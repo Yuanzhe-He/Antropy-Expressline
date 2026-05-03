@@ -97,7 +97,7 @@
           </label>
 
           <label>
-            <span><%= t("calculator.businessNature") %></span>
+            <span><%= t("calculator.businessNature") %> <span class="field-help" title="<%= t("calculator.businessNatureHelp") %>">?</span></span>
             <select name="businessNature">
               <% for (const option of businessNatureOptions) { %>
                 <option value="<%= option.value %>" <%= formData.businessNature === option.value ? "selected" : "" %>>
@@ -108,12 +108,12 @@
           </label>
 
           <label>
-            <span><%= t("calculator.blCount") %></span>
+            <span><%= t("calculator.blCount") %> <span class="field-help" title="<%= t("calculator.blCountHelp") %>">?</span></span>
             <input type="number" min="0" step="1" name="blCount" value="<%= formData.blCount %>" required />
           </label>
 
           <label>
-            <span><%= t("calculator.demurrageDays") %></span>
+            <span><%= t("calculator.demurrageDays") %> <span class="field-help" title="<%= t("calculator.demurrageDaysHelp") %>">?</span></span>
             <input type="number" min="0" step="1" name="demurrageDays" value="<%= formData.demurrageDays %>" required />
           </label>
 
@@ -176,13 +176,18 @@
         </div>
 
         <% if (taxControls?.length) { %>
-          <div class="table-card">
-            <div class="section-title compact">
+          <% const changedTaxOverrideCount = Object.values(formData.taxOverrides || {}).filter((value) => value && value !== "default").length; %>
+          <details class="table-card collapsible-card" <%= changedTaxOverrideCount ? "open" : "" %>>
+            <summary class="section-title compact">
               <div>
                 <p class="eyebrow"><%= t("calculator.taxOverrideTitle") %></p>
                 <h4><%= t("calculator.taxOverrideDescription") %></h4>
+                <small><%= t("calculator.taxOverrideSummary") %></small>
               </div>
-            </div>
+              <% if (changedTaxOverrideCount) { %>
+                <span class="change-badge"><%= t("calculator.taxOverrideChangedCount", { count: changedTaxOverrideCount }) %></span>
+              <% } %>
+            </summary>
             <div class="tax-grid">
               <% for (const control of taxControls) { %>
                 <label class="tax-control">
@@ -199,7 +204,7 @@
                 </label>
               <% } %>
             </div>
-          </div>
+          </details>
         <% } %>
 
         <div class="actions">
@@ -275,14 +280,15 @@
           </div>
         </div>
 
-        <div class="formula-panel">
+        <details class="formula-panel formula-details">
+          <summary><%= t("calculator.formulaDetails") %></summary>
           <p class="eyebrow"><%= t("calculator.totalFormula") %></p>
           <code><%= result.totalFormula %></code>
           <p><%= result.totalExplanation %></p>
           <% if (result.invoiceNote) { %>
             <p><strong><%= t("calculator.lineNotice") %>:</strong> <%= result.invoiceNote %></p>
           <% } %>
-        </div>
+        </details>
       <% } %>
     </section>
   </section>
@@ -314,10 +320,10 @@
                 <% if (item.note) { %>
                   <p><%= item.note %></p>
                 <% } %>
-                <div class="formula-inline">
-                  <span><%= t("calculator.formula") %></span>
+                <details class="formula-inline formula-details">
+                  <summary><%= t("calculator.formula") %></summary>
                   <code><%= item.formula %></code>
-                </div>
+                </details>
                 <p><%= item.explanation %></p>
                 <% if (item.parts.length) { %>
                   <div class="part-list">
@@ -345,6 +351,7 @@
     containerType: t("calculator.containerType"),
     quantity: t("calculator.quantity"),
     removeRow: t("calculator.removeRow"),
+    keepOneContainer: t("calculator.keepOneContainer"),
   }) %></script>
   <script src="/calculator.js"></script>
 <% } %>

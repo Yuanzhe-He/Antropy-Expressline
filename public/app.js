@@ -121,3 +121,121 @@
   window.addEventListener("beforeunload", writeState);
   restoreState();
 })();
+
+(function adminFormSafeguards() {
+  const forms = [...document.querySelectorAll("[data-admin-form]")];
+  if (!forms.length) {
+    return;
+  }
+
+  let hasPendingChanges = false;
+  let allowNavigation = false;
+
+  function setFormState(form, dirty) {
+    form.dataset.dirty = dirty ? "true" : "false";
+    const stateLabel = form.querySelector("[data-save-state]");
+    if (stateLabel) {
+      stateLabel.textContent = dirty
+        ? form.dataset.unsavedLabel || "Unsaved changes"
+        : form.dataset.savedLabel || "No pending changes";
+    }
+    const discardButton = form.querySelector("[data-discard-changes]");
+    if (discardButton) {
+      discardButton.disabled = !dirty;
+    }
+  }
+
+  forms.forEach((form) => {
+    setFormState(form, false);
+
+    form.addEventListener("input", () => {
+      hasPendingChanges = true;
+      setFormState(form, true);
+    });
+
+    form.addEventListener("change", () => {
+      hasPendingChanges = true;
+      setFormState(form, true);
+    });
+
+    form.addEventListener("submit", (event) => {
+      const submitter = event.submitter;
+      const confirmMessage = submitter?.dataset.confirmSubmit;
+      if (confirmMessage && !window.confirm(confirmMessage)) {
+        event.preventDefault();
+        return;
+      }
+      allowNavigation = true;
+    });
+
+    const discardButton = form.querySelector("[data-discard-changes]");
+    if (discardButton) {
+      discardButton.addEventListener("click", () => {
+        allowNavigation = true;
+        window.location.reload();
+      });
+    }
+  });
+
+  document.addEventListener(
+    "click",
+    (event) => {
+      const link = event.target.closest("a[href]");
+      if (!link || allowNavigation || !hasPendingChanges) {
+        return;
+      }
+
+      const nextUrl = new URL(link.href, window.location.href);
+      if (nextUrl.origin === window.location.origin) {
+        const message =
+          forms[0]?.dataset.confirmLeave || "You have unsaved changes. Leave?";
+        if (!window.confirm(message)) {
+          event.preventDefault();
+        } else {
+          allowNavigation = true;
+        }
+      }
+    },
+    true
+  );
+
+  window.addEventListener("beforeunload", (event) => {
+    if (!hasPendingChanges || allowNavigation) {
+      return;
+    }
+    event.preventDefault();
+    event.returnValue = "";
+  });
+})();
+
+(function adminListFilter() {
+  const input = document.querySelector("[data-admin-filter]");
+  const linksRoot = document.querySelector("[data-admin-filter-list]");
+  if (!input || !linksRoot) {
+    return;
+  }
+
+  const links = [...linksRoot.querySelectorAll("[data-admin-filter-item]")];
+  const emptyState = document.querySelector("[data-admin-filter-empty]");
+
+  function applyFilter() {
+    const query = input.value.trim().toLowerCase();
+    let visibleCount = 0;
+
+    links.forEach((link) => {
+      const haystack = link.textContent.trim().toLowerCase();
+      const visible = !query || haystack.includes(query);
+      link.hidden = !visible;
+      if (visible) {
+        visibleCount += 1;
+      }
+    });
+
+    if (emptyState) {
+      emptyState.hidden = visibleCount > 0;
+    }
+  }
+
+  input.addEventListener("input", applyFilter);
+  applyFilter();
+})();

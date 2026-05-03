@@ -293,6 +293,8 @@ async function main() {
     expectContains(response.text, "业务性质", "handover page");
     expectContains(response.text, "税率覆盖", "handover tax overrides");
     expectContains(response.text, "data-add-row", "handover add row button");
+    expectContains(response.text, "collapsible-card", "handover collapsible tax overrides");
+    expectContains(response.text, "field-help", "handover field help");
 
     response = await request(baseUrl, "/workbench/handover", {
       method: "POST",
@@ -319,6 +321,7 @@ async function main() {
     expectContains(response.text, "清关一页式工作台", "customs page");
     expectContains(response.text, 'value="cma-cgm" selected', "linked shipping line");
     expectContains(response.text, 'value="gp-hq-dc" selected', "linked container type");
+    expectContains(response.text, "collapsible-card", "customs collapsible tax overrides");
 
     response = await request(baseUrl, "/workbench/customs", {
       method: "POST",
@@ -347,6 +350,9 @@ async function main() {
     assert.equal(response.status, 200);
     expectContains(response.text, "船公司与场站映射", "public admin access");
     expectContains(response.text, "新增阶梯", "customs add rule button");
+    expectContains(response.text, "section-jump-nav", "customs section navigation");
+    expectContains(response.text, "data-admin-form", "customs dirty form guard");
+    expectContains(response.text, "data-confirm-submit", "customs delete confirmation");
 
     response = await request(baseUrl, "/admin/handover/shipping-lines/cma-cgm", {
       jar: publicJar,
@@ -356,6 +362,9 @@ async function main() {
     expectContains(response.text, 'data-scroll-scope="admin"', "admin scroll scope");
     expectContains(response.text, 'data-scroll-panel="admin-list"', "admin list scroll panel");
     expectContains(response.text, 'data-scroll-panel="admin-detail"', "admin detail scroll panel");
+    expectContains(response.text, "data-admin-filter", "handover admin search");
+    expectContains(response.text, "sticky-save-bar", "handover sticky save bar");
+    expectContains(response.text, "data-confirm-submit", "handover delete confirmation");
 
     response = await request(baseUrl, "/workbench/handover", {
       method: "POST",

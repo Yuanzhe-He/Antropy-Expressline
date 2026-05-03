@@ -28,11 +28,16 @@
         <h3><%= selectedModule.title %></h3>
       </div>
     </div>
-    <div class="admin-links">
+    <label class="admin-search">
+      <span><%= t("common.search") %></span>
+      <input type="search" data-admin-filter placeholder="<%= t("admin.searchPlaceholder") %>" />
+    </label>
+    <div class="admin-links" data-admin-filter-list>
       <% for (const line of shippingLines) { %>
         <a
           class="<%= selectedLine?.id === line.id ? 'active' : '' %>"
           href="/admin/<%= currentModuleKey %>/shipping-lines/<%= line.id %>"
+          data-admin-filter-item
         >
           <strong><%= line.name %></strong>
           <span><%= t("admin.shippingLineCount", {
@@ -41,6 +46,9 @@
           }) %></span>
         </a>
       <% } %>
+      <div class="note-box" data-admin-filter-empty hidden>
+        <p><%= t("admin.noSearchResults") %></p>
+      </div>
       <% if (!shippingLines.length) { %>
         <div class="note-box">
           <strong><%= t("admin.modulePlaceholderTitle") %></strong>
@@ -67,7 +75,15 @@
         </div>
       </div>
 
-      <form method="post" action="/admin/<%= currentModuleKey %>/shipping-lines/<%= selectedLine.id %>" class="stack-form">
+      <form
+        method="post"
+        action="/admin/<%= currentModuleKey %>/shipping-lines/<%= selectedLine.id %>"
+        class="stack-form"
+        data-admin-form
+        data-unsaved-label="<%= t("admin.unsavedChanges") %>"
+        data-saved-label="<%= t("admin.savedState") %>"
+        data-confirm-leave="<%= t("admin.confirmLeave") %>"
+      >
         <div class="grid-form">
           <label class="checkbox-field">
             <span><%= t("admin.invoiceOnly") %></span>
@@ -295,6 +311,7 @@
                             class="ghost-button compact-button"
                             formaction="/admin/<%= currentModuleKey %>/shipping-lines/<%= selectedLine.id %>/demurrage/<%= group.key %>/<%= rule.id %>/delete"
                             formmethod="post"
+                            data-confirm-submit="<%= t("admin.confirmDeleteRule") %>"
                             <%= rules.length <= 1 ? "disabled" : "" %>
                           ><%= t("admin.deleteRule") %></button>
                         </td>
@@ -308,7 +325,9 @@
           </div>
         </div>
 
-        <div class="actions">
+        <div class="actions sticky-save-bar">
+          <span class="save-state" data-save-state><%= t("admin.savedState") %></span>
+          <button type="button" class="ghost-button compact-button" data-discard-changes disabled><%= t("admin.discardChanges") %></button>
           <button type="submit"><%= t("admin.saveShippingLine") %></button>
         </div>
       </form>

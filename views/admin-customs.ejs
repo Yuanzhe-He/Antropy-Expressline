@@ -20,7 +20,15 @@
 
 <%- include("partials/admin-tabs", { modules, currentModuleKey, currentAdminSection, t }) %>
 
-<form method="post" action="/admin/customs/shipping-lines" class="stack-form">
+<form
+  method="post"
+  action="/admin/customs/shipping-lines"
+  class="stack-form"
+  data-admin-form
+  data-unsaved-label="<%= t("admin.unsavedChanges") %>"
+  data-saved-label="<%= t("admin.savedState") %>"
+  data-confirm-leave="<%= t("admin.confirmLeave") %>"
+>
   <section class="cards-grid">
     <article class="summary-card">
       <p><%= t("admin.shippingLineTable") %></p>
@@ -40,7 +48,14 @@
     </article>
   </section>
 
-  <section class="panel">
+  <nav class="section-jump-nav" aria-label="<%= t("admin.jumpToSection") %>">
+    <span><%= t("admin.jumpToSection") %></span>
+    <a href="#customs-yard-map"><%= t("customs.shippingLineYardMap") %></a>
+    <a href="#customs-terminal-rules"><%= t("customs.portTerminalRules") %></a>
+    <a href="#customs-yard-rules"><%= t("customs.yardRulesTitle") %></a>
+  </nav>
+
+  <section class="panel" id="customs-yard-map">
     <div class="section-title">
       <div>
         <p class="eyebrow"><%= t("customs.shippingLineYardMap") %></p>
@@ -77,7 +92,7 @@
     </div>
   </section>
 
-  <section class="panel">
+  <section class="panel" id="customs-terminal-rules">
     <div class="section-title">
       <div>
         <p class="eyebrow"><%= t("customs.portTerminalRules") %></p>
@@ -252,6 +267,7 @@
                                 class="ghost-button compact-button"
                                 formaction="/admin/customs/terminals/<%= terminal.id %>/storage/<%= type.key %>/<%= rule.id %>/delete"
                                 formmethod="post"
+                                data-confirm-submit="<%= t("admin.confirmDeleteRule") %>"
                                 <%= rules.length <= 1 ? "disabled" : "" %>
                               ><%= t("admin.deleteRule") %></button>
                             </td>
@@ -270,7 +286,7 @@
     </div>
   </section>
 
-  <section class="panel">
+  <section class="panel" id="customs-yard-rules">
     <div class="section-title">
       <div>
         <p class="eyebrow"><%= t("customs.yardRulesTitle") %></p>
@@ -381,7 +397,9 @@
     </div>
   </section>
 
-  <div class="actions">
+  <div class="actions sticky-save-bar">
+    <span class="save-state" data-save-state><%= t("admin.savedState") %></span>
+    <button type="button" class="ghost-button compact-button" data-discard-changes disabled><%= t("admin.discardChanges") %></button>
     <button type="submit"><%= t("admin.saveShippingLine") %></button>
   </div>
 </form>
