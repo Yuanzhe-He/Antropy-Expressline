@@ -286,7 +286,7 @@ async function main() {
 
     response = await request(baseUrl, "/workbench/handover", { jar: publicJar });
     assert.equal(response.status, 200);
-    expectContains(response.text, "Express Line", "brand wordmark");
+    expectContains(response.text, "EXPRESS LINE", "brand wordmark");
     expectContains(response.text, "Antropy AI", "brand submark");
     expectContains(response.text, "data-theme-toggle", "theme toggle");
     expectContains(response.text, "compact-language-switcher", "compact language switcher");
