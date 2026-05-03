@@ -38,11 +38,15 @@ const {
 const port = process.env.PORT || 3000;
 const sessionSecret =
   process.env.SESSION_SECRET || "jose-expressline-consulting-local";
+const publicDemoUser = Object.freeze({
+  id: "public-demo",
+  name: "Express Line",
+  role: "admin",
+  username: "public",
+});
 
 function requireAuth(req, res, next) {
-  if (!req.session.user) {
-    return res.redirect("/login");
-  }
+  req.session.user = req.session.user || publicDemoUser;
   return next();
 }
 
@@ -736,6 +740,11 @@ function createApp() {
   });
 
   app.use((req, _res, next) => {
+    req.session.user = req.session.user || publicDemoUser;
+    next();
+  });
+
+  app.use((req, _res, next) => {
     if (req.session.flash) {
       req.flash = req.session.flash;
       delete req.session.flash;
@@ -744,9 +753,6 @@ function createApp() {
   });
 
   app.get("/", (req, res) => {
-    if (!req.session.user) {
-      return res.redirect("/login");
-    }
     return res.redirect(`/workbench/${DEFAULT_MODULE_KEY}`);
   });
 
@@ -756,13 +762,7 @@ function createApp() {
   });
 
   app.get("/login", (req, res) => {
-    res.render(
-      "login",
-      baseView(req, {
-        pageTitle: req.t("login.title"),
-        languageReturnTo: "/login",
-      })
-    );
+    return res.redirect(`/workbench/${DEFAULT_MODULE_KEY}`);
   });
 
   app.post("/login", async (req, res) => {
@@ -794,7 +794,7 @@ function createApp() {
 
   app.post("/logout", (req, res) => {
     req.session.destroy(() => {
-      res.redirect("/login");
+      res.redirect(`/workbench/${DEFAULT_MODULE_KEY}`);
     });
   });
 

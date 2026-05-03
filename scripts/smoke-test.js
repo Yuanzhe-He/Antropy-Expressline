@@ -273,48 +273,30 @@ async function main() {
   const port = server.address().port;
   const baseUrl = `http://127.0.0.1:${port}`;
 
-  const adminJar = new CookieJar();
-  const salesJar = new CookieJar();
+  const publicJar = new CookieJar();
 
   try {
-    let response = await request(baseUrl, "/login");
+    let response = await request(baseUrl, "/", { jar: publicJar });
+    assert.equal(response.status, 302);
+    assert.equal(response.location, "/workbench/handover");
+
+    response = await request(baseUrl, "/login", { jar: publicJar });
+    assert.equal(response.status, 302);
+    assert.equal(response.location, "/workbench/handover");
+
+    response = await request(baseUrl, "/workbench/handover", { jar: publicJar });
     assert.equal(response.status, 200);
-    expectContains(response.text, "进入系统", "login page");
     expectContains(response.text, "Express Line", "brand wordmark");
     expectContains(response.text, "Antropy AI", "brand submark");
     expectContains(response.text, "data-theme-toggle", "theme toggle");
     expectContains(response.text, "compact-language-switcher", "compact language switcher");
-
-    response = await request(baseUrl, "/login", {
-      method: "POST",
-      jar: adminJar,
-      formEntries: [
-        ["username", "admin"],
-        ["password", "admin123"],
-      ],
-    });
-    assert.equal(response.status, 302);
-    assert.equal(response.location, "/workbench/handover");
-
-    response = await request(baseUrl, "/login", {
-      method: "POST",
-      jar: salesJar,
-      formEntries: [
-        ["username", "sales"],
-        ["password", "sales123"],
-      ],
-    });
-    assert.equal(response.status, 302);
-
-    response = await request(baseUrl, "/workbench/handover", { jar: adminJar });
-    assert.equal(response.status, 200);
     expectContains(response.text, "业务性质", "handover page");
     expectContains(response.text, "税率覆盖", "handover tax overrides");
     expectContains(response.text, "data-add-row", "handover add row button");
 
     response = await request(baseUrl, "/workbench/handover", {
       method: "POST",
-      jar: adminJar,
+      jar: publicJar,
       formEntries: [
         ["shippingLineId", "cma-cgm"],
         ["businessNature", "handover_customs"],
@@ -331,7 +313,7 @@ async function main() {
     expectContains(response.text, "换单 + 清关连续业务", "business nature result");
 
     response = await request(baseUrl, "/workbench/customs?useLinked=1", {
-      jar: adminJar,
+      jar: publicJar,
     });
     assert.equal(response.status, 200);
     expectContains(response.text, "清关一页式工作台", "customs page");
@@ -340,7 +322,7 @@ async function main() {
 
     response = await request(baseUrl, "/workbench/customs", {
       method: "POST",
-      jar: adminJar,
+      jar: publicJar,
       formEntries: [
         ["businessNature", "handover_customs"],
         ["shippingLineId", "cma-cgm"],
@@ -360,14 +342,14 @@ async function main() {
     expectContains(response.text, "清关堆场费", "customs yard fee");
 
     response = await request(baseUrl, "/admin/customs/shipping-lines", {
-      jar: salesJar,
+      jar: publicJar,
     });
     assert.equal(response.status, 200);
-    expectContains(response.text, "船公司与场站映射", "sales admin access");
+    expectContains(response.text, "船公司与场站映射", "public admin access");
     expectContains(response.text, "新增阶梯", "customs add rule button");
 
     response = await request(baseUrl, "/admin/handover/shipping-lines/cma-cgm", {
-      jar: adminJar,
+      jar: publicJar,
     });
     assert.equal(response.status, 200);
     expectContains(response.text, "新增阶梯", "handover add rule button");
@@ -377,7 +359,7 @@ async function main() {
 
     response = await request(baseUrl, "/workbench/handover", {
       method: "POST",
-      jar: adminJar,
+      jar: publicJar,
       formEntries: [
         ["shippingLineId", "cma-cgm"],
         ["businessNature", "handover_only"],
@@ -403,7 +385,7 @@ async function main() {
       `/admin/handover/shipping-lines/${handoverLine.id}/demurrage/${handoverGroupKey}/add`,
       {
         method: "POST",
-        jar: adminJar,
+        jar: publicJar,
       }
     );
     assert.equal(response.status, 302);
@@ -422,7 +404,7 @@ async function main() {
       `/admin/handover/shipping-lines/${handoverLine.id}/demurrage/${handoverGroupKey}/${addedHandoverRule.id}/delete`,
       {
         method: "POST",
-        jar: adminJar,
+        jar: publicJar,
       }
     );
     assert.equal(response.status, 302);
@@ -449,12 +431,12 @@ async function main() {
       `/admin/handover/shipping-lines/${handoverLine.id}`,
       {
         method: "POST",
-        jar: adminJar,
+        jar: publicJar,
         formEntries: invalidHandoverForm,
       }
     );
     assert.equal(response.status, 302);
-    response = await request(baseUrl, response.location, { jar: adminJar });
+    response = await request(baseUrl, response.location, { jar: publicJar });
     expectContains(response.text, "阶梯区间无效", "handover validation");
 
     const validHandoverForm = buildHandoverAdminForm(
@@ -466,7 +448,7 @@ async function main() {
       `/admin/handover/shipping-lines/${handoverLine.id}`,
       {
         method: "POST",
-        jar: adminJar,
+        jar: publicJar,
         formEntries: validHandoverForm,
       }
     );
@@ -484,7 +466,7 @@ async function main() {
       `/admin/customs/terminals/${terminal.id}/storage/${customsGroupKey}/add`,
       {
         method: "POST",
-        jar: adminJar,
+        jar: publicJar,
       }
     );
     assert.equal(response.status, 302);
@@ -503,7 +485,7 @@ async function main() {
       `/admin/customs/terminals/${terminal.id}/storage/${customsGroupKey}/${addedCustomsRule.id}/delete`,
       {
         method: "POST",
-        jar: adminJar,
+        jar: publicJar,
       }
     );
     assert.equal(response.status, 302);
@@ -529,23 +511,23 @@ async function main() {
 
     response = await request(baseUrl, "/admin/customs/shipping-lines", {
       method: "POST",
-      jar: adminJar,
+      jar: publicJar,
       formEntries: customsForm,
     });
     assert.equal(response.status, 302);
-    response = await request(baseUrl, response.location, { jar: adminJar });
+    response = await request(baseUrl, response.location, { jar: publicJar });
     expectContains(response.text, "阶梯区间无效", "customs validation");
 
     const validCustomsForm = buildCustomsAdminForm(shippingData.modules.customs);
     response = await request(baseUrl, "/admin/customs/shipping-lines", {
       method: "POST",
-      jar: adminJar,
+      jar: publicJar,
       formEntries: validCustomsForm,
     });
     assert.equal(response.status, 302);
 
     response = await request(baseUrl, "/workbench/customs?lang=es", {
-      jar: adminJar,
+      jar: publicJar,
     });
     expectContains(response.text, "Mesa integral de despacho", "spanish customs");
 
