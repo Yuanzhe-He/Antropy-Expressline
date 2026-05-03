@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -10,10 +11,11 @@ from openpyxl import load_workbook
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = Path(
+DEFAULT_SOURCE = Path(
     "/Users/yuanzhehe/Library/Containers/com.tencent.xinWeChat/Data/Documents/"
     "xwechat_files/wxid_8b9mu5g3fomo22_21e8/temp/drag/TARIFARIO 120426.xlsx"
 )
+SOURCE = Path(os.environ.get("TARIFF_SOURCE", DEFAULT_SOURCE)).expanduser()
 OUTPUT = ROOT / "data" / "shipping-lines.json"
 
 SKIP_HEADERS = {
@@ -331,6 +333,19 @@ def load_existing_payload() -> dict[str, Any]:
 
 
 def main() -> None:
+    if not SOURCE.exists():
+        if OUTPUT.exists():
+            print(
+                f"Tariff source not found: {SOURCE}. "
+                f"Keeping existing {OUTPUT}. "
+                "Set TARIFF_SOURCE=/path/to/tariff.xlsx to rebuild from Excel."
+            )
+            return
+        raise FileNotFoundError(
+            f"Tariff source not found: {SOURCE}. "
+            "Set TARIFF_SOURCE=/path/to/tariff.xlsx."
+        )
+
     wb = load_workbook(SOURCE, data_only=False)
     existing_payload = load_existing_payload()
     existing_modules = existing_payload.get("modules", {}) if isinstance(existing_payload, dict) else {}

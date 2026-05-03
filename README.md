@@ -88,6 +88,14 @@ npm test
 npm run build:data
 ```
 
+如果 Excel 不在默认路径，可以指定：
+
+```bash
+TARIFF_SOURCE="/path/to/TARIFARIO 120426.xlsx" npm run build:data
+```
+
+如果没有找到 Excel，但 `data/shipping-lines.json` 已存在，脚本会保留现有数据并退出成功，避免部署或测试被微信临时文件路径卡住。
+
 默认地址：
 
 ```text
