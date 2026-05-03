@@ -1,0 +1,287 @@
+<%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
+
+<section class="hero-card hero-split">
+  <div class="hero-copy">
+    <p class="eyebrow"><%= t("admin.eyebrow") %></p>
+    <h2><%= t("admin.settingsTitle") %></h2>
+    <p class="hero-text"><%= selectedModule.description %></p>
+  </div>
+  <div class="hero-side">
+    <div class="status-tile">
+      <span><%= t("common.status") %></span>
+      <strong><%= selectedModule.stateLabel %></strong>
+    </div>
+    <div class="status-tile">
+      <span><%= t("admin.moduleOverview") %></span>
+      <strong><%= selectedModule.implemented ? t("admin.statusCardLive") : t("admin.statusCardPlanned") %></strong>
+    </div>
+  </div>
+</section>
+
+<%- include("partials/admin-tabs", { modules, currentModuleKey, currentAdminSection, t }) %>
+
+<section class="stack-form">
+  <section class="cards-grid">
+    <article class="summary-card">
+      <p><%= currentModuleKey === "customs" ? t("customs.portLabel") : t("admin.shippingLineTable") %></p>
+      <strong><%= currentModuleKey === "customs" ? moduleData.ports.length : moduleData.shippingLines.length %></strong>
+    </article>
+    <article class="summary-card">
+      <p><%= currentModuleKey === "customs" ? t("customs.yardLabel") : t("admin.containerTable") %></p>
+      <strong><%= currentModuleKey === "customs" ? moduleData.yards.length : moduleData.containerTypes.length %></strong>
+    </article>
+    <article class="summary-card">
+      <p><%= t("common.quoteCurrency") %></p>
+      <strong><%= moduleData.settings.defaultQuoteCurrency %></strong>
+    </article>
+    <article class="summary-card">
+      <p><%= t("common.priceMode") %></p>
+      <strong><%= moduleData.settings.defaultPriceMode === "aftertax" ? t("priceMode.aftertax") : t("priceMode.pretax") %></strong>
+    </article>
+  </section>
+
+  <section class="panel">
+    <form method="post" action="/admin/<%= currentModuleKey %>/settings" class="stack-form">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow"><%= t("admin.moduleDefaults") %></p>
+          <h3><%= t("admin.settingsDescription") %></h3>
+        </div>
+      </div>
+
+      <div class="grid-form">
+        <label>
+          <span><%= t("admin.defaultQuoteCurrency") %></span>
+          <select name="defaultQuoteCurrency">
+            <% for (const option of currencyOptions) { %>
+              <option value="<%= option.code %>" <%= moduleData.settings.defaultQuoteCurrency === option.code ? "selected" : "" %>>
+                <%= option.label %>
+              </option>
+            <% } %>
+          </select>
+        </label>
+
+        <label>
+          <span><%= t("admin.defaultPriceMode") %></span>
+          <select name="defaultPriceMode">
+            <% for (const option of priceModeOptions) { %>
+              <option value="<%= option.value %>" <%= moduleData.settings.defaultPriceMode === option.value ? "selected" : "" %>>
+                <%= option.label %>
+              </option>
+            <% } %>
+          </select>
+        </label>
+      </div>
+
+      <div class="table-card">
+        <div class="section-title compact">
+          <div>
+            <p class="eyebrow"><%= t("admin.taxPresets") %></p>
+            <h4><%= t("admin.moduleSettings") %></h4>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th><%= t("admin.id") %></th>
+              <th><%= t("admin.label") %></th>
+              <th><%= t("admin.rate") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (const preset of [...moduleData.taxRatePresets, { id: "", label: "", rate: "" }]) { %>
+              <tr>
+                <td><input type="text" name="taxPresetId[]" value="<%= preset.id %>" /></td>
+                <td><input type="text" name="taxPresetLabel[]" value="<%= preset.label %>" /></td>
+                <td><input type="number" min="0" step="0.01" name="taxPresetRate[]" value="<%= preset.rate %>" /></td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="actions">
+        <button type="submit"><%= t("admin.saveSettings") %></button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow"><%= currentModuleKey === "customs" ? t("customs.scopeTitle") : t("admin.shippingLineOverview") %></p>
+        <h3><%= currentModuleKey === "customs" ? t("customs.adminOverviewTitle") : t("admin.shippingLineTable") %></h3>
+      </div>
+    </div>
+    <div class="table-card">
+      <% if (currentModuleKey === "customs") { %>
+        <table>
+          <thead>
+            <tr>
+              <th><%= t("customs.portLabel") %></th>
+              <th><%= t("customs.terminalLabel") %></th>
+              <th><%= t("customs.yardLabel") %></th>
+              <th><%= t("customs.shippingLineLabel") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (const port of moduleData.ports || []) { %>
+              <tr>
+                <td><a href="/admin/customs/shipping-lines"><%= port.name %></a></td>
+                <td><%= port.terminals?.length || 0 %></td>
+                <td><%= (moduleData.yards || []).filter((yard) => yard.portIds?.includes(port.id)).length %></td>
+                <td><%= (moduleData.yards || []).filter((yard) => yard.portIds?.includes(port.id)).reduce((count, yard) => count + (yard.shippingLineIds?.length || 0), 0) %></td>
+              </tr>
+            <% } %>
+            <% if (!moduleData.ports?.length) { %>
+              <tr>
+                <td colspan="4"><%= t("common.noData") %></td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      <% } else { %>
+        <table>
+          <thead>
+            <tr>
+              <th><%= t("admin.lineName") %></th>
+              <th><%= t("admin.containerTable") %></th>
+              <th><%= t("admin.localChargesCount") %></th>
+              <th><%= t("admin.demurrageRulesCount") %></th>
+              <th><%= t("admin.invoiceRestriction") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (const line of moduleData.shippingLines) { %>
+              <tr>
+                <td><a href="/admin/<%= currentModuleKey %>/shipping-lines/<%= line.id %>"><%= line.name %></a></td>
+                <td><%= line.containerGroups.length %></td>
+                <td><%= line.localCharges.length %></td>
+                <td><%= Object.values(line.demurrage.rulesByGroup || {}).reduce((sum, rules) => sum + rules.length, 0) %></td>
+                <td><%= line.invoiceToConsigneeOnly ? t("admin.onlyConsignee") : t("admin.reInvoice") %></td>
+              </tr>
+            <% } %>
+            <% if (!moduleData.shippingLines.length) { %>
+              <tr>
+                <td colspan="5"><%= t("admin.noShippingLines") %></td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow"><%= t("admin.containerTable") %></p>
+        <h3><%= t("admin.containerTable") %></h3>
+      </div>
+    </div>
+    <div class="table-card">
+      <% if (currentModuleKey === "customs") { %>
+        <table>
+          <thead>
+            <tr>
+              <th><%= t("admin.typeKey") %></th>
+              <th><%= t("admin.typeName") %></th>
+              <th><%= t("customs.portLabel") %></th>
+              <th><%= t("customs.yardLabel") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (const type of moduleData.containerTypes) { %>
+              <tr>
+                <td><%= type.key %></td>
+                <td><%= type.label %></td>
+                <td><%= moduleData.ports.length %></td>
+                <td><%= moduleData.yards.length %></td>
+              </tr>
+            <% } %>
+            <% if (!moduleData.containerTypes.length) { %>
+              <tr>
+                <td colspan="4"><%= t("admin.noContainerTypes") %></td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      <% } else { %>
+        <table>
+          <thead>
+            <tr>
+              <th><%= t("admin.typeKey") %></th>
+              <th><%= t("admin.typeName") %></th>
+              <th><%= t("admin.lineCoverage") %></th>
+              <th><%= t("admin.lineNames") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (const type of moduleData.containerTypes) { %>
+              <tr>
+                <td><%= type.key %></td>
+                <td><%= type.label %></td>
+                <td><%= type.shippingLineCount %></td>
+                <td><%= type.shippingLines.join(" / ") %></td>
+              </tr>
+            <% } %>
+            <% if (!moduleData.containerTypes.length) { %>
+              <tr>
+                <td colspan="4"><%= t("admin.noContainerTypes") %></td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow"><%= t("admin.exchangeRates") %></p>
+        <h3><%= t("admin.exchangeRatesHint") %></h3>
+      </div>
+      <form method="post" action="/admin/<%= currentModuleKey %>/exchange-rates/refresh">
+        <button type="submit"><%= t("admin.refreshExchangeRates") %></button>
+      </form>
+    </div>
+
+    <div class="note-box">
+      <p><%= t("common.provider") %>: <strong><a href="<%= exchangeRates.docsUrl %>" target="_blank" rel="noreferrer"><%= exchangeRates.provider %></a></strong></p>
+      <p><%= t("common.exchangeDate") %>: <strong><%= exchangeRates.asOfDate || "—" %></strong></p>
+      <p><%= t("common.lastChecked") %>: <strong><%= exchangeRates.lastCheckedAt || "—" %></strong></p>
+      <% if (exchangeRates.lastError) { %>
+        <p class="warning-text"><%= t("admin.exchangeFailure", { error: exchangeRates.lastError }) %></p>
+      <% } %>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Base</th>
+            <th>Quote</th>
+            <th>Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const pair of exchangeRates.pairs) { %>
+            <tr>
+              <td><%= pair.base %></td>
+              <td><%= pair.quote %></td>
+              <td><%= pair.rate %></td>
+            </tr>
+          <% } %>
+          <% if (!exchangeRates.pairs.length) { %>
+            <tr>
+              <td colspan="3"><%= t("admin.noFxData") %></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
+<%- include("partials/footer") %>

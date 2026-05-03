@@ -1,0 +1,243 @@
+<%- include('partials/header', { currentPath, user, flash }) %>
+<section class="hero-card">
+  <div>
+    <p class="eyebrow">销售前台</p>
+    <h2>换单费成本计算</h2>
+    <p>支持混装、多柜型、多币种换算，以及 demoras 阶梯累进。</p>
+  </div>
+  <% if (selectedLine) { %>
+    <div class="meta-grid">
+      <div>
+        <span>开票对象</span>
+        <strong><%= selectedLine.invoiceToConsigneeOnly ? '只能开发票给客户/收货人' : '可先给报关行再转开' %></strong>
+      </div>
+      <div>
+        <span>Corte de Demoras</span>
+        <strong><%= selectedLine.demurrageCutoffHandledBy === 'customs_broker_only' ? '只能报关行' : selectedLine.demurrageCutoffHandledBy === 'customer_only' ? '只能客户' : '报关行和收货人都能做' %></strong>
+      </div>
+      <div>
+        <span>Demoras 结构</span>
+        <strong>按箱型分别维护阶梯</strong>
+      </div>
+      <div>
+        <span>押金状态</span>
+        <strong><%= selectedLine.guarantee.benefitEnabled ? '可配置免押金期限' : '默认收押金' %></strong>
+      </div>
+    </div>
+  <% } %>
+</section>
+
+<section class="panel">
+  <div class="section-title">
+    <div>
+      <p class="eyebrow">录入</p>
+      <h3>销售输入</h3>
+    </div>
+    <% if (selectedLine?.invoiceNote) { %>
+      <div class="note-box"><strong>提示：</strong><%= selectedLine.invoiceNote %></div>
+    <% } %>
+  </div>
+
+  <form method="post" action="/calculator" class="stack-form">
+    <div class="grid-form">
+      <label>
+        船公司
+        <select name="shippingLineId" onchange="this.form.submit()">
+          <% for (const line of shippingLines) { %>
+            <option value="<%= line.id %>" <%= formData.shippingLineId === line.id ? 'selected' : '' %>>
+              <%= line.name %>
+            </option>
+          <% } %>
+        </select>
+      </label>
+
+      <label>
+        提单数量 BL
+        <input type="number" min="0" step="1" name="blCount" value="<%= formData.blCount %>" required />
+      </label>
+
+      <label>
+        Demoras 天数
+        <input type="number" min="0" step="1" name="demurrageDays" value="<%= formData.demurrageDays %>" required />
+      </label>
+
+      <label>
+        显示价格
+        <select name="priceMode">
+          <% for (const option of priceModeOptions) { %>
+            <option value="<%= option.value %>" <%= formData.priceMode === option.value ? 'selected' : '' %>>
+              <%= option.label %>
+            </option>
+          <% } %>
+        </select>
+      </label>
+
+      <label>
+        汇总币种
+        <select name="quoteCurrency">
+          <% for (const option of currencyOptions) { %>
+            <option value="<%= option.code %>" <%= formData.quoteCurrency === option.code ? 'selected' : '' %>>
+              <%= option.label %>
+            </option>
+          <% } %>
+        </select>
+      </label>
+    </div>
+
+    <div class="table-card">
+      <div class="section-title compact">
+        <div>
+          <p class="eyebrow">混装</p>
+          <h4>柜型与数量</h4>
+        </div>
+        <button type="button" class="ghost-button" data-add-row>+ 增加一组柜型</button>
+      </div>
+      <div
+        class="dynamic-rows"
+        data-container-rows
+        data-empty-label="<%= selectedLine?.containerGroups?.length ? '' : '当前船公司没有柜型配置' %>"
+      >
+        <% for (const row of formData.containerRows || []) { %>
+          <div class="dynamic-row" data-row>
+            <label>
+              柜型
+              <select name="containerGroupKey[]">
+                <% for (const group of selectedLine?.containerGroups || []) { %>
+                  <option value="<%= group.key %>" <%= row.containerGroupKey === group.key ? 'selected' : '' %>>
+                    <%= group.label %>
+                  </option>
+                <% } %>
+              </select>
+            </label>
+            <label>
+              数量
+              <input type="number" min="0" step="1" name="containerCount[]" value="<%= row.quantity %>" />
+            </label>
+            <button type="button" class="ghost-button compact-button" data-remove-row>删除</button>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit">计算成本</button>
+    </div>
+  </form>
+</section>
+
+<% if (result) { %>
+  <section class="cards-grid">
+    <article class="summary-card accent">
+      <p>总数</p>
+      <strong><%= result.total.toFixed(2) %> <%= result.quoteCurrency %></strong>
+      <small><%= result.priceMode === 'aftertax' ? '税后价' : '税前价' %></small>
+    </article>
+    <article class="summary-card">
+      <p>税前合计</p>
+      <strong><%= result.pretaxTotal.toFixed(2) %> <%= result.quoteCurrency %></strong>
+    </article>
+    <article class="summary-card">
+      <p>税后合计</p>
+      <strong><%= result.afterTaxTotal.toFixed(2) %> <%= result.quoteCurrency %></strong>
+    </article>
+    <article class="summary-card">
+      <p>命中阶梯</p>
+      <strong><%= result.matchedTierLabels.length ? result.matchedTierLabels.join(' / ') : '未触发' %></strong>
+    </article>
+  </section>
+
+  <section class="panel">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow">结果</p>
+        <h3>报价摘要</h3>
+      </div>
+      <div class="note-box">
+        <p>汇率来源：<strong><%= result.exchangeRates.provider %></strong></p>
+        <p>汇率日期：<strong><%= result.exchangeRates.asOfDate || '未更新' %></strong></p>
+      </div>
+    </div>
+
+    <div class="result-meta-grid">
+      <div class="note-box">
+        <p class="meta-title">是否只能给客户/收货人开发票</p>
+        <strong><%= result.invoiceToConsigneeOnly ? '是' : '否' %></strong>
+      </div>
+      <div class="note-box">
+        <p class="meta-title">Corte de Demoras 谁能做</p>
+        <strong><%= result.demurrageCutoffHandledByLabel %></strong>
+      </div>
+      <div class="note-box">
+        <p class="meta-title">混装输入</p>
+        <strong><%= result.containerRows.map((row) => `${row.label} × ${row.quantity}`).join(' / ') || '未输入柜量' %></strong>
+      </div>
+      <div class="note-box">
+        <p class="meta-title">Demoras</p>
+        <strong><%= result.demurrageDays %> 天，按所选箱型各自阶梯累进</strong>
+      </div>
+    </div>
+
+    <div class="formula-panel">
+      <p class="eyebrow">总公式</p>
+      <code><%= result.totalFormula %></code>
+      <p><%= result.totalExplanation %></p>
+      <% if (result.invoiceNote) { %>
+        <p><strong>开票说明：</strong><%= result.invoiceNote %></p>
+      <% } %>
+    </div>
+  </section>
+
+  <section class="breakdown-grid">
+    <% for (const block of [result.localCharges, result.guarantee, result.demurrage]) { %>
+      <article class="breakdown-card">
+        <div class="section-title compact">
+          <div>
+            <h4><%= block.title %></h4>
+          </div>
+          <div class="mini-summary">
+            <span>税前 <%= block.pretaxTotal.toFixed(2) %> <%= block.quoteCurrency %></span>
+            <span>税后 <%= block.afterTaxTotal.toFixed(2) %> <%= block.quoteCurrency %></span>
+            <strong><%= block.displayTotal.toFixed(2) %> <%= block.quoteCurrency %></strong>
+          </div>
+        </div>
+
+        <% if (!block.items.length) { %>
+          <p class="muted">当前没有产生费用。</p>
+        <% } %>
+
+        <% for (const item of block.items) { %>
+          <div class="breakdown-item rich">
+            <div class="breakdown-main">
+              <strong><%= item.concept %></strong>
+              <% if (item.note) { %>
+                <p><%= item.note %></p>
+              <% } %>
+              <div class="formula-inline">
+                <span>公式</span>
+                <code><%= item.formula %></code>
+              </div>
+              <p><%= item.explanation %></p>
+              <% if (item.parts.length) { %>
+                <div class="part-list">
+                  <% for (const part of item.parts) { %>
+                    <span><%= part.summaryLabel %></span>
+                  <% } %>
+                </div>
+              <% } %>
+            </div>
+            <div class="amount-stack">
+              <span>税率 <%= item.taxRateLabel %></span>
+              <span>税前 <%= item.pretaxAmount.toFixed(2) %> <%= item.quoteCurrency %></span>
+              <span>税后 <%= item.afterTaxAmount.toFixed(2) %> <%= item.quoteCurrency %></span>
+              <strong><%= item.displayAmount.toFixed(2) %> <%= item.quoteCurrency %></strong>
+            </div>
+          </div>
+        <% } %>
+      </article>
+    <% } %>
+  </section>
+<% } %>
+
+<script id="container-group-data" type="application/json"><%- JSON.stringify(selectedLine?.containerGroups || []) %></script>
+<script src="/calculator.js"></script>
+<%- include('partials/footer') %>

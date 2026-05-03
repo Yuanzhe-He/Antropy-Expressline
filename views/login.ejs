@@ -1,0 +1,30 @@
+<%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
+<section class="panel panel-narrow panel-centered">
+  <div class="section-title">
+    <div>
+      <p class="eyebrow"><%= t("login.eyebrow") %></p>
+      <h2><%= t("login.title") %></h2>
+      <p><%= t("login.description") %></p>
+    </div>
+  </div>
+  <form method="post" action="/login" class="stack-form">
+    <div class="grid-form">
+      <label>
+        <span><%= t("login.username") %></span>
+        <input type="text" name="username" placeholder="admin / sales" required />
+      </label>
+      <label>
+        <span><%= t("login.password") %></span>
+        <input type="password" name="password" placeholder="admin123" required />
+      </label>
+    </div>
+    <div class="actions">
+      <button type="submit"><%= t("login.submit") %></button>
+    </div>
+  </form>
+  <div class="hint">
+    <p><%= t("login.demoAdmin") %></p>
+    <p><%= t("login.demoSales") %></p>
+  </div>
+</section>
+<%- include("partials/footer") %>

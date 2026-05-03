@@ -1,0 +1,344 @@
+<%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
+
+<section class="hero-card hero-split">
+  <div class="hero-copy">
+    <p class="eyebrow"><%= t("customs.eyebrow") %></p>
+    <h2><%= selectedModule.title %></h2>
+    <p class="hero-text"><%= selectedModule.description %></p>
+  </div>
+  <div class="hero-side">
+    <div class="status-tile">
+      <span><%= t("common.status") %></span>
+      <strong><%= selectedModule.stateLabel %></strong>
+    </div>
+    <div class="status-tile">
+      <span><%= t("customs.dataCoverage") %></span>
+      <strong><%= moduleData.ports?.length || 0 %> <%= t("customs.portLabel") %> / <%= moduleData.yards?.length || 0 %> <%= t("customs.yardLabel") %></strong>
+    </div>
+  </div>
+</section>
+
+<%- include("partials/module-rail", { modules, currentModuleKey, variant: "sales" }) %>
+
+<section class="hero-card">
+  <div>
+    <p class="eyebrow"><%= t("customs.scopeTitle") %></p>
+    <h3><%= customsSelections.port?.name || t("common.notConfigured") %></h3>
+    <p><%= t("customs.scopeDescription") %></p>
+  </div>
+  <div class="meta-grid">
+    <div>
+      <span><%= t("customs.portLabel") %></span>
+      <strong><%= customsSelections.port?.name || t("common.notConfigured") %></strong>
+    </div>
+    <div>
+      <span><%= t("customs.terminalLabel") %></span>
+      <strong><%= customsSelections.terminal?.name || t("common.notConfigured") %></strong>
+    </div>
+    <div>
+      <span><%= t("customs.shippingLineLabel") %></span>
+      <strong><%= customsSelections.shippingLine?.name || t("common.notConfigured") %></strong>
+    </div>
+    <div>
+      <span><%= t("customs.yardLabel") %></span>
+      <strong><%= customsSelections.yard?.name || t("common.notConfigured") %></strong>
+    </div>
+  </div>
+</section>
+
+<section class="workspace-grid">
+  <section class="panel">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow"><%= t("customs.formTitle") %></p>
+        <h3><%= t("customs.pageTitle") %></h3>
+      </div>
+      <% if (linkedHandoverContext) { %>
+        <div class="note-box">
+          <p class="meta-title"><%= t("workflow.linkedFromHandover") %></p>
+          <strong><%= t("workflow.linkedContextSummary") %></strong>
+        </div>
+      <% } %>
+    </div>
+
+    <form method="post" action="/workbench/customs" class="stack-form">
+      <div class="grid-form">
+        <label>
+          <span><%= t("calculator.businessNature") %></span>
+          <select name="businessNature">
+            <% for (const option of businessNatureOptions) { %>
+              <option value="<%= option.value %>" <%= formData.businessNature === option.value ? "selected" : "" %>>
+                <%= option.label %>
+              </option>
+            <% } %>
+          </select>
+        </label>
+
+        <label>
+          <span><%= t("customs.shippingLineLabel") %></span>
+          <select name="shippingLineId" onchange="this.form.submit()">
+            <% for (const line of moduleData.shippingLines || []) { %>
+              <option value="<%= line.id %>" <%= formData.shippingLineId === line.id ? "selected" : "" %>>
+                <%= line.name %>
+              </option>
+            <% } %>
+          </select>
+        </label>
+
+        <label>
+          <span><%= t("customs.portLabel") %></span>
+          <select name="portId" onchange="this.form.submit()">
+            <% for (const port of moduleData.ports || []) { %>
+              <option value="<%= port.id %>" <%= formData.portId === port.id ? "selected" : "" %>>
+                <%= port.name %>
+              </option>
+            <% } %>
+          </select>
+        </label>
+
+        <label>
+          <span><%= t("customs.terminalLabel") %></span>
+          <select name="terminalId">
+            <% for (const terminal of customsSelections.port?.terminals || []) { %>
+              <option value="<%= terminal.id %>" <%= formData.terminalId === terminal.id ? "selected" : "" %>>
+                <%= terminal.name %>
+              </option>
+            <% } %>
+          </select>
+        </label>
+
+        <label>
+          <span><%= t("customs.yardLabel") %></span>
+          <select name="yardId">
+            <% for (const yard of customsSelections.availableYards || []) { %>
+              <option value="<%= yard.id %>" <%= formData.yardId === yard.id ? "selected" : "" %>>
+                <%= yard.name %>
+              </option>
+            <% } %>
+          </select>
+          <% if (!customsSelections.availableYards?.length) { %>
+            <small class="helper-text"><%= t("customs.noYardsAvailable") %></small>
+          <% } %>
+        </label>
+
+        <label>
+          <span><%= t("customs.storageDays") %></span>
+          <input type="number" min="0" step="1" name="storageDays" value="<%= formData.storageDays %>" required />
+          <small class="helper-text"><%= t("customs.storageDaysHint") %></small>
+        </label>
+
+        <label>
+          <span><%= t("common.priceMode") %></span>
+          <select name="priceMode">
+            <% for (const option of priceModeOptions) { %>
+              <option value="<%= option.value %>" <%= formData.priceMode === option.value ? "selected" : "" %>>
+                <%= option.label %>
+              </option>
+            <% } %>
+          </select>
+        </label>
+
+        <label>
+          <span><%= t("common.quoteCurrency") %></span>
+          <select name="quoteCurrency">
+            <% for (const option of currencyOptions) { %>
+              <option value="<%= option.code %>" <%= formData.quoteCurrency === option.code ? "selected" : "" %>>
+                <%= option.label %>
+              </option>
+            <% } %>
+          </select>
+        </label>
+      </div>
+
+      <div class="table-card">
+        <div class="section-title compact">
+          <div>
+            <p class="eyebrow"><%= t("calculator.containerTitle") %></p>
+            <h4><%= t("customs.containerDescription") %></h4>
+          </div>
+          <button type="button" class="ghost-button" data-add-row><%= t("calculator.addContainer") %></button>
+        </div>
+        <div class="dynamic-rows" data-container-rows>
+          <% for (const row of formData.containerRows || []) { %>
+            <div class="dynamic-row" data-row>
+              <label>
+                <span><%= t("calculator.containerType") %></span>
+                <select name="containerGroupKey[]">
+                  <% for (const type of moduleData.containerTypes || []) { %>
+                    <option value="<%= type.key %>" <%= row.containerGroupKey === type.key ? "selected" : "" %>>
+                      <%= type.label %>
+                    </option>
+                  <% } %>
+                </select>
+              </label>
+              <label>
+                <span><%= t("calculator.quantity") %></span>
+                <input type="number" min="0" step="1" name="containerCount[]" value="<%= row.quantity %>" />
+              </label>
+              <button type="button" class="ghost-button compact-button" data-remove-row><%= t("calculator.removeRow") %></button>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <% if (taxControls?.length) { %>
+        <div class="table-card">
+          <div class="section-title compact">
+            <div>
+              <p class="eyebrow"><%= t("calculator.taxOverrideTitle") %></p>
+              <h4><%= t("customs.taxOverrideDescription") %></h4>
+            </div>
+          </div>
+          <div class="tax-grid">
+            <% for (const control of taxControls) { %>
+              <label class="tax-control">
+                <input type="hidden" name="taxOverrideKey[]" value="<%= control.key %>" />
+                <span><%= control.label %></span>
+                <small><%= t("calculator.taxDefaultRate", { rate: control.defaultLabel }) %></small>
+                <select name="taxOverrideRate[]">
+                  <% for (const option of taxOverrideOptions) { %>
+                    <option value="<%= option.value %>" <%= String(formData.taxOverrides?.[control.key] || "default") === String(option.value) ? "selected" : "" %>>
+                      <%= option.label %>
+                    </option>
+                  <% } %>
+                </select>
+              </label>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+
+      <div class="actions">
+        <button type="submit"><%= t("common.calculate") %></button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel results-panel">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow"><%= t("calculator.resultTitle") %></p>
+        <h3><%= t("customs.resultTitle") %></h3>
+      </div>
+      <div class="note-box">
+        <p><%= t("common.provider") %>: <strong><%= result?.exchangeRates?.provider || "Frankfurter" %></strong></p>
+        <p><%= t("common.exchangeDate") %>: <strong><%= result?.exchangeRates?.asOfDate || "—" %></strong></p>
+      </div>
+    </div>
+
+    <% if (!result) { %>
+      <div class="empty-state">
+        <h3><%= t("customs.resultEmptyTitle") %></h3>
+        <p><%= t("customs.resultEmptyDescription") %></p>
+      </div>
+    <% } else { %>
+      <section class="cards-grid">
+        <article class="summary-card accent">
+          <p><%= t("calculator.total") %></p>
+          <strong><%= result.total.toFixed(2) %> <%= result.quoteCurrency %></strong>
+          <small><%= result.priceMode === "aftertax" ? t("priceMode.aftertax") : t("priceMode.pretax") %></small>
+        </article>
+        <article class="summary-card">
+          <p><%= t("calculator.pretaxTotal") %></p>
+          <strong><%= result.pretaxTotal.toFixed(2) %> <%= result.quoteCurrency %></strong>
+        </article>
+        <article class="summary-card">
+          <p><%= t("calculator.aftertaxTotal") %></p>
+          <strong><%= result.afterTaxTotal.toFixed(2) %> <%= result.quoteCurrency %></strong>
+        </article>
+        <article class="summary-card">
+          <p><%= t("calculator.businessNature") %></p>
+          <strong><%= t(`businessNature.${result.businessNature === "handover_customs" ? "handoverCustoms" : "customsOnly"}`) %></strong>
+        </article>
+      </section>
+
+      <div class="result-meta-grid">
+        <div class="note-box">
+          <p class="meta-title"><%= t("customs.portLabel") %></p>
+          <strong><%= result.selectedPort?.name || t("common.notConfigured") %></strong>
+        </div>
+        <div class="note-box">
+          <p class="meta-title"><%= t("customs.terminalLabel") %></p>
+          <strong><%= result.selectedTerminal?.name || t("common.notConfigured") %></strong>
+        </div>
+        <div class="note-box">
+          <p class="meta-title"><%= t("customs.yardLabel") %></p>
+          <strong><%= result.selectedYard?.name || t("common.notConfigured") %></strong>
+        </div>
+        <div class="note-box">
+          <p class="meta-title"><%= t("customs.storageDays") %></p>
+          <strong><%= t("customs.storageDaysValue", { days: result.storageDays }) %></strong>
+        </div>
+      </div>
+
+      <div class="formula-panel">
+        <p class="eyebrow"><%= t("calculator.totalFormula") %></p>
+        <code><%= result.totalFormula %></code>
+        <p><%= result.totalExplanation %></p>
+      </div>
+    <% } %>
+  </section>
+</section>
+
+<% if (result) { %>
+  <section class="breakdown-grid">
+    <% for (const block of [result.terminalFixed, result.terminalStorage, result.yardDropoff, result.yardCustoms]) { %>
+      <article class="breakdown-card">
+        <div class="section-title compact">
+          <div>
+            <p class="eyebrow"><%= t("calculator.detailsTitle") %></p>
+            <h4><%= block.title %></h4>
+          </div>
+          <div class="mini-summary">
+            <span><%= t("calculator.itemPretax") %> <%= block.pretaxTotal.toFixed(2) %> <%= block.quoteCurrency %></span>
+            <span><%= t("calculator.itemAftertax") %> <%= block.afterTaxTotal.toFixed(2) %> <%= block.quoteCurrency %></span>
+            <strong><%= block.displayTotal.toFixed(2) %> <%= block.quoteCurrency %></strong>
+          </div>
+        </div>
+
+        <% if (!block.items.length) { %>
+          <p class="muted"><%= t("common.noCalculation") %></p>
+        <% } %>
+
+        <% for (const item of block.items) { %>
+          <div class="breakdown-item rich">
+            <div class="breakdown-main">
+              <strong><%= item.concept %></strong>
+              <% if (item.note) { %>
+                <p><%= item.note %></p>
+              <% } %>
+              <div class="formula-inline">
+                <span><%= t("calculator.formula") %></span>
+                <code><%= item.formula %></code>
+              </div>
+              <p><%= item.explanation %></p>
+              <% if (item.parts.length) { %>
+                <div class="part-list">
+                  <% for (const part of item.parts) { %>
+                    <span><%= part.summaryLabel %></span>
+                  <% } %>
+                </div>
+              <% } %>
+            </div>
+            <div class="amount-stack">
+              <span><%= t("calculator.itemTaxRate") %> <%= item.taxRateLabel %></span>
+              <span><%= t("calculator.itemPretax") %> <%= item.pretaxAmount.toFixed(2) %> <%= item.quoteCurrency %></span>
+              <span><%= t("calculator.itemAftertax") %> <%= item.afterTaxAmount.toFixed(2) %> <%= item.quoteCurrency %></span>
+              <strong><%= item.displayAmount.toFixed(2) %> <%= item.quoteCurrency %></strong>
+            </div>
+          </div>
+        <% } %>
+      </article>
+    <% } %>
+  </section>
+<% } %>
+
+<script id="container-group-data" type="application/json"><%- JSON.stringify(moduleData.containerTypes || []) %></script>
+<script id="calculator-i18n" type="application/json"><%- JSON.stringify({
+  containerType: t("calculator.containerType"),
+  quantity: t("calculator.quantity"),
+  removeRow: t("calculator.removeRow"),
+}) %></script>
+<script src="/calculator.js"></script>
+
+<%- include("partials/footer") %>

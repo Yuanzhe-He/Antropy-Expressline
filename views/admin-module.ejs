@@ -1,0 +1,319 @@
+<%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
+
+<section class="hero-card hero-split">
+  <div class="hero-copy">
+    <p class="eyebrow"><%= t("admin.eyebrow") %></p>
+    <h2><%= t("admin.shippingLineTitle") %></h2>
+    <p class="hero-text"><%= selectedModule.description %></p>
+  </div>
+  <div class="hero-side">
+    <div class="status-tile">
+      <span><%= t("common.status") %></span>
+      <strong><%= selectedModule.stateLabel %></strong>
+    </div>
+    <div class="status-tile">
+      <span><%= t("admin.shippingLineTable") %></span>
+      <strong><%= shippingLines.length %></strong>
+    </div>
+  </div>
+</section>
+
+<%- include("partials/admin-tabs", { modules, currentModuleKey, currentAdminSection, t }) %>
+
+<section class="admin-layout">
+  <aside class="panel admin-list">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow"><%= t("admin.lineList") %></p>
+        <h3><%= selectedModule.title %></h3>
+      </div>
+    </div>
+    <div class="admin-links">
+      <% for (const line of shippingLines) { %>
+        <a
+          class="<%= selectedLine?.id === line.id ? 'active' : '' %>"
+          href="/admin/<%= currentModuleKey %>/shipping-lines/<%= line.id %>"
+        >
+          <strong><%= line.name %></strong>
+          <span><%= t("admin.shippingLineCount", {
+            count: line.containerGroups.length,
+            rules: Object.values(line.demurrage.rulesByGroup || {}).reduce((sum, rules) => sum + rules.length, 0),
+          }) %></span>
+        </a>
+      <% } %>
+      <% if (!shippingLines.length) { %>
+        <div class="note-box">
+          <strong><%= t("admin.modulePlaceholderTitle") %></strong>
+          <p><%= t("admin.modulePlaceholderDescription") %></p>
+        </div>
+      <% } %>
+    </div>
+  </aside>
+
+  <section class="panel">
+    <% if (!selectedLine) { %>
+      <div class="empty-state">
+        <h3><%= t("admin.selectShippingLine") %></h3>
+        <p><%= shippingLines.length ? t("admin.selectShippingLineHint") : t("admin.noShippingLines") %></p>
+      </div>
+    <% } else { %>
+      <div class="section-title">
+        <div>
+          <p class="eyebrow"><%= selectedLine.notes?.code || selectedModule.title %></p>
+          <h3><%= selectedLine.name %></h3>
+        </div>
+        <div class="note-box">
+          <p><%= t("admin.containerTable") %>: <%= selectedLine.containerGroups.map((group) => group.label).join(" / ") %></p>
+        </div>
+      </div>
+
+      <form method="post" action="/admin/<%= currentModuleKey %>/shipping-lines/<%= selectedLine.id %>" class="stack-form">
+        <div class="grid-form">
+          <label class="checkbox-field">
+            <span><%= t("admin.invoiceOnly") %></span>
+            <input type="checkbox" name="invoiceToConsigneeOnly" <%= selectedLine.invoiceToConsigneeOnly ? "checked" : "" %> />
+          </label>
+
+          <label>
+            <span><%= t("admin.invoiceNote") %></span>
+            <input type="text" name="invoiceNote" value="<%= selectedLine.invoiceNote || '' %>" />
+          </label>
+
+          <label>
+            <span><%= t("admin.cutoffHandler") %></span>
+            <select name="demurrageCutoffHandledBy">
+              <% for (const option of demurrageCutoffOptions) { %>
+                <option value="<%= option.value %>" <%= selectedLine.demurrageCutoffHandledBy === option.value ? "selected" : "" %>>
+                  <%= option.label %>
+                </option>
+              <% } %>
+            </select>
+          </label>
+
+          <label class="checkbox-field">
+            <span><%= t("admin.benefitEnabled") %></span>
+            <input type="checkbox" name="benefitEnabled" <%= selectedLine.guarantee.benefitEnabled ? "checked" : "" %> />
+          </label>
+
+          <label>
+            <span><%= t("admin.benefitExpiresAt") %></span>
+            <input type="date" name="benefitExpiresAt" value="<%= selectedLine.guarantee.benefitExpiresAt || '' %>" />
+          </label>
+
+          <label class="full-width">
+            <span><%= t("admin.benefitNote") %></span>
+            <input type="text" name="benefitNote" value="<%= selectedLine.guarantee.benefitNote || '' %>" />
+          </label>
+        </div>
+
+        <div class="table-card">
+          <div class="section-title compact">
+            <div>
+              <p class="eyebrow">Garantia</p>
+              <h4><%= t("admin.guaranteeTitle") %></h4>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th><%= t("admin.taxRate") %></th>
+                <% for (const group of selectedLine.containerGroups || []) { %>
+                  <th><%= group.label %></th>
+                <% } %>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <select name="guaranteeTaxRate">
+                    <% for (const preset of moduleData.taxRatePresets) { %>
+                      <option value="<%= preset.rate %>" <%= String(selectedLine.guarantee.taxRate) === String(preset.rate) ? "selected" : "" %>>
+                        <%= preset.label %>
+                      </option>
+                    <% } %>
+                  </select>
+                </td>
+                <% for (const group of selectedLine.containerGroups || []) { %>
+                  <% const rate = selectedLine.guarantee.ratesByGroup?.[group.key]; %>
+                  <td>
+                    <% if (rate) { %>
+                      <div class="rate-cell">
+                        <input type="number" min="0" step="0.01" name="guarantee_<%= group.key %>_rate" value="<%= rate.rate %>" />
+                        <select name="guarantee_<%= group.key %>_currency">
+                          <% for (const option of currencyOptions) { %>
+                            <option value="<%= option.code %>" <%= rate.currency === option.code ? "selected" : "" %>>
+                              <%= option.label %>
+                            </option>
+                          <% } %>
+                        </select>
+                      </div>
+                    <% } %>
+                  </td>
+                <% } %>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-card">
+          <div class="section-title compact">
+            <div>
+              <p class="eyebrow">Local Charges</p>
+              <h4><%= t("admin.localChargesTitle") %></h4>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th><%= t("admin.item") %></th>
+                <th><%= t("admin.taxRate") %></th>
+                <th>BL</th>
+                <% for (const group of selectedLine.containerGroups || []) { %>
+                  <th><%= group.label %></th>
+                <% } %>
+              </tr>
+            </thead>
+            <tbody>
+              <% for (const charge of selectedLine.localCharges || []) { %>
+                <tr>
+                  <td><%= charge.concept %></td>
+                  <td>
+                    <select name="charge_tax_<%= charge.id %>">
+                      <% for (const preset of moduleData.taxRatePresets) { %>
+                        <option value="<%= preset.rate %>" <%= String(charge.taxRate) === String(preset.rate) ? "selected" : "" %>>
+                          <%= preset.label %>
+                        </option>
+                      <% } %>
+                    </select>
+                  </td>
+                  <td>
+                    <% if (charge.blRate) { %>
+                      <div class="rate-cell">
+                        <input type="number" min="0" step="0.01" name="charge_bl_<%= charge.id %>_rate" value="<%= charge.blRate.rate %>" />
+                        <select name="charge_bl_<%= charge.id %>_currency">
+                          <% for (const option of currencyOptions) { %>
+                            <option value="<%= option.code %>" <%= charge.blRate.currency === option.code ? "selected" : "" %>>
+                              <%= option.label %>
+                            </option>
+                          <% } %>
+                        </select>
+                      </div>
+                    <% } %>
+                  </td>
+                  <% for (const group of selectedLine.containerGroups || []) { %>
+                    <% const rate = charge.groupRates?.[group.key]; %>
+                    <td>
+                      <% if (rate) { %>
+                        <div class="rate-cell">
+                          <input type="number" min="0" step="0.01" name="charge_<%= charge.id %>_<%= group.key %>_rate" value="<%= rate.rate %>" />
+                          <select name="charge_<%= charge.id %>_<%= group.key %>_currency">
+                            <% for (const option of currencyOptions) { %>
+                              <option value="<%= option.code %>" <%= rate.currency === option.code ? "selected" : "" %>>
+                                <%= option.label %>
+                              </option>
+                            <% } %>
+                          </select>
+                        </div>
+                      <% } %>
+                    </td>
+                  <% } %>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-card">
+          <div class="section-title compact">
+            <div>
+              <p class="eyebrow">Demoras</p>
+              <h4><%= t("admin.demurrageTitle") %></h4>
+            </div>
+          </div>
+          <div class="stack-form">
+            <% for (const group of selectedLine.containerGroups || []) { %>
+              <% const rules = selectedLine.demurrage.rulesByGroup?.[group.key] || []; %>
+              <div class="table-card nested-card">
+                <div class="section-title compact">
+                  <div>
+                    <p class="eyebrow"><%= t("admin.groupLabel") %></p>
+                    <h4><%= group.label %></h4>
+                  </div>
+                  <button
+                    type="submit"
+                    class="ghost-button compact-button"
+                    formaction="/admin/<%= currentModuleKey %>/shipping-lines/<%= selectedLine.id %>/demurrage/<%= group.key %>/add"
+                    formmethod="post"
+                  ><%= t("admin.addRule") %></button>
+                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Label</th>
+                      <th><%= t("admin.startDay") %></th>
+                      <th><%= t("admin.endDay") %></th>
+                      <th><%= t("admin.taxRate") %></th>
+                      <th><%= t("admin.amount") %></th>
+                      <th><%= t("admin.currency") %></th>
+                      <th><%= t("admin.actions") %></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% for (const rule of rules) { %>
+                      <tr>
+                        <td><%= rule.label %><%= rule.freeRule ? ` (${t("admin.freeRule")})` : "" %></td>
+                        <td>
+                          <input type="number" min="0" step="1" value="<%= rule.startDay ?? '' %>" readonly />
+                        </td>
+                        <td>
+                          <input type="number" min="0" step="1" name="rule_<%= group.key %>_<%= rule.id %>_end" value="<%= rule.endDay ?? '' %>" placeholder="<%= t("admin.emptyEndDay") %>" />
+                        </td>
+                        <td>
+                          <select name="rule_<%= group.key %>_<%= rule.id %>_tax">
+                            <% for (const preset of moduleData.taxRatePresets) { %>
+                              <option value="<%= preset.rate %>" <%= String(rule.taxRate) === String(preset.rate) ? "selected" : "" %>>
+                                <%= preset.label %>
+                              </option>
+                            <% } %>
+                          </select>
+                        </td>
+                        <td>
+                          <input type="number" min="0" step="0.01" name="rule_<%= group.key %>_<%= rule.id %>_rate" value="<%= rule.rateConfig.rate %>" />
+                        </td>
+                        <td>
+                          <select name="rule_<%= group.key %>_<%= rule.id %>_currency">
+                            <% for (const option of currencyOptions) { %>
+                              <option value="<%= option.code %>" <%= rule.rateConfig.currency === option.code ? "selected" : "" %>>
+                                <%= option.label %>
+                              </option>
+                            <% } %>
+                          </select>
+                        </td>
+                        <td>
+                          <button
+                            type="submit"
+                            class="ghost-button compact-button"
+                            formaction="/admin/<%= currentModuleKey %>/shipping-lines/<%= selectedLine.id %>/demurrage/<%= group.key %>/<%= rule.id %>/delete"
+                            formmethod="post"
+                            <%= rules.length <= 1 ? "disabled" : "" %>
+                          ><%= t("admin.deleteRule") %></button>
+                        </td>
+                      </tr>
+                    <% } %>
+                  </tbody>
+                </table>
+                <p class="helper-text"><%= t("admin.autoSequentialHint") %></p>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit"><%= t("admin.saveShippingLine") %></button>
+        </div>
+      </form>
+    <% } %>
+  </section>
+</section>
+
+<%- include("partials/footer") %>

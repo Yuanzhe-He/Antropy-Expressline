@@ -1,0 +1,17 @@
+{
+  "name": "jose-expressline-consulting",
+  "version": "1.0.0",
+  "description": "Cost calculator and admin portal for shipping line release fees.",
+  "main": "src/server.js",
+  "scripts": {
+    "build:data": "python3 scripts/extract_tariff.py",
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "node scripts/smoke-test.js"
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1"
+  }
+}

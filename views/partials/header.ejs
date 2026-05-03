@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="<%= lang === 'zh' ? 'zh-CN' : 'es' %>">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-top">
+          <div class="brand-block">
+            <span class="brand-mark">JX</span>
+            <div>
+              <p class="eyebrow"><%= t("app.brand") %></p>
+              <h1><%= t("app.name") %></h1>
+              <p class="sidebar-subtitle"><%= t("app.subtitle") %></p>
+            </div>
+          </div>
+
+          <form method="post" action="/preferences/language" class="language-switcher">
+            <input type="hidden" name="returnTo" value="<%= languageReturnTo %>" />
+            <% for (const option of languageOptions) { %>
+              <button
+                type="submit"
+                name="language"
+                value="<%= option.code %>"
+                class="<%= lang === option.code ? 'is-active' : '' %>"
+              >
+                <%= option.label %>
+              </button>
+            <% } %>
+          </form>
+
+          <% if (user) { %>
+            <section class="nav-section">
+              <p class="section-label"><%= t("nav.workspaces") %></p>
+              <nav class="workspace-nav">
+                <% for (const module of modules) { %>
+                  <a
+                    class="workspace-link <%= currentArea === 'sales' && currentModuleKey === module.key ? 'active' : '' %>"
+                    href="<%= module.salesHref %>"
+                  >
+                    <span class="workspace-link-top">
+                      <strong><%= module.title %></strong>
+                      <em><%= module.stateLabel %></em>
+                    </span>
+                    <small><%= module.subtitle %></small>
+                  </a>
+                <% } %>
+              </nav>
+            </section>
+
+            <section class="nav-section">
+              <p class="section-label"><%= t("nav.management") %></p>
+              <nav class="workspace-nav">
+                <a
+                  class="workspace-link <%= currentArea === 'admin' ? 'active' : '' %>"
+                  href="/admin/<%= currentModuleKey || modules[0].key %>/settings"
+                >
+                  <span class="workspace-link-top">
+                    <strong><%= t("nav.admin") %></strong>
+                    <em><%= currentModule ? currentModule.stateLabel : modules[0].stateLabel %></em>
+                  </span>
+                  <small><%= currentModule ? currentModule.title : modules[0].title %></small>
+                </a>
+              </nav>
+            </section>
+          <% } %>
+        </div>
+
+        <% if (user) { %>
+          <div class="user-card">
+            <div>
+              <p class="eyebrow"><%= userRoleLabel %></p>
+              <strong><%= user.name %></strong>
+              <p><%= user.username %></p>
+            </div>
+            <form method="post" action="/logout">
+              <button class="ghost-button wide-button" type="submit"><%= t("nav.logout") %></button>
+            </form>
+          </div>
+        <% } %>
+      </aside>
+      <main class="content">
+        <% if (flash) { %>
+          <div class="flash flash-<%= flash.type %>"><%= flash.message %></div>
+        <% } %>

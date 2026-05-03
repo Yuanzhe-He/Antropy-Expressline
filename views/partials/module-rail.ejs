@@ -1,0 +1,12 @@
+<% const hrefKey = variant === "admin" ? "adminSettingsHref" : "salesHref"; %>
+<nav class="module-rail">
+  <% for (const module of modules) { %>
+    <a
+      class="module-pill <%= currentModuleKey === module.key ? 'active' : '' %>"
+      href="<%= module[hrefKey] %>"
+    >
+      <span><%= module.title %></span>
+      <small><%= module.subtitle %></small>
+    </a>
+  <% } %>
+</nav>

@@ -1,0 +1,278 @@
+<%- include('partials/header', { currentPath, user, flash }) %>
+<section class="hero-card">
+  <div>
+    <p class="eyebrow">后台维护</p>
+    <h2>船公司表</h2>
+    <p>每个船公司维护自己的柜型费率、押金、阶梯 demoras、发票限制和 corte 规则。</p>
+  </div>
+</section>
+
+<%- include('partials/admin-tabs', { currentPath }) %>
+
+<section class="admin-layout">
+  <aside class="panel admin-list">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow">船公司</p>
+        <h3>配置列表</h3>
+      </div>
+    </div>
+    <div class="admin-links">
+      <% for (const line of shippingLines) { %>
+        <a class="<%= selectedLine?.id === line.id ? 'active' : '' %>" href="/admin/shipping-lines/<%= line.id %>">
+          <strong><%= line.name %></strong>
+          <span><%= line.containerGroups.length %> 个柜型 / <%= Object.values(line.demurrage.rulesByGroup || {}).reduce((sum, rules) => sum + rules.length, 0) %> 条 demoras 规则</span>
+        </a>
+      <% } %>
+    </div>
+  </aside>
+
+  <section class="panel">
+    <% if (!selectedLine) { %>
+      <div class="empty-state">
+        <h3>请选择一个船公司</h3>
+        <p>左侧选择后可编辑该船公司的费用结构。</p>
+      </div>
+    <% } else { %>
+      <div class="section-title">
+        <div>
+          <p class="eyebrow"><%= selectedLine.notes?.code || 'Config' %></p>
+          <h3><%= selectedLine.name %></h3>
+        </div>
+        <div class="note-box">
+          <p>柜型：<%= selectedLine.containerGroups.map((group) => group.label).join(' / ') %></p>
+        </div>
+      </div>
+
+      <form method="post" action="/admin/shipping-lines/<%= selectedLine.id %>" class="stack-form">
+        <div class="grid-form">
+          <label>
+            <span>只能开发票给客户/收货人</span>
+            <input type="checkbox" name="invoiceToConsigneeOnly" <%= selectedLine.invoiceToConsigneeOnly ? 'checked' : '' %> />
+          </label>
+
+          <label>
+            开票说明
+            <input type="text" name="invoiceNote" value="<%= selectedLine.invoiceNote || '' %>" />
+          </label>
+
+          <label>
+            Corte de demoras 谁能做
+            <select name="demurrageCutoffHandledBy">
+              <% for (const option of demurrageCutoffOptions) { %>
+                <option value="<%= option.value %>" <%= selectedLine.demurrageCutoffHandledBy === option.value ? 'selected' : '' %>>
+                  <%= option.label %>
+                </option>
+              <% } %>
+            </select>
+          </label>
+
+          <label>
+            <span>启用免押金/信用</span>
+            <input type="checkbox" name="benefitEnabled" <%= selectedLine.guarantee.benefitEnabled ? 'checked' : '' %> />
+          </label>
+
+          <label>
+            免押金截止日期
+            <input type="date" name="benefitExpiresAt" value="<%= selectedLine.guarantee.benefitExpiresAt || '' %>" />
+          </label>
+
+          <label class="full-width">
+            押金备注
+            <input type="text" name="benefitNote" value="<%= selectedLine.guarantee.benefitNote || '' %>" />
+          </label>
+        </div>
+
+        <div class="table-card">
+          <div class="section-title compact">
+            <div>
+              <p class="eyebrow">Garantia</p>
+              <h4>押金配置</h4>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>税率</th>
+                <% for (const group of selectedLine.containerGroups || []) { %>
+                  <th><%= group.label %></th>
+                <% } %>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <select name="guaranteeTaxRate">
+                    <% for (const preset of taxRatePresets) { %>
+                      <option value="<%= preset.rate %>" <%= String(selectedLine.guarantee.taxRate) === String(preset.rate) ? 'selected' : '' %>>
+                        <%= preset.label %>
+                      </option>
+                    <% } %>
+                  </select>
+                </td>
+                <% for (const group of selectedLine.containerGroups || []) { %>
+                  <% const rate = selectedLine.guarantee.ratesByGroup?.[group.key]; %>
+                  <td>
+                    <% if (rate) { %>
+                      <div class="rate-cell">
+                        <input type="number" min="0" step="0.01" name="guarantee_<%= group.key %>_rate" value="<%= rate.rate %>" />
+                        <select name="guarantee_<%= group.key %>_currency">
+                          <% for (const option of currencyOptions) { %>
+                            <option value="<%= option.code %>" <%= rate.currency === option.code ? 'selected' : '' %>>
+                              <%= option.label %>
+                            </option>
+                          <% } %>
+                        </select>
+                      </div>
+                    <% } %>
+                  </td>
+                <% } %>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-card">
+          <div class="section-title compact">
+            <div>
+              <p class="eyebrow">Local Charges</p>
+              <h4>本地费用</h4>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>项目</th>
+                <th>税率</th>
+                <th>BL</th>
+                <% for (const group of selectedLine.containerGroups || []) { %>
+                  <th><%= group.label %></th>
+                <% } %>
+              </tr>
+            </thead>
+            <tbody>
+              <% for (const charge of selectedLine.localCharges || []) { %>
+                <tr>
+                  <td><%= charge.concept %></td>
+                  <td>
+                    <select name="charge_tax_<%= charge.id %>">
+                      <% for (const preset of taxRatePresets) { %>
+                        <option value="<%= preset.rate %>" <%= String(charge.taxRate) === String(preset.rate) ? 'selected' : '' %>>
+                          <%= preset.label %>
+                        </option>
+                      <% } %>
+                    </select>
+                  </td>
+                  <td>
+                    <% if (charge.blRate) { %>
+                      <div class="rate-cell">
+                        <input type="number" min="0" step="0.01" name="charge_bl_<%= charge.id %>_rate" value="<%= charge.blRate.rate %>" />
+                        <select name="charge_bl_<%= charge.id %>_currency">
+                          <% for (const option of currencyOptions) { %>
+                            <option value="<%= option.code %>" <%= charge.blRate.currency === option.code ? 'selected' : '' %>>
+                              <%= option.label %>
+                            </option>
+                          <% } %>
+                        </select>
+                      </div>
+                    <% } %>
+                  </td>
+                  <% for (const group of selectedLine.containerGroups || []) { %>
+                    <% const rate = charge.groupRates?.[group.key]; %>
+                    <td>
+                      <% if (rate) { %>
+                        <div class="rate-cell">
+                          <input type="number" min="0" step="0.01" name="charge_<%= charge.id %>_<%= group.key %>_rate" value="<%= rate.rate %>" />
+                          <select name="charge_<%= charge.id %>_<%= group.key %>_currency">
+                            <% for (const option of currencyOptions) { %>
+                              <option value="<%= option.code %>" <%= rate.currency === option.code ? 'selected' : '' %>>
+                                <%= option.label %>
+                              </option>
+                            <% } %>
+                          </select>
+                        </div>
+                      <% } %>
+                    </td>
+                  <% } %>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-card">
+          <div class="section-title compact">
+            <div>
+              <p class="eyebrow">Demoras</p>
+              <h4>按箱型维护阶梯累进规则</h4>
+            </div>
+          </div>
+          <div class="stack-form">
+            <% for (const group of selectedLine.containerGroups || []) { %>
+              <% const rules = selectedLine.demurrage.rulesByGroup?.[group.key] || []; %>
+              <div class="table-card nested-card">
+                <div class="section-title compact">
+                  <div>
+                    <p class="eyebrow">箱型</p>
+                    <h4><%= group.label %></h4>
+                  </div>
+                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>区间标签</th>
+                      <th>起始天</th>
+                      <th>结束天</th>
+                      <th>税率</th>
+                      <th>金额</th>
+                      <th>币种</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% for (const rule of rules) { %>
+                      <tr>
+                        <td><%= rule.label %><%= rule.freeRule ? '（免费）' : '' %></td>
+                        <td>
+                          <input type="number" min="0" step="1" name="rule_start_<%= group.key %>_<%= rule.id %>" value="<%= rule.startDay ?? '' %>" />
+                        </td>
+                        <td>
+                          <input type="number" min="0" step="1" name="rule_end_<%= group.key %>_<%= rule.id %>" value="<%= rule.endDay ?? '' %>" placeholder="留空表示无限" />
+                        </td>
+                        <td>
+                          <select name="rule_tax_<%= group.key %>_<%= rule.id %>">
+                            <% for (const preset of taxRatePresets) { %>
+                              <option value="<%= preset.rate %>" <%= String(rule.taxRate) === String(preset.rate) ? 'selected' : '' %>>
+                                <%= preset.label %>
+                              </option>
+                            <% } %>
+                          </select>
+                        </td>
+                        <td>
+                          <input type="number" min="0" step="0.01" name="rule_<%= group.key %>_<%= rule.id %>_rate" value="<%= rule.rateConfig.rate %>" />
+                        </td>
+                        <td>
+                          <select name="rule_<%= group.key %>_<%= rule.id %>_currency">
+                            <% for (const option of currencyOptions) { %>
+                              <option value="<%= option.code %>" <%= rule.rateConfig.currency === option.code ? 'selected' : '' %>>
+                                <%= option.label %>
+                              </option>
+                            <% } %>
+                          </select>
+                        </td>
+                      </tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit">保存配置</button>
+        </div>
+      </form>
+    <% } %>
+  </section>
+</section>
+<%- include('partials/footer') %>

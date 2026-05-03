@@ -1,0 +1,9 @@
+<%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
+<section class="panel panel-narrow panel-centered">
+  <div class="empty-state">
+    <p class="eyebrow">403</p>
+    <h2><%= t("system.forbiddenTitle") %></h2>
+    <p><%= t("system.forbiddenDescription") %></p>
+  </div>
+</section>
+<%- include("partials/footer") %>

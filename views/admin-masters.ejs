@@ -1,0 +1,168 @@
+<%- include('partials/header', { currentPath, user, flash }) %>
+<section class="hero-card">
+  <div>
+    <p class="eyebrow">后台维护</p>
+    <h2>基础表</h2>
+    <p>这里集中维护汇率表、税率表，并查看船公司和柜型的基础结构。</p>
+  </div>
+</section>
+
+<%- include('partials/admin-tabs', { currentPath }) %>
+
+<section class="stack-form">
+  <section class="panel">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow">船公司表</p>
+        <h3>船公司概览</h3>
+      </div>
+    </div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>船公司</th>
+            <th>柜型数</th>
+            <th>Local Charges</th>
+            <th>Demoras 阶梯</th>
+            <th>发票限制</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const line of shippingData.shippingLines) { %>
+            <tr>
+              <td><a href="/admin/shipping-lines/<%= line.id %>"><%= line.name %></a></td>
+              <td><%= line.containerGroups.length %></td>
+              <td><%= line.localCharges.length %></td>
+              <td><%= Object.values(line.demurrage.rulesByGroup || {}).reduce((sum, rules) => sum + rules.length, 0) %></td>
+              <td><%= line.invoiceToConsigneeOnly ? '只能给客户/收货人' : '可转开' %></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow">柜型表</p>
+        <h3>柜型总览</h3>
+      </div>
+    </div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>柜型 Key</th>
+            <th>柜型名称</th>
+            <th>出现船公司数</th>
+            <th>船公司</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const type of shippingData.containerTypes) { %>
+            <tr>
+              <td><%= type.key %></td>
+              <td><%= type.label %></td>
+              <td><%= type.shippingLineCount %></td>
+              <td><%= type.shippingLines.join(' / ') %></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <form method="post" action="/admin/masters" class="stack-form">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">税率表</p>
+          <h3>税率预设与默认币种</h3>
+        </div>
+      </div>
+      <div class="grid-form">
+        <label>
+          默认汇总币种
+          <select name="defaultQuoteCurrency">
+            <% for (const option of currencyOptions) { %>
+              <option value="<%= option.code %>" <%= shippingData.settings.defaultQuoteCurrency === option.code ? 'selected' : '' %>>
+                <%= option.label %>
+              </option>
+            <% } %>
+          </select>
+        </label>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>预设 ID</th>
+              <th>显示名称</th>
+              <th>税率</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (const preset of [...shippingData.taxRatePresets, { id: '', label: '', rate: '' }]) { %>
+              <tr>
+                <td><input type="text" name="taxPresetId[]" value="<%= preset.id %>" /></td>
+                <td><input type="text" name="taxPresetLabel[]" value="<%= preset.label %>" /></td>
+                <td><input type="number" min="0" step="0.01" name="taxPresetRate[]" value="<%= preset.rate %>" /></td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+      <div class="actions">
+        <button type="submit">保存基础表</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="section-title">
+      <div>
+        <p class="eyebrow">汇率表</p>
+        <h3>USD / MXN 每日更新</h3>
+      </div>
+      <form method="post" action="/admin/masters/refresh-exchange-rates">
+        <button type="submit">立即刷新汇率</button>
+      </form>
+    </div>
+    <div class="note-box">
+      <p>来源：<strong><a href="<%= shippingData.exchangeRates.docsUrl %>" target="_blank" rel="noreferrer"><%= shippingData.exchangeRates.provider %></a></strong></p>
+      <p>汇率日期：<strong><%= shippingData.exchangeRates.asOfDate || '未更新' %></strong></p>
+      <p>最近检查：<strong><%= shippingData.exchangeRates.lastCheckedAt || '未检查' %></strong></p>
+      <% if (shippingData.exchangeRates.lastError) { %>
+        <p class="warning-text">最近一次刷新失败：<%= shippingData.exchangeRates.lastError %></p>
+      <% } %>
+    </div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Base</th>
+            <th>Quote</th>
+            <th>Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (const pair of shippingData.exchangeRates.pairs) { %>
+            <tr>
+              <td><%= pair.base %></td>
+              <td><%= pair.quote %></td>
+              <td><%= pair.rate %></td>
+            </tr>
+          <% } %>
+          <% if (!shippingData.exchangeRates.pairs.length) { %>
+            <tr>
+              <td colspan="3">还没有汇率数据，点击“立即刷新汇率”。</td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+<%- include('partials/footer') %>

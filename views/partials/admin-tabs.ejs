@@ -1,0 +1,18 @@
+<section class="stack-form">
+  <%- include("module-rail", { modules, currentModuleKey, variant: "admin" }) %>
+  <nav class="admin-tabs">
+    <a
+      class="<%= currentAdminSection === 'settings' ? 'active' : '' %>"
+      href="/admin/<%= currentModuleKey %>/settings"
+    >
+      <%= t("nav.moduleSettings") %>
+    </a>
+    <a
+      class="<%= currentAdminSection === 'shipping-lines' ? 'active' : '' %>"
+      href="/admin/<%= currentModuleKey %>/shipping-lines"
+    >
+      <%= t("nav.moduleRules") %>
+    </a>
+    <a href="/workbench/<%= currentModuleKey %>"><%= t("nav.backToSales") %></a>
+  </nav>
+</section>

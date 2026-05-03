@@ -1,0 +1,557 @@
+const assert = require("node:assert/strict");
+const fs = require("node:fs/promises");
+const path = require("node:path");
+
+process.env.SKIP_FX_REFRESH = "1";
+
+const { createApp } = require("../src/server");
+const { getShippingData } = require("../src/lib/store");
+
+const dataFile = path.join(__dirname, "../data/shipping-lines.json");
+
+class CookieJar {
+  constructor() {
+    this.cookies = new Map();
+  }
+
+  store(headers) {
+    const setCookies =
+      typeof headers.getSetCookie === "function"
+        ? headers.getSetCookie()
+        : headers.get("set-cookie")
+          ? headers.get("set-cookie").split(/,(?=[^;]+?=)/)
+          : [];
+
+    for (const cookie of setCookies) {
+      const [pair] = cookie.split(";");
+      const separator = pair.indexOf("=");
+      if (separator < 0) {
+        continue;
+      }
+      const name = pair.slice(0, separator).trim();
+      const value = pair.slice(separator + 1).trim();
+      this.cookies.set(name, value);
+    }
+  }
+
+  header() {
+    return [...this.cookies.entries()]
+      .map(([name, value]) => `${name}=${value}`)
+      .join("; ");
+  }
+}
+
+function buildFormBody(entries) {
+  const params = new URLSearchParams();
+  for (const [key, value] of entries) {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        params.append(key, item == null ? "" : String(item));
+      }
+      continue;
+    }
+    params.append(key, value == null ? "" : String(value));
+  }
+  return params;
+}
+
+async function request(baseUrl, urlPath, { method = "GET", formEntries, jar } = {}) {
+  const headers = {};
+  if (jar?.header()) {
+    headers.cookie = jar.header();
+  }
+
+  let body;
+  if (formEntries) {
+    body = buildFormBody(formEntries);
+    headers["content-type"] = "application/x-www-form-urlencoded";
+  }
+
+  const response = await fetch(`${baseUrl}${urlPath}`, {
+    method,
+    headers,
+    body,
+    redirect: "manual",
+  });
+
+  jar?.store(response.headers);
+  const text = await response.text();
+  return {
+    status: response.status,
+    location: response.headers.get("location"),
+    text,
+  };
+}
+
+function expectContains(haystack, needle, message) {
+  assert.ok(haystack.includes(needle), `${message}: missing "${needle}"`);
+}
+
+function buildHandoverAdminForm(moduleData, line) {
+  const entries = [
+    ["invoiceNote", line.invoiceNote || ""],
+    ["demurrageCutoffHandledBy", line.demurrageCutoffHandledBy],
+    ["benefitExpiresAt", line.guarantee.benefitExpiresAt || ""],
+    ["benefitNote", line.guarantee.benefitNote || ""],
+    ["guaranteeTaxRate", line.guarantee.taxRate],
+  ];
+
+  if (line.invoiceToConsigneeOnly) {
+    entries.push(["invoiceToConsigneeOnly", "on"]);
+  }
+  if (line.guarantee.benefitEnabled) {
+    entries.push(["benefitEnabled", "on"]);
+  }
+
+  for (const charge of line.localCharges || []) {
+    entries.push([`charge_tax_${charge.id}`, charge.taxRate]);
+    if (charge.blRate) {
+      entries.push([`charge_bl_${charge.id}_rate`, charge.blRate.rate]);
+      entries.push([`charge_bl_${charge.id}_currency`, charge.blRate.currency]);
+    }
+    for (const group of line.containerGroups || []) {
+      const rate = charge.groupRates?.[group.key];
+      if (!rate) {
+        continue;
+      }
+      entries.push([`charge_${charge.id}_${group.key}_rate`, rate.rate]);
+      entries.push([`charge_${charge.id}_${group.key}_currency`, rate.currency]);
+    }
+  }
+
+  for (const group of line.containerGroups || []) {
+    const rate = line.guarantee.ratesByGroup?.[group.key];
+    if (!rate) {
+      continue;
+    }
+    entries.push([`guarantee_${group.key}_rate`, rate.rate]);
+    entries.push([`guarantee_${group.key}_currency`, rate.currency]);
+  }
+
+  for (const group of line.containerGroups || []) {
+    for (const rule of line.demurrage.rulesByGroup?.[group.key] || []) {
+      entries.push([`rule_${group.key}_${rule.id}_end`, rule.endDay ?? ""]);
+      entries.push([`rule_${group.key}_${rule.id}_tax`, rule.taxRate]);
+      entries.push([`rule_${group.key}_${rule.id}_rate`, rule.rateConfig?.rate ?? 0]);
+      entries.push([
+        `rule_${group.key}_${rule.id}_currency`,
+        rule.rateConfig?.currency || "MXN",
+      ]);
+    }
+  }
+
+  return entries;
+}
+
+function buildCustomsAdminForm(moduleData) {
+  const entries = [];
+
+  for (const line of moduleData.shippingLines || []) {
+    entries.push([`customs_line_note_${line.id}`, line.notes || ""]);
+    for (const yardId of line.yardIds || []) {
+      entries.push([`shippingLine_yardIds_${line.id}`, yardId]);
+    }
+  }
+
+  for (const port of moduleData.ports || []) {
+    entries.push([`port_name_${port.id}`, port.name]);
+    entries.push([`port_note_${port.id}`, port.note || ""]);
+    for (const terminal of port.terminals || []) {
+      entries.push([`terminal_name_${terminal.id}`, terminal.name]);
+      entries.push([`terminal_note_${terminal.id}`, terminal.note || ""]);
+      for (const charge of terminal.fixedCharges || []) {
+        entries.push([`terminal_charge_concept_${terminal.id}_${charge.id}`, charge.concept]);
+        entries.push([`terminal_charge_note_${terminal.id}_${charge.id}`, charge.note || ""]);
+        entries.push([`terminal_charge_tax_${terminal.id}_${charge.id}`, charge.taxRate]);
+        for (const type of moduleData.containerTypes || []) {
+          const rate = charge.groupRates?.[type.key];
+          if (!rate) {
+            continue;
+          }
+          entries.push([
+            `terminal_charge_${terminal.id}_${charge.id}_${type.key}_rate`,
+            rate.rate,
+          ]);
+          entries.push([
+            `terminal_charge_${terminal.id}_${charge.id}_${type.key}_currency`,
+            rate.currency,
+          ]);
+        }
+      }
+
+      for (const type of moduleData.containerTypes || []) {
+        for (const rule of terminal.storageRulesByContainer?.[type.key] || []) {
+          entries.push([
+            `terminal_rule_${terminal.id}_${type.key}_${rule.id}_end`,
+            rule.endDay ?? "",
+          ]);
+          entries.push([
+            `terminal_rule_${terminal.id}_${type.key}_${rule.id}_tax`,
+            rule.taxRate,
+          ]);
+          entries.push([
+            `terminal_rule_${terminal.id}_${type.key}_${rule.id}_rate`,
+            rule.rateConfig?.rate ?? 0,
+          ]);
+          entries.push([
+            `terminal_rule_${terminal.id}_${type.key}_${rule.id}_currency`,
+            rule.rateConfig?.currency || "MXN",
+          ]);
+        }
+      }
+    }
+  }
+
+  for (const yard of moduleData.yards || []) {
+    entries.push([`yard_name_${yard.id}`, yard.name]);
+    entries.push([`yard_note_${yard.id}`, yard.note || ""]);
+    for (const portId of yard.portIds || []) {
+      entries.push([`yard_portIds_${yard.id}`, portId]);
+    }
+    for (const shippingLineId of yard.shippingLineIds || []) {
+      entries.push([`yard_shippingLineIds_${yard.id}`, shippingLineId]);
+    }
+
+    for (const charge of yard.dropoffCharges || []) {
+      entries.push([`yard_dropoff_concept_${yard.id}_${charge.id}`, charge.concept]);
+      entries.push([`yard_dropoff_note_${yard.id}_${charge.id}`, charge.note || ""]);
+      entries.push([`yard_dropoff_tax_${yard.id}_${charge.id}`, charge.taxRate]);
+      for (const type of moduleData.containerTypes || []) {
+        const rate = charge.groupRates?.[type.key];
+        if (!rate) {
+          continue;
+        }
+        entries.push([`yard_dropoff_${yard.id}_${charge.id}_${type.key}_rate`, rate.rate]);
+        entries.push([
+          `yard_dropoff_${yard.id}_${charge.id}_${type.key}_currency`,
+          rate.currency,
+        ]);
+      }
+    }
+
+    for (const charge of yard.customsCharges || []) {
+      entries.push([`yard_customs_concept_${yard.id}_${charge.id}`, charge.concept]);
+      entries.push([`yard_customs_note_${yard.id}_${charge.id}`, charge.note || ""]);
+      entries.push([`yard_customs_tax_${yard.id}_${charge.id}`, charge.taxRate]);
+      for (const type of moduleData.containerTypes || []) {
+        const rate = charge.groupRates?.[type.key];
+        if (!rate) {
+          continue;
+        }
+        entries.push([`yard_customs_${yard.id}_${charge.id}_${type.key}_rate`, rate.rate]);
+        entries.push([
+          `yard_customs_${yard.id}_${charge.id}_${type.key}_currency`,
+          rate.currency,
+        ]);
+      }
+    }
+  }
+
+  return entries;
+}
+
+async function main() {
+  const originalData = await fs.readFile(dataFile, "utf8");
+  const seededData = JSON.parse(originalData);
+  seededData.exchangeRates = {
+    provider: seededData.exchangeRates?.provider || "Fixture",
+    docsUrl: seededData.exchangeRates?.docsUrl || "https://example.test/fx",
+    asOfDate: seededData.exchangeRates?.asOfDate || "2026-04-24",
+    lastCheckedAt: seededData.exchangeRates?.lastCheckedAt || "2026-04-24T00:00:00.000Z",
+    lastError: null,
+    defaultQuoteCurrency: "MXN",
+    pairs: [
+      { base: "USD", quote: "MXN", rate: 17.2 },
+      { base: "MXN", quote: "USD", rate: 1 / 17.2 },
+    ],
+  };
+  await fs.writeFile(dataFile, JSON.stringify(seededData, null, 2), "utf8");
+  const app = createApp();
+  const server = await new Promise((resolve) => {
+    const instance = app.listen(0, () => resolve(instance));
+  });
+  const port = server.address().port;
+  const baseUrl = `http://127.0.0.1:${port}`;
+
+  const adminJar = new CookieJar();
+  const salesJar = new CookieJar();
+
+  try {
+    let response = await request(baseUrl, "/login");
+    assert.equal(response.status, 200);
+    expectContains(response.text, "进入系统", "login page");
+
+    response = await request(baseUrl, "/login", {
+      method: "POST",
+      jar: adminJar,
+      formEntries: [
+        ["username", "admin"],
+        ["password", "admin123"],
+      ],
+    });
+    assert.equal(response.status, 302);
+    assert.equal(response.location, "/workbench/handover");
+
+    response = await request(baseUrl, "/login", {
+      method: "POST",
+      jar: salesJar,
+      formEntries: [
+        ["username", "sales"],
+        ["password", "sales123"],
+      ],
+    });
+    assert.equal(response.status, 302);
+
+    response = await request(baseUrl, "/workbench/handover", { jar: adminJar });
+    assert.equal(response.status, 200);
+    expectContains(response.text, "业务性质", "handover page");
+    expectContains(response.text, "税率覆盖", "handover tax overrides");
+    expectContains(response.text, "data-add-row", "handover add row button");
+
+    response = await request(baseUrl, "/workbench/handover", {
+      method: "POST",
+      jar: adminJar,
+      formEntries: [
+        ["shippingLineId", "cma-cgm"],
+        ["businessNature", "handover_customs"],
+        ["blCount", 1],
+        ["demurrageDays", 9],
+        ["priceMode", "aftertax"],
+        ["quoteCurrency", "MXN"],
+        ["containerGroupKey[]", "gp-hq-dc"],
+        ["containerCount[]", 2],
+      ],
+    });
+    assert.equal(response.status, 200);
+    expectContains(response.text, "继续到清关", "continuous workflow CTA");
+    expectContains(response.text, "换单 + 清关连续业务", "business nature result");
+
+    response = await request(baseUrl, "/workbench/customs?useLinked=1", {
+      jar: adminJar,
+    });
+    assert.equal(response.status, 200);
+    expectContains(response.text, "清关一页式工作台", "customs page");
+    expectContains(response.text, 'value="cma-cgm" selected', "linked shipping line");
+    expectContains(response.text, 'value="gp-hq-dc" selected', "linked container type");
+
+    response = await request(baseUrl, "/workbench/customs", {
+      method: "POST",
+      jar: adminJar,
+      formEntries: [
+        ["businessNature", "handover_customs"],
+        ["shippingLineId", "cma-cgm"],
+        ["portId", "manzanillo"],
+        ["terminalId", "contecon-manzanillo"],
+        ["yardId", "yard-mzo-norte"],
+        ["storageDays", 12],
+        ["priceMode", "aftertax"],
+        ["quoteCurrency", "MXN"],
+        ["containerGroupKey[]", "gp-hq-dc"],
+        ["containerCount[]", 2],
+      ],
+    });
+    assert.equal(response.status, 200);
+    expectContains(response.text, "码头固定费", "customs fixed fee");
+    expectContains(response.text, "落柜", "customs dropoff");
+    expectContains(response.text, "清关堆场费", "customs yard fee");
+
+    response = await request(baseUrl, "/admin/customs/shipping-lines", {
+      jar: salesJar,
+    });
+    assert.equal(response.status, 200);
+    expectContains(response.text, "船公司与场站映射", "sales admin access");
+    expectContains(response.text, "新增阶梯", "customs add rule button");
+
+    response = await request(baseUrl, "/admin/handover/shipping-lines/cma-cgm", {
+      jar: adminJar,
+    });
+    assert.equal(response.status, 200);
+    expectContains(response.text, "新增阶梯", "handover add rule button");
+
+    response = await request(baseUrl, "/workbench/handover", {
+      method: "POST",
+      jar: adminJar,
+      formEntries: [
+        ["shippingLineId", "cma-cgm"],
+        ["businessNature", "handover_only"],
+        ["blCount", -3],
+        ["demurrageDays", -9],
+        ["priceMode", "pretax"],
+        ["quoteCurrency", "MXN"],
+        ["containerGroupKey[]", "gp-hq-dc"],
+        ["containerCount[]", -2],
+      ],
+    });
+    assert.equal(response.status, 200);
+    expectContains(response.text, "总数", "negative handover input still renders");
+
+    let shippingData = await getShippingData();
+    const handoverLine = shippingData.modules.handover.shippingLines[0];
+    const handoverGroupKey = handoverLine.containerGroups[0].key;
+    const beforeHandoverRuleCount =
+      handoverLine.demurrage.rulesByGroup[handoverGroupKey].length;
+
+    response = await request(
+      baseUrl,
+      `/admin/handover/shipping-lines/${handoverLine.id}/demurrage/${handoverGroupKey}/add`,
+      {
+        method: "POST",
+        jar: adminJar,
+      }
+    );
+    assert.equal(response.status, 302);
+
+    shippingData = await getShippingData();
+    const afterAddHandoverCount =
+      shippingData.modules.handover.shippingLines[0].demurrage.rulesByGroup[handoverGroupKey]
+        .length;
+    assert.equal(afterAddHandoverCount, beforeHandoverRuleCount + 1);
+
+    const addedHandoverRule =
+      shippingData.modules.handover.shippingLines[0].demurrage.rulesByGroup[handoverGroupKey]
+        .at(-1);
+    response = await request(
+      baseUrl,
+      `/admin/handover/shipping-lines/${handoverLine.id}/demurrage/${handoverGroupKey}/${addedHandoverRule.id}/delete`,
+      {
+        method: "POST",
+        jar: adminJar,
+      }
+    );
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    assert.equal(
+      shippingData.modules.handover.shippingLines[0].demurrage.rulesByGroup[handoverGroupKey]
+        .length,
+      beforeHandoverRuleCount
+    );
+
+    const invalidHandoverForm = buildHandoverAdminForm(
+      shippingData.modules.handover,
+      shippingData.modules.handover.shippingLines[0]
+    );
+    const firstHandoverRule =
+      shippingData.modules.handover.shippingLines[0].demurrage.rulesByGroup[handoverGroupKey][0];
+    const invalidIndex = invalidHandoverForm.findIndex(
+      ([key]) => key === `rule_${handoverGroupKey}_${firstHandoverRule.id}_end`
+    );
+    invalidHandoverForm[invalidIndex][1] = 0;
+
+    response = await request(
+      baseUrl,
+      `/admin/handover/shipping-lines/${handoverLine.id}`,
+      {
+        method: "POST",
+        jar: adminJar,
+        formEntries: invalidHandoverForm,
+      }
+    );
+    assert.equal(response.status, 302);
+    response = await request(baseUrl, response.location, { jar: adminJar });
+    expectContains(response.text, "阶梯区间无效", "handover validation");
+
+    const validHandoverForm = buildHandoverAdminForm(
+      shippingData.modules.handover,
+      shippingData.modules.handover.shippingLines[0]
+    );
+    response = await request(
+      baseUrl,
+      `/admin/handover/shipping-lines/${handoverLine.id}`,
+      {
+        method: "POST",
+        jar: adminJar,
+        formEntries: validHandoverForm,
+      }
+    );
+    assert.equal(response.status, 302);
+
+    shippingData = await getShippingData();
+    const terminal =
+      shippingData.modules.customs.ports[0].terminals[0];
+    const customsGroupKey = shippingData.modules.customs.containerTypes[0].key;
+    const beforeCustomsRuleCount =
+      terminal.storageRulesByContainer[customsGroupKey].length;
+
+    response = await request(
+      baseUrl,
+      `/admin/customs/terminals/${terminal.id}/storage/${customsGroupKey}/add`,
+      {
+        method: "POST",
+        jar: adminJar,
+      }
+    );
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    const updatedTerminal =
+      shippingData.modules.customs.ports[0].terminals[0];
+    assert.equal(
+      updatedTerminal.storageRulesByContainer[customsGroupKey].length,
+      beforeCustomsRuleCount + 1
+    );
+
+    const addedCustomsRule =
+      updatedTerminal.storageRulesByContainer[customsGroupKey].at(-1);
+    response = await request(
+      baseUrl,
+      `/admin/customs/terminals/${terminal.id}/storage/${customsGroupKey}/${addedCustomsRule.id}/delete`,
+      {
+        method: "POST",
+        jar: adminJar,
+      }
+    );
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    assert.equal(
+      shippingData.modules.customs.ports[0].terminals[0].storageRulesByContainer[
+        customsGroupKey
+      ].length,
+      beforeCustomsRuleCount
+    );
+
+    const customsForm = buildCustomsAdminForm(shippingData.modules.customs);
+    const firstCustomsRule =
+      shippingData.modules.customs.ports[0].terminals[0].storageRulesByContainer[
+        customsGroupKey
+      ][0];
+    const customsInvalidIndex = customsForm.findIndex(
+      ([key]) =>
+        key ===
+        `terminal_rule_${terminal.id}_${customsGroupKey}_${firstCustomsRule.id}_end`
+    );
+    customsForm[customsInvalidIndex][1] = 0;
+
+    response = await request(baseUrl, "/admin/customs/shipping-lines", {
+      method: "POST",
+      jar: adminJar,
+      formEntries: customsForm,
+    });
+    assert.equal(response.status, 302);
+    response = await request(baseUrl, response.location, { jar: adminJar });
+    expectContains(response.text, "阶梯区间无效", "customs validation");
+
+    const validCustomsForm = buildCustomsAdminForm(shippingData.modules.customs);
+    response = await request(baseUrl, "/admin/customs/shipping-lines", {
+      method: "POST",
+      jar: adminJar,
+      formEntries: validCustomsForm,
+    });
+    assert.equal(response.status, 302);
+
+    response = await request(baseUrl, "/workbench/customs?lang=es", {
+      jar: adminJar,
+    });
+    expectContains(response.text, "Mesa integral de despacho", "spanish customs");
+
+    console.log("smoke-test-ok");
+  } finally {
+    await fs.writeFile(dataFile, originalData, "utf8");
+    await new Promise((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  }
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
