@@ -280,6 +280,10 @@ async function main() {
     let response = await request(baseUrl, "/login");
     assert.equal(response.status, 200);
     expectContains(response.text, "进入系统", "login page");
+    expectContains(response.text, "Express Line", "brand wordmark");
+    expectContains(response.text, "Antropy AI", "brand submark");
+    expectContains(response.text, "data-theme-toggle", "theme toggle");
+    expectContains(response.text, "compact-language-switcher", "compact language switcher");
 
     response = await request(baseUrl, "/login", {
       method: "POST",
@@ -367,6 +371,9 @@ async function main() {
     });
     assert.equal(response.status, 200);
     expectContains(response.text, "新增阶梯", "handover add rule button");
+    expectContains(response.text, 'data-scroll-scope="admin"', "admin scroll scope");
+    expectContains(response.text, 'data-scroll-panel="admin-list"', "admin list scroll panel");
+    expectContains(response.text, 'data-scroll-panel="admin-detail"', "admin detail scroll panel");
 
     response = await request(baseUrl, "/workbench/handover", {
       method: "POST",

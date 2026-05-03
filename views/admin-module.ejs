@@ -21,7 +21,7 @@
 <%- include("partials/admin-tabs", { modules, currentModuleKey, currentAdminSection, t }) %>
 
 <section class="admin-layout">
-  <aside class="panel admin-list">
+  <aside class="panel admin-list" data-scroll-panel="admin-list">
     <div class="section-title">
       <div>
         <p class="eyebrow"><%= t("admin.lineList") %></p>
@@ -50,7 +50,7 @@
     </div>
   </aside>
 
-  <section class="panel">
+  <section class="panel admin-detail" data-scroll-panel="admin-detail">
     <% if (!selectedLine) { %>
       <div class="empty-state">
         <h3><%= t("admin.selectShippingLine") %></h3>

@@ -10,6 +10,17 @@
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
       rel="stylesheet"
     />
+    <script>
+      (function setInitialTheme() {
+        try {
+          const storedTheme = localStorage.getItem("expressline-theme");
+          document.documentElement.dataset.theme =
+            storedTheme === "light" ? "light" : "dark";
+        } catch (_error) {
+          document.documentElement.dataset.theme = "dark";
+        }
+      })();
+    </script>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -17,27 +28,9 @@
       <aside class="sidebar">
         <div class="sidebar-top">
           <div class="brand-block">
-            <span class="brand-mark">JX</span>
-            <div>
-              <p class="eyebrow"><%= t("app.brand") %></p>
-              <h1><%= t("app.name") %></h1>
-              <p class="sidebar-subtitle"><%= t("app.subtitle") %></p>
-            </div>
+            <h1>Express Line</h1>
+            <p>Antropy AI</p>
           </div>
-
-          <form method="post" action="/preferences/language" class="language-switcher">
-            <input type="hidden" name="returnTo" value="<%= languageReturnTo %>" />
-            <% for (const option of languageOptions) { %>
-              <button
-                type="submit"
-                name="language"
-                value="<%= option.code %>"
-                class="<%= lang === option.code ? 'is-active' : '' %>"
-              >
-                <%= option.label %>
-              </button>
-            <% } %>
-          </form>
 
           <% if (user) { %>
             <section class="nav-section">
@@ -89,7 +82,38 @@
           </div>
         <% } %>
       </aside>
-      <main class="content">
+      <main
+        class="content"
+        <% if (currentArea === "admin") { %>data-scroll-scope="admin" data-scroll-preserve<% } %>
+      >
+        <header class="topbar">
+          <div class="utility-controls">
+            <button
+              type="button"
+              class="icon-button"
+              data-theme-toggle
+              aria-label="<%= t("common.themeToggle") %>"
+              title="<%= t("common.themeToggle") %>"
+            >
+              <span class="theme-icon" data-theme-icon aria-hidden="true"></span>
+            </button>
+            <form method="post" action="/preferences/language" class="language-switcher compact-language-switcher">
+              <input type="hidden" name="returnTo" value="<%= languageReturnTo %>" />
+              <% for (const option of languageOptions) { %>
+                <button
+                  type="submit"
+                  name="language"
+                  value="<%= option.code %>"
+                  class="<%= lang === option.code ? 'is-active' : '' %>"
+                  title="<%= option.label %>"
+                  aria-label="<%= option.label %>"
+                >
+                  <%= option.code === "zh" ? "中" : "ES" %>
+                </button>
+              <% } %>
+            </form>
+          </div>
+        </header>
         <% if (flash) { %>
           <div class="flash flash-<%= flash.type %>"><%= flash.message %></div>
         <% } %>

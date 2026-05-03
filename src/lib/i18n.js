@@ -10,9 +10,9 @@ const DEFAULT_LANGUAGE = SUPPORTED_LANGUAGES[0].code;
 const MESSAGES = {
   zh: {
     app: {
-      brand: "Jose Expressline",
-      name: "物流成本操作台",
-      subtitle: "黑白灰风格的内部报价与规则系统",
+      brand: "Express Line",
+      name: "Express Line",
+      subtitle: "Antropy AI",
     },
     languages: {
       zh: "中文",
@@ -94,6 +94,7 @@ const MESSAGES = {
       noShippingLines: "当前模块还没有船公司配置。",
       noCalculation: "当前没有产生费用。",
       generatedFrom: "数据来源",
+      themeToggle: "切换明暗模式",
     },
     priceMode: {
       pretax: "税前价",
@@ -341,9 +342,9 @@ const MESSAGES = {
   },
   es: {
     app: {
-      brand: "Jose Expressline",
-      name: "Consola de Costos Logísticos",
-      subtitle: "Sistema interno de cotización y reglas en blanco, negro y gris",
+      brand: "Express Line",
+      name: "Express Line",
+      subtitle: "Antropy AI",
     },
     languages: {
       zh: "Chino",
@@ -430,6 +431,7 @@ const MESSAGES = {
       noShippingLines: "Este modulo aun no tiene navieras configuradas.",
       noCalculation: "No se genero ningun costo.",
       generatedFrom: "Origen de datos",
+      themeToggle: "Cambiar tema claro / oscuro",
     },
     priceMode: {
       pretax: "Antes de IVA",
