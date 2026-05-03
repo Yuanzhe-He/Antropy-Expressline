@@ -82,19 +82,27 @@ npm run dev
 npm test
 ```
 
-如果要重新从 Excel 生成换单基础数据：
+如果要校验并规范化当前应用数据：
 
 ```bash
 npm run build:data
 ```
 
-如果 Excel 不在默认路径，可以指定：
+当前系统不再把 Excel 当作数据源。`build:data` 只读取并规范化应用自己的数据文件，不会读取任何 Excel。
+
+如果需要生成 Excel 批量上传模板：
 
 ```bash
-TARIFF_SOURCE="/path/to/TARIFARIO 120426.xlsx" npm run build:data
+npm run templates:excel
 ```
 
-如果没有找到 Excel，但 `data/shipping-lines.json` 已存在，脚本会保留现有数据并退出成功，避免部署或测试被微信临时文件路径卡住。
+模板输出到：
+
+```text
+templates/bulk-upload/express-line-bulk-upload-template.xlsx
+```
+
+模板只用于后台批量上传，不作为系统启动、计算或构建的数据来源。设计说明见 [docs/bulk-upload-design.md](</Users/yuanzhehe/Desktop/Cursor Project/Jose Expressline Consulting/docs/bulk-upload-design.md>)。
 
 默认地址：
 
@@ -133,15 +141,16 @@ PORT=3101 npm run dev
 
 ## 数据结构
 
-- Excel 会被抽取到 `data/shipping-lines.json`
+- 当前原型的数据源是应用自己的 `data/shipping-lines.json`
 - 当前数据按模块分区保存：
   - `handover`
   - `customs`
   - `inland`
 - 后台保存会直接写回 `data/shipping-lines.json`
+- Excel 只作为批量上传模板，不作为数据源
 
 ## 当前边界
 
 - 持久化仍是本地 JSON，不是数据库
 - 账号密码仍是本地演示结构，不适合直接上线
-- `build:data` 现在会保留已有的清关 / 陆运模块配置和汇率结构，但仍建议先备份数据再重抽 Excel
+- `build:data` 只做应用数据规范化；正式上线前建议迁移到数据库，并为批量上传增加 dry-run、差异预览和审计日志

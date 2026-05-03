@@ -4,9 +4,10 @@
   "description": "Cost calculator and admin portal for shipping line release fees.",
   "main": "src/server.js",
   "scripts": {
-    "build:data": "python3 scripts/extract_tariff.py",
+    "build:data": "node scripts/normalize-data.js",
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
+    "templates:excel": "python3 scripts/generate_bulk_upload_templates.py",
     "test": "node scripts/smoke-test.js"
   },
   "dependencies": {
