@@ -100,6 +100,23 @@ http://localhost:3000
 PORT=3101 npm run dev
 ```
 
+## Railway 部署
+
+当前项目可以从 GitHub 部署到 Railway。Railway 会读取 `package.json`，安装依赖，并通过 `npm start` 启动服务。
+
+建议在 Railway 里配置：
+
+- `SESSION_SECRET`: 一段足够长的随机字符串
+- `DATA_DIR`: `/app/runtime-data`
+
+因为当前原型仍使用 JSON 文件保存后台规则，Railway 上需要给服务添加 Volume，并把 Volume mount path 设置为：
+
+```text
+/app/runtime-data
+```
+
+首次启动时，如果 Volume 目录为空，系统会从仓库内的 `data` 种子文件初始化 `shipping-lines.json` 和 `users.json`。
+
 ## 演示账号
 
 - `admin / admin123`

@@ -12,9 +12,12 @@ const {
 } = require("./options");
 const { BUSINESS_MODULES, DEFAULT_MODULE_KEY } = require("./modules");
 
-const dataDir = path.join(__dirname, "../../data");
+const bundledDataDir = path.join(__dirname, "../../data");
+const dataDir = path.resolve(process.env.DATA_DIR || bundledDataDir);
 const shippingLinesFile = path.join(dataDir, "shipping-lines.json");
 const usersFile = path.join(dataDir, "users.json");
+const seedShippingLinesFile = path.join(bundledDataDir, "shipping-lines.json");
+const seedUsersFile = path.join(bundledDataDir, "users.json");
 
 function parseNumber(value, fallback = 0) {
   const numeric = Number(value);
@@ -101,6 +104,32 @@ async function readJson(filePath, fallback) {
 async function writeJson(filePath, payload) {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(payload, null, 2), "utf8");
+}
+
+async function readSeededJson(filePath, seedFilePath, fallback) {
+  try {
+    const content = await fs.readFile(filePath, "utf8");
+    return JSON.parse(content);
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      throw error;
+    }
+  }
+
+  if (path.resolve(filePath) !== path.resolve(seedFilePath)) {
+    try {
+      const seedContent = await fs.readFile(seedFilePath, "utf8");
+      const seedPayload = JSON.parse(seedContent);
+      await writeJson(filePath, seedPayload);
+      return seedPayload;
+    } catch (error) {
+      if (error.code !== "ENOENT") {
+        throw error;
+      }
+    }
+  }
+
+  return fallback;
 }
 
 function normalizeRateConfig(rateConfig) {
@@ -1054,7 +1083,11 @@ function normalizeShippingData(data) {
 }
 
 async function getShippingData() {
-  const rawData = await readJson(shippingLinesFile, { modules: {} });
+  const rawData = await readSeededJson(
+    shippingLinesFile,
+    seedShippingLinesFile,
+    { modules: {} }
+  );
   return normalizeShippingData(rawData);
 }
 
@@ -1063,7 +1096,7 @@ async function saveShippingData(data) {
 }
 
 async function getUsers() {
-  return readJson(usersFile, { users: [] });
+  return readSeededJson(usersFile, seedUsersFile, { users: [] });
 }
 
 async function saveUsers(data) {
