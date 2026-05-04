@@ -176,6 +176,64 @@
     return template.replace("__RATE__", defaultLabel || "0%");
   }
 
+  function taxRateLabel(value, defaultLabel) {
+    if (!value || value === "default") {
+      return defaultLabel || "0%";
+    }
+    return value === "0.16" ? "16%" : "0%";
+  }
+
+  function taxDefaultValue(defaultLabel) {
+    return Number.parseFloat(defaultLabel || "0") >= 16 ? "0.16" : "0";
+  }
+
+  function normalizeTaxOverride(value, defaultValue) {
+    const safeValue = String(value || "default");
+    if (safeValue === defaultValue) {
+      return "default";
+    }
+    return safeValue === "0" || safeValue === "0.16" ? safeValue : "default";
+  }
+
+  function taxToggleText(templateKey, rate) {
+    const template = i18n[templateKey] || "__RATE__";
+    return template.replace("__RATE__", rate);
+  }
+
+  function updateTaxToggleButton(button) {
+    const row = button.closest(".tax-control");
+    const select = row?.querySelector("select[name='taxOverrideRate[]']");
+    if (!select) {
+      return;
+    }
+
+    const defaultValue = select.dataset.taxDefaultValue || taxDefaultValue(select.dataset.taxDefaultLabel);
+    const defaultLabel = select.dataset.taxDefaultLabel || taxRateLabel(defaultValue, "0%");
+    const oppositeValue = select.dataset.taxOppositeValue || (defaultValue === "0.16" ? "0" : "0.16");
+    const normalizedValue = normalizeTaxOverride(select.value, defaultValue);
+    select.value = normalizedValue;
+
+    const effectiveValue = normalizedValue === "default" ? defaultValue : normalizedValue;
+    const targetValue = normalizedValue === "default" ? oppositeValue : "default";
+    const currentLabel = taxRateLabel(effectiveValue, defaultLabel);
+    const targetLabel = taxRateLabel(targetValue, defaultLabel);
+
+    button.classList.toggle("is-overridden", normalizedValue !== "default");
+    button.replaceChildren();
+
+    const currentNode = document.createElement("span");
+    currentNode.textContent = taxToggleText("taxToggleCurrent", currentLabel);
+    const targetNode = document.createElement("small");
+    targetNode.textContent = taxToggleText("taxToggleToRate", targetLabel);
+    button.append(currentNode, targetNode);
+  }
+
+  function setupTaxToggleButtons(root = document) {
+    root.querySelectorAll("[data-tax-toggle]").forEach((button) => {
+      updateTaxToggleButton(button);
+    });
+  }
+
   function readTaxOverrides() {
     const overrides = {};
     document.querySelectorAll("[data-tax-controls] .tax-control").forEach((row) => {
@@ -203,7 +261,7 @@
     root.replaceChildren();
 
     for (const control of safeControls) {
-      const label = document.createElement("label");
+      const label = document.createElement("div");
       label.className = "tax-control";
 
       const keyInput = document.createElement("input");
@@ -218,8 +276,20 @@
       defaultText.textContent = taxDefaultText(control.defaultLabel);
 
       const select = document.createElement("select");
+      select.className = "tax-override-select";
       select.name = "taxOverrideRate[]";
-      const selectedValue = String(selectedOverrides[control.key] || "default");
+      const defaultValue = taxDefaultValue(control.defaultLabel);
+      const oppositeValue = defaultValue === "0.16" ? "0" : "0.16";
+      select.dataset.taxDefaultValue = defaultValue;
+      select.dataset.taxDefaultLabel = control.defaultLabel || "0%";
+      select.dataset.taxOppositeValue = oppositeValue;
+      select.dataset.taxOppositeLabel = taxRateLabel(oppositeValue, control.defaultLabel);
+      select.setAttribute("aria-hidden", "true");
+      select.tabIndex = -1;
+      const selectedValue = normalizeTaxOverride(
+        selectedOverrides[control.key],
+        defaultValue
+      );
       for (const optionData of safeOptions) {
         const option = document.createElement("option");
         option.value = optionData.value;
@@ -228,10 +298,36 @@
         select.appendChild(option);
       }
 
-      label.append(keyInput, title, defaultText, select);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "tax-toggle-button";
+      button.dataset.taxToggle = "";
+
+      label.append(keyInput, title, defaultText, select, button);
+      updateTaxToggleButton(button);
       root.appendChild(label);
     }
   }
+
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-tax-toggle]");
+    if (!button) {
+      return;
+    }
+
+    const row = button.closest(".tax-control");
+    const select = row?.querySelector("select[name='taxOverrideRate[]']");
+    if (!select) {
+      return;
+    }
+
+    const defaultValue = select.dataset.taxDefaultValue || taxDefaultValue(select.dataset.taxDefaultLabel);
+    const normalizedValue = normalizeTaxOverride(select.value, defaultValue);
+    select.value = normalizedValue === "default"
+      ? select.dataset.taxOppositeValue || (defaultValue === "0.16" ? "0" : "0.16")
+      : "default";
+    updateTaxToggleButton(button);
+  });
 
   function setText(selector, value) {
     const node = document.querySelector(selector);
@@ -420,4 +516,5 @@
   updateContainerGroups(activeContainerGroups);
   setupHandoverDependencies();
   setupCustomsDependencies();
+  setupTaxToggleButtons();
 })();

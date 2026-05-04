@@ -183,18 +183,39 @@
           </div>
           <div class="tax-grid" data-tax-controls>
             <% for (const control of taxControls) { %>
-              <label class="tax-control">
+              <% const taxOverrideValue = String(formData.taxOverrides?.[control.key] || "default"); %>
+              <% const taxDefaultValue = Number.parseFloat(control.defaultLabel) >= 16 ? "0.16" : "0"; %>
+              <% const taxOppositeValue = taxDefaultValue === "0.16" ? "0" : "0.16"; %>
+              <% const normalizedTaxOverride = taxOverrideValue === taxDefaultValue ? "default" : taxOverrideValue; %>
+              <% const effectiveTaxValue = normalizedTaxOverride === "default" ? taxDefaultValue : normalizedTaxOverride; %>
+              <% const effectiveTaxLabel = effectiveTaxValue === "0.16" ? "16%" : "0%"; %>
+              <% const targetTaxValue = normalizedTaxOverride === "default" ? taxOppositeValue : "default"; %>
+              <% const targetTaxLabel = targetTaxValue === "default" ? control.defaultLabel : (targetTaxValue === "0.16" ? "16%" : "0%"); %>
+              <div class="tax-control">
                 <input type="hidden" name="taxOverrideKey[]" value="<%= control.key %>" />
                 <span><%= control.label %></span>
                 <small><%= t("calculator.taxDefaultRate", { rate: control.defaultLabel }) %></small>
-                <select name="taxOverrideRate[]">
+                <select
+                  class="tax-override-select"
+                  name="taxOverrideRate[]"
+                  data-tax-default-value="<%= taxDefaultValue %>"
+                  data-tax-default-label="<%= control.defaultLabel %>"
+                  data-tax-opposite-value="<%= taxOppositeValue %>"
+                  data-tax-opposite-label="<%= taxOppositeValue === '0.16' ? '16%' : '0%' %>"
+                  aria-hidden="true"
+                  tabindex="-1"
+                >
                   <% for (const option of taxOverrideOptions) { %>
-                    <option value="<%= option.value %>" <%= String(formData.taxOverrides?.[control.key] || "default") === String(option.value) ? "selected" : "" %>>
+                    <option value="<%= option.value %>" <%= normalizedTaxOverride === String(option.value) ? "selected" : "" %>>
                       <%= option.label %>
                     </option>
                   <% } %>
                 </select>
-              </label>
+                <button type="button" class="tax-toggle-button <%= normalizedTaxOverride !== 'default' ? 'is-overridden' : '' %>" data-tax-toggle>
+                  <span><%= t("calculator.taxToggleCurrent", { rate: effectiveTaxLabel }) %></span>
+                  <small><%= t("calculator.taxToggleToRate", { rate: targetTaxLabel }) %></small>
+                </button>
+              </div>
             <% } %>
           </div>
         </section>
@@ -369,6 +390,8 @@
   removeRow: t("calculator.removeRow"),
   keepOneContainer: t("calculator.keepOneContainer"),
   taxDefaultRate: t("calculator.taxDefaultRate", { rate: "__RATE__" }),
+  taxToggleCurrent: t("calculator.taxToggleCurrent", { rate: "__RATE__" }),
+  taxToggleToRate: t("calculator.taxToggleToRate", { rate: "__RATE__" }),
 }) %></script>
 <script src="/calculator.js"></script>
 

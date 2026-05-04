@@ -1137,9 +1137,48 @@ th {
   background: var(--accent-soft);
 }
 
-.tax-control select,
 .tax-control input {
   margin-top: 0;
+}
+
+.tax-override-select {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tax-toggle-button {
+  display: grid;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 0.18rem;
+  padding: 0.55rem 0.65rem;
+  justify-items: start;
+  gap: 0.12rem;
+  border-color: var(--line);
+  background: var(--panel-soft);
+  color: var(--text);
+  text-align: left;
+}
+
+.tax-toggle-button:hover {
+  box-shadow: none;
+}
+
+.tax-toggle-button.is-overridden {
+  border-color: var(--line-strong);
+  background: var(--button-bg);
+  color: var(--button-text);
+}
+
+.tax-toggle-button small {
+  color: inherit;
+  font-size: 0.72rem;
+  opacity: 0.68;
 }
 
 .quote-line-card {
