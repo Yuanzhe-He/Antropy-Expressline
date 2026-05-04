@@ -68,8 +68,20 @@
     });
   }
 
-  addButton.addEventListener("click", () => {
-    rowsRoot.appendChild(buildRow(containerGroups[0]?.key || "", 1));
+  function keepViewportStable(callback) {
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    callback();
+    requestAnimationFrame(() => {
+      window.scrollTo({ left: scrollX, top: scrollY, behavior: "auto" });
+    });
+  }
+
+  addButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    keepViewportStable(() => {
+      rowsRoot.appendChild(buildRow(containerGroups[0]?.key || "", 1));
+    });
     updateRemoveButtons();
   });
 
@@ -84,7 +96,10 @@
       return;
     }
 
-    row.remove();
+    event.preventDefault();
+    keepViewportStable(() => {
+      row.remove();
+    });
     updateRemoveButtons();
   });
 

@@ -42,6 +42,10 @@
     return;
   }
 
+  if ("scrollRestoration" in window.history) {
+    window.history.scrollRestoration = "manual";
+  }
+
   const scope = scopeRoot.dataset.scrollScope || "page";
   const storageKey = `expressline-scroll:${scope}`;
   const maxAgeMs = 30 * 60 * 1000;
@@ -81,14 +85,24 @@
       return;
     }
 
-    requestAnimationFrame(() => {
-      window.scrollTo(0, Number(state.windowY) || 0);
+    function applyState() {
+      window.scrollTo({
+        left: 0,
+        top: Number(state.windowY) || 0,
+        behavior: "auto",
+      });
       document.querySelectorAll("[data-scroll-panel]").forEach((panel) => {
         const name = panel.dataset.scrollPanel;
         if (state.panels && Object.prototype.hasOwnProperty.call(state.panels, name)) {
           panel.scrollTop = Number(state.panels[name]) || 0;
         }
       });
+    }
+
+    requestAnimationFrame(() => {
+      applyState();
+      window.setTimeout(applyState, 80);
+      window.setTimeout(applyState, 220);
     });
   }
 
@@ -112,6 +126,17 @@
     "submit",
     (event) => {
       if (scopeRoot.contains(event.target)) {
+        writeState();
+      }
+    },
+    true
+  );
+
+  document.addEventListener(
+    "click",
+    (event) => {
+      const button = event.target.closest("button[type='submit'], button[formaction]");
+      if (button && scopeRoot.contains(button)) {
         writeState();
       }
     },
@@ -238,4 +263,137 @@
 
   input.addEventListener("input", applyFilter);
   applyFilter();
+})();
+
+(function fieldHelpTooltips() {
+  const helpNodes = [...document.querySelectorAll(".field-help[title]")];
+  if (!helpNodes.length) {
+    return;
+  }
+
+  const popover = document.createElement("div");
+  popover.className = "help-popover";
+  popover.id = "help-popover";
+  popover.setAttribute("role", "tooltip");
+  popover.hidden = true;
+  document.body.appendChild(popover);
+
+  let activeNode = null;
+
+  function placePopover(node) {
+    const rect = node.getBoundingClientRect();
+    const margin = 12;
+    const maxLeft = window.innerWidth - popover.offsetWidth - margin;
+    const left = Math.max(margin, Math.min(rect.left, maxLeft));
+    const belowTop = rect.bottom + 8;
+    const aboveTop = rect.top - popover.offsetHeight - 8;
+    const top =
+      belowTop + popover.offsetHeight < window.innerHeight
+        ? belowTop
+        : Math.max(margin, aboveTop);
+
+    popover.style.left = `${left}px`;
+    popover.style.top = `${top}px`;
+  }
+
+  function showPopover(node) {
+    activeNode = node;
+    popover.textContent = node.dataset.help || "";
+    popover.hidden = false;
+    placePopover(node);
+  }
+
+  function hidePopover() {
+    activeNode = null;
+    popover.hidden = true;
+  }
+
+  helpNodes.forEach((node) => {
+    node.dataset.help = node.getAttribute("title") || "";
+    node.removeAttribute("title");
+    node.tabIndex = 0;
+    node.setAttribute("role", "button");
+    node.setAttribute("aria-label", node.dataset.help);
+    node.setAttribute("aria-describedby", "help-popover");
+
+    node.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (activeNode === node && !popover.hidden) {
+        hidePopover();
+      } else {
+        showPopover(node);
+      }
+    });
+
+    node.addEventListener("mouseenter", () => showPopover(node));
+    node.addEventListener("focus", () => showPopover(node));
+    node.addEventListener("mouseleave", hidePopover);
+    node.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        hidePopover();
+      }
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        showPopover(node);
+      }
+    });
+  });
+
+  document.addEventListener("click", (event) => {
+    if (
+      activeNode &&
+      !event.target.closest(".field-help") &&
+      !event.target.closest(".help-popover")
+    ) {
+      hidePopover();
+    }
+  });
+
+  window.addEventListener("scroll", () => {
+    if (activeNode && !popover.hidden) {
+      placePopover(activeNode);
+    }
+  }, true);
+  window.addEventListener("resize", hidePopover);
+})();
+
+(function consistentNumberInputs() {
+  const selector = "input[type='number']:not([readonly]):not([disabled])";
+
+  function selectInput(input) {
+    window.setTimeout(() => {
+      try {
+        input.select();
+      } catch (_error) {
+        input.setSelectionRange?.(0, String(input.value || "").length);
+      }
+    }, 0);
+  }
+
+  document.addEventListener(
+    "pointerdown",
+    (event) => {
+      const input = event.target.closest(selector);
+      if (!input || document.activeElement === input) {
+        return;
+      }
+
+      event.preventDefault();
+      try {
+        input.focus({ preventScroll: true });
+      } catch (_error) {
+        input.focus();
+      }
+      selectInput(input);
+    },
+    true
+  );
+
+  document.addEventListener("focusin", (event) => {
+    const input = event.target.closest(selector);
+    if (input) {
+      selectInput(input);
+    }
+  });
 })();
