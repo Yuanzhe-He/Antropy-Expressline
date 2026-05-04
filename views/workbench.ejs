@@ -71,48 +71,9 @@
 
       <form method="post" action="/workbench/<%= currentModuleKey %>" class="stack-form" data-calculator-form>
         <div class="handover-field-layout">
-          <section class="field-group-card">
-            <div class="field-group-heading">
-              <p class="eyebrow"><%= t("calculator.requiredGroupEyebrow") %></p>
-              <strong><%= t("calculator.requiredGroupTitle") %></strong>
-            </div>
-            <div class="grid-form required-field-grid">
-              <label>
-                <span><%= t("calculator.shippingLine") %></span>
-                <select name="shippingLineId" data-handover-line-select>
-                  <% for (const line of shippingLines) { %>
-                    <option value="<%= line.id %>" <%= formData.shippingLineId === line.id ? "selected" : "" %>>
-                      <%= line.name %>
-                    </option>
-                  <% } %>
-                </select>
-              </label>
-
-              <label>
-                <span><%= t("calculator.businessNature") %> <span class="field-help" title="<%= t("calculator.businessNatureHelp") %>">?</span></span>
-                <select name="businessNature">
-                  <% for (const option of businessNatureOptions) { %>
-                    <option value="<%= option.value %>" <%= formData.businessNature === option.value ? "selected" : "" %>>
-                      <%= option.label %>
-                    </option>
-                  <% } %>
-                </select>
-              </label>
-
-              <label>
-                <span><%= t("calculator.demurrageDays") %> <span class="field-help" title="<%= t("calculator.demurrageDaysHelp") %>">?</span></span>
-                <input type="number" min="0" step="1" name="demurrageDays" value="<%= formData.demurrageDays %>" required />
-              </label>
-            </div>
-          </section>
-
           <section class="field-group-card default-field-card">
-            <div class="field-group-heading">
-              <p class="eyebrow"><%= t("calculator.defaultGroupEyebrow") %></p>
-              <strong><%= t("calculator.defaultGroupTitle") %></strong>
-              <small><%= t("calculator.defaultGroupDescription") %></small>
-            </div>
-            <div class="default-field-stack">
+            <p class="field-group-label"><%= t("calculator.defaultGroupTitle") %></p>
+            <div class="grid-form field-group-grid">
               <label>
                 <span><%= t("calculator.blCount") %> <span class="field-help" title="<%= t("calculator.blCountHelp") %>">?</span></span>
                 <input type="number" min="0" step="1" name="blCount" value="<%= formData.blCount %>" required />
@@ -138,6 +99,39 @@
                     </option>
                   <% } %>
                 </select>
+              </label>
+
+            </div>
+          </section>
+
+          <section class="field-group-card">
+            <p class="field-group-label"><%= t("calculator.requiredGroupTitle") %></p>
+            <div class="grid-form field-group-grid">
+              <label>
+                <span><%= t("calculator.shippingLine") %></span>
+                <select name="shippingLineId" data-handover-line-select>
+                  <% for (const line of shippingLines) { %>
+                    <option value="<%= line.id %>" <%= formData.shippingLineId === line.id ? "selected" : "" %>>
+                      <%= line.name %>
+                    </option>
+                  <% } %>
+                </select>
+              </label>
+
+              <label>
+                <span><%= t("calculator.businessNature") %> <span class="field-help" title="<%= t("calculator.businessNatureHelp") %>">?</span></span>
+                <select name="businessNature">
+                  <% for (const option of businessNatureOptions) { %>
+                    <option value="<%= option.value %>" <%= formData.businessNature === option.value ? "selected" : "" %>>
+                      <%= option.label %>
+                    </option>
+                  <% } %>
+                </select>
+              </label>
+
+              <label>
+                <span><%= t("calculator.demurrageDays") %> <span class="field-help" title="<%= t("calculator.demurrageDaysHelp") %>">?</span></span>
+                <input type="number" min="0" step="1" name="demurrageDays" value="<%= formData.demurrageDays %>" required />
               </label>
             </div>
           </section>
