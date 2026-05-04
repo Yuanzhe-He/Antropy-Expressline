@@ -1,5 +1,11 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
+const { loadLocalEnv } = require("./env");
+const {
+  getAppState,
+  saveAppState,
+  shouldUseDatabase,
+} = require("./db");
 const {
   DEFAULT_DEMURRAGE_CUTOFF,
   DEFAULT_PRICE_MODE,
@@ -12,12 +18,16 @@ const {
 } = require("./options");
 const { BUSINESS_MODULES, DEFAULT_MODULE_KEY } = require("./modules");
 
+loadLocalEnv();
+
 const bundledDataDir = path.join(__dirname, "../../data");
 const dataDir = path.resolve(process.env.DATA_DIR || bundledDataDir);
 const shippingLinesFile = path.join(dataDir, "shipping-lines.json");
 const usersFile = path.join(dataDir, "users.json");
 const seedShippingLinesFile = path.join(bundledDataDir, "shipping-lines.json");
 const seedUsersFile = path.join(bundledDataDir, "users.json");
+const shippingDataStateKey = "shipping-data";
+const usersStateKey = "users";
 
 function parseNumber(value, fallback = 0) {
   const numeric = Number(value);
@@ -1083,6 +1093,22 @@ function normalizeShippingData(data) {
 }
 
 async function getShippingData() {
+  if (shouldUseDatabase()) {
+    const storedData = await getAppState(shippingDataStateKey);
+    if (storedData) {
+      return normalizeShippingData(storedData);
+    }
+
+    const seedData = await readSeededJson(
+      shippingLinesFile,
+      seedShippingLinesFile,
+      { modules: {} }
+    );
+    const normalizedData = normalizeShippingData(seedData);
+    await saveAppState(shippingDataStateKey, normalizedData);
+    return normalizedData;
+  }
+
   const rawData = await readSeededJson(
     shippingLinesFile,
     seedShippingLinesFile,
@@ -1092,14 +1118,35 @@ async function getShippingData() {
 }
 
 async function saveShippingData(data) {
+  if (shouldUseDatabase()) {
+    return saveAppState(shippingDataStateKey, normalizeShippingData(data));
+  }
+
   return writeJson(shippingLinesFile, normalizeShippingData(data));
 }
 
 async function getUsers() {
+  if (shouldUseDatabase()) {
+    const storedUsers = await getAppState(usersStateKey);
+    if (storedUsers) {
+      return storedUsers;
+    }
+
+    const seedUsers = await readSeededJson(usersFile, seedUsersFile, {
+      users: [],
+    });
+    await saveAppState(usersStateKey, seedUsers);
+    return seedUsers;
+  }
+
   return readSeededJson(usersFile, seedUsersFile, { users: [] });
 }
 
 async function saveUsers(data) {
+  if (shouldUseDatabase()) {
+    return saveAppState(usersStateKey, data);
+  }
+
   return writeJson(usersFile, data);
 }
 

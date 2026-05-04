@@ -5,6 +5,9 @@
   "main": "src/server.js",
   "scripts": {
     "build:data": "node scripts/normalize-data.js",
+    "db:check": "node scripts/db-check.js",
+    "db:migrate": "node scripts/db-migrate.js",
+    "db:seed": "node scripts/db-seed.js",
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "templates:excel": "python3 scripts/generate_bulk_upload_templates.py",
@@ -13,6 +16,7 @@
   "dependencies": {
     "ejs": "^3.1.10",
     "express": "^5.1.0",
-    "express-session": "^1.18.1"
+    "express-session": "^1.18.1",
+    "pg": "^8.20.0"
   }
 }

@@ -3,6 +3,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 
 process.env.SKIP_FX_REFRESH = "1";
+process.env.STORAGE_DRIVER = "json";
 
 const { createApp } = require("../src/server");
 const { getShippingData } = require("../src/lib/store");

@@ -1,3 +1,5 @@
+process.env.STORAGE_DRIVER = process.env.STORAGE_DRIVER || "json";
+
 const { getShippingData, saveShippingData } = require("../src/lib/store");
 
 async function main() {
