@@ -4,6 +4,25 @@
 
 项目：Express Line / Antropy AI logistics cost workbench
 
+## 0. 2026-05-04 UIUX 落地记录
+
+本轮已落地两类前台交互修正，均不改变费用计算业务逻辑：
+
+- 销售端不再在主内容区重复显示 `换单 / 清关 / 陆运` 模块切换；模块切换统一放在左侧导航。
+- 换单和清关的页头从大 hero 改为紧凑的统一边框卡片，标题和简介放在同一个框内，减少首屏高度。
+- 换单船公司切换不再触发整页提交；前端只局部更新船公司提示、开票口径、押金状态、柜型下拉和税率覆盖项。
+- 清关船公司 / 港口 / 码头 / 场站切换不再触发整页提交；前端只局部更新可选码头、可选场站、当前选择摘要和税率覆盖项。
+- 真正的报价计算仍然只在用户点击 `立即计算` 时提交服务端，保持现有计算口径不变。
+
+代码证据：
+
+- 紧凑页头结构：[views/workbench.ejs](../views/workbench.ejs#L3)、[views/workbench-customs.ejs](../views/workbench-customs.ejs#L3)
+- 页头样式：[public/styles.css](../public/styles.css#L486)
+- 换单下拉改为前端联动标记：[views/workbench.ejs](../views/workbench.ejs#L77)
+- 清关联动下拉标记：[views/workbench-customs.ejs](../views/workbench-customs.ejs#L68)
+- 前端局部联动实现：[public/calculator.js](../public/calculator.js#L243)
+- 服务端只输出局部联动需要的精简依赖数据：[src/server.js](../src/server.js#L590)
+
 ## 1. 我用了什么 skill，怎么搜的
 
 当前 Codex 本地可用 skill 列表里没有专门的 `Product/UIUX` skill。因此这份报告没有调用某个本地 UIUX skill 文件，而是组合使用了以下三类方法论：
@@ -117,15 +136,15 @@ session 丢了、换浏览器、换账号，连续业务关系就丢了。
 - 清关页面通过 `quoteId` 拉取换单上下文。
 - 页面上展示“来自换单 quote X”的可点击来源。
 
-### 3. 船公司 / 港口选择不应 `onchange` 立即提交
+### 3. 船公司 / 港口选择不应 `onchange` 立即提交（已解决）
 
 代码证据：
 
-- 换单船公司选择会立即提交：[views/workbench.ejs:90](../views/workbench.ejs#L90)
-- 清关船公司选择会立即提交：[views/workbench-customs.ejs:79](../views/workbench-customs.ejs#L79)
-- 清关港口选择会立即提交：[views/workbench-customs.ejs:90](../views/workbench-customs.ejs#L90)
+- 换单船公司选择现在只带 `data-handover-line-select`，没有 `onchange` 提交：[views/workbench.ejs](../views/workbench.ejs#L77)
+- 清关船公司、港口、码头、场站选择只带局部联动标记：[views/workbench-customs.ejs](../views/workbench-customs.ejs#L68)
+- 局部刷新逻辑在前端处理：[public/calculator.js](../public/calculator.js#L243)
 
-问题：
+原问题：
 
 用户可能已经输入柜型、数量、天数，切换船公司或港口时页面提交，容易造成上下文变化或字段重置感。
 
@@ -133,11 +152,12 @@ session 丢了、换浏览器、换账号，连续业务关系就丢了。
 
 Baymard 强调错误恢复和保留输入；自动提交会让用户感觉系统“抢走控制权”。
 
-具体优化：
+已落地：
 
-- 改成“更新可选项”按钮，或前端局部刷新 dependent dropdown。
-- 切换前如果已有输入，弹出确认：“切换船公司会重新加载柜型和规则，是否继续？”
-- 保留可兼容字段，比如相同柜型数量不要丢。
+- 换单切换船公司时，页面不刷新，只更新船公司提示、开票信息、押金状态、柜型下拉和税率覆盖项。
+- 清关切换船公司 / 港口 / 码头 / 场站时，页面不刷新，只更新码头、场站、当前选择摘要和税率覆盖项。
+- 已有数量输入会保留；如果新船公司没有同名柜型，系统自动落到可用柜型。
+- 仍保留服务端计算作为唯一报价计算入口，避免前端复制计算逻辑。
 
 ### 4. 前台结果应增加“保存报价 / 导出 / 分享”
 
@@ -693,14 +713,14 @@ UIUX 改动最容易在浏览器里出问题，尤其是 sticky、scroll、focus
 - 覆盖：登录、主题切换、语言切换、后台列表点击不跳顶、长表单滚动、移动端截图。
 - 每次 UI 改动跑 screenshot diff。
 
-### 30. 页面顶部 hero 对内部工具略占空间
+### 30. 页面顶部 hero 对内部工具略占空间（已解决）
 
 代码证据：
 
-- hero-split 最小高度 180px：[public/styles.css:450](../public/styles.css#L450)
-- 页面进入后先显示大标题区域：[views/workbench.ejs:1](../views/workbench.ejs#L1)
+- 当前换单 / 清关页头使用统一小卡片：[views/workbench.ejs](../views/workbench.ejs#L3)、[views/workbench-customs.ejs](../views/workbench-customs.ejs#L3)
+- 标题卡片样式为紧凑高度：[public/styles.css](../public/styles.css#L486)
 
-问题：
+原问题：
 
 现在视觉更高级，但内部报价系统的核心是输入和结果。长期高频使用时，过大的顶部区域会压缩工作区。
 
@@ -708,11 +728,11 @@ UIUX 改动最容易在浏览器里出问题，尤其是 sticky、scroll、focus
 
 Microsoft 的企业 UI 原则强调简洁和聚焦任务。运营工具不应像 landing page。
 
-具体优化：
+已落地：
 
-- 给用户一个 `Compact mode`。
-- 登录后默认进入紧凑模式：顶部只保留模块名、状态、关键统计。
-- 大 hero 仅保留在 demo 或首次访问时。
+- 销售端默认使用紧凑页头，不再使用大 hero。
+- 模块简介和标题合并在同一边框卡片内，减少视觉割裂和首屏占用。
+- 左侧导航已经承担模块切换功能，主内容区不再重复显示模块选择。
 
 ## 5. 优先级建议
 
