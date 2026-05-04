@@ -36,7 +36,7 @@ const MESSAGES = {
       handover: {
         title: "换单",
         subtitle: "Entrega / Release",
-        description: "当前已落地：船公司、BL、混装箱型、押金、demoras、税率和汇率换算。",
+        description: "船公司、BL、混装箱型、押金、demoras、税率和汇率换算已接入同一套报价流程。",
         state: "已启用",
         placeholderTitle: "换单模块已上线",
         placeholderDescription: "此模块当前可直接用于本地演示和规则维护。",
@@ -44,7 +44,7 @@ const MESSAGES = {
       customs: {
         title: "清关",
         subtitle: "Despacho Aduanal",
-        description: "当前已落地：港口、码头、场站、落柜、清关堆场费，以及按箱型的阶梯累进堆存费。",
+        description: "港口、码头、场站、落柜、清关堆场费和按箱型阶梯堆存费已在同一页计算。",
         state: "已启用",
         placeholderTitle: "清关模块已上线",
         placeholderDescription: "清关、码头与落柜已合并成一页式流程，可直接本地演示和维护规则。",
@@ -110,7 +110,6 @@ const MESSAGES = {
       defaultOption: "跟后台默认",
     },
     calculator: {
-      eyebrow: "前台报价",
       title: "成本工作台",
       description: "按业务输入后，系统即时输出公式、解释、分类金额和总数。",
       formTitle: "录入条件",
@@ -385,7 +384,7 @@ const MESSAGES = {
         title: "Liberacion",
         subtitle: "Entrega / Release",
         description:
-          "Ya operativo: naviera, BL, mezcla de contenedores, garantia, demoras, IVA y conversion de moneda.",
+          "Naviera, BL, mezcla de contenedores, garantia, demoras, IVA y conversion de moneda viven en el mismo flujo de cotizacion.",
         state: "Activo",
         placeholderTitle: "Modulo de liberacion activo",
         placeholderDescription: "Este modulo ya sirve para demo local y mantenimiento de reglas.",
@@ -394,7 +393,7 @@ const MESSAGES = {
         title: "Despacho",
         subtitle: "Despacho Aduanal",
         description:
-          "Ya operativo: puerto, terminal, patio, drop-off, patio aduanal y almacenajes progresivos por tipo de contenedor.",
+          "Puerto, terminal, patio, drop-off, patio aduanal y almacenajes progresivos se calculan en una sola pagina.",
         state: "Activo",
         placeholderTitle: "Modulo de despacho activo",
         placeholderDescription:
@@ -463,7 +462,6 @@ const MESSAGES = {
       defaultOption: "Usar valor por defecto",
     },
     calculator: {
-      eyebrow: "Cotizador",
       title: "Mesa de costos",
       description:
         "Despues de capturar los datos del negocio, el sistema devuelve formula, explicacion, importes y total.",

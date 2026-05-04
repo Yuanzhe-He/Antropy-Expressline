@@ -483,6 +483,41 @@ code {
   color: var(--danger);
 }
 
+.page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 0.95rem;
+  padding: 0.15rem 0 0.78rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.page-heading-title h2 {
+  margin: 0;
+  font-family: "Cormorant Garamond", "Noto Sans SC", serif;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+}
+
+.module-intro-card {
+  width: min(100%, 360px);
+  padding: 0.58rem 0.76rem;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--accent-soft);
+}
+
+.module-intro-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.48;
+}
+
 .hero-card,
 .panel {
   padding: 1.1rem;
@@ -1063,10 +1098,15 @@ input[readonly] {
   }
 
   .hero-card,
+  .page-heading,
   .section-title,
   .breakdown-item,
   .panel-banner {
     flex-direction: column;
+  }
+
+  .module-intro-card {
+    width: 100%;
   }
 
   .meta-grid,

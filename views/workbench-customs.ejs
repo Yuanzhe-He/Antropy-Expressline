@@ -1,24 +1,13 @@
 <%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
 
-<section class="hero-card hero-split">
-  <div class="hero-copy">
-    <p class="eyebrow"><%= t("customs.eyebrow") %></p>
+<section class="page-heading">
+  <div class="page-heading-title">
     <h2><%= selectedModule.title %></h2>
-    <p class="hero-text"><%= selectedModule.description %></p>
   </div>
-  <div class="hero-side">
-    <div class="status-tile">
-      <span><%= t("common.status") %></span>
-      <strong><%= selectedModule.stateLabel %></strong>
-    </div>
-    <div class="status-tile">
-      <span><%= t("customs.dataCoverage") %></span>
-      <strong><%= moduleData.ports?.length || 0 %> <%= t("customs.portLabel") %> / <%= moduleData.yards?.length || 0 %> <%= t("customs.yardLabel") %></strong>
-    </div>
-  </div>
+  <aside class="module-intro-card">
+    <p><%= selectedModule.description %></p>
+  </aside>
 </section>
-
-<%- include("partials/module-rail", { modules, currentModuleKey, variant: "sales" }) %>
 
 <section class="hero-card">
   <div>
