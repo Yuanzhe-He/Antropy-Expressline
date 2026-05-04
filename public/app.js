@@ -147,6 +147,113 @@
   restoreState();
 })();
 
+(function calculatorSubmitFlow() {
+  const forms = [...document.querySelectorAll("[data-calculator-form]")];
+  const resultsPanel = document.querySelector("[data-calculator-results]");
+  if (!forms.length) {
+    return;
+  }
+
+  if ("scrollRestoration" in window.history) {
+    window.history.scrollRestoration = "manual";
+  }
+
+  const storageKey = `expressline-calculator:${window.location.pathname}`;
+  const maxAgeMs = 2 * 60 * 1000;
+
+  function saveState(options = {}) {
+    try {
+      sessionStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          path: window.location.pathname,
+          focusResult: Boolean(options.focusResult),
+          time: Date.now(),
+          windowY: window.scrollY,
+        })
+      );
+    } catch (_error) {
+      // A missing scroll restore is better than blocking the quote flow.
+    }
+  }
+
+  function readState() {
+    try {
+      return JSON.parse(sessionStorage.getItem(storageKey) || "null");
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function clearState() {
+    try {
+      sessionStorage.removeItem(storageKey);
+    } catch (_error) {
+      // Ignore storage failures.
+    }
+  }
+
+  function resultIsVisible(panel) {
+    const rect = panel.getBoundingClientRect();
+    const topGuard = 72;
+    return rect.top >= topGuard && rect.top < window.innerHeight * 0.78;
+  }
+
+  function restoreAfterSubmit() {
+    const state = readState();
+    if (
+      !state ||
+      state.path !== window.location.pathname ||
+      Date.now() - state.time > maxAgeMs
+    ) {
+      return;
+    }
+
+    clearState();
+    requestAnimationFrame(() => {
+      window.scrollTo({
+        left: 0,
+        top: Number(state.windowY) || 0,
+        behavior: "auto",
+      });
+
+      if (
+        state.focusResult &&
+        resultsPanel &&
+        resultsPanel.dataset.hasResult === "true"
+      ) {
+        window.setTimeout(() => {
+          resultsPanel.classList.add("result-just-updated");
+          if (!resultIsVisible(resultsPanel)) {
+            resultsPanel.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }
+          window.setTimeout(() => {
+            resultsPanel.classList.remove("result-just-updated");
+          }, 1000);
+        }, 90);
+      }
+    });
+  }
+
+  forms.forEach((form) => {
+    form.addEventListener("submit", (event) => {
+      const submitter = event.submitter;
+      const focusResult = Boolean(submitter?.matches("[data-calculate-submit]"));
+      saveState({ focusResult });
+
+      if (focusResult) {
+        form.classList.add("is-submitting");
+        form.setAttribute("aria-busy", "true");
+      }
+    });
+  });
+
+  restoreAfterSubmit();
+})();
+
 (function adminFormSafeguards() {
   const forms = [...document.querySelectorAll("[data-admin-form]")];
   if (!forms.length) {

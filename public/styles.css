@@ -622,6 +622,31 @@ code {
   top: 1.35rem;
 }
 
+.results-panel.result-just-updated {
+  animation: result-settle 900ms ease;
+}
+
+@keyframes result-settle {
+  0% {
+    border-color: var(--line-strong);
+    box-shadow: 0 0 0 1px var(--line-strong), var(--shadow-lg);
+  }
+  100% {
+    border-color: var(--line);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+.stack-form.is-submitting {
+  cursor: progress;
+}
+
+.stack-form.is-submitting [data-calculate-submit] {
+  opacity: 0.72;
+  transform: none;
+  box-shadow: none;
+}
+
 .formula-panel,
 .formula-inline {
   padding: 0.72rem;

@@ -61,7 +61,7 @@
       <% } %>
     </div>
 
-    <form method="post" action="/workbench/customs" class="stack-form">
+    <form method="post" action="/workbench/customs" class="stack-form" data-calculator-form>
       <div class="grid-form">
         <label>
           <span><%= t("calculator.businessNature") %> <span class="field-help" title="<%= t("calculator.businessNatureHelp") %>">?</span></span>
@@ -76,7 +76,7 @@
 
         <label>
           <span><%= t("customs.shippingLineLabel") %></span>
-          <select name="shippingLineId" onchange="this.form.submit()">
+          <select name="shippingLineId" onchange="this.form.requestSubmit()">
             <% for (const line of moduleData.shippingLines || []) { %>
               <option value="<%= line.id %>" <%= formData.shippingLineId === line.id ? "selected" : "" %>>
                 <%= line.name %>
@@ -87,7 +87,7 @@
 
         <label>
           <span><%= t("customs.portLabel") %></span>
-          <select name="portId" onchange="this.form.submit()">
+          <select name="portId" onchange="this.form.requestSubmit()">
             <% for (const port of moduleData.ports || []) { %>
               <option value="<%= port.id %>" <%= formData.portId === port.id ? "selected" : "" %>>
                 <%= port.name %>
@@ -214,12 +214,12 @@
       <% } %>
 
       <div class="actions">
-        <button type="submit"><%= t("common.calculate") %></button>
+        <button type="submit" data-calculate-submit><%= t("common.calculate") %></button>
       </div>
     </form>
   </section>
 
-  <section class="panel results-panel">
+  <section class="panel results-panel" data-calculator-results data-has-result="<%= result ? 'true' : 'false' %>">
     <div class="section-title">
       <div>
         <p class="eyebrow"><%= t("calculator.resultTitle") %></p>

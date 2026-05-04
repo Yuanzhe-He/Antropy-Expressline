@@ -83,11 +83,11 @@
         <% } %>
       </div>
 
-      <form method="post" action="/workbench/<%= currentModuleKey %>" class="stack-form">
+      <form method="post" action="/workbench/<%= currentModuleKey %>" class="stack-form" data-calculator-form>
         <div class="grid-form">
           <label>
             <span><%= t("calculator.shippingLine") %></span>
-            <select name="shippingLineId" onchange="this.form.submit()">
+            <select name="shippingLineId" onchange="this.form.requestSubmit()">
               <% for (const line of shippingLines) { %>
                 <option value="<%= line.id %>" <%= formData.shippingLineId === line.id ? "selected" : "" %>>
                   <%= line.name %>
@@ -208,12 +208,12 @@
         <% } %>
 
         <div class="actions">
-          <button type="submit"><%= t("common.calculate") %></button>
+          <button type="submit" data-calculate-submit><%= t("common.calculate") %></button>
         </div>
       </form>
     </section>
 
-    <section class="panel results-panel">
+    <section class="panel results-panel" data-calculator-results data-has-result="<%= result ? 'true' : 'false' %>">
       <div class="section-title">
         <div>
           <p class="eyebrow"><%= t("calculator.resultTitle") %></p>
