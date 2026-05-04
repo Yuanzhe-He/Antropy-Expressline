@@ -1,12 +1,12 @@
 <%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
 
-<section class="page-heading">
+<section class="page-heading page-heading-card">
   <div class="page-heading-title">
     <h2><%= selectedModule.title %></h2>
   </div>
-  <aside class="module-intro-card">
+  <div class="module-intro-card">
     <p><%= selectedModule.description %></p>
-  </aside>
+  </div>
 </section>
 
 <section class="hero-card">
