@@ -137,12 +137,15 @@ button:disabled {
 input,
 select {
   width: 100%;
+  min-width: 0;
+  height: 42px;
   margin-top: 0.42rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--accent-soft);
   color: var(--text);
   padding: 0.62rem 0.78rem;
+  line-height: 1.2;
   outline: none;
   transition:
     border-color 180ms ease,
@@ -939,9 +942,13 @@ th {
 
 .dynamic-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(120px, 0.6fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
   gap: 0.65rem;
   align-items: end;
+}
+
+.dynamic-row label {
+  min-width: 0;
 }
 
 .compact-button {
