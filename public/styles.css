@@ -687,6 +687,53 @@ code {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
+.handover-field-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 250px);
+  gap: 0.78rem;
+}
+
+.field-group-card {
+  display: grid;
+  gap: 0.72rem;
+  padding: 0.78rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+:root[data-theme="light"] .field-group-card {
+  background: rgba(0, 0, 0, 0.025);
+}
+
+.field-group-heading {
+  display: grid;
+  gap: 0.14rem;
+}
+
+.field-group-heading strong {
+  font-size: 0.98rem;
+}
+
+.field-group-heading small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.required-field-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.default-field-card {
+  background: var(--accent-soft);
+}
+
+.default-field-stack {
+  display: grid;
+  gap: 0.58rem;
+}
+
 .workspace-grid {
   grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
   align-items: start;
@@ -1196,6 +1243,11 @@ input[readonly] {
 
   .handover-meta-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .handover-field-layout,
+  .required-field-grid {
+    grid-template-columns: 1fr;
   }
 
   .sidebar {
