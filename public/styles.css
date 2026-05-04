@@ -719,6 +719,26 @@ code {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.field-group-grid label {
+  display: grid;
+  min-width: 0;
+  align-content: end;
+}
+
+.field-group-grid label > span {
+  display: flex;
+  min-height: 2.15rem;
+  align-items: flex-end;
+  gap: 0.28rem;
+  line-height: 1.18;
+}
+
+.field-group-grid input,
+.field-group-grid select {
+  min-width: 0;
+  height: 42px;
+}
+
 .default-field-card {
   background: var(--accent-soft);
 }
