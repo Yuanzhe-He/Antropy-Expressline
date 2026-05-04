@@ -22,15 +22,14 @@
     </div>
   </section>
 <% } else { %>
-  <section class="hero-card">
+  <section class="hero-card compact-hero-card">
     <div>
       <p class="eyebrow"><%= t("calculator.shippingInfo") %></p>
       <h3 data-handover-line-name><%= selectedLine ? selectedLine.name : t("common.notConfigured") %></h3>
-      <p><%= t("calculator.description") %></p>
     </div>
 
     <% if (selectedLine) { %>
-      <div class="meta-grid">
+      <div class="meta-grid handover-meta-grid">
         <div>
           <span><%= t("calculator.metadataInvoiceLocked") %></span>
           <strong data-handover-line-invoice><%= selectedLine.invoiceToConsigneeOnly ? t("calculator.metadataInvoiceLockedYes") : t("calculator.metadataInvoiceLockedNo") %></strong>
@@ -59,15 +58,15 @@
 
   <section class="workspace-grid">
     <section class="panel">
-      <div class="section-title">
+      <div class="section-title tight-section-title">
         <div>
           <p class="eyebrow"><%= t("calculator.formTitle") %></p>
           <h3><%= t("calculator.title") %></h3>
         </div>
-        <div class="note-box" data-handover-line-notice <%= selectedLine?.invoiceNote ? "" : "hidden" %>>
-          <p class="meta-title"><%= t("calculator.lineNotice") %></p>
+        <p class="inline-notice" data-handover-line-notice <%= selectedLine?.invoiceNote ? "" : "hidden" %>>
+          <span><%= t("calculator.lineNotice") %></span>
           <strong data-handover-line-notice-text><%= selectedLine?.invoiceNote || "" %></strong>
-        </div>
+        </p>
       </div>
 
       <form method="post" action="/workbench/<%= currentModuleKey %>" class="stack-form" data-calculator-form>

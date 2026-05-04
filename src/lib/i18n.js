@@ -138,7 +138,7 @@ const MESSAGES = {
       demurrageSummaryValue: "{days} 天，按所选箱型各自阶梯累进",
       totalFormula: "总公式",
       formula: "公式",
-      lineNotice: "开票说明",
+      lineNotice: "开票备注",
       shippingInfo: "船公司提示",
       moduleUnavailableTitle: "功能结构已预留",
       moduleUnavailableDescription:
@@ -491,7 +491,7 @@ const MESSAGES = {
       demurrageSummaryValue: "{days} dias, acumulado progresivo por tipo de contenedor",
       totalFormula: "Formula total",
       formula: "Formula",
-      lineNotice: "Nota de facturacion",
+      lineNotice: "Nota factura",
       shippingInfo: "Notas de la naviera",
       moduleUnavailableTitle: "La estructura ya esta reservada",
       moduleUnavailableDescription:
