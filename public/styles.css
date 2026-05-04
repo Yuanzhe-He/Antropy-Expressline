@@ -1142,6 +1142,51 @@ th {
   margin-top: 0;
 }
 
+.quote-line-card {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.85rem 0;
+  padding: 0.72rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--accent-soft);
+}
+
+.quote-line-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.quote-line-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.2rem 0.75rem;
+  align-items: baseline;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.quote-line-item:last-child {
+  border-bottom: 0;
+}
+
+.quote-line-item span {
+  min-width: 0;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.quote-line-item strong {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.quote-line-item small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
 .panel-banner {
   display: flex;
   align-items: center;

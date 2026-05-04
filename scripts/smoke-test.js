@@ -292,9 +292,9 @@ async function main() {
     expectContains(response.text, "data-theme-toggle", "theme toggle");
     expectContains(response.text, "compact-language-switcher", "compact language switcher");
     expectContains(response.text, "业务性质", "handover page");
-    expectContains(response.text, "税率覆盖", "handover tax overrides");
+    expectContains(response.text, "每项费用税率", "handover tax overrides");
     expectContains(response.text, "data-add-row", "handover add row button");
-    expectContains(response.text, "collapsible-card", "handover collapsible tax overrides");
+    expectContains(response.text, "tax-override-card", "handover visible tax overrides");
     expectContains(response.text, "field-help", "handover field help");
 
     response = await request(baseUrl, "/workbench/handover", {
@@ -322,7 +322,7 @@ async function main() {
     expectContains(response.text, "清关一页式工作台", "customs page");
     expectContains(response.text, 'value="cma-cgm" selected', "linked shipping line");
     expectContains(response.text, 'value="gp-hq-dc" selected', "linked container type");
-    expectContains(response.text, "collapsible-card", "customs collapsible tax overrides");
+    expectContains(response.text, "tax-override-card", "customs visible tax overrides");
 
     response = await request(baseUrl, "/workbench/customs", {
       method: "POST",

@@ -170,8 +170,8 @@
 
       <% if (taxControls?.length) { %>
         <% const changedTaxOverrideCount = Object.values(formData.taxOverrides || {}).filter((value) => value && value !== "default").length; %>
-        <details class="table-card collapsible-card" data-tax-overrides-card <%= changedTaxOverrideCount ? "open" : "" %>>
-          <summary class="section-title compact">
+        <section class="table-card tax-override-card" data-tax-overrides-card>
+          <div class="section-title compact">
             <div>
               <p class="eyebrow"><%= t("calculator.taxOverrideTitle") %></p>
               <h4><%= t("customs.taxOverrideDescription") %></h4>
@@ -180,7 +180,7 @@
             <% if (changedTaxOverrideCount) { %>
               <span class="change-badge"><%= t("calculator.taxOverrideChangedCount", { count: changedTaxOverrideCount }) %></span>
             <% } %>
-          </summary>
+          </div>
           <div class="tax-grid" data-tax-controls>
             <% for (const control of taxControls) { %>
               <label class="tax-control">
@@ -197,7 +197,7 @@
               </label>
             <% } %>
           </div>
-        </details>
+        </section>
       <% } %>
 
       <div class="actions">
@@ -250,6 +250,31 @@
           <p><%= t("calculator.businessNature") %></p>
           <strong><%= t(`businessNature.${result.businessNature === "handover_customs" ? "handoverCustoms" : "customsOnly"}`) %></strong>
         </article>
+      </section>
+
+      <section class="quote-line-card">
+        <div class="section-title compact">
+          <div>
+            <p class="eyebrow"><%= t("calculator.quickBreakdownTitle") %></p>
+            <h4><%= t("calculator.quickBreakdownDescription") %></h4>
+          </div>
+        </div>
+        <div class="quote-line-list">
+          <% for (const block of [result.terminalFixed, result.terminalStorage, result.yardDropoff, result.yardCustoms]) { %>
+            <% for (const item of block.items) { %>
+              <div class="quote-line-item">
+                <span><%= item.concept %></span>
+                <strong><%= item.sourceDisplayAmountLabel %></strong>
+                <small>
+                  <% if (item.sourceDisplayAmountLabel !== item.convertedDisplayAmountLabel) { %>
+                    <%= t("calculator.convertedAmount") %> <%= item.convertedDisplayAmountLabel %> ·
+                  <% } %>
+                  <%= t("calculator.itemTaxRate") %> <%= item.taxRateLabel %>
+                </small>
+              </div>
+            <% } %>
+          <% } %>
+        </div>
       </section>
 
       <div class="result-meta-grid">

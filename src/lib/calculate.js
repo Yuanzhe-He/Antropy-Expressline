@@ -125,6 +125,26 @@ function buildItemFormula(parts, pretaxAmount, afterTaxAmount, taxRate, quoteCur
   return `${pretaxExpression} = ${formatAmount(pretaxAmount)} ${quoteCurrency}`;
 }
 
+function buildSourceAmountLabel(parts, taxRate, priceMode, fallbackCurrency) {
+  if (!parts.length) {
+    return `0.00 ${fallbackCurrency}`;
+  }
+
+  const taxMultiplier = priceMode === "aftertax" ? 1 + taxRate : 1;
+  const totalsByCurrency = new Map();
+  for (const part of parts) {
+    const currentTotal = totalsByCurrency.get(part.currency) || 0;
+    totalsByCurrency.set(
+      part.currency,
+      roundMoney(currentTotal + part.sourcePretax * taxMultiplier)
+    );
+  }
+
+  return [...totalsByCurrency.entries()]
+    .map(([currency, amount]) => `${formatAmount(amount)} ${currency}`)
+    .join(" + ");
+}
+
 function resolveTaxRate(defaultTaxRate, taxOverrides = {}, overrideKey) {
   const overrideValue = taxOverrides?.[overrideKey];
   if (
@@ -154,6 +174,13 @@ function buildDisplayItem({
   );
   const afterTaxAmount = roundMoney(pretaxAmount * (1 + taxRate));
   const displayAmount = priceMode === "aftertax" ? afterTaxAmount : pretaxAmount;
+  const sourceDisplayAmountLabel = buildSourceAmountLabel(
+    parts,
+    taxRate,
+    priceMode,
+    quoteCurrency
+  );
+  const convertedDisplayAmountLabel = `${formatAmount(displayAmount)} ${quoteCurrency}`;
 
   return {
     itemId,
@@ -167,6 +194,8 @@ function buildDisplayItem({
     pretaxAmount,
     afterTaxAmount,
     displayAmount,
+    sourceDisplayAmountLabel,
+    convertedDisplayAmountLabel,
     formula: buildItemFormula(
       parts,
       pretaxAmount,
@@ -200,6 +229,8 @@ function buildZeroItem({
     pretaxAmount: 0,
     afterTaxAmount: 0,
     displayAmount: 0,
+    sourceDisplayAmountLabel: `0.00 ${quoteCurrency}`,
+    convertedDisplayAmountLabel: `0.00 ${quoteCurrency}`,
     formula: `0.00 ${quoteCurrency}`,
     explanation,
   };
