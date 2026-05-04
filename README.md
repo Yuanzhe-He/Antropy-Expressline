@@ -17,7 +17,7 @@
 - 中 / 西语切换
 - 黑白灰风格的前台 + 后台
 - 当前临时关闭登录入口，所有访问者都可进入前台和后台修改规则
-- 汇率通过 Frankfurter API 拉取 `USD / MXN`
+- 汇率通过公开 API 拉取 `USD / MXN`：Frankfurter v2 主源，ExchangeRate-API Open Access 备用源
 - 费用项支持按项设置币种和默认税率
 - 前台支持按费用项临时覆盖税率
 - `换单` 支持：
@@ -90,6 +90,14 @@ npm run build:data
 
 当前系统不再把 Excel 当作数据源。`build:data` 只读取并规范化应用自己的数据文件，不会读取任何 Excel。
 
+如果要手动强制刷新汇率：
+
+```bash
+npm run fx:refresh
+```
+
+服务启动后会按 `America/Mexico_City` 时间每天 `00:00` 自动刷新一次汇率；也可以通过后台“立即刷新汇率”按钮手动刷新。
+
 如果需要生成 Excel 批量上传模板：
 
 ```bash
@@ -125,6 +133,9 @@ PORT=3101 npm run dev
 - `SESSION_SECRET`: 一段足够长的随机字符串
 - `DATABASE_URL`: Supabase Postgres 的 Session pooler connection string
 - `DATABASE_SCHEMA`: `expressline`
+- `FX_REFRESH_TIME_ZONE`: 可选，默认 `America/Mexico_City`
+- `FX_REFRESH_HOUR`: 可选，默认 `0`
+- `FX_REFRESH_MINUTE`: 可选，默认 `0`
 
 完整环境变量说明和 Supabase / AI key 获取步骤见 [`docs/env-setup.md`](docs/env-setup.md)。
 

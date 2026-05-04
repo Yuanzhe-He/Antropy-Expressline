@@ -415,7 +415,7 @@ function normalizeExchangeRates(exchangeRates = {}) {
 
   return {
     provider: exchangeRates.provider || "Frankfurter",
-    docsUrl: exchangeRates.docsUrl || "https://frankfurter.dev/v1/",
+    docsUrl: exchangeRates.docsUrl || "https://frankfurter.dev/",
     asOfDate: exchangeRates.asOfDate || null,
     lastCheckedAt: exchangeRates.lastCheckedAt || null,
     lastError: exchangeRates.lastError || null,

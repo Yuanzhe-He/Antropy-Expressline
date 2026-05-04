@@ -19,9 +19,14 @@ NODE_ENV=production
 SESSION_SECRET=replace-with-a-long-random-secret
 DATABASE_URL=postgresql://postgres.<project-ref>:<database-password>@aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require&uselibpqcompat=true
 DATABASE_SCHEMA=expressline
+FX_REFRESH_TIME_ZONE=America/Mexico_City
+FX_REFRESH_HOUR=0
+FX_REFRESH_MINUTE=0
 ```
 
 `PORT` 不需要手动设置，Railway 会自动提供。
+
+`FX_REFRESH_*` 可以不填；不填时默认按墨西哥城时间每天 `00:00` 自动刷新一次 USD/MXN。
 
 `SKIP_FX_REFRESH=1` 只适合测试时临时使用，生产不要配置，否则汇率不会自动刷新。
 

@@ -11,6 +11,11 @@ function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function formatIsoDateFromUtcString(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
+}
+
 function needsExchangeRateRefresh(exchangeRates) {
   if (!exchangeRates?.pairs?.length) {
     return true;
@@ -21,25 +26,11 @@ function needsExchangeRateRefresh(exchangeRates) {
   return exchangeRates.lastCheckedAt.slice(0, 10) !== todayIsoDate();
 }
 
-async function fetchLatestUsdMxnRates() {
-  const response = await fetch(
-    "https://api.frankfurter.dev/v1/latest?base=USD&symbols=MXN"
-  );
-
-  if (!response.ok) {
-    throw new Error(`Exchange rate request failed with ${response.status}`);
-  }
-
-  const payload = await response.json();
-  const usdToMxn = Number(payload?.rates?.MXN);
-  if (!Number.isFinite(usdToMxn) || usdToMxn <= 0) {
-    throw new Error("Exchange rate payload is missing USD/MXN");
-  }
-
+function buildExchangeRatePayload({ provider, docsUrl, asOfDate, usdToMxn }) {
   return {
-    provider: "Frankfurter",
-    docsUrl: "https://frankfurter.dev/v1/",
-    asOfDate: payload.date || null,
+    provider,
+    docsUrl,
+    asOfDate,
     lastCheckedAt: new Date().toISOString(),
     lastError: null,
     defaultQuoteCurrency: DEFAULT_QUOTE_CURRENCY,
@@ -48,6 +39,72 @@ async function fetchLatestUsdMxnRates() {
       { base: "MXN", quote: "USD", rate: roundCurrency(1 / usdToMxn) },
     ],
   };
+}
+
+async function fetchFrankfurterUsdMxnRates() {
+  const response = await fetch(
+    "https://api.frankfurter.dev/v2/rates?base=USD&quotes=MXN"
+  );
+
+  if (!response.ok) {
+    throw new Error(`Frankfurter request failed with ${response.status}`);
+  }
+
+  const payload = await response.json();
+  const row = Array.isArray(payload) ? payload[0] : null;
+  const usdToMxn = Number(row?.rate);
+  if (!Number.isFinite(usdToMxn) || usdToMxn <= 0) {
+    throw new Error("Frankfurter payload is missing USD/MXN");
+  }
+
+  return buildExchangeRatePayload({
+    provider: "Frankfurter",
+    docsUrl: "https://frankfurter.dev/",
+    asOfDate: row.date || null,
+    usdToMxn,
+  });
+}
+
+async function fetchExchangeRateApiUsdMxnRates() {
+  const response = await fetch("https://open.er-api.com/v6/latest/USD");
+
+  if (!response.ok) {
+    throw new Error(`ExchangeRate-API request failed with ${response.status}`);
+  }
+
+  const payload = await response.json();
+  const usdToMxn = Number(payload?.rates?.MXN);
+  if (
+    payload?.result !== "success" ||
+    !Number.isFinite(usdToMxn) ||
+    usdToMxn <= 0
+  ) {
+    throw new Error("ExchangeRate-API payload is missing USD/MXN");
+  }
+
+  return buildExchangeRatePayload({
+    provider: "ExchangeRate-API Open Access",
+    docsUrl: payload.documentation || "https://www.exchangerate-api.com/docs/free",
+    asOfDate: formatIsoDateFromUtcString(payload.time_last_update_utc),
+    usdToMxn,
+  });
+}
+
+async function fetchLatestUsdMxnRates() {
+  const errors = [];
+
+  for (const fetcher of [
+    fetchFrankfurterUsdMxnRates,
+    fetchExchangeRateApiUsdMxnRates,
+  ]) {
+    try {
+      return await fetcher();
+    } catch (error) {
+      errors.push(error.message);
+    }
+  }
+
+  throw new Error(`All exchange rate providers failed: ${errors.join("; ")}`);
 }
 
 async function refreshExchangeRatesIfStale(shippingData, options = {}) {
@@ -113,6 +170,7 @@ function convertAmount(amount, fromCurrency, toCurrency, exchangeRates) {
 
 module.exports = {
   convertAmount,
+  fetchLatestUsdMxnRates,
   findExchangeRate,
   refreshExchangeRatesIfStale,
 };

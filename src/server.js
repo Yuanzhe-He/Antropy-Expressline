@@ -7,6 +7,7 @@ const {
   parseNumber,
 } = require("./lib/calculate");
 const { refreshExchangeRatesIfStale } = require("./lib/exchange-rates");
+const { startExchangeRateScheduler } = require("./lib/exchange-rate-scheduler");
 const {
   buildTranslator,
   getLanguageOptions,
@@ -1592,6 +1593,7 @@ if (require.main === module) {
   app.listen(port, () => {
     console.log(`Server listening on http://localhost:${port}`);
   });
+  startExchangeRateScheduler();
 }
 
 module.exports = { createApp };
