@@ -25,6 +25,7 @@ const {
   CURRENCY_OPTIONS,
   DEMURRAGE_CUTOFF_OPTIONS,
   PRICE_MODE_OPTIONS,
+  getDemurrageCutoffLabel,
   getTaxRateLabel,
   getLocalizedOptions,
   normalizeBusinessNature,
@@ -589,6 +590,73 @@ function buildCustomsTaxControls(customsContext, t) {
   return controls;
 }
 
+function buildHandoverDependencyData(moduleData, t) {
+  return {
+    labels: {
+      invoiceLockedYes: t("calculator.metadataInvoiceLockedYes"),
+      invoiceLockedNo: t("calculator.metadataInvoiceLockedNo"),
+      guaranteeOn: t("calculator.metadataGuaranteeOn"),
+      guaranteeOff: t("calculator.metadataGuaranteeOff"),
+    },
+    taxOverrideOptions: buildTaxOverrideOptions(moduleData, t),
+    lines: (moduleData.shippingLines || []).map((line) => ({
+      id: line.id,
+      name: line.name,
+      invoiceNote: line.invoiceNote || "",
+      invoiceLabel: line.invoiceToConsigneeOnly
+        ? t("calculator.metadataInvoiceLockedYes")
+        : t("calculator.metadataInvoiceLockedNo"),
+      cutoffLabel: getDemurrageCutoffLabel(line.demurrageCutoffHandledBy, t),
+      guaranteeLabel: line.guarantee?.benefitEnabled
+        ? t("calculator.metadataGuaranteeOn")
+        : t("calculator.metadataGuaranteeOff"),
+      containerGroups: line.containerGroups || [],
+      taxControls: buildHandoverTaxControls(line, t),
+    })),
+  };
+}
+
+function buildCustomsDependencyData(moduleData, t) {
+  const firstContainerKey = moduleData.containerTypes?.[0]?.key || "";
+  const compactCharge = (charge) => ({
+    id: charge.id,
+    concept: charge.concept,
+    taxRate: charge.taxRate,
+  });
+
+  return {
+    labels: {
+      noYardsAvailable: t("customs.noYardsAvailable"),
+      notConfigured: t("common.notConfigured"),
+      terminalFixed: t("customs.categories.terminalFixed"),
+      terminalStorage: t("customs.categories.terminalStorage"),
+      yardDropoff: t("customs.categories.yardDropoff"),
+      yardCustoms: t("customs.categories.yardCustoms"),
+    },
+    taxOverrideOptions: buildTaxOverrideOptions(moduleData, t),
+    ports: (moduleData.ports || []).map((entry) => ({
+      id: entry.id,
+      name: entry.name,
+      terminals: (entry.terminals || []).map((terminal) => ({
+        id: terminal.id,
+        name: terminal.name,
+        fixedCharges: (terminal.fixedCharges || []).map(compactCharge),
+        storageTaxRate:
+          terminal.storageRulesByContainer?.[firstContainerKey]?.[0]?.taxRate ||
+          0,
+      })),
+    })),
+    yards: (moduleData.yards || []).map((entry) => ({
+      id: entry.id,
+      name: entry.name,
+      portIds: entry.portIds || [],
+      shippingLineIds: entry.shippingLineIds || [],
+      dropoffCharges: (entry.dropoffCharges || []).map(compactCharge),
+      customsCharges: (entry.customsCharges || []).map(compactCharge),
+    })),
+  };
+}
+
 function renderHandoverWorkbench(req, res, payload) {
   const moduleMeta = getModulePresentation(payload.moduleKey, req.language);
   const taxControls = buildHandoverTaxControls(payload.selectedLine, req.t);
@@ -610,6 +678,7 @@ function renderHandoverWorkbench(req, res, payload) {
       businessNatureOptions: buildBusinessNatureOptions(payload.moduleKey, req.t),
       taxOverrideOptions: buildTaxOverrideOptions(payload.moduleData, req.t),
       taxControls,
+      dependencyData: buildHandoverDependencyData(payload.moduleData, req.t),
       canContinueToCustoms:
         payload.result?.businessNature === "handover_customs",
       languageReturnTo: `/workbench/${payload.moduleKey}?restoreLast=1`,
@@ -643,6 +712,7 @@ function renderCustomsWorkbench(req, res, payload) {
       businessNatureOptions: buildBusinessNatureOptions(payload.moduleKey, req.t),
       taxOverrideOptions: buildTaxOverrideOptions(payload.moduleData, req.t),
       taxControls: buildCustomsTaxControls(customsContext, req.t),
+      dependencyData: buildCustomsDependencyData(payload.moduleData, req.t),
       linkedHandoverContext: payload.linkedHandoverContext || null,
       languageReturnTo: `/workbench/${payload.moduleKey}?restoreLast=1`,
     })

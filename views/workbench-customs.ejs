@@ -12,25 +12,25 @@
 <section class="hero-card">
   <div>
     <p class="eyebrow"><%= t("customs.scopeTitle") %></p>
-    <h3><%= customsSelections.port?.name || t("common.notConfigured") %></h3>
+    <h3 data-customs-current-port><%= customsSelections.port?.name || t("common.notConfigured") %></h3>
     <p><%= t("customs.scopeDescription") %></p>
   </div>
   <div class="meta-grid">
     <div>
       <span><%= t("customs.portLabel") %></span>
-      <strong><%= customsSelections.port?.name || t("common.notConfigured") %></strong>
+      <strong data-customs-meta-port><%= customsSelections.port?.name || t("common.notConfigured") %></strong>
     </div>
     <div>
       <span><%= t("customs.terminalLabel") %></span>
-      <strong><%= customsSelections.terminal?.name || t("common.notConfigured") %></strong>
+      <strong data-customs-meta-terminal><%= customsSelections.terminal?.name || t("common.notConfigured") %></strong>
     </div>
     <div>
       <span><%= t("customs.shippingLineLabel") %></span>
-      <strong><%= customsSelections.shippingLine?.name || t("common.notConfigured") %></strong>
+      <strong data-customs-meta-shipping-line><%= customsSelections.shippingLine?.name || t("common.notConfigured") %></strong>
     </div>
     <div>
       <span><%= t("customs.yardLabel") %></span>
-      <strong><%= customsSelections.yard?.name || t("common.notConfigured") %></strong>
+      <strong data-customs-meta-yard><%= customsSelections.yard?.name || t("common.notConfigured") %></strong>
     </div>
   </div>
 </section>
@@ -65,7 +65,7 @@
 
         <label>
           <span><%= t("customs.shippingLineLabel") %></span>
-          <select name="shippingLineId" onchange="this.form.requestSubmit()">
+          <select name="shippingLineId" data-customs-shipping-line-select>
             <% for (const line of moduleData.shippingLines || []) { %>
               <option value="<%= line.id %>" <%= formData.shippingLineId === line.id ? "selected" : "" %>>
                 <%= line.name %>
@@ -76,7 +76,7 @@
 
         <label>
           <span><%= t("customs.portLabel") %></span>
-          <select name="portId" onchange="this.form.requestSubmit()">
+          <select name="portId" data-customs-port-select>
             <% for (const port of moduleData.ports || []) { %>
               <option value="<%= port.id %>" <%= formData.portId === port.id ? "selected" : "" %>>
                 <%= port.name %>
@@ -87,7 +87,7 @@
 
         <label>
           <span><%= t("customs.terminalLabel") %></span>
-          <select name="terminalId">
+          <select name="terminalId" data-customs-terminal-select>
             <% for (const terminal of customsSelections.port?.terminals || []) { %>
               <option value="<%= terminal.id %>" <%= formData.terminalId === terminal.id ? "selected" : "" %>>
                 <%= terminal.name %>
@@ -98,16 +98,14 @@
 
         <label>
           <span><%= t("customs.yardLabel") %></span>
-          <select name="yardId">
+          <select name="yardId" data-customs-yard-select>
             <% for (const yard of customsSelections.availableYards || []) { %>
               <option value="<%= yard.id %>" <%= formData.yardId === yard.id ? "selected" : "" %>>
                 <%= yard.name %>
               </option>
             <% } %>
           </select>
-          <% if (!customsSelections.availableYards?.length) { %>
-            <small class="helper-text"><%= t("customs.noYardsAvailable") %></small>
-          <% } %>
+          <small class="helper-text" data-customs-yard-empty <%= customsSelections.availableYards?.length ? "hidden" : "" %>><%= t("customs.noYardsAvailable") %></small>
         </label>
 
         <label>
@@ -172,7 +170,7 @@
 
       <% if (taxControls?.length) { %>
         <% const changedTaxOverrideCount = Object.values(formData.taxOverrides || {}).filter((value) => value && value !== "default").length; %>
-        <details class="table-card collapsible-card" <%= changedTaxOverrideCount ? "open" : "" %>>
+        <details class="table-card collapsible-card" data-tax-overrides-card <%= changedTaxOverrideCount ? "open" : "" %>>
           <summary class="section-title compact">
             <div>
               <p class="eyebrow"><%= t("calculator.taxOverrideTitle") %></p>
@@ -183,7 +181,7 @@
               <span class="change-badge"><%= t("calculator.taxOverrideChangedCount", { count: changedTaxOverrideCount }) %></span>
             <% } %>
           </summary>
-          <div class="tax-grid">
+          <div class="tax-grid" data-tax-controls>
             <% for (const control of taxControls) { %>
               <label class="tax-control">
                 <input type="hidden" name="taxOverrideKey[]" value="<%= control.key %>" />
@@ -329,11 +327,13 @@
 <% } %>
 
 <script id="container-group-data" type="application/json"><%- JSON.stringify(moduleData.containerTypes || []) %></script>
+<script id="customs-dependency-data" type="application/json"><%- JSON.stringify(dependencyData || {}) %></script>
 <script id="calculator-i18n" type="application/json"><%- JSON.stringify({
   containerType: t("calculator.containerType"),
   quantity: t("calculator.quantity"),
   removeRow: t("calculator.removeRow"),
   keepOneContainer: t("calculator.keepOneContainer"),
+  taxDefaultRate: t("calculator.taxDefaultRate", { rate: "__RATE__" }),
 }) %></script>
 <script src="/calculator.js"></script>
 

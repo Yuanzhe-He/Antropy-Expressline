@@ -25,7 +25,7 @@
   <section class="hero-card">
     <div>
       <p class="eyebrow"><%= t("calculator.shippingInfo") %></p>
-      <h3><%= selectedLine ? selectedLine.name : t("common.notConfigured") %></h3>
+      <h3 data-handover-line-name><%= selectedLine ? selectedLine.name : t("common.notConfigured") %></h3>
       <p><%= t("calculator.description") %></p>
     </div>
 
@@ -33,11 +33,11 @@
       <div class="meta-grid">
         <div>
           <span><%= t("calculator.metadataInvoiceLocked") %></span>
-          <strong><%= selectedLine.invoiceToConsigneeOnly ? t("calculator.metadataInvoiceLockedYes") : t("calculator.metadataInvoiceLockedNo") %></strong>
+          <strong data-handover-line-invoice><%= selectedLine.invoiceToConsigneeOnly ? t("calculator.metadataInvoiceLockedYes") : t("calculator.metadataInvoiceLockedNo") %></strong>
         </div>
         <div>
           <span><%= t("calculator.metadataCutoff") %></span>
-          <strong>
+          <strong data-handover-line-cutoff>
             <%= selectedLine.demurrageCutoffHandledBy === "customs_broker_only"
               ? t("demurrageCutoff.customsBrokerOnly")
               : selectedLine.demurrageCutoffHandledBy === "customer_only"
@@ -51,7 +51,7 @@
         </div>
         <div>
           <span><%= t("calculator.metadataGuarantee") %></span>
-          <strong><%= selectedLine.guarantee.benefitEnabled ? t("calculator.metadataGuaranteeOn") : t("calculator.metadataGuaranteeOff") %></strong>
+          <strong data-handover-line-guarantee><%= selectedLine.guarantee.benefitEnabled ? t("calculator.metadataGuaranteeOn") : t("calculator.metadataGuaranteeOff") %></strong>
         </div>
       </div>
     <% } %>
@@ -64,19 +64,17 @@
           <p class="eyebrow"><%= t("calculator.formTitle") %></p>
           <h3><%= t("calculator.title") %></h3>
         </div>
-        <% if (selectedLine?.invoiceNote) { %>
-          <div class="note-box">
-            <p class="meta-title"><%= t("calculator.lineNotice") %></p>
-            <strong><%= selectedLine.invoiceNote %></strong>
-          </div>
-        <% } %>
+        <div class="note-box" data-handover-line-notice <%= selectedLine?.invoiceNote ? "" : "hidden" %>>
+          <p class="meta-title"><%= t("calculator.lineNotice") %></p>
+          <strong data-handover-line-notice-text><%= selectedLine?.invoiceNote || "" %></strong>
+        </div>
       </div>
 
       <form method="post" action="/workbench/<%= currentModuleKey %>" class="stack-form" data-calculator-form>
         <div class="grid-form">
           <label>
             <span><%= t("calculator.shippingLine") %></span>
-            <select name="shippingLineId" onchange="this.form.requestSubmit()">
+            <select name="shippingLineId" data-handover-line-select>
               <% for (const line of shippingLines) { %>
                 <option value="<%= line.id %>" <%= formData.shippingLineId === line.id ? "selected" : "" %>>
                   <%= line.name %>
@@ -166,7 +164,7 @@
 
         <% if (taxControls?.length) { %>
           <% const changedTaxOverrideCount = Object.values(formData.taxOverrides || {}).filter((value) => value && value !== "default").length; %>
-          <details class="table-card collapsible-card" <%= changedTaxOverrideCount ? "open" : "" %>>
+          <details class="table-card collapsible-card" data-tax-overrides-card <%= changedTaxOverrideCount ? "open" : "" %>>
             <summary class="section-title compact">
               <div>
                 <p class="eyebrow"><%= t("calculator.taxOverrideTitle") %></p>
@@ -177,7 +175,7 @@
                 <span class="change-badge"><%= t("calculator.taxOverrideChangedCount", { count: changedTaxOverrideCount }) %></span>
               <% } %>
             </summary>
-            <div class="tax-grid">
+            <div class="tax-grid" data-tax-controls>
               <% for (const control of taxControls) { %>
                 <label class="tax-control">
                   <input type="hidden" name="taxOverrideKey[]" value="<%= control.key %>" />
@@ -336,11 +334,13 @@
   <% } %>
 
   <script id="container-group-data" type="application/json"><%- JSON.stringify(selectedLine?.containerGroups || []) %></script>
+  <script id="handover-line-data" type="application/json"><%- JSON.stringify(dependencyData || {}) %></script>
   <script id="calculator-i18n" type="application/json"><%- JSON.stringify({
     containerType: t("calculator.containerType"),
     quantity: t("calculator.quantity"),
     removeRow: t("calculator.removeRow"),
     keepOneContainer: t("calculator.keepOneContainer"),
+    taxDefaultRate: t("calculator.taxDefaultRate", { rate: "__RATE__" }),
   }) %></script>
   <script src="/calculator.js"></script>
 <% } %>
