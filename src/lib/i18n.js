@@ -72,6 +72,7 @@ const MESSAGES = {
     common: {
       save: "保存",
       calculate: "立即计算",
+      calculating: "计算中",
       refresh: "刷新",
       edit: "编辑",
       delete: "删除",
@@ -112,6 +113,9 @@ const MESSAGES = {
     calculator: {
       title: "成本工作台",
       description: "按业务输入后，系统即时输出公式、解释、分类金额和总数。",
+      loadingDescription: "正在按当前输入重新计算右侧报价结果。",
+      loadingErrorTitle: "计算失败",
+      loadingErrorDescription: "请检查输入后重新点击立即计算。",
       formTitle: "录入条件",
       formDescription: "销售只填业务变量，规则和默认金额全部来自后台。",
       shippingLine: "船公司",
@@ -424,6 +428,7 @@ const MESSAGES = {
     common: {
       save: "Guardar",
       calculate: "Calcular ahora",
+      calculating: "Calculando",
       refresh: "Actualizar",
       edit: "Editar",
       delete: "Eliminar",
@@ -465,6 +470,11 @@ const MESSAGES = {
       title: "Mesa de costos",
       description:
         "Despues de capturar los datos del negocio, el sistema devuelve formula, explicacion, importes y total.",
+      loadingDescription:
+        "Recalculando el resultado del panel derecho con los datos actuales.",
+      loadingErrorTitle: "No se pudo calcular",
+      loadingErrorDescription:
+        "Revisa los datos capturados y vuelve a calcular.",
       formTitle: "Datos de entrada",
       formDescription: "Ventas solo captura variables del negocio; las reglas y montos base vienen del backend.",
       shippingLine: "Naviera",

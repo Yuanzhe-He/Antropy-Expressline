@@ -149,7 +149,8 @@
 
 (function calculatorSubmitFlow() {
   const forms = [...document.querySelectorAll("[data-calculator-form]")];
-  const resultsPanel = document.querySelector("[data-calculator-results]");
+  let resultsPanel = document.querySelector("[data-calculator-results]");
+  const breakdownSlot = document.querySelector("[data-calculator-breakdown-slot]");
   if (!forms.length) {
     return;
   }
@@ -199,6 +200,144 @@
     return rect.top >= topGuard && rect.top < window.innerHeight * 0.78;
   }
 
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function getResultsPanel() {
+    resultsPanel = document.querySelector("[data-calculator-results]");
+    return resultsPanel;
+  }
+
+  function showLoadingState(panel) {
+    if (!panel) {
+      return;
+    }
+
+    const title = panel.dataset.loadingTitle || "Calculating";
+    const description =
+      panel.dataset.loadingDescription || "Updating the quote result.";
+    panel.dataset.hasResult = "loading";
+    panel.setAttribute("aria-busy", "true");
+    panel.classList.add("is-loading");
+    panel.innerHTML = `
+      <div class="loading-state" role="status" aria-live="polite">
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <div>
+          <h3>${escapeHtml(title)}</h3>
+          <p>${escapeHtml(description)}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  function setSubmitState(form, submitter, isSubmitting) {
+    form.classList.toggle("is-submitting", isSubmitting);
+    form.setAttribute("aria-busy", isSubmitting ? "true" : "false");
+
+    if (submitter) {
+      submitter.disabled = isSubmitting;
+    }
+  }
+
+  function buildRequestBody(form, submitter) {
+    const formData = new FormData(form);
+    if (submitter?.name) {
+      formData.append(submitter.name, submitter.value);
+    }
+    return new URLSearchParams(formData);
+  }
+
+  function replaceBreakdown(nextDocument) {
+    if (!breakdownSlot) {
+      return;
+    }
+
+    const nextSlot = nextDocument.querySelector("[data-calculator-breakdown-slot]");
+    breakdownSlot.innerHTML = nextSlot ? nextSlot.innerHTML : "";
+  }
+
+  function waitForMinimumLoading(startTime) {
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, 180 - elapsed);
+    return new Promise((resolve) => {
+      window.setTimeout(resolve, remaining);
+    });
+  }
+
+  async function submitCalculator(form, submitter) {
+    const panel = getResultsPanel();
+    if (!panel || !window.fetch || !window.DOMParser || !window.URLSearchParams) {
+      return false;
+    }
+
+    const loadingStartedAt = Date.now();
+    showLoadingState(panel);
+    if (breakdownSlot) {
+      breakdownSlot.innerHTML = "";
+    }
+    setSubmitState(form, submitter, true);
+
+    try {
+      const response = await fetch(submitter?.formAction || form.action, {
+        method: (submitter?.formMethod || form.method || "post").toUpperCase(),
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: buildRequestBody(form, submitter),
+      });
+      const html = await response.text();
+      await waitForMinimumLoading(loadingStartedAt);
+      const nextDocument = new DOMParser().parseFromString(html, "text/html");
+      const nextPanel = nextDocument.querySelector("[data-calculator-results]");
+
+      if (!nextPanel) {
+        if (response.redirected && response.url) {
+          window.location.assign(response.url);
+          return true;
+        }
+        throw new Error("Missing calculator results panel.");
+      }
+
+      panel.replaceWith(nextPanel);
+      resultsPanel = nextPanel;
+      replaceBreakdown(nextDocument);
+      nextPanel.classList.add("result-just-updated");
+      nextPanel.removeAttribute("aria-busy");
+      window.setTimeout(() => {
+        nextPanel.classList.remove("result-just-updated");
+      }, 1000);
+      clearState();
+    } catch (_error) {
+      const currentPanel = getResultsPanel();
+      if (currentPanel) {
+        const title = currentPanel.dataset.errorTitle || "Calculation failed";
+        const description =
+          currentPanel.dataset.errorDescription ||
+          "Please check the input and calculate again.";
+        currentPanel.classList.remove("is-loading");
+        currentPanel.removeAttribute("aria-busy");
+        currentPanel.innerHTML = `
+          <div class="empty-state">
+            <h3>${escapeHtml(title)}</h3>
+            <p>${escapeHtml(description)}</p>
+          </div>
+        `;
+      }
+    } finally {
+      setSubmitState(form, submitter, false);
+    }
+
+    return true;
+  }
+
   function restoreAfterSubmit() {
     const state = readState();
     if (
@@ -245,8 +384,12 @@
       saveState({ focusResult });
 
       if (focusResult) {
-        form.classList.add("is-submitting");
-        form.setAttribute("aria-busy", "true");
+        event.preventDefault();
+        submitCalculator(form, submitter).then((handled) => {
+          if (!handled) {
+            form.submit();
+          }
+        });
       }
     });
   });

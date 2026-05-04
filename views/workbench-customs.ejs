@@ -206,7 +206,15 @@
     </form>
   </section>
 
-  <section class="panel results-panel" data-calculator-results data-has-result="<%= result ? 'true' : 'false' %>">
+  <section
+    class="panel results-panel"
+    data-calculator-results
+    data-has-result="<%= result ? 'true' : 'false' %>"
+    data-loading-title="<%= t("common.calculating") %>"
+    data-loading-description="<%= t("calculator.loadingDescription") %>"
+    data-error-title="<%= t("calculator.loadingErrorTitle") %>"
+    data-error-description="<%= t("calculator.loadingErrorDescription") %>"
+  >
     <div class="section-title">
       <div>
         <p class="eyebrow"><%= t("calculator.resultTitle") %></p>
@@ -273,58 +281,60 @@
   </section>
 </section>
 
-<% if (result) { %>
-  <section class="breakdown-grid">
-    <% for (const block of [result.terminalFixed, result.terminalStorage, result.yardDropoff, result.yardCustoms]) { %>
-      <article class="breakdown-card">
-        <div class="section-title compact">
-          <div>
-            <p class="eyebrow"><%= t("calculator.detailsTitle") %></p>
-            <h4><%= block.title %></h4>
-          </div>
-          <div class="mini-summary">
-            <span><%= t("calculator.itemPretax") %> <%= block.pretaxTotal.toFixed(2) %> <%= block.quoteCurrency %></span>
-            <span><%= t("calculator.itemAftertax") %> <%= block.afterTaxTotal.toFixed(2) %> <%= block.quoteCurrency %></span>
-            <strong><%= block.displayTotal.toFixed(2) %> <%= block.quoteCurrency %></strong>
-          </div>
-        </div>
-
-        <% if (!block.items.length) { %>
-          <p class="muted"><%= t("common.noCalculation") %></p>
-        <% } %>
-
-        <% for (const item of block.items) { %>
-          <div class="breakdown-item rich">
-            <div class="breakdown-main">
-              <strong><%= item.concept %></strong>
-              <% if (item.note) { %>
-                <p><%= item.note %></p>
-              <% } %>
-              <details class="formula-inline formula-details">
-                <summary><%= t("calculator.formula") %></summary>
-                <code><%= item.formula %></code>
-              </details>
-              <p><%= item.explanation %></p>
-              <% if (item.parts.length) { %>
-                <div class="part-list">
-                  <% for (const part of item.parts) { %>
-                    <span><%= part.summaryLabel %></span>
-                  <% } %>
-                </div>
-              <% } %>
+<div data-calculator-breakdown-slot>
+  <% if (result) { %>
+    <section class="breakdown-grid" data-calculator-breakdown>
+      <% for (const block of [result.terminalFixed, result.terminalStorage, result.yardDropoff, result.yardCustoms]) { %>
+        <article class="breakdown-card">
+          <div class="section-title compact">
+            <div>
+              <p class="eyebrow"><%= t("calculator.detailsTitle") %></p>
+              <h4><%= block.title %></h4>
             </div>
-            <div class="amount-stack">
-              <span><%= t("calculator.itemTaxRate") %> <%= item.taxRateLabel %></span>
-              <span><%= t("calculator.itemPretax") %> <%= item.pretaxAmount.toFixed(2) %> <%= item.quoteCurrency %></span>
-              <span><%= t("calculator.itemAftertax") %> <%= item.afterTaxAmount.toFixed(2) %> <%= item.quoteCurrency %></span>
-              <strong><%= item.displayAmount.toFixed(2) %> <%= item.quoteCurrency %></strong>
+            <div class="mini-summary">
+              <span><%= t("calculator.itemPretax") %> <%= block.pretaxTotal.toFixed(2) %> <%= block.quoteCurrency %></span>
+              <span><%= t("calculator.itemAftertax") %> <%= block.afterTaxTotal.toFixed(2) %> <%= block.quoteCurrency %></span>
+              <strong><%= block.displayTotal.toFixed(2) %> <%= block.quoteCurrency %></strong>
             </div>
           </div>
-        <% } %>
-      </article>
-    <% } %>
-  </section>
-<% } %>
+
+          <% if (!block.items.length) { %>
+            <p class="muted"><%= t("common.noCalculation") %></p>
+          <% } %>
+
+          <% for (const item of block.items) { %>
+            <div class="breakdown-item rich">
+              <div class="breakdown-main">
+                <strong><%= item.concept %></strong>
+                <% if (item.note) { %>
+                  <p><%= item.note %></p>
+                <% } %>
+                <details class="formula-inline formula-details">
+                  <summary><%= t("calculator.formula") %></summary>
+                  <code><%= item.formula %></code>
+                </details>
+                <p><%= item.explanation %></p>
+                <% if (item.parts.length) { %>
+                  <div class="part-list">
+                    <% for (const part of item.parts) { %>
+                      <span><%= part.summaryLabel %></span>
+                    <% } %>
+                  </div>
+                <% } %>
+              </div>
+              <div class="amount-stack">
+                <span><%= t("calculator.itemTaxRate") %> <%= item.taxRateLabel %></span>
+                <span><%= t("calculator.itemPretax") %> <%= item.pretaxAmount.toFixed(2) %> <%= item.quoteCurrency %></span>
+                <span><%= t("calculator.itemAftertax") %> <%= item.afterTaxAmount.toFixed(2) %> <%= item.quoteCurrency %></span>
+                <strong><%= item.displayAmount.toFixed(2) %> <%= item.quoteCurrency %></strong>
+              </div>
+            </div>
+          <% } %>
+        </article>
+      <% } %>
+    </section>
+  <% } %>
+</div>
 
 <script id="container-group-data" type="application/json"><%- JSON.stringify(moduleData.containerTypes || []) %></script>
 <script id="customs-dependency-data" type="application/json"><%- JSON.stringify(dependencyData || {}) %></script>
