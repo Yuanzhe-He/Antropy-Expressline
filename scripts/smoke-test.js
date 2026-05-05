@@ -200,22 +200,44 @@ function buildCustomsAdminForm(moduleData) {
         }
       }
 
-      for (const type of moduleData.containerTypes || []) {
-        for (const rule of terminal.storageRulesByContainer?.[type.key] || []) {
+      for (const ruleSet of terminal.storageRuleSets || []) {
+        entries.push([
+          `terminal_storage_set_${terminal.id}_${ruleSet.id}_name`,
+          ruleSet.name,
+        ]);
+        for (const line of moduleData.shippingLines || []) {
+          for (const type of moduleData.containerTypes || []) {
+            const assignmentKey = `${line.id}::${type.key}`;
+            const isUnassigned =
+              terminal.storageUnassignedLineContainers?.includes(assignmentKey);
+            const assignedRuleSetId = isUnassigned
+              ? null
+              : terminal.storageAssignmentsByLineContainer?.[line.id]?.[
+                  type.key
+                ] || terminal.storageAssignmentsByContainerType?.[type.key];
+            if (assignedRuleSetId === ruleSet.id) {
+              entries.push([
+                `terminal_storage_set_${terminal.id}_${ruleSet.id}_lineContainers`,
+                assignmentKey,
+              ]);
+            }
+          }
+        }
+        for (const rule of ruleSet.rules || []) {
           entries.push([
-            `terminal_rule_${terminal.id}_${type.key}_${rule.id}_end`,
+            `terminal_storage_set_${terminal.id}_${ruleSet.id}_${rule.id}_end`,
             rule.endDay ?? "",
           ]);
           entries.push([
-            `terminal_rule_${terminal.id}_${type.key}_${rule.id}_tax`,
+            `terminal_storage_set_${terminal.id}_${ruleSet.id}_${rule.id}_tax`,
             rule.taxRate,
           ]);
           entries.push([
-            `terminal_rule_${terminal.id}_${type.key}_${rule.id}_rate`,
+            `terminal_storage_set_${terminal.id}_${ruleSet.id}_${rule.id}_rate`,
             rule.rateConfig?.rate ?? 0,
           ]);
           entries.push([
-            `terminal_rule_${terminal.id}_${type.key}_${rule.id}_currency`,
+            `terminal_storage_set_${terminal.id}_${ruleSet.id}_${rule.id}_currency`,
             rule.rateConfig?.currency || "MXN",
           ]);
         }
@@ -412,6 +434,11 @@ async function main() {
     assert.equal(response.status, 200);
     expectContains(response.text, "船公司与场站映射", "public admin access");
     expectContains(response.text, "新增阶梯", "customs add rule button");
+    expectContains(response.text, "码头堆存规则集", "customs storage rule sets");
+    expectContains(response.text, "适用船公司 / 柜型", "customs line-container rule assignments");
+    expectContains(response.text, "移除", "customs assignment removal");
+    expectContains(response.text, "entity-collapsible", "customs collapsible sections");
+    expectContains(response.text, "multiple", "customs multi-select assignments");
     expectContains(response.text, "新增码头", "customs add terminal button");
     expectContains(response.text, "新增场站", "customs add yard button");
     expectContains(response.text, "section-jump-nav", "customs section navigation");
@@ -430,18 +457,32 @@ async function main() {
       }
     );
     assert.equal(response.status, 302);
-    assert.equal(response.location, "/admin/customs/shipping-lines");
     shippingData = await getShippingData();
     const updatedCustomsPort = shippingData.modules.customs.ports.find(
       (port) => port.id === firstCustomsPort.id
     );
     assert.equal(updatedCustomsPort.terminals.length, beforeTerminalCount + 1);
     const addedTerminal = updatedCustomsPort.terminals.at(-1);
+    assert.equal(
+      response.location,
+      `/admin/customs/shipping-lines#customs-terminal-${addedTerminal.id}`
+    );
     assert.equal(addedTerminal.fixedCharges.length, 1);
+    assert.ok(addedTerminal.storageRuleSets.length, "new terminal storage rule set exists");
     for (const type of shippingData.modules.customs.containerTypes || []) {
       assert.ok(
         addedTerminal.fixedCharges[0].groupRates[type.key],
         `new terminal fixed charge rate exists for ${type.key}`
+      );
+      assert.ok(
+        addedTerminal.storageAssignmentsByContainerType[type.key],
+        `new terminal storage rule assignment exists for ${type.key}`
+      );
+      assert.ok(
+        addedTerminal.storageAssignmentsByLineContainer[
+          shippingData.modules.customs.shippingLines[0].id
+        ]?.[type.key],
+        `new terminal line-container storage assignment exists for ${type.key}`
       );
       assert.ok(
         addedTerminal.storageRulesByContainer[type.key]?.length,
@@ -455,10 +496,13 @@ async function main() {
       jar: publicJar,
     });
     assert.equal(response.status, 302);
-    assert.equal(response.location, "/admin/customs/shipping-lines");
     shippingData = await getShippingData();
     assert.equal(shippingData.modules.customs.yards.length, beforeYardCount + 1);
     const addedYard = shippingData.modules.customs.yards.at(-1);
+    assert.equal(
+      response.location,
+      `/admin/customs/shipping-lines#customs-yard-${addedYard.id}`
+    );
     assert.deepEqual(addedYard.portIds, [firstCustomsPort.id]);
     assert.equal(addedYard.dropoffCharges.length, 1);
     assert.equal(addedYard.customsCharges.length, 1);
@@ -692,34 +736,65 @@ async function main() {
     assert.equal(response.status, 302);
 
     shippingData = await getShippingData();
-    const terminal =
+    let terminal =
       shippingData.modules.customs.ports[0].terminals[0];
     const customsGroupKey = shippingData.modules.customs.containerTypes[0].key;
-    const beforeCustomsRuleCount =
-      terminal.storageRulesByContainer[customsGroupKey].length;
+    const beforeStorageRuleSetCount = terminal.storageRuleSets.length;
 
     response = await request(
       baseUrl,
-      `/admin/customs/terminals/${terminal.id}/storage/${customsGroupKey}/add`,
+      `/admin/customs/terminals/${terminal.id}/storage-rule-sets/add`,
       {
         method: "POST",
         jar: publicJar,
       }
     );
     assert.equal(response.status, 302);
+    assert.equal(
+      response.location,
+      `/admin/customs/shipping-lines#customs-terminal-${terminal.id}`
+    );
+    shippingData = await getShippingData();
+    terminal = shippingData.modules.customs.ports[0].terminals[0];
+    assert.equal(terminal.storageRuleSets.length, beforeStorageRuleSetCount + 1);
+
+    const customsRuleSet = terminal.storageRuleSets[0];
+    const beforeCustomsRuleCount =
+      customsRuleSet.rules.length;
+
+    response = await request(
+      baseUrl,
+      `/admin/customs/terminals/${terminal.id}/storage-rule-sets/${customsRuleSet.id}/add`,
+      {
+        method: "POST",
+        jar: publicJar,
+      }
+    );
+    assert.equal(response.status, 302);
+    assert.equal(
+      response.location,
+      `/admin/customs/shipping-lines#customs-terminal-${terminal.id}`
+    );
     shippingData = await getShippingData();
     const updatedTerminal =
       shippingData.modules.customs.ports[0].terminals[0];
+    const updatedCustomsRuleSet = updatedTerminal.storageRuleSets.find(
+      (ruleSet) => ruleSet.id === customsRuleSet.id
+    );
+    assert.equal(
+      updatedCustomsRuleSet.rules.length,
+      beforeCustomsRuleCount + 1
+    );
     assert.equal(
       updatedTerminal.storageRulesByContainer[customsGroupKey].length,
-      beforeCustomsRuleCount + 1
+      updatedCustomsRuleSet.rules.length
     );
 
     const addedCustomsRule =
-      updatedTerminal.storageRulesByContainer[customsGroupKey].at(-1);
+      updatedCustomsRuleSet.rules.at(-1);
     response = await request(
       baseUrl,
-      `/admin/customs/terminals/${terminal.id}/storage/${customsGroupKey}/${addedCustomsRule.id}/delete`,
+      `/admin/customs/terminals/${terminal.id}/storage-rule-sets/${customsRuleSet.id}/${addedCustomsRule.id}/delete`,
       {
         method: "POST",
         jar: publicJar,
@@ -728,21 +803,44 @@ async function main() {
     assert.equal(response.status, 302);
     shippingData = await getShippingData();
     assert.equal(
-      shippingData.modules.customs.ports[0].terminals[0].storageRulesByContainer[
-        customsGroupKey
-      ].length,
+      shippingData.modules.customs.ports[0].terminals[0].storageRuleSets.find(
+        (ruleSet) => ruleSet.id === customsRuleSet.id
+      ).rules.length,
       beforeCustomsRuleCount
+    );
+
+    const firstCustomsLineId = shippingData.modules.customs.shippingLines[0].id;
+    response = await request(
+      baseUrl,
+      `/admin/customs/terminals/${terminal.id}/storage-assignments/${firstCustomsLineId}/${customsGroupKey}/delete`,
+      {
+        method: "POST",
+        jar: publicJar,
+      }
+    );
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    assert.ok(
+      shippingData.modules.customs.ports[0].terminals[0].storageUnassignedLineContainers.includes(
+        `${firstCustomsLineId}::${customsGroupKey}`
+      ),
+      "removed customs storage assignment is tracked"
+    );
+    assert.equal(
+      shippingData.modules.customs.ports[0].terminals[0]
+        .storageAssignmentsByLineContainer[firstCustomsLineId]?.[customsGroupKey],
+      undefined
     );
 
     const customsForm = buildCustomsAdminForm(shippingData.modules.customs);
     const firstCustomsRule =
-      shippingData.modules.customs.ports[0].terminals[0].storageRulesByContainer[
-        customsGroupKey
-      ][0];
+      shippingData.modules.customs.ports[0].terminals[0].storageRuleSets.find(
+        (ruleSet) => ruleSet.id === customsRuleSet.id
+      ).rules[0];
     const customsInvalidIndex = customsForm.findIndex(
       ([key]) =>
         key ===
-        `terminal_rule_${terminal.id}_${customsGroupKey}_${firstCustomsRule.id}_end`
+        `terminal_storage_set_${terminal.id}_${customsRuleSet.id}_${firstCustomsRule.id}_end`
     );
     customsForm[customsInvalidIndex][1] = 0;
 

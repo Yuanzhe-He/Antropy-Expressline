@@ -2,21 +2,21 @@
   "generatedFrom": "/Users/yuanzhehe/Library/Containers/com.tencent.xinWeChat/Data/Documents/xwechat_files/wxid_8b9mu5g3fomo22_21e8/temp/drag/TARIFARIO 120426.xlsx",
   "exchangeRates": {
     "provider": "Frankfurter",
-    "docsUrl": "https://frankfurter.dev/v1/",
-    "asOfDate": "2026-04-23",
-    "lastCheckedAt": "2026-04-24T06:47:55.772Z",
+    "docsUrl": "https://frankfurter.dev/",
+    "asOfDate": "2026-05-05",
+    "lastCheckedAt": "2026-05-05T21:49:40.446Z",
     "lastError": null,
     "defaultQuoteCurrency": "MXN",
     "pairs": [
       {
         "base": "USD",
         "quote": "MXN",
-        "rate": 17.3516
+        "rate": 17.459
       },
       {
         "base": "MXN",
         "quote": "USD",
-        "rate": 0.057632
+        "rate": 0.057277
       }
     ]
   },
@@ -8616,7 +8616,1232 @@
                     }
                   }
                 ]
-              }
+              },
+              "storageRuleSets": [
+                {
+                  "id": "storage-set-fr-20",
+                  "name": "FR 20'",
+                  "sourceContainerKey": "fr-20",
+                  "sourceContainerKeys": [
+                    "fr-20"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-fr-20-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "FR 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-fr-20-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "FR 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 115
+                      }
+                    },
+                    {
+                      "id": "contecon-fr-20-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "FR 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 200
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-fr-40",
+                  "name": "FR 40'",
+                  "sourceContainerKey": "fr-40",
+                  "sourceContainerKeys": [
+                    "fr-40"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-fr-40-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "FR 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-fr-40-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "FR 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 140
+                      }
+                    },
+                    {
+                      "id": "contecon-fr-40-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "FR 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 240
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-gp-hc-sd",
+                  "name": "GP HC SD",
+                  "sourceContainerKey": "gp-hc-sd",
+                  "sourceContainerKeys": [
+                    "gp-hc-sd"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-gp-hc-sd-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "GP HC SD",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-gp-hc-sd-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HC SD",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 165
+                      }
+                    },
+                    {
+                      "id": "contecon-gp-hc-sd-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HC SD",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 280
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-gp-hq-dc",
+                  "name": "GP HQ DC",
+                  "sourceContainerKey": "gp-hq-dc",
+                  "sourceContainerKeys": [
+                    "gp-hq-dc"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-gp-hq-dc-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "GP HQ DC",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-gp-hq-dc-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HQ DC",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 190
+                      }
+                    },
+                    {
+                      "id": "contecon-gp-hq-dc-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HQ DC",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 320
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-gp-hq-dc-20-40",
+                  "name": "GP HQ DC 20' 40'",
+                  "sourceContainerKey": "gp-hq-dc-20-40",
+                  "sourceContainerKeys": [
+                    "gp-hq-dc-20-40"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-gp-hq-dc-20-40-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "GP HQ DC 20' 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-gp-hq-dc-20-40-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HQ DC 20' 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 215
+                      }
+                    },
+                    {
+                      "id": "contecon-gp-hq-dc-20-40-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HQ DC 20' 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 360
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-imo-dry",
+                  "name": "IMO DRY",
+                  "sourceContainerKey": "imo-dry",
+                  "sourceContainerKeys": [
+                    "imo-dry"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-imo-dry-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "IMO DRY",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-imo-dry-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO DRY",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 240
+                      }
+                    },
+                    {
+                      "id": "contecon-imo-dry-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO DRY",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 400
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-imo-reefer",
+                  "name": "IMO REEFER",
+                  "sourceContainerKey": "imo-reefer",
+                  "sourceContainerKeys": [
+                    "imo-reefer"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-imo-reefer-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "IMO REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-imo-reefer-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 265
+                      }
+                    },
+                    {
+                      "id": "contecon-imo-reefer-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 440
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-imo-special-45",
+                  "name": "IMO SPECIAL & 45'",
+                  "sourceContainerKey": "imo-special-45",
+                  "sourceContainerKeys": [
+                    "imo-special-45"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-imo-special-45-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "IMO SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-imo-special-45-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 290
+                      }
+                    },
+                    {
+                      "id": "contecon-imo-special-45-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 480
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-ot-20",
+                  "name": "OT 20'",
+                  "sourceContainerKey": "ot-20",
+                  "sourceContainerKeys": [
+                    "ot-20"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-ot-20-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "OT 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-ot-20-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 315
+                      }
+                    },
+                    {
+                      "id": "contecon-ot-20-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 520
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-ot-40",
+                  "name": "OT 40'",
+                  "sourceContainerKey": "ot-40",
+                  "sourceContainerKeys": [
+                    "ot-40"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-ot-40-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "OT 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-ot-40-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 340
+                      }
+                    },
+                    {
+                      "id": "contecon-ot-40-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 560
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-ot-fl-pl",
+                  "name": "OT FL PL",
+                  "sourceContainerKey": "ot-fl-pl",
+                  "sourceContainerKeys": [
+                    "ot-fl-pl"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-ot-fl-pl-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "OT FL PL",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-ot-fl-pl-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT FL PL",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 365
+                      }
+                    },
+                    {
+                      "id": "contecon-ot-fl-pl-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT FL PL",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 600
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-ot-fr-rf",
+                  "name": "OT FR RF",
+                  "sourceContainerKey": "ot-fr-rf",
+                  "sourceContainerKeys": [
+                    "ot-fr-rf"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-ot-fr-rf-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "OT FR RF",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-ot-fr-rf-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT FR RF",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 390
+                      }
+                    },
+                    {
+                      "id": "contecon-ot-fr-rf-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT FR RF",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 640
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-reefer",
+                  "name": "REEFER",
+                  "sourceContainerKey": "reefer",
+                  "sourceContainerKeys": [
+                    "reefer"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-reefer-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-reefer-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 415
+                      }
+                    },
+                    {
+                      "id": "contecon-reefer-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 680
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-rf-20",
+                  "name": "RF 20'",
+                  "sourceContainerKey": "rf-20",
+                  "sourceContainerKeys": [
+                    "rf-20"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-rf-20-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "RF 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-rf-20-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 440
+                      }
+                    },
+                    {
+                      "id": "contecon-rf-20-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 720
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-rf-40",
+                  "name": "RF 40'",
+                  "sourceContainerKey": "rf-40",
+                  "sourceContainerKeys": [
+                    "rf-40"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-rf-40-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "RF 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-rf-40-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 465
+                      }
+                    },
+                    {
+                      "id": "contecon-rf-40-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 760
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-rf-rq",
+                  "name": "RF RQ",
+                  "sourceContainerKey": "rf-rq",
+                  "sourceContainerKeys": [
+                    "rf-rq"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-rf-rq-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "RF RQ",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-rf-rq-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF RQ",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 490
+                      }
+                    },
+                    {
+                      "id": "contecon-rf-rq-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF RQ",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 800
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-special-45",
+                  "name": "SPECIAL & 45'",
+                  "sourceContainerKey": "special-45",
+                  "sourceContainerKeys": [
+                    "special-45"
+                  ],
+                  "rules": [
+                    {
+                      "id": "contecon-special-45-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "contecon-special-45-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 515
+                      }
+                    },
+                    {
+                      "id": "contecon-special-45-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 840
+                      }
+                    }
+                  ]
+                }
+              ],
+              "storageAssignmentsByContainerType": {
+                "fr-20": "storage-set-fr-20",
+                "fr-40": "storage-set-fr-40",
+                "gp-hc-sd": "storage-set-gp-hc-sd",
+                "gp-hq-dc": "storage-set-gp-hq-dc",
+                "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                "imo-dry": "storage-set-imo-dry",
+                "imo-reefer": "storage-set-imo-reefer",
+                "imo-special-45": "storage-set-imo-special-45",
+                "ot-20": "storage-set-ot-20",
+                "ot-40": "storage-set-ot-40",
+                "ot-fl-pl": "storage-set-ot-fl-pl",
+                "ot-fr-rf": "storage-set-ot-fr-rf",
+                "reefer": "storage-set-reefer",
+                "rf-20": "storage-set-rf-20",
+                "rf-40": "storage-set-rf-40",
+                "rf-rq": "storage-set-rf-rq",
+                "special-45": "storage-set-special-45"
+              },
+              "storageAssignmentsByLineContainer": {
+                "cma-cgm": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "maersk": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "zim": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "msc": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "one": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "pil": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "whan-hai": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "hapag": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "evergreen": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "cosco": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "oocl": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "yang-ming": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "kmtc": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "rcl": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                }
+              },
+              "storageUnassignedLineContainers": []
             },
             {
               "id": "ssa-manzanillo",
@@ -9534,7 +10759,1232 @@
                     }
                   }
                 ]
-              }
+              },
+              "storageRuleSets": [
+                {
+                  "id": "storage-set-fr-20",
+                  "name": "FR 20'",
+                  "sourceContainerKey": "fr-20",
+                  "sourceContainerKeys": [
+                    "fr-20"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-fr-20-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "FR 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-fr-20-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "FR 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 130
+                      }
+                    },
+                    {
+                      "id": "ssa-fr-20-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "FR 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 220
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-fr-40",
+                  "name": "FR 40'",
+                  "sourceContainerKey": "fr-40",
+                  "sourceContainerKeys": [
+                    "fr-40"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-fr-40-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "FR 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-fr-40-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "FR 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 150
+                      }
+                    },
+                    {
+                      "id": "ssa-fr-40-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "FR 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 255
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-gp-hc-sd",
+                  "name": "GP HC SD",
+                  "sourceContainerKey": "gp-hc-sd",
+                  "sourceContainerKeys": [
+                    "gp-hc-sd"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-gp-hc-sd-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "GP HC SD",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-gp-hc-sd-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HC SD",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 170
+                      }
+                    },
+                    {
+                      "id": "ssa-gp-hc-sd-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HC SD",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 290
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-gp-hq-dc",
+                  "name": "GP HQ DC",
+                  "sourceContainerKey": "gp-hq-dc",
+                  "sourceContainerKeys": [
+                    "gp-hq-dc"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-gp-hq-dc-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "GP HQ DC",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-gp-hq-dc-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HQ DC",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 190
+                      }
+                    },
+                    {
+                      "id": "ssa-gp-hq-dc-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HQ DC",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 325
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-gp-hq-dc-20-40",
+                  "name": "GP HQ DC 20' 40'",
+                  "sourceContainerKey": "gp-hq-dc-20-40",
+                  "sourceContainerKeys": [
+                    "gp-hq-dc-20-40"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-gp-hq-dc-20-40-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "GP HQ DC 20' 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-gp-hq-dc-20-40-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HQ DC 20' 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 210
+                      }
+                    },
+                    {
+                      "id": "ssa-gp-hq-dc-20-40-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HQ DC 20' 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 360
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-imo-dry",
+                  "name": "IMO DRY",
+                  "sourceContainerKey": "imo-dry",
+                  "sourceContainerKeys": [
+                    "imo-dry"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-imo-dry-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "IMO DRY",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-imo-dry-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO DRY",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 230
+                      }
+                    },
+                    {
+                      "id": "ssa-imo-dry-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO DRY",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 395
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-imo-reefer",
+                  "name": "IMO REEFER",
+                  "sourceContainerKey": "imo-reefer",
+                  "sourceContainerKeys": [
+                    "imo-reefer"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-imo-reefer-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "IMO REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-imo-reefer-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 250
+                      }
+                    },
+                    {
+                      "id": "ssa-imo-reefer-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 430
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-imo-special-45",
+                  "name": "IMO SPECIAL & 45'",
+                  "sourceContainerKey": "imo-special-45",
+                  "sourceContainerKeys": [
+                    "imo-special-45"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-imo-special-45-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "IMO SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-imo-special-45-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 270
+                      }
+                    },
+                    {
+                      "id": "ssa-imo-special-45-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 465
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-ot-20",
+                  "name": "OT 20'",
+                  "sourceContainerKey": "ot-20",
+                  "sourceContainerKeys": [
+                    "ot-20"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-ot-20-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "OT 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-ot-20-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 290
+                      }
+                    },
+                    {
+                      "id": "ssa-ot-20-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 500
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-ot-40",
+                  "name": "OT 40'",
+                  "sourceContainerKey": "ot-40",
+                  "sourceContainerKeys": [
+                    "ot-40"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-ot-40-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "OT 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-ot-40-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 310
+                      }
+                    },
+                    {
+                      "id": "ssa-ot-40-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 535
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-ot-fl-pl",
+                  "name": "OT FL PL",
+                  "sourceContainerKey": "ot-fl-pl",
+                  "sourceContainerKeys": [
+                    "ot-fl-pl"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-ot-fl-pl-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "OT FL PL",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-ot-fl-pl-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT FL PL",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 330
+                      }
+                    },
+                    {
+                      "id": "ssa-ot-fl-pl-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT FL PL",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 570
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-ot-fr-rf",
+                  "name": "OT FR RF",
+                  "sourceContainerKey": "ot-fr-rf",
+                  "sourceContainerKeys": [
+                    "ot-fr-rf"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-ot-fr-rf-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "OT FR RF",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-ot-fr-rf-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT FR RF",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 350
+                      }
+                    },
+                    {
+                      "id": "ssa-ot-fr-rf-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT FR RF",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 605
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-reefer",
+                  "name": "REEFER",
+                  "sourceContainerKey": "reefer",
+                  "sourceContainerKeys": [
+                    "reefer"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-reefer-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-reefer-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 370
+                      }
+                    },
+                    {
+                      "id": "ssa-reefer-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 640
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-rf-20",
+                  "name": "RF 20'",
+                  "sourceContainerKey": "rf-20",
+                  "sourceContainerKeys": [
+                    "rf-20"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-rf-20-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "RF 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-rf-20-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 390
+                      }
+                    },
+                    {
+                      "id": "ssa-rf-20-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 675
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-rf-40",
+                  "name": "RF 40'",
+                  "sourceContainerKey": "rf-40",
+                  "sourceContainerKeys": [
+                    "rf-40"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-rf-40-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "RF 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-rf-40-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 410
+                      }
+                    },
+                    {
+                      "id": "ssa-rf-40-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 710
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-rf-rq",
+                  "name": "RF RQ",
+                  "sourceContainerKey": "rf-rq",
+                  "sourceContainerKeys": [
+                    "rf-rq"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-rf-rq-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "RF RQ",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-rf-rq-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF RQ",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 430
+                      }
+                    },
+                    {
+                      "id": "ssa-rf-rq-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF RQ",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 745
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-special-45",
+                  "name": "SPECIAL & 45'",
+                  "sourceContainerKey": "special-45",
+                  "sourceContainerKeys": [
+                    "special-45"
+                  ],
+                  "rules": [
+                    {
+                      "id": "ssa-special-45-free",
+                      "label": "0-5",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 5,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "ssa-special-45-tier-2",
+                      "label": "6-9",
+                      "note": null,
+                      "startDay": 6,
+                      "endDay": 9,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 450
+                      }
+                    },
+                    {
+                      "id": "ssa-special-45-tier-3",
+                      "label": ">9",
+                      "note": null,
+                      "startDay": 10,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 780
+                      }
+                    }
+                  ]
+                }
+              ],
+              "storageAssignmentsByContainerType": {
+                "fr-20": "storage-set-fr-20",
+                "fr-40": "storage-set-fr-40",
+                "gp-hc-sd": "storage-set-gp-hc-sd",
+                "gp-hq-dc": "storage-set-gp-hq-dc",
+                "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                "imo-dry": "storage-set-imo-dry",
+                "imo-reefer": "storage-set-imo-reefer",
+                "imo-special-45": "storage-set-imo-special-45",
+                "ot-20": "storage-set-ot-20",
+                "ot-40": "storage-set-ot-40",
+                "ot-fl-pl": "storage-set-ot-fl-pl",
+                "ot-fr-rf": "storage-set-ot-fr-rf",
+                "reefer": "storage-set-reefer",
+                "rf-20": "storage-set-rf-20",
+                "rf-40": "storage-set-rf-40",
+                "rf-rq": "storage-set-rf-rq",
+                "special-45": "storage-set-special-45"
+              },
+              "storageAssignmentsByLineContainer": {
+                "cma-cgm": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "maersk": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "zim": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "msc": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "one": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "pil": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "whan-hai": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "hapag": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "evergreen": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "cosco": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "oocl": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "yang-ming": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "kmtc": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "rcl": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                }
+              },
+              "storageUnassignedLineContainers": []
             }
           ]
         },
@@ -10459,7 +12909,1232 @@
                     }
                   }
                 ]
-              }
+              },
+              "storageRuleSets": [
+                {
+                  "id": "storage-set-fr-20",
+                  "name": "FR 20'",
+                  "sourceContainerKey": "fr-20",
+                  "sourceContainerKeys": [
+                    "fr-20"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-fr-20-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "FR 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-fr-20-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "FR 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 120
+                      }
+                    },
+                    {
+                      "id": "hutchison-fr-20-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "FR 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 210
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-fr-40",
+                  "name": "FR 40'",
+                  "sourceContainerKey": "fr-40",
+                  "sourceContainerKeys": [
+                    "fr-40"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-fr-40-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "FR 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-fr-40-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "FR 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 145
+                      }
+                    },
+                    {
+                      "id": "hutchison-fr-40-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "FR 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 255
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-gp-hc-sd",
+                  "name": "GP HC SD",
+                  "sourceContainerKey": "gp-hc-sd",
+                  "sourceContainerKeys": [
+                    "gp-hc-sd"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-gp-hc-sd-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "GP HC SD",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-gp-hc-sd-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HC SD",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 170
+                      }
+                    },
+                    {
+                      "id": "hutchison-gp-hc-sd-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HC SD",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 300
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-gp-hq-dc",
+                  "name": "GP HQ DC",
+                  "sourceContainerKey": "gp-hq-dc",
+                  "sourceContainerKeys": [
+                    "gp-hq-dc"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-gp-hq-dc-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "GP HQ DC",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-gp-hq-dc-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HQ DC",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 195
+                      }
+                    },
+                    {
+                      "id": "hutchison-gp-hq-dc-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HQ DC",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 345
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-gp-hq-dc-20-40",
+                  "name": "GP HQ DC 20' 40'",
+                  "sourceContainerKey": "gp-hq-dc-20-40",
+                  "sourceContainerKeys": [
+                    "gp-hq-dc-20-40"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-gp-hq-dc-20-40-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "GP HQ DC 20' 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-gp-hq-dc-20-40-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HQ DC 20' 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 220
+                      }
+                    },
+                    {
+                      "id": "hutchison-gp-hq-dc-20-40-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "GP HQ DC 20' 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 390
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-imo-dry",
+                  "name": "IMO DRY",
+                  "sourceContainerKey": "imo-dry",
+                  "sourceContainerKeys": [
+                    "imo-dry"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-imo-dry-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "IMO DRY",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-imo-dry-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO DRY",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 245
+                      }
+                    },
+                    {
+                      "id": "hutchison-imo-dry-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO DRY",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 435
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-imo-reefer",
+                  "name": "IMO REEFER",
+                  "sourceContainerKey": "imo-reefer",
+                  "sourceContainerKeys": [
+                    "imo-reefer"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-imo-reefer-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "IMO REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-imo-reefer-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 270
+                      }
+                    },
+                    {
+                      "id": "hutchison-imo-reefer-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 480
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-imo-special-45",
+                  "name": "IMO SPECIAL & 45'",
+                  "sourceContainerKey": "imo-special-45",
+                  "sourceContainerKeys": [
+                    "imo-special-45"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-imo-special-45-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "IMO SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-imo-special-45-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 295
+                      }
+                    },
+                    {
+                      "id": "hutchison-imo-special-45-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "IMO SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 525
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-ot-20",
+                  "name": "OT 20'",
+                  "sourceContainerKey": "ot-20",
+                  "sourceContainerKeys": [
+                    "ot-20"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-ot-20-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "OT 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-ot-20-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 320
+                      }
+                    },
+                    {
+                      "id": "hutchison-ot-20-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 570
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-ot-40",
+                  "name": "OT 40'",
+                  "sourceContainerKey": "ot-40",
+                  "sourceContainerKeys": [
+                    "ot-40"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-ot-40-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "OT 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-ot-40-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 345
+                      }
+                    },
+                    {
+                      "id": "hutchison-ot-40-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 615
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-ot-fl-pl",
+                  "name": "OT FL PL",
+                  "sourceContainerKey": "ot-fl-pl",
+                  "sourceContainerKeys": [
+                    "ot-fl-pl"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-ot-fl-pl-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "OT FL PL",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-ot-fl-pl-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT FL PL",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 370
+                      }
+                    },
+                    {
+                      "id": "hutchison-ot-fl-pl-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT FL PL",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 660
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-ot-fr-rf",
+                  "name": "OT FR RF",
+                  "sourceContainerKey": "ot-fr-rf",
+                  "sourceContainerKeys": [
+                    "ot-fr-rf"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-ot-fr-rf-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "OT FR RF",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-ot-fr-rf-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT FR RF",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 395
+                      }
+                    },
+                    {
+                      "id": "hutchison-ot-fr-rf-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "OT FR RF",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 705
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-reefer",
+                  "name": "REEFER",
+                  "sourceContainerKey": "reefer",
+                  "sourceContainerKeys": [
+                    "reefer"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-reefer-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-reefer-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 420
+                      }
+                    },
+                    {
+                      "id": "hutchison-reefer-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "REEFER",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 750
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-rf-20",
+                  "name": "RF 20'",
+                  "sourceContainerKey": "rf-20",
+                  "sourceContainerKeys": [
+                    "rf-20"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-rf-20-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "RF 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-rf-20-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 445
+                      }
+                    },
+                    {
+                      "id": "hutchison-rf-20-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF 20'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 795
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-rf-40",
+                  "name": "RF 40'",
+                  "sourceContainerKey": "rf-40",
+                  "sourceContainerKeys": [
+                    "rf-40"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-rf-40-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "RF 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-rf-40-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 470
+                      }
+                    },
+                    {
+                      "id": "hutchison-rf-40-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF 40'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 840
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-rf-rq",
+                  "name": "RF RQ",
+                  "sourceContainerKey": "rf-rq",
+                  "sourceContainerKeys": [
+                    "rf-rq"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-rf-rq-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "RF RQ",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-rf-rq-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF RQ",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 495
+                      }
+                    },
+                    {
+                      "id": "hutchison-rf-rq-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "RF RQ",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 885
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "storage-set-special-45",
+                  "name": "SPECIAL & 45'",
+                  "sourceContainerKey": "special-45",
+                  "sourceContainerKeys": [
+                    "special-45"
+                  ],
+                  "rules": [
+                    {
+                      "id": "hutchison-special-45-free",
+                      "label": "0-7",
+                      "note": null,
+                      "startDay": 1,
+                      "endDay": 7,
+                      "freeRule": true,
+                      "taxRate": 0,
+                      "rateConfig": {
+                        "label": "SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 0
+                      }
+                    },
+                    {
+                      "id": "hutchison-special-45-tier-2",
+                      "label": "8-10",
+                      "note": null,
+                      "startDay": 8,
+                      "endDay": 10,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 520
+                      }
+                    },
+                    {
+                      "id": "hutchison-special-45-tier-3",
+                      "label": ">10",
+                      "note": null,
+                      "startDay": 11,
+                      "endDay": null,
+                      "freeRule": false,
+                      "taxRate": 0.16,
+                      "rateConfig": {
+                        "label": "SPECIAL & 45'",
+                        "qtyHint": 1,
+                        "currency": "MXN",
+                        "rate": 930
+                      }
+                    }
+                  ]
+                }
+              ],
+              "storageAssignmentsByContainerType": {
+                "fr-20": "storage-set-fr-20",
+                "fr-40": "storage-set-fr-40",
+                "gp-hc-sd": "storage-set-gp-hc-sd",
+                "gp-hq-dc": "storage-set-gp-hq-dc",
+                "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                "imo-dry": "storage-set-imo-dry",
+                "imo-reefer": "storage-set-imo-reefer",
+                "imo-special-45": "storage-set-imo-special-45",
+                "ot-20": "storage-set-ot-20",
+                "ot-40": "storage-set-ot-40",
+                "ot-fl-pl": "storage-set-ot-fl-pl",
+                "ot-fr-rf": "storage-set-ot-fr-rf",
+                "reefer": "storage-set-reefer",
+                "rf-20": "storage-set-rf-20",
+                "rf-40": "storage-set-rf-40",
+                "rf-rq": "storage-set-rf-rq",
+                "special-45": "storage-set-special-45"
+              },
+              "storageAssignmentsByLineContainer": {
+                "cma-cgm": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "maersk": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "zim": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "msc": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "one": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "pil": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "whan-hai": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "hapag": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "evergreen": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "cosco": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "oocl": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "yang-ming": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "kmtc": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                },
+                "rcl": {
+                  "fr-20": "storage-set-fr-20",
+                  "fr-40": "storage-set-fr-40",
+                  "gp-hc-sd": "storage-set-gp-hc-sd",
+                  "gp-hq-dc": "storage-set-gp-hq-dc",
+                  "gp-hq-dc-20-40": "storage-set-gp-hq-dc-20-40",
+                  "imo-dry": "storage-set-imo-dry",
+                  "imo-reefer": "storage-set-imo-reefer",
+                  "imo-special-45": "storage-set-imo-special-45",
+                  "ot-20": "storage-set-ot-20",
+                  "ot-40": "storage-set-ot-40",
+                  "ot-fl-pl": "storage-set-ot-fl-pl",
+                  "ot-fr-rf": "storage-set-ot-fr-rf",
+                  "reefer": "storage-set-reefer",
+                  "rf-20": "storage-set-rf-20",
+                  "rf-40": "storage-set-rf-40",
+                  "rf-rq": "storage-set-rf-rq",
+                  "special-45": "storage-set-special-45"
+                }
+              },
+              "storageUnassignedLineContainers": []
             }
           ]
         }

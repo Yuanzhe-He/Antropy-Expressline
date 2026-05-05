@@ -144,6 +144,23 @@
   );
 
   window.addEventListener("beforeunload", writeState);
+  if (window.location.hash) {
+    requestAnimationFrame(() => {
+      const targetId = decodeURIComponent(window.location.hash.slice(1));
+      const target = document.getElementById(targetId);
+      if (!target) {
+        return;
+      }
+      if (target.tagName === "DETAILS") {
+        target.open = true;
+      }
+      target.scrollIntoView({
+        block: "start",
+        behavior: "auto",
+      });
+    });
+    return;
+  }
   restoreState();
 })();
 

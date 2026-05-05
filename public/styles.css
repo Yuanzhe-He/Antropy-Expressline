@@ -978,6 +978,131 @@ code {
   margin-top: 0;
 }
 
+.entity-collapsible {
+  padding: 0;
+}
+
+.entity-collapsible > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.72rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.entity-collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+
+.entity-collapsible > summary::after {
+  content: "+";
+  display: grid;
+  width: 1.45rem;
+  height: 1.45rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.entity-collapsible[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.entity-collapsible[open] > summary::after {
+  content: "-";
+}
+
+.collapsible-summary-meta {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.entity-collapsible-body {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.72rem;
+}
+
+.storage-rule-set-shell {
+  display: grid;
+  gap: 0.62rem;
+}
+
+.storage-rule-card {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.58rem;
+}
+
+.storage-assignment-card {
+  padding: 0.58rem;
+}
+
+.rule-name-field,
+.rule-assignment-field {
+  display: grid;
+  gap: 0.32rem;
+}
+
+.rule-name-field {
+  width: min(100%, 320px);
+}
+
+.rule-assignment-field {
+  width: min(100%, 560px);
+}
+
+.rule-assignment-field select {
+  min-height: 112px;
+}
+
+.line-container-assignment-field select {
+  min-height: 180px;
+}
+
+.storage-assignment-card select {
+  min-height: 86px;
+}
+
+.selected-assignment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.38rem;
+}
+
+.assignment-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  max-width: 100%;
+  padding: 0.32rem 0.38rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.compact-rule-table th,
+.compact-rule-table td {
+  padding: 0.36rem;
+}
+
+.compact-rule-table input,
+.compact-rule-table select {
+  min-height: 34px;
+  padding: 0.36rem 0.44rem;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

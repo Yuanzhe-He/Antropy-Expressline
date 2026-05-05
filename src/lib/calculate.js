@@ -638,6 +638,43 @@ function buildCustomsItem({
   });
 }
 
+function resolveTerminalStorageRuleSet(terminal, shippingLineId, containerTypeKey) {
+  if (
+    shippingLineId &&
+    terminal?.storageUnassignedLineContainers?.includes(
+      `${shippingLineId}::${containerTypeKey}`
+    )
+  ) {
+    return null;
+  }
+
+  const assignedRuleSetId = Array.isArray(
+    terminal?.storageAssignmentsByLineContainer?.[shippingLineId]?.[
+      containerTypeKey
+    ]
+  )
+    ? terminal.storageAssignmentsByLineContainer[shippingLineId][containerTypeKey][0]
+    : terminal?.storageAssignmentsByLineContainer?.[shippingLineId]?.[
+        containerTypeKey
+      ] || terminal?.storageAssignmentsByContainerType?.[containerTypeKey];
+  const ruleSet = (terminal?.storageRuleSets || []).find(
+    (entry) => entry.id === assignedRuleSetId
+  );
+
+  if (ruleSet?.rules?.length) {
+    return ruleSet;
+  }
+
+  const fallbackRules = terminal?.storageRulesByContainer?.[containerTypeKey] || [];
+  return fallbackRules.length
+    ? {
+        id: `legacy-${containerTypeKey}`,
+        name: containerTypeKey,
+        rules: fallbackRules,
+      }
+    : null;
+}
+
 function computeCustomsCalculator(moduleData, formData, referenceData, options = {}) {
   const t = options.t || ((key) => key);
   const priceMode = normalizePriceMode(formData.priceMode);
@@ -722,9 +759,13 @@ function computeCustomsCalculator(moduleData, formData, referenceData, options =
 
   const terminalStorageItems = [];
   for (const row of containerRows) {
-    const rules = selectedTerminal?.storageRulesByContainer?.[row.containerGroupKey] || [];
+    const ruleSet = resolveTerminalStorageRuleSet(
+      selectedTerminal,
+      selectedShippingLine?.id,
+      row.containerGroupKey
+    );
     let coveredUntil = 0;
-    for (const rule of rules) {
+    for (const rule of ruleSet?.rules || []) {
       const window = getProgressiveRuleWindow(
         storageDays,
         rule.startDay,
@@ -740,9 +781,9 @@ function computeCustomsCalculator(moduleData, formData, referenceData, options =
       const taxRate = resolveTaxRate(rule.taxRate, taxOverrides, overrideKey);
       terminalStorageItems.push(
         buildCustomsItem({
-          itemId: `customs:storage:${rule.id}`,
+          itemId: `customs:storage:${ruleSet.id}:${rule.id}`,
           categoryKey: "terminalStorage",
-          concept: `${t("customs.variableFeeTitle")} ${row.label} ${ruleLabel}`,
+          concept: `${t("customs.variableFeeTitle")} ${row.label} ${ruleSet.name} ${ruleLabel}`,
           note: rule.note,
           parts: [
             buildRatePart({

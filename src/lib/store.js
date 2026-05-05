@@ -987,27 +987,257 @@ function normalizeStorageRulesByContainer(storageRulesByContainer = {}, containe
   return normalized;
 }
 
-function normalizeCustomsTerminal(terminal, containerTypes, fallbackId) {
+function getStorageRuleSignature(rules = []) {
+  return JSON.stringify(
+    (rules || []).map((rule) => ({
+      startDay: rule.startDay,
+      endDay: rule.endDay,
+      freeRule: rule.freeRule,
+      taxRate: rule.taxRate,
+      rate: rule.rateConfig?.rate || 0,
+      currency: rule.rateConfig?.currency || DEFAULT_QUOTE_CURRENCY,
+      qtyHint: rule.rateConfig?.qtyHint || 1,
+    }))
+  );
+}
+
+function buildStorageRuleSetsFromContainers(terminal, containerTypes, rulesByContainer) {
+  const groups = new Map();
+
+  for (const [index, type] of (containerTypes || []).entries()) {
+    const rules = normalizeDemurrageRuleList(
+      rulesByContainer?.[type.key] || [],
+      `${terminal.id || "terminal"}-storage-set-${type.key}`
+    );
+    const signature = getStorageRuleSignature(rules);
+    const existingGroup = groups.get(signature);
+
+    if (existingGroup) {
+      existingGroup.sourceContainerKeys.push(type.key);
+      continue;
+    }
+
+    groups.set(signature, {
+      id: `storage-set-${slugifyId(type.key, `type-${index + 1}`)}`,
+      name: type.label || type.key || `Storage ${index + 1}`,
+      sourceContainerKey: type.key,
+      sourceContainerKeys: [type.key],
+      rules,
+    });
+  }
+
+  return [...groups.values()];
+}
+
+function normalizeStorageRuleSets(terminal, containerTypes, rulesByContainer) {
+  const sourceSets = Array.isArray(terminal.storageRuleSets)
+    ? terminal.storageRuleSets
+    : [];
+  const rawSets = sourceSets.length
+    ? sourceSets
+    : buildStorageRuleSetsFromContainers(terminal, containerTypes, rulesByContainer);
+  const seenIds = new Set();
+
+  return rawSets.map((set, index) => {
+    const fallbackId = `storage-set-${index + 1}`;
+    let id = slugifyId(set.id, fallbackId);
+    if (seenIds.has(id)) {
+      id = `${id}-${index + 1}`;
+    }
+    seenIds.add(id);
+
+    const name = set.name || set.label || set.sourceContainerKey || `Storage ${index + 1}`;
+    const rules = normalizeDemurrageRuleList(
+      set.rules || [],
+      `${terminal.id || "terminal"}-${id}`
+    );
+
+    return {
+      id,
+      name,
+      sourceContainerKey: set.sourceContainerKey || set.containerTypeKey || null,
+      sourceContainerKeys: [
+        ...new Set(
+          [
+            ...(Array.isArray(set.sourceContainerKeys)
+              ? set.sourceContainerKeys
+              : []),
+            set.sourceContainerKey,
+            set.containerTypeKey,
+          ].filter(Boolean)
+        ),
+      ],
+      rules: rules.length
+        ? rules
+        : buildDefaultProgressiveRules(
+            { key: id, label: name },
+            `${terminal.id || "terminal"}-${id}`
+          ),
+    };
+  });
+}
+
+function assignStorageRuleSetsToContainerTypes(terminal, containerTypes, ruleSets) {
+  if (!ruleSets.length) {
+    return {};
+  }
+
+  const validRuleSetIds = new Set(ruleSets.map((set) => set.id));
+  const explicitAssignments = terminal.storageAssignmentsByContainerType || {};
+  const ruleSetByContainerKey = new Map();
+
+  for (const set of ruleSets) {
+    if (set.sourceContainerKey) {
+      ruleSetByContainerKey.set(set.sourceContainerKey, set.id);
+    }
+    for (const sourceContainerKey of set.sourceContainerKeys || []) {
+      ruleSetByContainerKey.set(sourceContainerKey, set.id);
+    }
+  }
+
+  const firstRuleSetId = ruleSets[0].id;
+  const assignments = {};
+  for (const type of containerTypes || []) {
+    const explicitRuleSetIds = Array.isArray(explicitAssignments[type.key])
+      ? explicitAssignments[type.key]
+      : [explicitAssignments[type.key]].filter(Boolean);
+    const validExplicitRuleSetId = explicitRuleSetIds.find((ruleSetId) =>
+      validRuleSetIds.has(ruleSetId)
+    );
+    if (validExplicitRuleSetId) {
+      assignments[type.key] = validExplicitRuleSetId;
+      continue;
+    }
+
+    assignments[type.key] = ruleSetByContainerKey.get(type.key) || firstRuleSetId;
+  }
+
+  return assignments;
+}
+
+function getLineContainerAssignmentKey(lineId, containerTypeKey) {
+  return `${lineId}::${containerTypeKey}`;
+}
+
+function normalizeUnassignedLineContainers(terminal, shippingLines, containerTypes) {
+  const validKeys = new Set();
+  for (const line of shippingLines || []) {
+    for (const type of containerTypes || []) {
+      validKeys.add(getLineContainerAssignmentKey(line.id, type.key));
+    }
+  }
+
+  return normalizeIdList(terminal.storageUnassignedLineContainers).filter((key) =>
+    validKeys.has(key)
+  );
+}
+
+function assignStorageRuleSetsToLineContainers({
+  terminal,
+  shippingLines,
+  containerTypes,
+  ruleSets,
+  fallbackAssignmentsByContainerType,
+  unassignedLineContainers,
+}) {
+  if (!ruleSets.length) {
+    return {};
+  }
+
+  const validRuleSetIds = new Set(ruleSets.map((set) => set.id));
+  const explicitAssignments = terminal.storageAssignmentsByLineContainer || {};
+  const unassignedKeys = new Set(unassignedLineContainers || []);
+  const assignments = {};
+
+  for (const line of shippingLines || []) {
+    assignments[line.id] = {};
+
+    for (const type of containerTypes || []) {
+      const assignmentKey = getLineContainerAssignmentKey(line.id, type.key);
+      if (unassignedKeys.has(assignmentKey)) {
+        continue;
+      }
+
+      const explicitValue = explicitAssignments[line.id]?.[type.key];
+      const explicitRuleSetId = Array.isArray(explicitValue)
+        ? explicitValue.find((ruleSetId) => validRuleSetIds.has(ruleSetId))
+        : explicitValue;
+      if (validRuleSetIds.has(explicitRuleSetId)) {
+        assignments[line.id][type.key] = explicitRuleSetId;
+        continue;
+      }
+
+      const fallbackValue = fallbackAssignmentsByContainerType?.[type.key];
+      const fallbackRuleSetId = Array.isArray(fallbackValue)
+        ? fallbackValue.find((ruleSetId) => validRuleSetIds.has(ruleSetId))
+        : fallbackValue;
+      if (validRuleSetIds.has(fallbackRuleSetId)) {
+        assignments[line.id][type.key] = fallbackRuleSetId;
+        continue;
+      }
+
+      assignments[line.id][type.key] = ruleSets[0].id;
+    }
+
+    if (!Object.keys(assignments[line.id]).length) {
+      delete assignments[line.id];
+    }
+  }
+
+  return assignments;
+}
+
+function normalizeCustomsTerminal(terminal, shippingLines, containerTypes, fallbackId) {
+  const id = terminal.id || fallbackId;
+  const storageRulesByContainer = normalizeStorageRulesByContainer(
+    terminal.storageRulesByContainer,
+    containerTypes,
+    `${id}-storage`
+  );
+  const storageRuleSets = normalizeStorageRuleSets(
+    { ...terminal, id },
+    containerTypes,
+    storageRulesByContainer
+  );
+  const storageAssignmentsByContainerType = assignStorageRuleSetsToContainerTypes(
+    terminal,
+    containerTypes,
+    storageRuleSets
+  );
+  const storageUnassignedLineContainers = normalizeUnassignedLineContainers(
+    terminal,
+    shippingLines,
+    containerTypes
+  );
+  const storageAssignmentsByLineContainer = assignStorageRuleSetsToLineContainers({
+    terminal,
+    shippingLines,
+    containerTypes,
+    ruleSets: storageRuleSets,
+    fallbackAssignmentsByContainerType: storageAssignmentsByContainerType,
+    unassignedLineContainers: storageUnassignedLineContainers,
+  });
+
   return {
-    id: terminal.id || fallbackId,
+    id,
     name: terminal.name || fallbackId,
     note: terminal.note || null,
     fixedCharges: (terminal.fixedCharges || []).map((charge, index) =>
       normalizeCustomsCharge(
         charge,
-        `${terminal.id || fallbackId}-fixed-${index + 1}`,
+        `${id}-fixed-${index + 1}`,
         containerTypes
       )
     ),
-    storageRulesByContainer: normalizeStorageRulesByContainer(
-      terminal.storageRulesByContainer,
-      containerTypes,
-      `${terminal.id || fallbackId}-storage`
-    ),
+    storageRulesByContainer,
+    storageRuleSets,
+    storageAssignmentsByContainerType,
+    storageAssignmentsByLineContainer,
+    storageUnassignedLineContainers,
   };
 }
 
-function normalizeCustomsPort(port, containerTypes, fallbackId) {
+function normalizeCustomsPort(port, shippingLines, containerTypes, fallbackId) {
   return {
     id: port.id || fallbackId,
     name: port.name || fallbackId,
@@ -1015,6 +1245,7 @@ function normalizeCustomsPort(port, containerTypes, fallbackId) {
     terminals: (port.terminals || []).map((terminal, index) =>
       normalizeCustomsTerminal(
         terminal,
+        shippingLines,
         containerTypes,
         `${port.id || fallbackId}-terminal-${index + 1}`
       )
@@ -1375,7 +1606,12 @@ function normalizeCustomsModuleData(moduleData = {}, handoverModule) {
     normalizeSimpleShippingLine(line, `customs-line-${index + 1}`)
   );
   const ports = (source.ports || fallbackSeed.ports).map((port, index) =>
-    normalizeCustomsPort(port, containerTypes, `customs-port-${index + 1}`)
+    normalizeCustomsPort(
+      port,
+      shippingLines,
+      containerTypes,
+      `customs-port-${index + 1}`
+    )
   );
   const yards = (source.yards || fallbackSeed.yards).map((yard, index) =>
     normalizeCustomsYard(yard, containerTypes, `customs-yard-${index + 1}`)
