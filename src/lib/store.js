@@ -29,6 +29,231 @@ const seedUsersFile = path.join(bundledDataDir, "users.json");
 const shippingDataStateKey = "shipping-data";
 const usersStateKey = "users";
 
+const RATE_GROUPS = Object.freeze({
+  dry: ["gp-hq-dc", "gp-hc-sd", "gp-hq-dc-20-40", "imo-dry"],
+  fortyFiveDry: [
+    "special-45",
+    "imo-special-45",
+    "gp-hq-dc",
+    "gp-hc-sd",
+    "gp-hq-dc-20-40",
+    "imo-dry",
+  ],
+  flatrack20: ["fr-20", "ot-fr-rf", "ot-fl-pl"],
+  flatrack40: ["fr-40", "ot-fr-rf", "ot-fl-pl"],
+  openTop20: ["ot-20", "ot-fr-rf", "ot-fl-pl"],
+  openTop40: ["ot-40", "ot-fr-rf", "ot-fl-pl"],
+  reefer20: ["rf-20", "reefer", "rf-rq", "ot-fr-rf", "imo-reefer"],
+  reefer40: ["rf-40", "reefer", "rf-rq", "ot-fr-rf", "imo-reefer"],
+  tank: ["ot-fr-rf", "ot-fl-pl"],
+  platform20: ["ot-fl-pl", "ot-fr-rf", "fr-20"],
+  platform40: ["ot-fl-pl", "ot-fr-rf", "fr-40"],
+  fortyFiveOpenTop: ["special-45", "imo-special-45", "ot-40", "ot-fr-rf", "ot-fl-pl"],
+});
+
+const STANDARD_HANDOVER_CONTAINER_TYPES = Object.freeze([
+  {
+    key: "40GP",
+    label: "40GP - Forty foot general purpose",
+    code: "40GP",
+    description: "Forty foot general purpose",
+    mode: "SEA",
+    containerType: "DRY",
+    teu: 2,
+    rateGroupKeys: RATE_GROUPS.dry,
+  },
+  {
+    key: "20FR",
+    label: "20FR - Twenty foot flatrack",
+    code: "20FR",
+    description: "Twenty foot flatrack",
+    mode: "SEA",
+    containerType: "FLT",
+    teu: 1,
+    rateGroupKeys: RATE_GROUPS.flatrack20,
+  },
+  {
+    key: "20GP",
+    label: "20GP - Twenty foot general purpose",
+    code: "20GP",
+    description: "Twenty foot general purpose",
+    mode: "SEA",
+    containerType: "DRY",
+    teu: 1,
+    rateGroupKeys: RATE_GROUPS.dry,
+  },
+  {
+    key: "20NOR",
+    label: "20NOR - Twenty foot non-operating reefer",
+    code: "20NOR",
+    description: "Twenty foot non-operating reefer",
+    mode: "SEA",
+    containerType: "DRY",
+    teu: 1,
+    rateGroupKeys: RATE_GROUPS.dry,
+  },
+  {
+    key: "20OT",
+    label: "20OT - Twenty foot open top",
+    code: "20OT",
+    description: "Twenty foot open top",
+    mode: "SEA",
+    containerType: "TOP",
+    teu: 1,
+    rateGroupKeys: RATE_GROUPS.openTop20,
+  },
+  {
+    key: "20PL",
+    label: "20PL - Twenty foot platform",
+    code: "20PL",
+    description: "Twenty foot platform",
+    mode: "SEA",
+    containerType: "DRY",
+    teu: 1,
+    rateGroupKeys: RATE_GROUPS.platform20,
+  },
+  {
+    key: "40FR",
+    label: "40FR - Forty foot flatrack",
+    code: "40FR",
+    description: "Forty foot flatrack",
+    mode: "SEA",
+    containerType: "FLT",
+    teu: 2,
+    rateGroupKeys: RATE_GROUPS.flatrack40,
+  },
+  {
+    key: "40NOR",
+    label: "40NOR - Forty foot non-operating reefer",
+    code: "40NOR",
+    description: "Forty foot non-operating reefer",
+    mode: "SEA",
+    containerType: "DRY",
+    teu: 2,
+    rateGroupKeys: RATE_GROUPS.dry,
+  },
+  {
+    key: "40OT",
+    label: "40OT - Forty foot open top",
+    code: "40OT",
+    description: "Forty foot open top",
+    mode: "SEA",
+    containerType: "TOP",
+    teu: 2,
+    rateGroupKeys: RATE_GROUPS.openTop40,
+  },
+  {
+    key: "40PL",
+    label: "40PL - Forty foot platform",
+    code: "40PL",
+    description: "Forty foot platform",
+    mode: "SEA",
+    containerType: "DRY",
+    teu: 2,
+    rateGroupKeys: RATE_GROUPS.platform40,
+  },
+  {
+    key: "20HC",
+    label: "20HC - Twenty foot high cube",
+    code: "20HC",
+    description: "Twenty foot high cube",
+    mode: "SEA",
+    containerType: "DRY",
+    teu: 1,
+    rateGroupKeys: RATE_GROUPS.dry,
+  },
+  {
+    key: "20RHC",
+    label: "20RHC - Twenty Foot high cube Reefer",
+    code: "20RHC",
+    description: "Twenty Foot high cube Reefer",
+    mode: "SEA",
+    containerType: "RFG",
+    teu: 1,
+    rateGroupKeys: RATE_GROUPS.reefer20,
+  },
+  {
+    key: "20RF",
+    label: "20RF - Twenty foot reefer",
+    code: "20RF",
+    description: "Twenty foot reefer",
+    mode: "SEA",
+    containerType: "RFG",
+    teu: 1,
+    rateGroupKeys: RATE_GROUPS.reefer20,
+  },
+  {
+    key: "20TK",
+    label: "20TK - Twenty foot Tank trailer",
+    code: "20TK",
+    description: "Twenty foot Tank trailer",
+    mode: "SEA",
+    containerType: "TNK",
+    teu: 1,
+    rateGroupKeys: RATE_GROUPS.tank,
+  },
+  {
+    key: "40HC",
+    label: "40HC - Forty foot high cube",
+    code: "40HC",
+    description: "Forty foot high cube",
+    mode: "SEA",
+    containerType: "DRY",
+    teu: 2,
+    rateGroupKeys: RATE_GROUPS.dry,
+  },
+  {
+    key: "40RHC",
+    label: "40RHC - Forty foot high cube reefer",
+    code: "40RHC",
+    description: "Forty foot high cube reefer",
+    mode: "SEA",
+    containerType: "RFG",
+    teu: 2,
+    rateGroupKeys: RATE_GROUPS.reefer40,
+  },
+  {
+    key: "40RF",
+    label: "40RF - Forty foot reefer",
+    code: "40RF",
+    description: "Forty foot reefer",
+    mode: "SEA",
+    containerType: "RFG",
+    teu: 2,
+    rateGroupKeys: RATE_GROUPS.reefer40,
+  },
+  {
+    key: "40TK",
+    label: "40TK - Forty foot Tank trailer",
+    code: "40TK",
+    description: "Forty foot Tank trailer",
+    mode: "SEA",
+    containerType: "TNK",
+    teu: 2,
+    rateGroupKeys: RATE_GROUPS.tank,
+  },
+  {
+    key: "45HC",
+    label: "45HC - Forty Five foot high cube",
+    code: "45HC",
+    description: "Forty Five foot high cube",
+    mode: "SEA",
+    containerType: "DRY",
+    teu: 2,
+    rateGroupKeys: RATE_GROUPS.fortyFiveDry,
+  },
+  {
+    key: "45OT",
+    label: "45OT - Forty five foot open top",
+    code: "45OT",
+    description: "Forty five foot open top",
+    mode: "SEA",
+    containerType: "TOP",
+    teu: 2,
+    rateGroupKeys: RATE_GROUPS.fortyFiveOpenTop,
+  },
+]);
+
 function parseNumber(value, fallback = 0) {
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : fallback;
@@ -350,6 +575,109 @@ function normalizeDemurrageRulesByGroup(shippingLine, containerGroups) {
   return buildLegacyDemurrageRulesByGroup(shippingLine, containerGroups);
 }
 
+function slugifyId(value, fallback) {
+  return (
+    String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || fallback
+  );
+}
+
+function normalizeDemurrageRuleList(rules = [], prefix) {
+  return (rules || [])
+    .map((rule, index) =>
+      normalizeDemurrageRule(rule, `${prefix}-rule-${index + 1}`)
+    )
+    .sort((left, right) => {
+      if (left.startDay === null) {
+        return 1;
+      }
+      if (right.startDay === null) {
+        return -1;
+      }
+      return left.startDay - right.startDay;
+    });
+}
+
+function buildDemurrageRuleSetsFromGroups(shippingLine, containerGroups, rulesByGroup) {
+  return (containerGroups || []).map((group, index) => {
+    const id = `demurrage-set-${slugifyId(group.key, `group-${index + 1}`)}`;
+    return {
+      id,
+      name: group.label || group.key || `Rule Set ${index + 1}`,
+      sourceGroupKey: group.key,
+      rules: normalizeDemurrageRuleList(
+        rulesByGroup?.[group.key] || [],
+        `${shippingLine.id || "line"}-${id}`
+      ),
+    };
+  });
+}
+
+function normalizeDemurrageRuleSets(shippingLine, containerGroups, rulesByGroup) {
+  const sourceSets = Array.isArray(shippingLine.demurrage?.ruleSets)
+    ? shippingLine.demurrage.ruleSets
+    : [];
+  const rawSets = sourceSets.length
+    ? sourceSets
+    : buildDemurrageRuleSetsFromGroups(shippingLine, containerGroups, rulesByGroup);
+  const seenIds = new Set();
+
+  return rawSets.map((set, index) => {
+    const fallbackId = `demurrage-set-${index + 1}`;
+    let id = slugifyId(set.id, fallbackId);
+    if (seenIds.has(id)) {
+      id = `${id}-${index + 1}`;
+    }
+    seenIds.add(id);
+
+    return {
+      id,
+      name: set.name || set.label || set.sourceGroupKey || `Rule Set ${index + 1}`,
+      sourceGroupKey: set.sourceGroupKey || set.groupKey || null,
+      rules: normalizeDemurrageRuleList(
+        set.rules || [],
+        `${shippingLine.id || "line"}-${id}`
+      ),
+    };
+  });
+}
+
+function assignDemurrageRuleSetsToContainerTypes(shippingLine, ruleSets) {
+  if (!ruleSets.length) {
+    return {};
+  }
+
+  const validRuleSetIds = new Set(ruleSets.map((set) => set.id));
+  const explicitAssignments = shippingLine.demurrage?.assignmentsByContainerType || {};
+  const ruleSetByGroupKey = new Map();
+
+  for (const set of ruleSets) {
+    if (set.sourceGroupKey) {
+      ruleSetByGroupKey.set(set.sourceGroupKey, set.id);
+    }
+  }
+
+  const firstRuleSetId = ruleSets[0].id;
+  const assignments = {};
+  for (const type of STANDARD_HANDOVER_CONTAINER_TYPES) {
+    const explicitRuleSetId = explicitAssignments[type.key];
+    if (validRuleSetIds.has(explicitRuleSetId)) {
+      assignments[type.key] = explicitRuleSetId;
+      continue;
+    }
+
+    assignments[type.key] =
+      (type.rateGroupKeys || [])
+        .map((groupKey) => ruleSetByGroupKey.get(groupKey))
+        .find(Boolean) || firstRuleSetId;
+  }
+
+  return assignments;
+}
+
 function normalizeShippingLine(shippingLine) {
   const cutoffValid = DEMURRAGE_CUTOFF_OPTIONS.some(
     (option) => option.value === shippingLine.demurrageCutoffHandledBy
@@ -362,6 +690,15 @@ function normalizeShippingLine(shippingLine) {
     normalizeCharge(charge, `${shippingLine.id || "line"}-charge-${index + 1}`)
   );
   const rulesByGroup = normalizeDemurrageRulesByGroup(shippingLine, containerGroups);
+  const ruleSets = normalizeDemurrageRuleSets(
+    shippingLine,
+    containerGroups,
+    rulesByGroup
+  );
+  const assignmentsByContainerType = assignDemurrageRuleSetsToContainerTypes(
+    shippingLine,
+    ruleSets
+  );
 
   return {
     ...shippingLine,
@@ -379,6 +716,8 @@ function normalizeShippingLine(shippingLine) {
         daysByGroup: shippingLine.demurrage?.freeDays?.daysByGroup || {},
       },
       rulesByGroup,
+      ruleSets,
+      assignmentsByContainerType,
     },
     quoteDefaults: {
       priceMode: normalizePriceMode(shippingLine.quoteDefaults?.priceMode),
@@ -451,6 +790,20 @@ function deriveContainerTypes(shippingLines) {
       shippingLines: [...entry.shippingLines].sort(),
     }))
     .sort((left, right) => left.label.localeCompare(right.label));
+}
+
+function buildStandardHandoverContainerTypes(shippingLines = []) {
+  const lineNames = (shippingLines || [])
+    .map((line) => line.name)
+    .filter(Boolean)
+    .sort();
+
+  return STANDARD_HANDOVER_CONTAINER_TYPES.map((type) => ({
+    ...type,
+    rateGroupKeys: [...type.rateGroupKeys],
+    shippingLineCount: lineNames.length,
+    shippingLines: lineNames,
+  }));
 }
 
 function normalizeIdList(value) {
@@ -971,9 +1324,12 @@ function normalizeCustomsModuleData(moduleData = {}, handoverModule) {
     (moduleData.ports && moduleData.ports.length) || (moduleData.yards && moduleData.yards.length)
       ? moduleData
       : fallbackSeed;
+  const sourceContainerTypes = Array.isArray(source.containerTypes)
+    ? source.containerTypes
+    : [];
   const containerTypes = normalizeContainerTypeList(
-    source.containerTypes,
-    fallbackSeed.containerTypes
+    sourceContainerTypes,
+    sourceContainerTypes.length ? [] : fallbackSeed.containerTypes
   );
   const shippingLines = (source.shippingLines?.length
     ? source.shippingLines
@@ -1029,7 +1385,7 @@ function normalizeHandoverModuleData(moduleData = {}) {
     },
     taxRatePresets: normalizeTaxRatePresets(moduleData.taxRatePresets),
     shippingLines,
-    containerTypes: deriveContainerTypes(shippingLines),
+    containerTypes: buildStandardHandoverContainerTypes(shippingLines),
   };
 }
 

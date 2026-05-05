@@ -368,7 +368,7 @@
       }
 
       keepViewportStable(() => {
-        updateContainerGroups(line.containerGroups || []);
+        updateContainerGroups(data.containerTypes || line.containerGroups || []);
         renderTaxControls(line.taxControls || [], data.taxOverrideOptions || []);
       });
     }

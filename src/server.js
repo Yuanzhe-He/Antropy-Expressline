@@ -257,7 +257,7 @@ function buildDefaultContainerRows(typeList) {
   ];
 }
 
-function buildHandoverFormData(selectedLine, body, settings) {
+function buildHandoverFormData(selectedLine, body, settings, containerTypes = []) {
   const groupKeys = ensureArray(body.containerGroupKey);
   const quantities = ensureArray(body.containerCount);
   const containerRows = groupKeys.map((groupKey, index) => ({
@@ -278,7 +278,7 @@ function buildHandoverFormData(selectedLine, body, settings) {
     taxOverrides: buildTaxOverrides(body),
     containerRows: containerRows.length
       ? containerRows
-      : buildDefaultContainerRows(selectedLine?.containerGroups),
+      : buildDefaultContainerRows(containerTypes),
   };
 }
 
@@ -385,7 +385,7 @@ function buildDefaultHandoverFormData(moduleData, selectedLine, linkedContext = 
     containerRows:
       linkedContext?.containerRows?.length
         ? linkedContext.containerRows
-        : buildDefaultContainerRows(selectedLine?.containerGroups),
+        : buildDefaultContainerRows(moduleData.containerTypes),
   };
 }
 
@@ -542,7 +542,8 @@ function buildHandoverTaxControls(selectedLine, t) {
     key: "handover:demurrage",
     label: t("categories.demurrage"),
     defaultLabel: getTaxRateLabel(
-      selectedLine.demurrage?.rulesByGroup?.[selectedLine.containerGroups?.[0]?.key]?.[0]?.taxRate ||
+      selectedLine.demurrage?.ruleSets?.[0]?.rules?.[0]?.taxRate ||
+        selectedLine.demurrage?.rulesByGroup?.[selectedLine.containerGroups?.[0]?.key]?.[0]?.taxRate ||
         0
     ),
   });
@@ -599,6 +600,7 @@ function buildHandoverDependencyData(moduleData, t) {
       guaranteeOff: t("calculator.metadataGuaranteeOff"),
     },
     taxOverrideOptions: buildTaxOverrideOptions(moduleData, t),
+    containerTypes: moduleData.containerTypes || [],
     lines: (moduleData.shippingLines || []).map((line) => ({
       id: line.id,
       name: line.name,
@@ -610,7 +612,6 @@ function buildHandoverDependencyData(moduleData, t) {
       guaranteeLabel: line.guarantee?.benefitEnabled
         ? t("calculator.metadataGuaranteeOn")
         : t("calculator.metadataGuaranteeOff"),
-      containerGroups: line.containerGroups || [],
       taxControls: buildHandoverTaxControls(line, t),
     })),
   };
@@ -937,7 +938,8 @@ function createApp() {
       formData = buildHandoverFormData(
         selectedLine,
         rememberedForm,
-        moduleData.settings
+        moduleData.settings,
+        moduleData.containerTypes
       );
       result = computeCalculator(
         selectedLine,
@@ -945,6 +947,7 @@ function createApp() {
         {
           exchangeRates: shippingData.exchangeRates,
           settings: moduleData.settings,
+          containerTypes: moduleData.containerTypes,
         },
         { t: req.t }
       );
@@ -975,13 +978,19 @@ function createApp() {
       });
     }
 
-    const formData = buildHandoverFormData(selectedLine, req.body, moduleData.settings);
+    const formData = buildHandoverFormData(
+      selectedLine,
+      req.body,
+      moduleData.settings,
+      moduleData.containerTypes
+    );
     const result = computeCalculator(
       selectedLine,
       formData,
       {
         exchangeRates: shippingData.exchangeRates,
         settings: moduleData.settings,
+        containerTypes: moduleData.containerTypes,
       },
       { t: req.t }
     );
@@ -1409,6 +1418,200 @@ function createApp() {
   });
 
   app.post(
+    "/admin/:moduleKey/shipping-lines/:id/demurrage-rule-sets/add",
+    requireAuth,
+    async (req, res) => {
+      const module = getBusinessModule(req.params.moduleKey);
+      if (!module || module.key === "customs") {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = getModuleData(shippingData, module.key);
+      const lineIndex = moduleData.shippingLines.findIndex(
+        (entry) => entry.id === req.params.id
+      );
+
+      if (lineIndex < 0) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const updated = structuredClone(moduleData.shippingLines[lineIndex]);
+      const ruleSets = updated.demurrage.ruleSets || [];
+      const ruleSet = {
+        id: buildRuleId(`demurrage-set-${updated.id}`),
+        name: `${req.t("categories.demurrage")} ${ruleSets.length + 1}`,
+        sourceGroupKey: null,
+        rules: [],
+      };
+      appendProgressiveRule(ruleSet.rules, `${updated.id}-${ruleSet.id}`, ruleSet.name);
+      resequenceRules(ruleSet.rules);
+      ruleSets.push(ruleSet);
+      updated.demurrage.ruleSets = ruleSets;
+      shippingData.modules[module.key].shippingLines[lineIndex] = updated;
+      await saveShippingData(shippingData);
+
+      return redirectWithFlash(
+        req,
+        res,
+        "success",
+        req.t("admin.ruleAdded", { label: ruleSet.name }),
+        `/admin/${module.key}/shipping-lines/${updated.id}`
+      );
+    }
+  );
+
+  app.post(
+    "/admin/:moduleKey/shipping-lines/:id/demurrage-rule-sets/:ruleSetId/add",
+    requireAuth,
+    async (req, res) => {
+      const module = getBusinessModule(req.params.moduleKey);
+      if (!module || module.key === "customs") {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = getModuleData(shippingData, module.key);
+      const lineIndex = moduleData.shippingLines.findIndex(
+        (entry) => entry.id === req.params.id
+      );
+
+      if (lineIndex < 0) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const updated = structuredClone(moduleData.shippingLines[lineIndex]);
+      const ruleSet = (updated.demurrage.ruleSets || []).find(
+        (entry) => entry.id === req.params.ruleSetId
+      );
+      if (!ruleSet) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      appendProgressiveRule(
+        ruleSet.rules,
+        `${updated.id}-${ruleSet.id}`,
+        ruleSet.name
+      );
+      resequenceRules(ruleSet.rules);
+      if (ruleSet.sourceGroupKey) {
+        updated.demurrage.rulesByGroup[ruleSet.sourceGroupKey] = ruleSet.rules;
+      }
+      shippingData.modules[module.key].shippingLines[lineIndex] = updated;
+      await saveShippingData(shippingData);
+
+      return redirectWithFlash(
+        req,
+        res,
+        "success",
+        req.t("admin.ruleAdded", { label: ruleSet.name }),
+        `/admin/${module.key}/shipping-lines/${updated.id}`
+      );
+    }
+  );
+
+  app.post(
+    "/admin/:moduleKey/shipping-lines/:id/demurrage-rule-sets/:ruleSetId/:ruleId/delete",
+    requireAuth,
+    async (req, res) => {
+      const module = getBusinessModule(req.params.moduleKey);
+      if (!module || module.key === "customs") {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = getModuleData(shippingData, module.key);
+      const lineIndex = moduleData.shippingLines.findIndex(
+        (entry) => entry.id === req.params.id
+      );
+
+      if (lineIndex < 0) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const updated = structuredClone(moduleData.shippingLines[lineIndex]);
+      const ruleSet = (updated.demurrage.ruleSets || []).find(
+        (entry) => entry.id === req.params.ruleSetId
+      );
+      if (!ruleSet) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      if (!removeProgressiveRule(ruleSet.rules, req.params.ruleId)) {
+        return redirectWithFlash(
+          req,
+          res,
+          "error",
+          req.t("admin.cannotDeleteLastRule"),
+          `/admin/${module.key}/shipping-lines/${updated.id}`
+        );
+      }
+
+      resequenceRules(ruleSet.rules);
+      if (ruleSet.sourceGroupKey) {
+        updated.demurrage.rulesByGroup[ruleSet.sourceGroupKey] = ruleSet.rules;
+      }
+      shippingData.modules[module.key].shippingLines[lineIndex] = updated;
+      await saveShippingData(shippingData);
+      return redirectWithFlash(
+        req,
+        res,
+        "success",
+        req.t("admin.ruleDeleted", { label: ruleSet.name }),
+        `/admin/${module.key}/shipping-lines/${updated.id}`
+      );
+    }
+  );
+
+  app.post(
     "/admin/:moduleKey/shipping-lines/:id/demurrage/:groupKey/add",
     requireAuth,
     async (req, res) => {
@@ -1606,13 +1809,27 @@ function createApp() {
       );
     }
 
+    const validRuleSetIds = new Set((updated.demurrage.ruleSets || []).map((set) => set.id));
+    updated.demurrage.assignmentsByContainerType = {};
+    for (const type of moduleData.containerTypes || []) {
+      const assignedRuleSetId = req.body[`demurrage_assignment_${type.key}`];
+      updated.demurrage.assignmentsByContainerType[type.key] =
+        validRuleSetIds.has(assignedRuleSetId)
+          ? assignedRuleSetId
+          : updated.demurrage.ruleSets?.[0]?.id || "";
+    }
+
     updated.demurrage.freeDays.daysByGroup = {};
-    for (const group of updated.containerGroups || []) {
-      const rules = updated.demurrage.rulesByGroup?.[group.key] || [];
+    for (const ruleSet of updated.demurrage.ruleSets || []) {
+      ruleSet.name =
+        req.body[`demurrage_set_${ruleSet.id}_name`] ||
+        ruleSet.name ||
+        ruleSet.id;
+      const rules = ruleSet.rules || [];
       const updateResult = applySequentialRuleUpdates({
         rules,
         body: req.body,
-        getPrefix: (rule) => `rule_${group.key}_${rule.id}`,
+        getPrefix: (rule) => `rule_set_${ruleSet.id}_${rule.id}`,
         t: req.t,
       });
       if (!updateResult.ok) {
@@ -1625,9 +1842,14 @@ function createApp() {
         );
       }
 
+      ruleSet.rules = rules;
+      if (ruleSet.sourceGroupKey) {
+        updated.demurrage.rulesByGroup[ruleSet.sourceGroupKey] = rules;
+      }
+
       for (const rule of rules) {
         if (rule.freeRule && rule.endDay) {
-          updated.demurrage.freeDays.daysByGroup[group.key] = rule.endDay;
+          updated.demurrage.freeDays.daysByGroup[ruleSet.id] = rule.endDay;
         }
       }
     }

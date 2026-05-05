@@ -133,13 +133,23 @@ function buildHandoverAdminForm(moduleData, line) {
     entries.push([`guarantee_${group.key}_currency`, rate.currency]);
   }
 
-  for (const group of line.containerGroups || []) {
-    for (const rule of line.demurrage.rulesByGroup?.[group.key] || []) {
-      entries.push([`rule_${group.key}_${rule.id}_end`, rule.endDay ?? ""]);
-      entries.push([`rule_${group.key}_${rule.id}_tax`, rule.taxRate]);
-      entries.push([`rule_${group.key}_${rule.id}_rate`, rule.rateConfig?.rate ?? 0]);
+  for (const type of moduleData.containerTypes || []) {
+    entries.push([
+      `demurrage_assignment_${type.key}`,
+      line.demurrage.assignmentsByContainerType?.[type.key] ||
+        line.demurrage.ruleSets?.[0]?.id ||
+        "",
+    ]);
+  }
+
+  for (const ruleSet of line.demurrage.ruleSets || []) {
+    entries.push([`demurrage_set_${ruleSet.id}_name`, ruleSet.name]);
+    for (const rule of ruleSet.rules || []) {
+      entries.push([`rule_set_${ruleSet.id}_${rule.id}_end`, rule.endDay ?? ""]);
+      entries.push([`rule_set_${ruleSet.id}_${rule.id}_tax`, rule.taxRate]);
+      entries.push([`rule_set_${ruleSet.id}_${rule.id}_rate`, rule.rateConfig?.rate ?? 0]);
       entries.push([
-        `rule_${group.key}_${rule.id}_currency`,
+        `rule_set_${ruleSet.id}_${rule.id}_currency`,
         rule.rateConfig?.currency || "MXN",
       ]);
     }
@@ -297,6 +307,8 @@ async function main() {
     expectContains(response.text, "compact-language-switcher", "compact language switcher");
     expectContains(response.text, "data-handover-line-select", "handover shipping line select");
     expectContains(response.text, 'name="businessNature" value="handover_only"', "hidden default business nature");
+    expectContains(response.text, "40GP - Forty foot general purpose", "standard container type");
+    expectContains(response.text, "45OT - Forty five foot open top", "standard 45 foot container type");
     expectNotContains(response.text, "业务性质", "hidden business nature selector");
     expectContains(response.text, "每项费用税率", "handover tax overrides");
     expectContains(response.text, "data-add-row", "handover add row button");
@@ -320,6 +332,23 @@ async function main() {
     assert.equal(response.status, 200);
     expectContains(response.text, "继续到清关", "continuous workflow CTA");
     expectContains(response.text, "连续业务", "continuous workflow banner");
+
+    response = await request(baseUrl, "/workbench/handover", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: [
+        ["shippingLineId", "cosco"],
+        ["businessNature", "handover_only"],
+        ["blCount", 1],
+        ["demurrageDays", 4],
+        ["priceMode", "pretax"],
+        ["quoteCurrency", "MXN"],
+        ["containerGroupKey[]", "45OT"],
+        ["containerCount[]", 1],
+      ],
+    });
+    assert.equal(response.status, 200);
+    expectContains(response.text, "45OT - Forty five foot open top", "global handover container type");
 
     response = await request(baseUrl, "/workbench/customs?useLinked=1", {
       jar: publicJar,
@@ -366,6 +395,8 @@ async function main() {
     });
     assert.equal(response.status, 200);
     expectContains(response.text, "新增阶梯", "handover add rule button");
+    expectContains(response.text, "柜型规则分配", "handover rule assignment table");
+    expectContains(response.text, "新增规则集", "handover add rule set button");
     expectContains(response.text, 'data-scroll-scope="admin"', "admin scroll scope");
     expectContains(response.text, 'data-scroll-panel="admin-list"', "admin list scroll panel");
     expectContains(response.text, 'data-scroll-panel="admin-detail"', "admin detail scroll panel");
@@ -383,7 +414,7 @@ async function main() {
         ["demurrageDays", -9],
         ["priceMode", "pretax"],
         ["quoteCurrency", "MXN"],
-        ["containerGroupKey[]", "gp-hq-dc"],
+        ["containerGroupKey[]", "40GP"],
         ["containerCount[]", -2],
       ],
     });
@@ -392,13 +423,13 @@ async function main() {
 
     let shippingData = await getShippingData();
     const handoverLine = shippingData.modules.handover.shippingLines[0];
-    const handoverGroupKey = handoverLine.containerGroups[0].key;
+    const handoverRuleSetId = handoverLine.demurrage.ruleSets[0].id;
     const beforeHandoverRuleCount =
-      handoverLine.demurrage.rulesByGroup[handoverGroupKey].length;
+      handoverLine.demurrage.ruleSets[0].rules.length;
 
     response = await request(
       baseUrl,
-      `/admin/handover/shipping-lines/${handoverLine.id}/demurrage/${handoverGroupKey}/add`,
+      `/admin/handover/shipping-lines/${handoverLine.id}/demurrage-rule-sets/${handoverRuleSetId}/add`,
       {
         method: "POST",
         jar: publicJar,
@@ -408,16 +439,14 @@ async function main() {
 
     shippingData = await getShippingData();
     const afterAddHandoverCount =
-      shippingData.modules.handover.shippingLines[0].demurrage.rulesByGroup[handoverGroupKey]
-        .length;
+      shippingData.modules.handover.shippingLines[0].demurrage.ruleSets[0].rules.length;
     assert.equal(afterAddHandoverCount, beforeHandoverRuleCount + 1);
 
     const addedHandoverRule =
-      shippingData.modules.handover.shippingLines[0].demurrage.rulesByGroup[handoverGroupKey]
-        .at(-1);
+      shippingData.modules.handover.shippingLines[0].demurrage.ruleSets[0].rules.at(-1);
     response = await request(
       baseUrl,
-      `/admin/handover/shipping-lines/${handoverLine.id}/demurrage/${handoverGroupKey}/${addedHandoverRule.id}/delete`,
+      `/admin/handover/shipping-lines/${handoverLine.id}/demurrage-rule-sets/${handoverRuleSetId}/${addedHandoverRule.id}/delete`,
       {
         method: "POST",
         jar: publicJar,
@@ -426,9 +455,51 @@ async function main() {
     assert.equal(response.status, 302);
     shippingData = await getShippingData();
     assert.equal(
-      shippingData.modules.handover.shippingLines[0].demurrage.rulesByGroup[handoverGroupKey]
-        .length,
+      shippingData.modules.handover.shippingLines[0].demurrage.ruleSets[0].rules.length,
       beforeHandoverRuleCount
+    );
+
+    const beforeRuleSetCount =
+      shippingData.modules.handover.shippingLines[0].demurrage.ruleSets.length;
+    response = await request(
+      baseUrl,
+      `/admin/handover/shipping-lines/${handoverLine.id}/demurrage-rule-sets/add`,
+      {
+        method: "POST",
+        jar: publicJar,
+      }
+    );
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    assert.equal(
+      shippingData.modules.handover.shippingLines[0].demurrage.ruleSets.length,
+      beforeRuleSetCount + 1
+    );
+    const newRuleSetId =
+      shippingData.modules.handover.shippingLines[0].demurrage.ruleSets.at(-1).id;
+    const assignmentForm = buildHandoverAdminForm(
+      shippingData.modules.handover,
+      shippingData.modules.handover.shippingLines[0]
+    );
+    const assignmentKey = `demurrage_assignment_${shippingData.modules.handover.containerTypes[0].key}`;
+    const assignmentIndex = assignmentForm.findIndex(([key]) => key === assignmentKey);
+    assignmentForm[assignmentIndex][1] = newRuleSetId;
+    response = await request(
+      baseUrl,
+      `/admin/handover/shipping-lines/${handoverLine.id}`,
+      {
+        method: "POST",
+        jar: publicJar,
+        formEntries: assignmentForm,
+      }
+    );
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    assert.equal(
+      shippingData.modules.handover.shippingLines[0].demurrage.assignmentsByContainerType[
+        shippingData.modules.handover.containerTypes[0].key
+      ],
+      newRuleSetId
     );
 
     const invalidHandoverForm = buildHandoverAdminForm(
@@ -436,9 +507,9 @@ async function main() {
       shippingData.modules.handover.shippingLines[0]
     );
     const firstHandoverRule =
-      shippingData.modules.handover.shippingLines[0].demurrage.rulesByGroup[handoverGroupKey][0];
+      shippingData.modules.handover.shippingLines[0].demurrage.ruleSets[0].rules[0];
     const invalidIndex = invalidHandoverForm.findIndex(
-      ([key]) => key === `rule_${handoverGroupKey}_${firstHandoverRule.id}_end`
+      ([key]) => key === `rule_set_${handoverRuleSetId}_${firstHandoverRule.id}_end`
     );
     invalidHandoverForm[invalidIndex][1] = 0;
 

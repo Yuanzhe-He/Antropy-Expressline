@@ -136,14 +136,14 @@
           <div
             class="dynamic-rows"
             data-container-rows
-            data-empty-label="<%= selectedLine?.containerGroups?.length ? '' : t('calculator.noContainerConfig') %>"
+            data-empty-label="<%= moduleData.containerTypes?.length ? '' : t('calculator.noContainerConfig') %>"
           >
             <% for (const row of formData.containerRows || []) { %>
               <div class="dynamic-row" data-row>
                 <label>
                   <span><%= t("calculator.containerType") %></span>
                   <select name="containerGroupKey[]">
-                    <% for (const group of selectedLine?.containerGroups || []) { %>
+                    <% for (const group of moduleData.containerTypes || []) { %>
                       <option value="<%= group.key %>" <%= row.containerGroupKey === group.key ? "selected" : "" %>>
                         <%= group.label %>
                       </option>
@@ -383,7 +383,7 @@
     <% } %>
   </div>
 
-  <script id="container-group-data" type="application/json"><%- JSON.stringify(selectedLine?.containerGroups || []) %></script>
+  <script id="container-group-data" type="application/json"><%- JSON.stringify(moduleData.containerTypes || []) %></script>
   <script id="handover-line-data" type="application/json"><%- JSON.stringify(dependencyData || {}) %></script>
   <script id="calculator-i18n" type="application/json"><%- JSON.stringify({
     containerType: t("calculator.containerType"),

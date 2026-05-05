@@ -64,10 +64,36 @@ function buildTypedRows(typeList = [], rowsInput = [], t, unknownLabelKey) {
         id: `row-${index + 1}`,
         containerGroupKey: type?.key || row.containerGroupKey || "",
         label: type?.label || row.containerGroupKey || t(unknownLabelKey),
+        rateGroupKeys: Array.isArray(type?.rateGroupKeys)
+          ? type.rateGroupKeys
+          : [],
         quantity: parseNumber(row.quantity, 0),
       };
     })
     .filter((row) => row.containerGroupKey);
+}
+
+function resolveRateGroupKey(row, rateMap = {}) {
+  const candidates = [
+    ...(Array.isArray(row.rateGroupKeys) ? row.rateGroupKeys : []),
+    row.containerGroupKey,
+  ].filter(Boolean);
+
+  return candidates.find((key) => rateMap?.[key]) || Object.keys(rateMap || {})[0] || "";
+}
+
+function resolveDemurrageRules(row, shippingLine) {
+  const assignedRuleSetId =
+    shippingLine.demurrage?.assignmentsByContainerType?.[row.containerGroupKey];
+  const assignedRuleSet = (shippingLine.demurrage?.ruleSets || []).find(
+    (set) => set.id === assignedRuleSetId
+  );
+  if (assignedRuleSet?.rules?.length) {
+    return assignedRuleSet.rules;
+  }
+
+  const rateGroupKey = resolveRateGroupKey(row, shippingLine.demurrage?.rulesByGroup);
+  return shippingLine.demurrage?.rulesByGroup?.[rateGroupKey] || [];
 }
 
 function buildRatePart({
@@ -293,8 +319,11 @@ function computeHandoverCalculator(shippingLine, formData, referenceData, option
   const t = options.t || ((key) => key);
   const blCount = parseNumber(formData.blCount, 0);
   const demurrageDays = parseNumber(formData.demurrageDays, 0);
+  const containerTypes = referenceData?.containerTypes?.length
+    ? referenceData.containerTypes
+    : shippingLine.containerGroups || [];
   const containerRows = buildTypedRows(
-    shippingLine.containerGroups || [],
+    containerTypes,
     formData.containerRows || [],
     t,
     "calculator.unknownContainer"
@@ -329,7 +358,8 @@ function computeHandoverCalculator(shippingLine, formData, referenceData, option
     }
 
     for (const row of containerRows) {
-      const rateConfig = charge.groupRates?.[row.containerGroupKey];
+      const rateGroupKey = resolveRateGroupKey(row, charge.groupRates);
+      const rateConfig = charge.groupRates?.[rateGroupKey];
       if (!rateConfig) {
         continue;
       }
@@ -398,7 +428,8 @@ function computeHandoverCalculator(shippingLine, formData, referenceData, option
   } else if (containerRows.length) {
     const parts = [];
     for (const row of containerRows) {
-      const rateConfig = shippingLine.guarantee?.ratesByGroup?.[row.containerGroupKey];
+      const rateGroupKey = resolveRateGroupKey(row, shippingLine.guarantee?.ratesByGroup);
+      const rateConfig = shippingLine.guarantee?.ratesByGroup?.[rateGroupKey];
       if (!rateConfig) {
         continue;
       }
@@ -444,14 +475,9 @@ function computeHandoverCalculator(shippingLine, formData, referenceData, option
 
   const demurrageItems = [];
   const matchedTierLabels = [];
-  const demurrageTaxRate = resolveTaxRate(
-    shippingLine.demurrage?.rulesByGroup?.[shippingLine.containerGroups?.[0]?.key]?.[0]?.taxRate || 0,
-    taxOverrides,
-    "handover:demurrage"
-  );
 
   for (const row of containerRows) {
-    const rules = shippingLine.demurrage?.rulesByGroup?.[row.containerGroupKey] || [];
+    const rules = resolveDemurrageRules(row, shippingLine);
     let coveredUntil = 0;
     for (const rule of rules) {
       const window = getProgressiveRuleWindow(
@@ -467,6 +493,11 @@ function computeHandoverCalculator(shippingLine, formData, referenceData, option
       coveredUntil = window.endDay;
 
       const ruleLabel = formatRuleDisplayLabel(rule);
+      const ruleTaxRate = resolveTaxRate(
+        rule.taxRate || 0,
+        taxOverrides,
+        "handover:demurrage"
+      );
       matchedTierLabels.push(`${row.label} ${ruleLabel}`);
       demurrageItems.push(
         buildDisplayItem({
@@ -492,7 +523,7 @@ function computeHandoverCalculator(shippingLine, formData, referenceData, option
               exchangeRates,
             }),
           ],
-          taxRate: demurrageTaxRate,
+          taxRate: ruleTaxRate,
           quoteCurrency,
           priceMode,
           explanation: rule.freeRule
@@ -503,7 +534,7 @@ function computeHandoverCalculator(shippingLine, formData, referenceData, option
             : t("calculator.itemExplanationDemurrageCharged", {
                 container: row.label,
                 ruleLabel,
-                taxRate: getTaxRateLabel(demurrageTaxRate),
+                taxRate: getTaxRateLabel(ruleTaxRate),
               }),
         })
       );

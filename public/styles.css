@@ -552,25 +552,35 @@ code {
 
 .hero-line-control {
   display: grid;
-  gap: 0.32rem;
   width: min(100%, 280px);
 }
 
 .hero-select-field {
   display: grid;
-  gap: 0.18rem;
+  gap: 0.28rem;
+  min-height: 56px;
+  padding: 0.56rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--accent-soft);
 }
 
 .hero-select-field span {
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.66rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
 .hero-select-field select {
+  height: auto;
   margin-top: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-weight: 700;
 }
 
 .hero-split {

@@ -297,6 +297,170 @@
                   }
                 }
               ]
+            },
+            "ruleSets": [
+              {
+                "id": "demurrage-set-gp-hq-dc",
+                "name": "GP HQ DC",
+                "sourceGroupKey": "gp-hq-dc",
+                "rules": [
+                  {
+                    "id": "cma-cgm-gp-hq-dc-free",
+                    "label": "0-7",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 7,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "cma-cgm-demurrage-7-gp-hq-dc",
+                    "label": "8-10",
+                    "note": null,
+                    "startDay": 8,
+                    "endDay": 10,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 155,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "cma-cgm-demurrage-8-gp-hq-dc",
+                    "label": "11-14",
+                    "note": null,
+                    "startDay": 11,
+                    "endDay": 14,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 167,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "cma-cgm-demurrage-9-gp-hq-dc",
+                    "label": ">15",
+                    "note": null,
+                    "startDay": 16,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 172,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-ot-fr-rf",
+                "name": "OT FR RF",
+                "sourceGroupKey": "ot-fr-rf",
+                "rules": [
+                  {
+                    "id": "cma-cgm-ot-fr-rf-free",
+                    "label": "0-7",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 7,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "cma-cgm-demurrage-7-ot-fr-rf",
+                    "label": "8-10",
+                    "note": null,
+                    "startDay": 8,
+                    "endDay": 10,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 155,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "cma-cgm-demurrage-8-ot-fr-rf",
+                    "label": "11-14",
+                    "note": null,
+                    "startDay": 11,
+                    "endDay": 14,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 167,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "cma-cgm-demurrage-9-ot-fr-rf",
+                    "label": ">15",
+                    "note": null,
+                    "startDay": 16,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 172,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              }
+            ],
+            "assignmentsByContainerType": {
+              "40GP": "demurrage-set-gp-hq-dc",
+              "20FR": "demurrage-set-ot-fr-rf",
+              "20GP": "demurrage-set-gp-hq-dc",
+              "20NOR": "demurrage-set-gp-hq-dc",
+              "20OT": "demurrage-set-ot-fr-rf",
+              "20PL": "demurrage-set-ot-fr-rf",
+              "40FR": "demurrage-set-ot-fr-rf",
+              "40NOR": "demurrage-set-gp-hq-dc",
+              "40OT": "demurrage-set-ot-fr-rf",
+              "40PL": "demurrage-set-ot-fr-rf",
+              "20HC": "demurrage-set-gp-hq-dc",
+              "20RHC": "demurrage-set-ot-fr-rf",
+              "20RF": "demurrage-set-ot-fr-rf",
+              "20TK": "demurrage-set-ot-fr-rf",
+              "40HC": "demurrage-set-gp-hq-dc",
+              "40RHC": "demurrage-set-ot-fr-rf",
+              "40RF": "demurrage-set-ot-fr-rf",
+              "40TK": "demurrage-set-ot-fr-rf",
+              "45HC": "demurrage-set-gp-hq-dc",
+              "45OT": "demurrage-set-ot-fr-rf"
             }
           },
           "notes": {
@@ -555,6 +719,138 @@
                   }
                 }
               ]
+            },
+            "ruleSets": [
+              {
+                "id": "demurrage-set-gp-hq-dc",
+                "name": "GP HQ DC",
+                "sourceGroupKey": "gp-hq-dc",
+                "rules": [
+                  {
+                    "id": "maersk-gp-hq-dc-free",
+                    "label": "0-7",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 7,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "maersk-demurrage-8-gp-hq-dc",
+                    "label": "8-10",
+                    "note": null,
+                    "startDay": 8,
+                    "endDay": 10,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 160,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "maersk-demurrage-9-gp-hq-dc",
+                    "label": "11-14",
+                    "note": null,
+                    "startDay": 11,
+                    "endDay": 14,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 180,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "maersk-demurrage-10-gp-hq-dc",
+                    "label": "15-21",
+                    "note": null,
+                    "startDay": 15,
+                    "endDay": 21,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 190,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "maersk-demurrage-11-gp-hq-dc",
+                    "label": ">21",
+                    "note": null,
+                    "startDay": 22,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 200,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-ot-fr-rf",
+                "name": "OT FR RF",
+                "sourceGroupKey": "ot-fr-rf",
+                "rules": [
+                  {
+                    "id": "maersk-ot-fr-rf-free",
+                    "label": "0-7",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 7,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  }
+                ]
+              }
+            ],
+            "assignmentsByContainerType": {
+              "40GP": "demurrage-set-gp-hq-dc",
+              "20FR": "demurrage-set-ot-fr-rf",
+              "20GP": "demurrage-set-gp-hq-dc",
+              "20NOR": "demurrage-set-gp-hq-dc",
+              "20OT": "demurrage-set-ot-fr-rf",
+              "20PL": "demurrage-set-ot-fr-rf",
+              "40FR": "demurrage-set-ot-fr-rf",
+              "40NOR": "demurrage-set-gp-hq-dc",
+              "40OT": "demurrage-set-ot-fr-rf",
+              "40PL": "demurrage-set-ot-fr-rf",
+              "20HC": "demurrage-set-gp-hq-dc",
+              "20RHC": "demurrage-set-ot-fr-rf",
+              "20RF": "demurrage-set-ot-fr-rf",
+              "20TK": "demurrage-set-ot-fr-rf",
+              "40HC": "demurrage-set-gp-hq-dc",
+              "40RHC": "demurrage-set-ot-fr-rf",
+              "40RF": "demurrage-set-ot-fr-rf",
+              "40TK": "demurrage-set-ot-fr-rf",
+              "45HC": "demurrage-set-gp-hq-dc",
+              "45OT": "demurrage-set-ot-fr-rf"
             }
           },
           "notes": {
@@ -851,6 +1147,122 @@
                   }
                 }
               ]
+            },
+            "ruleSets": [
+              {
+                "id": "demurrage-set-gp-hq-dc",
+                "name": "GP HQ DC",
+                "sourceGroupKey": "gp-hq-dc",
+                "rules": [
+                  {
+                    "id": "zim-gp-hq-dc-free",
+                    "label": "0-7",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 7,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "zim-demurrage-11-gp-hq-dc",
+                    "label": "8-10",
+                    "note": null,
+                    "startDay": 8,
+                    "endDay": 10,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 120,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "zim-demurrage-12-gp-hq-dc",
+                    "label": "11-14",
+                    "note": null,
+                    "startDay": 11,
+                    "endDay": 14,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 150,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "zim-demurrage-13-gp-hq-dc",
+                    "label": ">15",
+                    "note": null,
+                    "startDay": 16,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 165,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-ot-fr-rf",
+                "name": "OT FR RF",
+                "sourceGroupKey": "ot-fr-rf",
+                "rules": [
+                  {
+                    "id": "zim-ot-fr-rf-free",
+                    "label": "0-7",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 7,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  }
+                ]
+              }
+            ],
+            "assignmentsByContainerType": {
+              "40GP": "demurrage-set-gp-hq-dc",
+              "20FR": "demurrage-set-ot-fr-rf",
+              "20GP": "demurrage-set-gp-hq-dc",
+              "20NOR": "demurrage-set-gp-hq-dc",
+              "20OT": "demurrage-set-ot-fr-rf",
+              "20PL": "demurrage-set-ot-fr-rf",
+              "40FR": "demurrage-set-ot-fr-rf",
+              "40NOR": "demurrage-set-gp-hq-dc",
+              "40OT": "demurrage-set-ot-fr-rf",
+              "40PL": "demurrage-set-ot-fr-rf",
+              "20HC": "demurrage-set-gp-hq-dc",
+              "20RHC": "demurrage-set-ot-fr-rf",
+              "20RF": "demurrage-set-ot-fr-rf",
+              "20TK": "demurrage-set-ot-fr-rf",
+              "40HC": "demurrage-set-gp-hq-dc",
+              "40RHC": "demurrage-set-ot-fr-rf",
+              "40RF": "demurrage-set-ot-fr-rf",
+              "40TK": "demurrage-set-ot-fr-rf",
+              "45HC": "demurrage-set-gp-hq-dc",
+              "45OT": "demurrage-set-ot-fr-rf"
             }
           },
           "notes": {
@@ -1661,6 +2073,562 @@
                   }
                 }
               ]
+            },
+            "ruleSets": [
+              {
+                "id": "demurrage-set-gp-hq-dc",
+                "name": "GP HQ DC",
+                "sourceGroupKey": "gp-hq-dc",
+                "rules": [
+                  {
+                    "id": "msc-gp-hq-dc-free",
+                    "label": "0-7",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 7,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-10-gp-hq-dc",
+                    "label": "8-14",
+                    "note": null,
+                    "startDay": 8,
+                    "endDay": 14,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 155,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-11-gp-hq-dc",
+                    "label": "15-17",
+                    "note": null,
+                    "startDay": 15,
+                    "endDay": 17,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 160,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-12-gp-hq-dc",
+                    "label": "18>",
+                    "note": null,
+                    "startDay": 19,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 180,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-imo-dry",
+                "name": "IMO DRY",
+                "sourceGroupKey": "imo-dry",
+                "rules": [
+                  {
+                    "id": "msc-imo-dry-free",
+                    "label": "0-5",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 5,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO DRY",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-9-imo-dry",
+                    "label": ">5",
+                    "note": null,
+                    "startDay": 6,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO DRY",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 225,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-10-imo-dry",
+                    "label": "8-14",
+                    "note": null,
+                    "startDay": 8,
+                    "endDay": 14,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO DRY",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 225,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-11-imo-dry",
+                    "label": "15-17",
+                    "note": null,
+                    "startDay": 15,
+                    "endDay": 17,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO DRY",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 225,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-12-imo-dry",
+                    "label": "18>",
+                    "note": null,
+                    "startDay": 19,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO DRY",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 225,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-special-45",
+                "name": "SPECIAL & 45'",
+                "sourceGroupKey": "special-45",
+                "rules": [
+                  {
+                    "id": "msc-special-45-free",
+                    "label": "0-5",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 5,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "SPECIAL & 45'",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-9-special-45",
+                    "label": ">5",
+                    "note": null,
+                    "startDay": 6,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "SPECIAL & 45'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 225,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-10-special-45",
+                    "label": "8-14",
+                    "note": null,
+                    "startDay": 8,
+                    "endDay": 14,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "SPECIAL & 45'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 225,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-11-special-45",
+                    "label": "15-17",
+                    "note": null,
+                    "startDay": 15,
+                    "endDay": 17,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "SPECIAL & 45'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 225,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-12-special-45",
+                    "label": "18>",
+                    "note": null,
+                    "startDay": 19,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "SPECIAL & 45'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 225,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-imo-special-45",
+                "name": "IMO SPECIAL & 45'",
+                "sourceGroupKey": "imo-special-45",
+                "rules": [
+                  {
+                    "id": "msc-imo-special-45-free",
+                    "label": "0-5",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 5,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO SPECIAL & 45'",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-9-imo-special-45",
+                    "label": ">5",
+                    "note": null,
+                    "startDay": 6,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO SPECIAL & 45'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 290,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-10-imo-special-45",
+                    "label": "8-14",
+                    "note": null,
+                    "startDay": 8,
+                    "endDay": 14,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO SPECIAL & 45'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 290,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-11-imo-special-45",
+                    "label": "15-17",
+                    "note": null,
+                    "startDay": 15,
+                    "endDay": 17,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO SPECIAL & 45'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 290,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-12-imo-special-45",
+                    "label": "18>",
+                    "note": null,
+                    "startDay": 19,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO SPECIAL & 45'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 290,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-reefer",
+                "name": "REEFER",
+                "sourceGroupKey": "reefer",
+                "rules": [
+                  {
+                    "id": "msc-reefer-free",
+                    "label": "0-3",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 3,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "REEFER",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-8-reefer",
+                    "label": ">3",
+                    "note": null,
+                    "startDay": 4,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "REEFER",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 225,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-9-reefer",
+                    "label": ">5",
+                    "note": null,
+                    "startDay": 6,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "REEFER",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 225,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-10-reefer",
+                    "label": "8-14",
+                    "note": null,
+                    "startDay": 8,
+                    "endDay": 14,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "REEFER",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 225,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-11-reefer",
+                    "label": "15-17",
+                    "note": null,
+                    "startDay": 15,
+                    "endDay": 17,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "REEFER",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 225,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-12-reefer",
+                    "label": "18>",
+                    "note": null,
+                    "startDay": 19,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "REEFER",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 225,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-imo-reefer",
+                "name": "IMO REEFER",
+                "sourceGroupKey": "imo-reefer",
+                "rules": [
+                  {
+                    "id": "msc-imo-reefer-free",
+                    "label": "0-3",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 3,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO REEFER",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-8-imo-reefer",
+                    "label": ">3",
+                    "note": null,
+                    "startDay": 4,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO REEFER",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 290,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-9-imo-reefer",
+                    "label": ">5",
+                    "note": null,
+                    "startDay": 6,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO REEFER",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 290,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-10-imo-reefer",
+                    "label": "8-14",
+                    "note": null,
+                    "startDay": 8,
+                    "endDay": 14,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO REEFER",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 290,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-11-imo-reefer",
+                    "label": "15-17",
+                    "note": null,
+                    "startDay": 15,
+                    "endDay": 17,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO REEFER",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 290,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "msc-demurrage-12-imo-reefer",
+                    "label": "18>",
+                    "note": null,
+                    "startDay": 19,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "IMO REEFER",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 290,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              }
+            ],
+            "assignmentsByContainerType": {
+              "40GP": "demurrage-set-gp-hq-dc",
+              "20FR": "demurrage-set-gp-hq-dc",
+              "20GP": "demurrage-set-gp-hq-dc",
+              "20NOR": "demurrage-set-gp-hq-dc",
+              "20OT": "demurrage-set-gp-hq-dc",
+              "20PL": "demurrage-set-gp-hq-dc",
+              "40FR": "demurrage-set-gp-hq-dc",
+              "40NOR": "demurrage-set-gp-hq-dc",
+              "40OT": "demurrage-set-gp-hq-dc",
+              "40PL": "demurrage-set-gp-hq-dc",
+              "20HC": "demurrage-set-gp-hq-dc",
+              "20RHC": "demurrage-set-reefer",
+              "20RF": "demurrage-set-reefer",
+              "20TK": "demurrage-set-gp-hq-dc",
+              "40HC": "demurrage-set-gp-hq-dc",
+              "40RHC": "demurrage-set-reefer",
+              "40RF": "demurrage-set-reefer",
+              "40TK": "demurrage-set-gp-hq-dc",
+              "45HC": "demurrage-set-special-45",
+              "45OT": "demurrage-set-special-45"
             }
           },
           "notes": {
@@ -2276,6 +3244,408 @@
                   }
                 }
               ]
+            },
+            "ruleSets": [
+              {
+                "id": "demurrage-set-gp-hq-dc-20-40",
+                "name": "GP HQ DC 20' 40'",
+                "sourceGroupKey": "gp-hq-dc-20-40",
+                "rules": [
+                  {
+                    "id": "one-gp-hq-dc-20-40-free",
+                    "label": "0-10",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 10,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC 20' 40'",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "one-demurrage-7-gp-hq-dc-20-40",
+                    "label": "11-20",
+                    "note": null,
+                    "startDay": 11,
+                    "endDay": 20,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC 20' 40'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 145,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "one-demurrage-8-gp-hq-dc-20-40",
+                    "label": ">21",
+                    "note": null,
+                    "startDay": 22,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC 20' 40'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 165,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-ot-20",
+                "name": "OT 20'",
+                "sourceGroupKey": "ot-20",
+                "rules": [
+                  {
+                    "id": "one-ot-20-free",
+                    "label": "0-10",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 10,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT 20'",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "one-demurrage-7-ot-20",
+                    "label": "11-20",
+                    "note": null,
+                    "startDay": 11,
+                    "endDay": 20,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT 20'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 176,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "one-demurrage-8-ot-20",
+                    "label": ">21",
+                    "note": null,
+                    "startDay": 22,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT 20'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 191,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-ot-40",
+                "name": "OT 40'",
+                "sourceGroupKey": "ot-40",
+                "rules": [
+                  {
+                    "id": "one-ot-40-free",
+                    "label": "0-10",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 10,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT 40'",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "one-demurrage-7-ot-40",
+                    "label": "11-20",
+                    "note": null,
+                    "startDay": 11,
+                    "endDay": 20,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT 40'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 196,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "one-demurrage-8-ot-40",
+                    "label": ">21",
+                    "note": null,
+                    "startDay": 22,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT 40'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 217,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-fr-20",
+                "name": "FR 20'",
+                "sourceGroupKey": "fr-20",
+                "rules": [
+                  {
+                    "id": "one-fr-20-free",
+                    "label": "0-10",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 10,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "FR 20'",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "one-demurrage-7-fr-20",
+                    "label": "11-20",
+                    "note": null,
+                    "startDay": 11,
+                    "endDay": 20,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "FR 20'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 176,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "one-demurrage-8-fr-20",
+                    "label": ">21",
+                    "note": null,
+                    "startDay": 22,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "FR 20'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 191,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-fr-40",
+                "name": "FR 40'",
+                "sourceGroupKey": "fr-40",
+                "rules": [
+                  {
+                    "id": "one-fr-40-free",
+                    "label": "0-10",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 10,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "FR 40'",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "one-demurrage-7-fr-40",
+                    "label": "11-20",
+                    "note": null,
+                    "startDay": 11,
+                    "endDay": 20,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "FR 40'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 196,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "one-demurrage-8-fr-40",
+                    "label": ">21",
+                    "note": null,
+                    "startDay": 22,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "FR 40'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 217,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-rf-20",
+                "name": "RF 20'",
+                "sourceGroupKey": "rf-20",
+                "rules": [
+                  {
+                    "id": "one-rf-20-free",
+                    "label": "0-10",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 10,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "RF 20'",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "one-demurrage-7-rf-20",
+                    "label": "11-20",
+                    "note": null,
+                    "startDay": 11,
+                    "endDay": 20,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "RF 20'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 186,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "one-demurrage-8-rf-20",
+                    "label": ">21",
+                    "note": null,
+                    "startDay": 22,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "RF 20'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 222,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-rf-40",
+                "name": "RF 40'",
+                "sourceGroupKey": "rf-40",
+                "rules": [
+                  {
+                    "id": "one-rf-40-free",
+                    "label": "0-10",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 10,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "RF 40'",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "one-demurrage-7-rf-40",
+                    "label": "11-20",
+                    "note": null,
+                    "startDay": 11,
+                    "endDay": 20,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "RF 40'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 196,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "one-demurrage-8-rf-40",
+                    "label": ">21",
+                    "note": null,
+                    "startDay": 22,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "RF 40'",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 233,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              }
+            ],
+            "assignmentsByContainerType": {
+              "40GP": "demurrage-set-gp-hq-dc-20-40",
+              "20FR": "demurrage-set-fr-20",
+              "20GP": "demurrage-set-gp-hq-dc-20-40",
+              "20NOR": "demurrage-set-gp-hq-dc-20-40",
+              "20OT": "demurrage-set-ot-20",
+              "20PL": "demurrage-set-fr-20",
+              "40FR": "demurrage-set-fr-40",
+              "40NOR": "demurrage-set-gp-hq-dc-20-40",
+              "40OT": "demurrage-set-ot-40",
+              "40PL": "demurrage-set-fr-40",
+              "20HC": "demurrage-set-gp-hq-dc-20-40",
+              "20RHC": "demurrage-set-rf-20",
+              "20RF": "demurrage-set-rf-20",
+              "20TK": "demurrage-set-gp-hq-dc-20-40",
+              "40HC": "demurrage-set-gp-hq-dc-20-40",
+              "40RHC": "demurrage-set-rf-40",
+              "40RF": "demurrage-set-rf-40",
+              "40TK": "demurrage-set-gp-hq-dc-20-40",
+              "45HC": "demurrage-set-gp-hq-dc-20-40",
+              "45OT": "demurrage-set-ot-40"
             }
           },
           "notes": {
@@ -2481,6 +3851,106 @@
                   }
                 }
               ]
+            },
+            "ruleSets": [
+              {
+                "id": "demurrage-set-gp-hc-sd",
+                "name": "GP HC SD",
+                "sourceGroupKey": "gp-hc-sd",
+                "rules": [
+                  {
+                    "id": "pil-gp-hc-sd-free",
+                    "label": "0-21",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 21,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "pil-demurrage-7-gp-hc-sd",
+                    "label": "Tier 7",
+                    "note": null,
+                    "startDay": null,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 193,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-ot-fr-rf",
+                "name": "OT FR RF",
+                "sourceGroupKey": "ot-fr-rf",
+                "rules": [
+                  {
+                    "id": "pil-ot-fr-rf-free",
+                    "label": "0-21",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 21,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "pil-demurrage-7-ot-fr-rf",
+                    "label": "Tier 7",
+                    "note": null,
+                    "startDay": null,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 220,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              }
+            ],
+            "assignmentsByContainerType": {
+              "40GP": "demurrage-set-gp-hc-sd",
+              "20FR": "demurrage-set-ot-fr-rf",
+              "20GP": "demurrage-set-gp-hc-sd",
+              "20NOR": "demurrage-set-gp-hc-sd",
+              "20OT": "demurrage-set-ot-fr-rf",
+              "20PL": "demurrage-set-ot-fr-rf",
+              "40FR": "demurrage-set-ot-fr-rf",
+              "40NOR": "demurrage-set-gp-hc-sd",
+              "40OT": "demurrage-set-ot-fr-rf",
+              "40PL": "demurrage-set-ot-fr-rf",
+              "20HC": "demurrage-set-gp-hc-sd",
+              "20RHC": "demurrage-set-ot-fr-rf",
+              "20RF": "demurrage-set-ot-fr-rf",
+              "20TK": "demurrage-set-ot-fr-rf",
+              "40HC": "demurrage-set-gp-hc-sd",
+              "40RHC": "demurrage-set-ot-fr-rf",
+              "40RF": "demurrage-set-ot-fr-rf",
+              "40TK": "demurrage-set-ot-fr-rf",
+              "45HC": "demurrage-set-gp-hc-sd",
+              "45OT": "demurrage-set-ot-fr-rf"
             }
           },
           "notes": {
@@ -2718,6 +4188,138 @@
                   }
                 }
               ]
+            },
+            "ruleSets": [
+              {
+                "id": "demurrage-set-gp-hc-sd",
+                "name": "GP HC SD",
+                "sourceGroupKey": "gp-hc-sd",
+                "rules": [
+                  {
+                    "id": "whan-hai-gp-hc-sd-free",
+                    "label": "0-7",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 7,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "whan-hai-demurrage-7-gp-hc-sd",
+                    "label": "1-3",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 3,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 140,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "whan-hai-demurrage-8-gp-hc-sd",
+                    "label": "≥4",
+                    "note": null,
+                    "startDay": null,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 155,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-ot-fr-rf",
+                "name": "OT FR RF",
+                "sourceGroupKey": "ot-fr-rf",
+                "rules": [
+                  {
+                    "id": "whan-hai-ot-fr-rf-free",
+                    "label": "0-3",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 3,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "whan-hai-demurrage-7-ot-fr-rf",
+                    "label": "1-3",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 3,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 185,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "whan-hai-demurrage-8-ot-fr-rf",
+                    "label": "≥4",
+                    "note": null,
+                    "startDay": null,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 195,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              }
+            ],
+            "assignmentsByContainerType": {
+              "40GP": "demurrage-set-gp-hc-sd",
+              "20FR": "demurrage-set-ot-fr-rf",
+              "20GP": "demurrage-set-gp-hc-sd",
+              "20NOR": "demurrage-set-gp-hc-sd",
+              "20OT": "demurrage-set-ot-fr-rf",
+              "20PL": "demurrage-set-ot-fr-rf",
+              "40FR": "demurrage-set-ot-fr-rf",
+              "40NOR": "demurrage-set-gp-hc-sd",
+              "40OT": "demurrage-set-ot-fr-rf",
+              "40PL": "demurrage-set-ot-fr-rf",
+              "20HC": "demurrage-set-gp-hc-sd",
+              "20RHC": "demurrage-set-ot-fr-rf",
+              "20RF": "demurrage-set-ot-fr-rf",
+              "20TK": "demurrage-set-ot-fr-rf",
+              "40HC": "demurrage-set-gp-hc-sd",
+              "40RHC": "demurrage-set-ot-fr-rf",
+              "40RF": "demurrage-set-ot-fr-rf",
+              "40TK": "demurrage-set-ot-fr-rf",
+              "45HC": "demurrage-set-gp-hc-sd",
+              "45OT": "demurrage-set-ot-fr-rf"
             }
           },
           "notes": {
@@ -2976,6 +4578,138 @@
                   }
                 }
               ]
+            },
+            "ruleSets": [
+              {
+                "id": "demurrage-set-gp-hq-dc",
+                "name": "GP HQ DC",
+                "sourceGroupKey": "gp-hq-dc",
+                "rules": [
+                  {
+                    "id": "hapag-gp-hq-dc-free",
+                    "label": "0-7",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 7,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "hapag-demurrage-8-gp-hq-dc",
+                    "label": "8-10",
+                    "note": null,
+                    "startDay": 8,
+                    "endDay": 10,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 160,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "hapag-demurrage-9-gp-hq-dc",
+                    "label": "11-14",
+                    "note": null,
+                    "startDay": 11,
+                    "endDay": 14,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 180,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "hapag-demurrage-10-gp-hq-dc",
+                    "label": "15-21",
+                    "note": null,
+                    "startDay": 15,
+                    "endDay": 21,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 190,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "hapag-demurrage-11-gp-hq-dc",
+                    "label": ">21",
+                    "note": null,
+                    "startDay": 22,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 200,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-ot-fr-rf",
+                "name": "OT FR RF",
+                "sourceGroupKey": "ot-fr-rf",
+                "rules": [
+                  {
+                    "id": "hapag-ot-fr-rf-free",
+                    "label": "0-7",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 7,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  }
+                ]
+              }
+            ],
+            "assignmentsByContainerType": {
+              "40GP": "demurrage-set-gp-hq-dc",
+              "20FR": "demurrage-set-ot-fr-rf",
+              "20GP": "demurrage-set-gp-hq-dc",
+              "20NOR": "demurrage-set-gp-hq-dc",
+              "20OT": "demurrage-set-ot-fr-rf",
+              "20PL": "demurrage-set-ot-fr-rf",
+              "40FR": "demurrage-set-ot-fr-rf",
+              "40NOR": "demurrage-set-gp-hq-dc",
+              "40OT": "demurrage-set-ot-fr-rf",
+              "40PL": "demurrage-set-ot-fr-rf",
+              "20HC": "demurrage-set-gp-hq-dc",
+              "20RHC": "demurrage-set-ot-fr-rf",
+              "20RF": "demurrage-set-ot-fr-rf",
+              "20TK": "demurrage-set-ot-fr-rf",
+              "40HC": "demurrage-set-gp-hq-dc",
+              "40RHC": "demurrage-set-ot-fr-rf",
+              "40RF": "demurrage-set-ot-fr-rf",
+              "40TK": "demurrage-set-ot-fr-rf",
+              "45HC": "demurrage-set-gp-hq-dc",
+              "45OT": "demurrage-set-ot-fr-rf"
             }
           },
           "notes": {
@@ -3169,6 +4903,106 @@
                   }
                 }
               ]
+            },
+            "ruleSets": [
+              {
+                "id": "demurrage-set-gp-hc-sd",
+                "name": "GP HC SD",
+                "sourceGroupKey": "gp-hc-sd",
+                "rules": [
+                  {
+                    "id": "evergreen-gp-hc-sd-free",
+                    "label": "0-21",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 21,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "evergreen-demurrage-6-gp-hc-sd",
+                    "label": "Tier 6",
+                    "note": null,
+                    "startDay": null,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0.16,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 120,
+                      "taxMultiplier": 1.16
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-ot-fr-rf",
+                "name": "OT FR RF",
+                "sourceGroupKey": "ot-fr-rf",
+                "rules": [
+                  {
+                    "id": "evergreen-ot-fr-rf-free",
+                    "label": "0-21",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 21,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "evergreen-demurrage-6-ot-fr-rf",
+                    "label": "Tier 6",
+                    "note": null,
+                    "startDay": null,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0.16,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 120,
+                      "taxMultiplier": 1.16
+                    }
+                  }
+                ]
+              }
+            ],
+            "assignmentsByContainerType": {
+              "40GP": "demurrage-set-gp-hc-sd",
+              "20FR": "demurrage-set-ot-fr-rf",
+              "20GP": "demurrage-set-gp-hc-sd",
+              "20NOR": "demurrage-set-gp-hc-sd",
+              "20OT": "demurrage-set-ot-fr-rf",
+              "20PL": "demurrage-set-ot-fr-rf",
+              "40FR": "demurrage-set-ot-fr-rf",
+              "40NOR": "demurrage-set-gp-hc-sd",
+              "40OT": "demurrage-set-ot-fr-rf",
+              "40PL": "demurrage-set-ot-fr-rf",
+              "20HC": "demurrage-set-gp-hc-sd",
+              "20RHC": "demurrage-set-ot-fr-rf",
+              "20RF": "demurrage-set-ot-fr-rf",
+              "20TK": "demurrage-set-ot-fr-rf",
+              "40HC": "demurrage-set-gp-hc-sd",
+              "40RHC": "demurrage-set-ot-fr-rf",
+              "40RF": "demurrage-set-ot-fr-rf",
+              "40TK": "demurrage-set-ot-fr-rf",
+              "45HC": "demurrage-set-gp-hc-sd",
+              "45OT": "demurrage-set-ot-fr-rf"
             }
           },
           "notes": {
@@ -3470,6 +5304,176 @@
                   }
                 }
               ]
+            },
+            "ruleSets": [
+              {
+                "id": "demurrage-set-gp-hc-sd",
+                "name": "GP HC SD",
+                "sourceGroupKey": "gp-hc-sd",
+                "rules": [
+                  {
+                    "id": "cosco-gp-hc-sd-free",
+                    "label": "0-14",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 14,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "cosco-demurrage-7-gp-hc-sd",
+                    "label": "15-20",
+                    "note": null,
+                    "startDay": 15,
+                    "endDay": 20,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 120,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "cosco-demurrage-8-gp-hc-sd",
+                    "label": ">21",
+                    "note": null,
+                    "startDay": 22,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 140,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-ot-fl-pl",
+                "name": "OT FL PL",
+                "sourceGroupKey": "ot-fl-pl",
+                "rules": [
+                  {
+                    "id": "cosco-ot-fl-pl-free",
+                    "label": "0-5",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 5,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FL PL",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "cosco-demurrage-9-ot-fl-pl",
+                    "label": "6-20",
+                    "note": null,
+                    "startDay": 6,
+                    "endDay": 20,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FL PL",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 130,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "cosco-demurrage-10-ot-fl-pl",
+                    "label": ">21",
+                    "note": null,
+                    "startDay": 22,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FL PL",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 180,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-rf-rq",
+                "name": "RF RQ",
+                "sourceGroupKey": "rf-rq",
+                "rules": [
+                  {
+                    "id": "cosco-rf-rq-free",
+                    "label": "0-10",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 10,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "RF RQ",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "cosco-demurrage-11-rf-rq",
+                    "label": ">11",
+                    "note": null,
+                    "startDay": 12,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "RF RQ",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 200,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              }
+            ],
+            "assignmentsByContainerType": {
+              "40GP": "demurrage-set-gp-hc-sd",
+              "20FR": "demurrage-set-ot-fl-pl",
+              "20GP": "demurrage-set-gp-hc-sd",
+              "20NOR": "demurrage-set-gp-hc-sd",
+              "20OT": "demurrage-set-ot-fl-pl",
+              "20PL": "demurrage-set-ot-fl-pl",
+              "40FR": "demurrage-set-ot-fl-pl",
+              "40NOR": "demurrage-set-gp-hc-sd",
+              "40OT": "demurrage-set-ot-fl-pl",
+              "40PL": "demurrage-set-ot-fl-pl",
+              "20HC": "demurrage-set-gp-hc-sd",
+              "20RHC": "demurrage-set-rf-rq",
+              "20RF": "demurrage-set-rf-rq",
+              "20TK": "demurrage-set-ot-fl-pl",
+              "40HC": "demurrage-set-gp-hc-sd",
+              "40RHC": "demurrage-set-rf-rq",
+              "40RF": "demurrage-set-rf-rq",
+              "40TK": "demurrage-set-ot-fl-pl",
+              "45HC": "demurrage-set-gp-hc-sd",
+              "45OT": "demurrage-set-ot-fl-pl"
             }
           },
           "notes": {
@@ -3744,6 +5748,154 @@
                   }
                 }
               ]
+            },
+            "ruleSets": [
+              {
+                "id": "demurrage-set-gp-hq-dc",
+                "name": "GP HQ DC",
+                "sourceGroupKey": "gp-hq-dc",
+                "rules": [
+                  {
+                    "id": "oocl-gp-hq-dc-free",
+                    "label": "0-14",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 14,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "oocl-demurrage-8-gp-hq-dc",
+                    "label": "1-5",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 5,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 150,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "oocl-demurrage-9-gp-hq-dc",
+                    "label": "6-10",
+                    "note": null,
+                    "startDay": 6,
+                    "endDay": 10,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HQ DC",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 160,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-ot-fr-rf",
+                "name": "OT FR RF",
+                "sourceGroupKey": "ot-fr-rf",
+                "rules": [
+                  {
+                    "id": "oocl-ot-fr-rf-free",
+                    "label": "0-3",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 3,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "oocl-demurrage-8-ot-fr-rf",
+                    "label": "1-5",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 5,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 210,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "oocl-demurrage-9-ot-fr-rf",
+                    "label": "6-10",
+                    "note": null,
+                    "startDay": 6,
+                    "endDay": 10,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 210,
+                      "taxMultiplier": 1
+                    }
+                  },
+                  {
+                    "id": "oocl-demurrage-10-ot-fr-rf",
+                    "label": ">10",
+                    "note": null,
+                    "startDay": 11,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 210,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              }
+            ],
+            "assignmentsByContainerType": {
+              "40GP": "demurrage-set-gp-hq-dc",
+              "20FR": "demurrage-set-ot-fr-rf",
+              "20GP": "demurrage-set-gp-hq-dc",
+              "20NOR": "demurrage-set-gp-hq-dc",
+              "20OT": "demurrage-set-ot-fr-rf",
+              "20PL": "demurrage-set-ot-fr-rf",
+              "40FR": "demurrage-set-ot-fr-rf",
+              "40NOR": "demurrage-set-gp-hq-dc",
+              "40OT": "demurrage-set-ot-fr-rf",
+              "40PL": "demurrage-set-ot-fr-rf",
+              "20HC": "demurrage-set-gp-hq-dc",
+              "20RHC": "demurrage-set-ot-fr-rf",
+              "20RF": "demurrage-set-ot-fr-rf",
+              "20TK": "demurrage-set-ot-fr-rf",
+              "40HC": "demurrage-set-gp-hq-dc",
+              "40RHC": "demurrage-set-ot-fr-rf",
+              "40RF": "demurrage-set-ot-fr-rf",
+              "40TK": "demurrage-set-ot-fr-rf",
+              "45HC": "demurrage-set-gp-hq-dc",
+              "45OT": "demurrage-set-ot-fr-rf"
             }
           },
           "notes": {
@@ -3928,6 +6080,106 @@
                   }
                 }
               ]
+            },
+            "ruleSets": [
+              {
+                "id": "demurrage-set-gp-hc-sd",
+                "name": "GP HC SD",
+                "sourceGroupKey": "gp-hc-sd",
+                "rules": [
+                  {
+                    "id": "yang-ming-gp-hc-sd-free",
+                    "label": "0-21",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 21,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "yang-ming-demurrage-6-gp-hc-sd",
+                    "label": "Tier 6",
+                    "note": null,
+                    "startDay": null,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 170,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-ot-fr-rf",
+                "name": "OT FR RF",
+                "sourceGroupKey": "ot-fr-rf",
+                "rules": [
+                  {
+                    "id": "yang-ming-ot-fr-rf-free",
+                    "label": "0-21",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 21,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "yang-ming-demurrage-6-ot-fr-rf",
+                    "label": "Tier 6",
+                    "note": null,
+                    "startDay": null,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 170,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              }
+            ],
+            "assignmentsByContainerType": {
+              "40GP": "demurrage-set-gp-hc-sd",
+              "20FR": "demurrage-set-ot-fr-rf",
+              "20GP": "demurrage-set-gp-hc-sd",
+              "20NOR": "demurrage-set-gp-hc-sd",
+              "20OT": "demurrage-set-ot-fr-rf",
+              "20PL": "demurrage-set-ot-fr-rf",
+              "40FR": "demurrage-set-ot-fr-rf",
+              "40NOR": "demurrage-set-gp-hc-sd",
+              "40OT": "demurrage-set-ot-fr-rf",
+              "40PL": "demurrage-set-ot-fr-rf",
+              "20HC": "demurrage-set-gp-hc-sd",
+              "20RHC": "demurrage-set-ot-fr-rf",
+              "20RF": "demurrage-set-ot-fr-rf",
+              "20TK": "demurrage-set-ot-fr-rf",
+              "40HC": "demurrage-set-gp-hc-sd",
+              "40RHC": "demurrage-set-ot-fr-rf",
+              "40RF": "demurrage-set-ot-fr-rf",
+              "40TK": "demurrage-set-ot-fr-rf",
+              "45HC": "demurrage-set-gp-hc-sd",
+              "45OT": "demurrage-set-ot-fr-rf"
             }
           },
           "notes": {
@@ -4117,6 +6369,90 @@
                   }
                 }
               ]
+            },
+            "ruleSets": [
+              {
+                "id": "demurrage-set-gp-hc-sd",
+                "name": "GP HC SD",
+                "sourceGroupKey": "gp-hc-sd",
+                "rules": [
+                  {
+                    "id": "kmtc-gp-hc-sd-free",
+                    "label": "0-21",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 21,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "kmtc-demurrage-7-gp-hc-sd",
+                    "label": "Tier 7",
+                    "note": null,
+                    "startDay": null,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 160,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-ot-fr-rf",
+                "name": "OT FR RF",
+                "sourceGroupKey": "ot-fr-rf",
+                "rules": [
+                  {
+                    "id": "kmtc-ot-fr-rf-free",
+                    "label": "0-21",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 21,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  }
+                ]
+              }
+            ],
+            "assignmentsByContainerType": {
+              "40GP": "demurrage-set-gp-hc-sd",
+              "20FR": "demurrage-set-ot-fr-rf",
+              "20GP": "demurrage-set-gp-hc-sd",
+              "20NOR": "demurrage-set-gp-hc-sd",
+              "20OT": "demurrage-set-ot-fr-rf",
+              "20PL": "demurrage-set-ot-fr-rf",
+              "40FR": "demurrage-set-ot-fr-rf",
+              "40NOR": "demurrage-set-gp-hc-sd",
+              "40OT": "demurrage-set-ot-fr-rf",
+              "40PL": "demurrage-set-ot-fr-rf",
+              "20HC": "demurrage-set-gp-hc-sd",
+              "20RHC": "demurrage-set-ot-fr-rf",
+              "20RF": "demurrage-set-ot-fr-rf",
+              "20TK": "demurrage-set-ot-fr-rf",
+              "40HC": "demurrage-set-gp-hc-sd",
+              "40RHC": "demurrage-set-ot-fr-rf",
+              "40RF": "demurrage-set-ot-fr-rf",
+              "40TK": "demurrage-set-ot-fr-rf",
+              "45HC": "demurrage-set-gp-hc-sd",
+              "45OT": "demurrage-set-ot-fr-rf"
             }
           },
           "notes": {
@@ -4306,6 +6642,90 @@
                   }
                 }
               ]
+            },
+            "ruleSets": [
+              {
+                "id": "demurrage-set-gp-hc-sd",
+                "name": "GP HC SD",
+                "sourceGroupKey": "gp-hc-sd",
+                "rules": [
+                  {
+                    "id": "rcl-gp-hc-sd-free",
+                    "label": "0-21",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 21,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  },
+                  {
+                    "id": "rcl-demurrage-7-gp-hc-sd",
+                    "label": "Tier 7",
+                    "note": null,
+                    "startDay": null,
+                    "endDay": null,
+                    "freeRule": false,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "GP HC SD",
+                      "qtyHint": 1,
+                      "currency": "USD",
+                      "rate": 160,
+                      "taxMultiplier": 1
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "demurrage-set-ot-fr-rf",
+                "name": "OT FR RF",
+                "sourceGroupKey": "ot-fr-rf",
+                "rules": [
+                  {
+                    "id": "rcl-ot-fr-rf-free",
+                    "label": "0-21",
+                    "note": null,
+                    "startDay": 1,
+                    "endDay": 21,
+                    "freeRule": true,
+                    "taxRate": 0,
+                    "rateConfig": {
+                      "label": "OT FR RF",
+                      "qtyHint": 1,
+                      "currency": "MXN",
+                      "rate": 0
+                    }
+                  }
+                ]
+              }
+            ],
+            "assignmentsByContainerType": {
+              "40GP": "demurrage-set-gp-hc-sd",
+              "20FR": "demurrage-set-ot-fr-rf",
+              "20GP": "demurrage-set-gp-hc-sd",
+              "20NOR": "demurrage-set-gp-hc-sd",
+              "20OT": "demurrage-set-ot-fr-rf",
+              "20PL": "demurrage-set-ot-fr-rf",
+              "40FR": "demurrage-set-ot-fr-rf",
+              "40NOR": "demurrage-set-gp-hc-sd",
+              "40OT": "demurrage-set-ot-fr-rf",
+              "40PL": "demurrage-set-ot-fr-rf",
+              "20HC": "demurrage-set-gp-hc-sd",
+              "20RHC": "demurrage-set-ot-fr-rf",
+              "20RF": "demurrage-set-ot-fr-rf",
+              "20TK": "demurrage-set-ot-fr-rf",
+              "40HC": "demurrage-set-gp-hc-sd",
+              "40RHC": "demurrage-set-ot-fr-rf",
+              "40RF": "demurrage-set-ot-fr-rf",
+              "40TK": "demurrage-set-ot-fr-rf",
+              "45HC": "demurrage-set-gp-hc-sd",
+              "45OT": "demurrage-set-ot-fr-rf"
             }
           },
           "notes": {
@@ -4320,114 +6740,29 @@
       ],
       "containerTypes": [
         {
-          "key": "fr-20",
-          "label": "FR 20'",
-          "shippingLineCount": 1,
+          "key": "40GP",
+          "label": "40GP - Forty foot general purpose",
+          "code": "40GP",
+          "description": "Forty foot general purpose",
+          "mode": "SEA",
+          "containerType": "DRY",
+          "teu": 2,
+          "rateGroupKeys": [
+            "gp-hq-dc",
+            "gp-hc-sd",
+            "gp-hq-dc-20-40",
+            "imo-dry"
+          ],
+          "shippingLineCount": 14,
           "shippingLines": [
-            "ONE"
-          ]
-        },
-        {
-          "key": "fr-40",
-          "label": "FR 40'",
-          "shippingLineCount": 1,
-          "shippingLines": [
-            "ONE"
-          ]
-        },
-        {
-          "key": "gp-hc-sd",
-          "label": "GP HC SD",
-          "shippingLineCount": 7,
-          "shippingLines": [
+            "CMA CGM",
             "COSCO",
             "EVERGREEN",
-            "KMTC",
-            "PIL",
-            "RCL",
-            "WHAN HAI",
-            "YANG MING"
-          ]
-        },
-        {
-          "key": "gp-hq-dc",
-          "label": "GP HQ DC",
-          "shippingLineCount": 6,
-          "shippingLines": [
-            "CMA CGM",
             "HAPAG",
+            "KMTC",
             "MAERSK",
             "MSC",
-            "OOCL",
-            "ZIM"
-          ]
-        },
-        {
-          "key": "gp-hq-dc-20-40",
-          "label": "GP HQ DC 20' 40'",
-          "shippingLineCount": 1,
-          "shippingLines": [
-            "ONE"
-          ]
-        },
-        {
-          "key": "imo-dry",
-          "label": "IMO DRY",
-          "shippingLineCount": 1,
-          "shippingLines": [
-            "MSC"
-          ]
-        },
-        {
-          "key": "imo-reefer",
-          "label": "IMO REEFER",
-          "shippingLineCount": 1,
-          "shippingLines": [
-            "MSC"
-          ]
-        },
-        {
-          "key": "imo-special-45",
-          "label": "IMO SPECIAL & 45'",
-          "shippingLineCount": 1,
-          "shippingLines": [
-            "MSC"
-          ]
-        },
-        {
-          "key": "ot-20",
-          "label": "OT 20'",
-          "shippingLineCount": 1,
-          "shippingLines": [
-            "ONE"
-          ]
-        },
-        {
-          "key": "ot-40",
-          "label": "OT 40'",
-          "shippingLineCount": 1,
-          "shippingLines": [
-            "ONE"
-          ]
-        },
-        {
-          "key": "ot-fl-pl",
-          "label": "OT FL PL",
-          "shippingLineCount": 1,
-          "shippingLines": [
-            "COSCO"
-          ]
-        },
-        {
-          "key": "ot-fr-rf",
-          "label": "OT FR RF",
-          "shippingLineCount": 11,
-          "shippingLines": [
-            "CMA CGM",
-            "EVERGREEN",
-            "HAPAG",
-            "KMTC",
-            "MAERSK",
+            "ONE",
             "OOCL",
             "PIL",
             "RCL",
@@ -4437,43 +6772,608 @@
           ]
         },
         {
-          "key": "reefer",
-          "label": "REEFER",
-          "shippingLineCount": 1,
+          "key": "20FR",
+          "label": "20FR - Twenty foot flatrack",
+          "code": "20FR",
+          "description": "Twenty foot flatrack",
+          "mode": "SEA",
+          "containerType": "FLT",
+          "teu": 1,
+          "rateGroupKeys": [
+            "fr-20",
+            "ot-fr-rf",
+            "ot-fl-pl"
+          ],
+          "shippingLineCount": 14,
           "shippingLines": [
-            "MSC"
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
           ]
         },
         {
-          "key": "rf-20",
-          "label": "RF 20'",
-          "shippingLineCount": 1,
+          "key": "20GP",
+          "label": "20GP - Twenty foot general purpose",
+          "code": "20GP",
+          "description": "Twenty foot general purpose",
+          "mode": "SEA",
+          "containerType": "DRY",
+          "teu": 1,
+          "rateGroupKeys": [
+            "gp-hq-dc",
+            "gp-hc-sd",
+            "gp-hq-dc-20-40",
+            "imo-dry"
+          ],
+          "shippingLineCount": 14,
           "shippingLines": [
-            "ONE"
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
           ]
         },
         {
-          "key": "rf-40",
-          "label": "RF 40'",
-          "shippingLineCount": 1,
+          "key": "20NOR",
+          "label": "20NOR - Twenty foot non-operating reefer",
+          "code": "20NOR",
+          "description": "Twenty foot non-operating reefer",
+          "mode": "SEA",
+          "containerType": "DRY",
+          "teu": 1,
+          "rateGroupKeys": [
+            "gp-hq-dc",
+            "gp-hc-sd",
+            "gp-hq-dc-20-40",
+            "imo-dry"
+          ],
+          "shippingLineCount": 14,
           "shippingLines": [
-            "ONE"
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
           ]
         },
         {
-          "key": "rf-rq",
-          "label": "RF RQ",
-          "shippingLineCount": 1,
+          "key": "20OT",
+          "label": "20OT - Twenty foot open top",
+          "code": "20OT",
+          "description": "Twenty foot open top",
+          "mode": "SEA",
+          "containerType": "TOP",
+          "teu": 1,
+          "rateGroupKeys": [
+            "ot-20",
+            "ot-fr-rf",
+            "ot-fl-pl"
+          ],
+          "shippingLineCount": 14,
           "shippingLines": [
-            "COSCO"
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
           ]
         },
         {
-          "key": "special-45",
-          "label": "SPECIAL & 45'",
-          "shippingLineCount": 1,
+          "key": "20PL",
+          "label": "20PL - Twenty foot platform",
+          "code": "20PL",
+          "description": "Twenty foot platform",
+          "mode": "SEA",
+          "containerType": "DRY",
+          "teu": 1,
+          "rateGroupKeys": [
+            "ot-fl-pl",
+            "ot-fr-rf",
+            "fr-20"
+          ],
+          "shippingLineCount": 14,
           "shippingLines": [
-            "MSC"
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
+          ]
+        },
+        {
+          "key": "40FR",
+          "label": "40FR - Forty foot flatrack",
+          "code": "40FR",
+          "description": "Forty foot flatrack",
+          "mode": "SEA",
+          "containerType": "FLT",
+          "teu": 2,
+          "rateGroupKeys": [
+            "fr-40",
+            "ot-fr-rf",
+            "ot-fl-pl"
+          ],
+          "shippingLineCount": 14,
+          "shippingLines": [
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
+          ]
+        },
+        {
+          "key": "40NOR",
+          "label": "40NOR - Forty foot non-operating reefer",
+          "code": "40NOR",
+          "description": "Forty foot non-operating reefer",
+          "mode": "SEA",
+          "containerType": "DRY",
+          "teu": 2,
+          "rateGroupKeys": [
+            "gp-hq-dc",
+            "gp-hc-sd",
+            "gp-hq-dc-20-40",
+            "imo-dry"
+          ],
+          "shippingLineCount": 14,
+          "shippingLines": [
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
+          ]
+        },
+        {
+          "key": "40OT",
+          "label": "40OT - Forty foot open top",
+          "code": "40OT",
+          "description": "Forty foot open top",
+          "mode": "SEA",
+          "containerType": "TOP",
+          "teu": 2,
+          "rateGroupKeys": [
+            "ot-40",
+            "ot-fr-rf",
+            "ot-fl-pl"
+          ],
+          "shippingLineCount": 14,
+          "shippingLines": [
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
+          ]
+        },
+        {
+          "key": "40PL",
+          "label": "40PL - Forty foot platform",
+          "code": "40PL",
+          "description": "Forty foot platform",
+          "mode": "SEA",
+          "containerType": "DRY",
+          "teu": 2,
+          "rateGroupKeys": [
+            "ot-fl-pl",
+            "ot-fr-rf",
+            "fr-40"
+          ],
+          "shippingLineCount": 14,
+          "shippingLines": [
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
+          ]
+        },
+        {
+          "key": "20HC",
+          "label": "20HC - Twenty foot high cube",
+          "code": "20HC",
+          "description": "Twenty foot high cube",
+          "mode": "SEA",
+          "containerType": "DRY",
+          "teu": 1,
+          "rateGroupKeys": [
+            "gp-hq-dc",
+            "gp-hc-sd",
+            "gp-hq-dc-20-40",
+            "imo-dry"
+          ],
+          "shippingLineCount": 14,
+          "shippingLines": [
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
+          ]
+        },
+        {
+          "key": "20RHC",
+          "label": "20RHC - Twenty Foot high cube Reefer",
+          "code": "20RHC",
+          "description": "Twenty Foot high cube Reefer",
+          "mode": "SEA",
+          "containerType": "RFG",
+          "teu": 1,
+          "rateGroupKeys": [
+            "rf-20",
+            "reefer",
+            "rf-rq",
+            "ot-fr-rf",
+            "imo-reefer"
+          ],
+          "shippingLineCount": 14,
+          "shippingLines": [
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
+          ]
+        },
+        {
+          "key": "20RF",
+          "label": "20RF - Twenty foot reefer",
+          "code": "20RF",
+          "description": "Twenty foot reefer",
+          "mode": "SEA",
+          "containerType": "RFG",
+          "teu": 1,
+          "rateGroupKeys": [
+            "rf-20",
+            "reefer",
+            "rf-rq",
+            "ot-fr-rf",
+            "imo-reefer"
+          ],
+          "shippingLineCount": 14,
+          "shippingLines": [
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
+          ]
+        },
+        {
+          "key": "20TK",
+          "label": "20TK - Twenty foot Tank trailer",
+          "code": "20TK",
+          "description": "Twenty foot Tank trailer",
+          "mode": "SEA",
+          "containerType": "TNK",
+          "teu": 1,
+          "rateGroupKeys": [
+            "ot-fr-rf",
+            "ot-fl-pl"
+          ],
+          "shippingLineCount": 14,
+          "shippingLines": [
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
+          ]
+        },
+        {
+          "key": "40HC",
+          "label": "40HC - Forty foot high cube",
+          "code": "40HC",
+          "description": "Forty foot high cube",
+          "mode": "SEA",
+          "containerType": "DRY",
+          "teu": 2,
+          "rateGroupKeys": [
+            "gp-hq-dc",
+            "gp-hc-sd",
+            "gp-hq-dc-20-40",
+            "imo-dry"
+          ],
+          "shippingLineCount": 14,
+          "shippingLines": [
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
+          ]
+        },
+        {
+          "key": "40RHC",
+          "label": "40RHC - Forty foot high cube reefer",
+          "code": "40RHC",
+          "description": "Forty foot high cube reefer",
+          "mode": "SEA",
+          "containerType": "RFG",
+          "teu": 2,
+          "rateGroupKeys": [
+            "rf-40",
+            "reefer",
+            "rf-rq",
+            "ot-fr-rf",
+            "imo-reefer"
+          ],
+          "shippingLineCount": 14,
+          "shippingLines": [
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
+          ]
+        },
+        {
+          "key": "40RF",
+          "label": "40RF - Forty foot reefer",
+          "code": "40RF",
+          "description": "Forty foot reefer",
+          "mode": "SEA",
+          "containerType": "RFG",
+          "teu": 2,
+          "rateGroupKeys": [
+            "rf-40",
+            "reefer",
+            "rf-rq",
+            "ot-fr-rf",
+            "imo-reefer"
+          ],
+          "shippingLineCount": 14,
+          "shippingLines": [
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
+          ]
+        },
+        {
+          "key": "40TK",
+          "label": "40TK - Forty foot Tank trailer",
+          "code": "40TK",
+          "description": "Forty foot Tank trailer",
+          "mode": "SEA",
+          "containerType": "TNK",
+          "teu": 2,
+          "rateGroupKeys": [
+            "ot-fr-rf",
+            "ot-fl-pl"
+          ],
+          "shippingLineCount": 14,
+          "shippingLines": [
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
+          ]
+        },
+        {
+          "key": "45HC",
+          "label": "45HC - Forty Five foot high cube",
+          "code": "45HC",
+          "description": "Forty Five foot high cube",
+          "mode": "SEA",
+          "containerType": "DRY",
+          "teu": 2,
+          "rateGroupKeys": [
+            "special-45",
+            "imo-special-45",
+            "gp-hq-dc",
+            "gp-hc-sd",
+            "gp-hq-dc-20-40",
+            "imo-dry"
+          ],
+          "shippingLineCount": 14,
+          "shippingLines": [
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
+          ]
+        },
+        {
+          "key": "45OT",
+          "label": "45OT - Forty five foot open top",
+          "code": "45OT",
+          "description": "Forty five foot open top",
+          "mode": "SEA",
+          "containerType": "TOP",
+          "teu": 2,
+          "rateGroupKeys": [
+            "special-45",
+            "imo-special-45",
+            "ot-40",
+            "ot-fr-rf",
+            "ot-fl-pl"
+          ],
+          "shippingLineCount": 14,
+          "shippingLines": [
+            "CMA CGM",
+            "COSCO",
+            "EVERGREEN",
+            "HAPAG",
+            "KMTC",
+            "MAERSK",
+            "MSC",
+            "ONE",
+            "OOCL",
+            "PIL",
+            "RCL",
+            "WHAN HAI",
+            "YANG MING",
+            "ZIM"
           ]
         }
       ]

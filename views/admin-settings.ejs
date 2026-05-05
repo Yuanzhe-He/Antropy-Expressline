@@ -155,9 +155,9 @@
             <% for (const line of moduleData.shippingLines) { %>
               <tr>
                 <td><a href="/admin/<%= currentModuleKey %>/shipping-lines/<%= line.id %>"><%= line.name %></a></td>
-                <td><%= line.containerGroups.length %></td>
+                <td><%= moduleData.containerTypes.length %></td>
                 <td><%= line.localCharges.length %></td>
-                <td><%= Object.values(line.demurrage.rulesByGroup || {}).reduce((sum, rules) => sum + rules.length, 0) %></td>
+                <td><%= line.demurrage.ruleSets?.length || 0 %></td>
                 <td><%= line.invoiceToConsigneeOnly ? t("admin.onlyConsignee") : t("admin.reInvoice") %></td>
               </tr>
             <% } %>
