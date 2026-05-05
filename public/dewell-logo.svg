@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 280" role="img" aria-labelledby="title">
+  <title id="title">DEWELL GROUP</title>
+  <rect width="640" height="280" rx="18" fill="#ffffff"/>
+  <path
+    d="M132 68c33-13 82-2 76 23-4 18-28 25-43 25-8 0-17 9-20 17-3 9 3 19 15 22 20 5 51-8 62-32 16-36-19-66-62-57-38 8-72 39-79 77-5 28 12 51 43 56 49 8 93-30 105-77"
+    fill="none"
+    stroke="#e2292f"
+    stroke-width="18"
+    stroke-linecap="round"
+  />
+  <path
+    d="M67 194c44 9 78-25 120-21 32 3 63 25 101 21 45-5 90-35 129-35 13 0 15 5 1 9-72 20-107 58-182 52-55-5-100-31-143 5-13 11-50-7-54-31 10-1 19-1 28 0z"
+    fill="#e2292f"
+  />
+  <path
+    d="M382 71c67 4 116-22 194-11 9 2 14 8 17 18l28 97c-72-8-124 14-198 7-12-1-19-8-23-19L371 81c-3-8 1-11 11-10z"
+    fill="#1f4aa8"
+  />
+  <path
+    d="M507 98c20-15 63-13 93-9"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="18"
+    stroke-linecap="round"
+  />
+  <path
+    d="M521 136c20-15 62-13 91-8"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="18"
+    stroke-linecap="round"
+  />
+  <text
+    x="164"
+    y="252"
+    fill="#2d2d2d"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="42"
+    font-weight="800"
+    letter-spacing="-2"
+  >DEWELL GROUP</text>
+  <text
+    x="420"
+    y="236"
+    fill="#2d2d2d"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="30"
+    font-weight="700"
+  >®</text>
+</svg>

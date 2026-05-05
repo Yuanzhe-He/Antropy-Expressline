@@ -13,6 +13,10 @@
   --accent-soft: rgba(255, 255, 255, 0.08);
   --button-bg: #f3f3f0;
   --button-text: #0a0a0a;
+  --brand-red: #e2292f;
+  --brand-blue: #1f4aa8;
+  --brand-red-soft: rgba(226, 41, 47, 0.18);
+  --brand-blue-soft: rgba(31, 74, 168, 0.2);
   --success: #d9ddd7;
   --danger: #f0dada;
   --radius-xl: 8px;
@@ -39,6 +43,10 @@
   --accent-soft: rgba(0, 0, 0, 0.06);
   --button-bg: #0b0b0b;
   --button-text: #f7f7f4;
+  --brand-red: #d9282f;
+  --brand-blue: #1f4aa8;
+  --brand-red-soft: rgba(217, 40, 47, 0.12);
+  --brand-blue-soft: rgba(31, 74, 168, 0.12);
   --success: #27322a;
   --danger: #6f2d2d;
   --shadow-lg: 0 22px 60px rgba(0, 0, 0, 0.09);
@@ -199,6 +207,14 @@ code {
   border-bottom: 1px solid var(--line);
 }
 
+.brand-logo {
+  width: min(100%, 210px);
+  height: auto;
+  display: block;
+  border-radius: var(--radius-md);
+  background: #ffffff;
+}
+
 .sidebar h1,
 .hero-card h2,
 .panel h2,
@@ -287,8 +303,11 @@ code {
 .module-pill.active,
 .admin-tabs a.active,
 .admin-links a.active {
-  border-color: var(--line-strong);
-  background: var(--panel-soft);
+  border-color: var(--brand-blue);
+  background:
+    linear-gradient(90deg, var(--brand-blue-soft), transparent 45%),
+    var(--panel-soft);
+  box-shadow: inset 3px 0 0 var(--brand-red);
 }
 
 .workspace-link-top {
@@ -426,9 +445,9 @@ code {
 }
 
 .compact-language-switcher button.is-active {
-  background: var(--button-bg);
-  color: var(--button-text);
-  border-color: var(--button-bg);
+  background: var(--brand-blue);
+  color: #ffffff;
+  border-color: var(--brand-blue);
 }
 
 .user-card,

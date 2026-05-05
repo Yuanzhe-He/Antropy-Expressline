@@ -307,10 +307,17 @@ async function main() {
 
     response = await request(baseUrl, "/workbench/handover", { jar: publicJar });
     assert.equal(response.status, 200);
-    expectContains(response.text, "EXPRESS LINE", "brand wordmark");
-    expectContains(response.text, "Antropy AI", "brand submark");
+    expectContains(response.text, "/dewell-logo.svg", "Dewell logo asset");
+    expectContains(response.text, "DEWELL GROUP", "Dewell logo alt text");
     expectContains(response.text, "data-theme-toggle", "theme toggle");
     expectContains(response.text, "compact-language-switcher", "compact language switcher");
+
+    response = await request(baseUrl, "/dewell-logo.svg", { jar: publicJar });
+    assert.equal(response.status, 200);
+    expectContains(response.text, "DEWELL GROUP", "Dewell SVG logo content");
+
+    response = await request(baseUrl, "/workbench/handover", { jar: publicJar });
+    assert.equal(response.status, 200);
     expectContains(response.text, "data-handover-line-select", "handover shipping line select");
     expectContains(response.text, 'name="businessNature" value="handover_only"', "hidden default business nature");
     expectContains(response.text, "data-handover-line-terminal-mix", "handover terminal mix summary");
