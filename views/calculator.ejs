@@ -16,8 +16,10 @@
         <strong><%= selectedLine.demurrageCutoffHandledBy === 'customs_broker_only' ? '只能报关行' : selectedLine.demurrageCutoffHandledBy === 'customer_only' ? '只能客户' : '报关行和收货人都能做' %></strong>
       </div>
       <div>
-        <span>Demoras 结构</span>
-        <strong>按箱型分别维护阶梯</strong>
+        <span>码头概率</span>
+        <strong>
+          <%= (selectedLine.terminalMix || []).map((entry) => `${entry.port || 'MANZANILLO'}: ${entry.terminal} ${Math.round(Number(entry.ratio || 0) * 100)}%`).join(' / ') || '后台未配置码头概率' %>
+        </strong>
       </div>
       <div>
         <span>押金状态</span>

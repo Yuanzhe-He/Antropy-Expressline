@@ -58,8 +58,22 @@
           "demurrageCutoffHandledBy": "customs_broker_only",
           "terminalMix": [
             {
+              "id": "terminal-mix-manzanillo-contecon",
+              "port": "MANZANILLO",
               "terminal": "CONTECON",
               "ratio": 0.55
+            },
+            {
+              "id": "terminal-mix-manzanillo-ssa",
+              "port": "MANZANILLO",
+              "terminal": "SSA",
+              "ratio": 0.3
+            },
+            {
+              "id": "terminal-mix-manzanillo-timsa",
+              "port": "MANZANILLO",
+              "terminal": "TIMSA",
+              "ratio": 0.15
             }
           ],
           "localCharges": [
@@ -491,8 +505,22 @@
           "demurrageCutoffHandledBy": "customs_broker_only",
           "terminalMix": [
             {
+              "id": "terminal-mix-manzanillo-ocupa",
+              "port": "MANZANILLO",
               "terminal": "OCUPA",
               "ratio": 0.45
+            },
+            {
+              "id": "terminal-mix-manzanillo-ssa",
+              "port": "MANZANILLO",
+              "terminal": "SSA",
+              "ratio": 0.35
+            },
+            {
+              "id": "terminal-mix-manzanillo-icave",
+              "port": "MANZANILLO",
+              "terminal": "ICAVE",
+              "ratio": 0.2
             }
           ],
           "localCharges": [
@@ -881,6 +909,8 @@
           "demurrageCutoffHandledBy": "customs_broker_only",
           "terminalMix": [
             {
+              "id": "terminal-mix-manzanillo-ssa",
+              "port": "MANZANILLO",
               "terminal": "SSA",
               "ratio": 1
             }
@@ -1309,8 +1339,22 @@
           "demurrageCutoffHandledBy": "customs_broker_only",
           "terminalMix": [
             {
+              "id": "terminal-mix-manzanillo-ocupa",
+              "port": "MANZANILLO",
               "terminal": "OCUPA",
               "ratio": 0.45
+            },
+            {
+              "id": "terminal-mix-manzanillo-contecon",
+              "port": "MANZANILLO",
+              "terminal": "CONTECON",
+              "ratio": 0.35
+            },
+            {
+              "id": "terminal-mix-manzanillo-ssa",
+              "port": "MANZANILLO",
+              "terminal": "SSA",
+              "ratio": 0.2
             }
           ],
           "localCharges": [
@@ -2677,7 +2721,20 @@
           "invoiceToConsigneeOnly": false,
           "invoiceNote": "Factura en linea con nombre de Express",
           "demurrageCutoffHandledBy": "customs_broker_only",
-          "terminalMix": [],
+          "terminalMix": [
+            {
+              "id": "terminal-mix-manzanillo-contecon",
+              "port": "MANZANILLO",
+              "terminal": "CONTECON",
+              "ratio": 0.65
+            },
+            {
+              "id": "terminal-mix-manzanillo-ssa",
+              "port": "MANZANILLO",
+              "terminal": "SSA",
+              "ratio": 0.35
+            }
+          ],
           "localCharges": [
             {
               "id": "one-4",
@@ -3676,8 +3733,16 @@
           "demurrageCutoffHandledBy": "customs_broker_only",
           "terminalMix": [
             {
+              "id": "terminal-mix-manzanillo-ocupa",
+              "port": "MANZANILLO",
               "terminal": "OCUPA",
               "ratio": 0.8
+            },
+            {
+              "id": "terminal-mix-manzanillo-ssa",
+              "port": "MANZANILLO",
+              "terminal": "SSA",
+              "ratio": 0.2
             }
           ],
           "localCharges": [
@@ -3981,8 +4046,16 @@
           "demurrageCutoffHandledBy": "customs_broker_only",
           "terminalMix": [
             {
+              "id": "terminal-mix-manzanillo-contecon",
+              "port": "MANZANILLO",
               "terminal": "CONTECON",
               "ratio": 0.8
+            },
+            {
+              "id": "terminal-mix-manzanillo-timsa",
+              "port": "MANZANILLO",
+              "terminal": "TIMSA",
+              "ratio": 0.2
             }
           ],
           "localCharges": [
@@ -4350,8 +4423,16 @@
           "demurrageCutoffHandledBy": "customs_broker_only",
           "terminalMix": [
             {
+              "id": "terminal-mix-manzanillo-ocupa",
+              "port": "MANZANILLO",
               "terminal": "OCUPA",
               "ratio": 0.8
+            },
+            {
+              "id": "terminal-mix-manzanillo-ssa",
+              "port": "MANZANILLO",
+              "terminal": "SSA",
+              "ratio": 0.2
             }
           ],
           "localCharges": [
@@ -4740,8 +4821,16 @@
           "demurrageCutoffHandledBy": "customs_broker_only",
           "terminalMix": [
             {
+              "id": "terminal-mix-manzanillo-timsa",
+              "port": "MANZANILLO",
               "terminal": "TIMSA",
               "ratio": 0.8
+            },
+            {
+              "id": "terminal-mix-manzanillo-contecon",
+              "port": "MANZANILLO",
+              "terminal": "CONTECON",
+              "ratio": 0.2
             }
           ],
           "localCharges": [
@@ -5037,8 +5126,16 @@
           "demurrageCutoffHandledBy": "customs_broker_only",
           "terminalMix": [
             {
+              "id": "terminal-mix-manzanillo-timsa",
+              "port": "MANZANILLO",
               "terminal": "TIMSA",
               "ratio": 0.8
+            },
+            {
+              "id": "terminal-mix-manzanillo-contecon",
+              "port": "MANZANILLO",
+              "terminal": "CONTECON",
+              "ratio": 0.2
             }
           ],
           "localCharges": [
@@ -5504,8 +5601,16 @@
           "demurrageCutoffHandledBy": "customs_broker_only",
           "terminalMix": [
             {
+              "id": "terminal-mix-manzanillo-contecon",
+              "port": "MANZANILLO",
               "terminal": "CONTECON",
               "ratio": 0.8
+            },
+            {
+              "id": "terminal-mix-manzanillo-timsa",
+              "port": "MANZANILLO",
+              "terminal": "TIMSA",
+              "ratio": 0.2
             }
           ],
           "localCharges": [
@@ -5926,8 +6031,16 @@
           "demurrageCutoffHandledBy": "customs_broker_only",
           "terminalMix": [
             {
+              "id": "terminal-mix-manzanillo-ocupa",
+              "port": "MANZANILLO",
               "terminal": "OCUPA",
               "ratio": 0.8
+            },
+            {
+              "id": "terminal-mix-manzanillo-ssa",
+              "port": "MANZANILLO",
+              "terminal": "SSA",
+              "ratio": 0.2
             }
           ],
           "localCharges": [
@@ -6210,8 +6323,16 @@
           "demurrageCutoffHandledBy": "customs_broker_only",
           "terminalMix": [
             {
+              "id": "terminal-mix-manzanillo-contecon-ocupa",
+              "port": "MANZANILLO",
               "terminal": "CONTECON/OCUPA",
               "ratio": 0.8
+            },
+            {
+              "id": "terminal-mix-manzanillo-ssa",
+              "port": "MANZANILLO",
+              "terminal": "SSA",
+              "ratio": 0.2
             }
           ],
           "localCharges": [
@@ -6483,8 +6604,16 @@
           "demurrageCutoffHandledBy": "customs_broker_only",
           "terminalMix": [
             {
+              "id": "terminal-mix-manzanillo-contecon-ocupa",
+              "port": "MANZANILLO",
               "terminal": "CONTECON/OCUPA",
               "ratio": 0.8
+            },
+            {
+              "id": "terminal-mix-manzanillo-ssa",
+              "port": "MANZANILLO",
+              "terminal": "SSA",
+              "ratio": 0.2
             }
           ],
           "localCharges": [

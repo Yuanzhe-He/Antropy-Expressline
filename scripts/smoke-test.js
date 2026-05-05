@@ -133,6 +133,12 @@ function buildHandoverAdminForm(moduleData, line) {
     entries.push([`guarantee_${group.key}_currency`, rate.currency]);
   }
 
+  for (const mix of line.terminalMix || []) {
+    entries.push([`terminal_mix_${mix.id}_port`, mix.port || ""]);
+    entries.push([`terminal_mix_${mix.id}_terminal`, mix.terminal || ""]);
+    entries.push([`terminal_mix_${mix.id}_ratio`, Number(mix.ratio || 0) * 100]);
+  }
+
   for (const type of moduleData.containerTypes || []) {
     entries.push([
       `demurrage_assignment_${type.key}`,
@@ -307,8 +313,16 @@ async function main() {
     expectContains(response.text, "compact-language-switcher", "compact language switcher");
     expectContains(response.text, "data-handover-line-select", "handover shipping line select");
     expectContains(response.text, 'name="businessNature" value="handover_only"', "hidden default business nature");
+    expectContains(response.text, "data-handover-line-terminal-mix", "handover terminal mix summary");
+    expectContains(response.text, "MANZANILLO:", "handover terminal mix port");
+    expectContains(response.text, "CONTECON 55%", "handover terminal mix probability");
     expectContains(response.text, "40GP - Forty foot general purpose", "standard container type");
     expectContains(response.text, "45OT - Forty five foot open top", "standard 45 foot container type");
+    expectNotContains(
+      response.text,
+      "按箱型分别维护阶梯",
+      "demurrage structure hint removed from handover hero"
+    );
     expectNotContains(response.text, "业务性质", "hidden business nature selector");
     expectContains(response.text, "每项费用税率", "handover tax overrides");
     expectContains(response.text, "data-add-row", "handover add row button");
@@ -459,6 +473,7 @@ async function main() {
     expectContains(response.text, "新增阶梯", "handover add rule button");
     expectContains(response.text, "柜型规则分配", "handover rule assignment table");
     expectContains(response.text, "新增规则集", "handover add rule set button");
+    expectContains(response.text, "码头概率配置", "handover terminal mix admin table");
     expectContains(response.text, 'data-scroll-scope="admin"', "admin scroll scope");
     expectContains(response.text, 'data-scroll-panel="admin-list"', "admin list scroll panel");
     expectContains(response.text, 'data-scroll-panel="admin-detail"', "admin detail scroll panel");
@@ -485,6 +500,72 @@ async function main() {
 
     shippingData = await getShippingData();
     const handoverLine = shippingData.modules.handover.shippingLines[0];
+    const beforeTerminalMixCount = handoverLine.terminalMix.length;
+    response = await request(
+      baseUrl,
+      `/admin/handover/shipping-lines/${handoverLine.id}/terminal-mix/add`,
+      {
+        method: "POST",
+        jar: publicJar,
+      }
+    );
+    assert.equal(response.status, 302);
+    assert.equal(response.location, `/admin/handover/shipping-lines/${handoverLine.id}`);
+    shippingData = await getShippingData();
+    let updatedHandoverLine = shippingData.modules.handover.shippingLines.find(
+      (line) => line.id === handoverLine.id
+    );
+    assert.equal(updatedHandoverLine.terminalMix.length, beforeTerminalMixCount + 1);
+    const addedTerminalMix = updatedHandoverLine.terminalMix.at(-1);
+    const terminalMixForm = buildHandoverAdminForm(
+      shippingData.modules.handover,
+      updatedHandoverLine
+    );
+    const terminalMixOverrides = new Map([
+      [`terminal_mix_${addedTerminalMix.id}_port`, "VERACRUZ"],
+      [`terminal_mix_${addedTerminalMix.id}_terminal`, "ICAVE"],
+      [`terminal_mix_${addedTerminalMix.id}_ratio`, "12.5"],
+    ]);
+    for (const entry of terminalMixForm) {
+      if (terminalMixOverrides.has(entry[0])) {
+        entry[1] = terminalMixOverrides.get(entry[0]);
+      }
+    }
+    response = await request(
+      baseUrl,
+      `/admin/handover/shipping-lines/${handoverLine.id}`,
+      {
+        method: "POST",
+        jar: publicJar,
+        formEntries: terminalMixForm,
+      }
+    );
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    updatedHandoverLine = shippingData.modules.handover.shippingLines.find(
+      (line) => line.id === handoverLine.id
+    );
+    const savedTerminalMix = updatedHandoverLine.terminalMix.find(
+      (entry) => entry.id === addedTerminalMix.id
+    );
+    assert.equal(savedTerminalMix.port, "VERACRUZ");
+    assert.equal(savedTerminalMix.terminal, "ICAVE");
+    assert.equal(savedTerminalMix.ratio, 0.125);
+    response = await request(
+      baseUrl,
+      `/admin/handover/shipping-lines/${handoverLine.id}/terminal-mix/${addedTerminalMix.id}/delete`,
+      {
+        method: "POST",
+        jar: publicJar,
+      }
+    );
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    updatedHandoverLine = shippingData.modules.handover.shippingLines.find(
+      (line) => line.id === handoverLine.id
+    );
+    assert.equal(updatedHandoverLine.terminalMix.length, beforeTerminalMixCount);
+
     const handoverRuleSetId = handoverLine.demurrage.ruleSets[0].id;
     const beforeHandoverRuleCount =
       handoverLine.demurrage.ruleSets[0].rules.length;

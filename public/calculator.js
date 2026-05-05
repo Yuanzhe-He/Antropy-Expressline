@@ -358,6 +358,7 @@
       setText("[data-handover-line-name]", line.name);
       setText("[data-handover-line-invoice]", line.invoiceLabel);
       setText("[data-handover-line-cutoff]", line.cutoffLabel);
+      setText("[data-handover-line-terminal-mix]", line.terminalMixLabel);
       setText("[data-handover-line-guarantee]", line.guaranteeLabel);
 
       const notice = document.querySelector("[data-handover-line-notice]");

@@ -678,6 +678,42 @@ function assignDemurrageRuleSetsToContainerTypes(shippingLine, ruleSets) {
   return assignments;
 }
 
+function normalizeTerminalMixRatio(value, fallback = 0) {
+  const ratio = parseNumber(value, fallback);
+  const normalized = ratio > 1 ? ratio / 100 : ratio;
+  return Math.min(1, Math.max(0, normalized));
+}
+
+function normalizeTerminalMix(entries = []) {
+  const seenIds = new Set();
+  return (Array.isArray(entries) ? entries : [])
+    .map((entry, index) => {
+      const port = String(entry.port || entry.portName || "MANZANILLO").trim();
+      const terminal = String(entry.terminal || entry.terminalName || "").trim();
+      if (!terminal) {
+        return null;
+      }
+
+      const fallbackId = `terminal-mix-${slugifyId(port, "port")}-${slugifyId(
+        terminal,
+        `terminal-${index + 1}`
+      )}`;
+      let id = slugifyId(entry.id, fallbackId);
+      if (seenIds.has(id)) {
+        id = `${id}-${index + 1}`;
+      }
+      seenIds.add(id);
+
+      return {
+        id,
+        port,
+        terminal,
+        ratio: normalizeTerminalMixRatio(entry.ratio, 0),
+      };
+    })
+    .filter(Boolean);
+}
+
 function normalizeShippingLine(shippingLine) {
   const cutoffValid = DEMURRAGE_CUTOFF_OPTIONS.some(
     (option) => option.value === shippingLine.demurrageCutoffHandledBy
@@ -709,6 +745,7 @@ function normalizeShippingLine(shippingLine) {
     containerGroups,
     localCharges,
     guarantee: normalizeGuarantee(shippingLine.guarantee),
+    terminalMix: normalizeTerminalMix(shippingLine.terminalMix),
     demurrage: {
       calculationMode: "progressive",
       freeDays: {

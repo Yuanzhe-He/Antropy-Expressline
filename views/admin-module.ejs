@@ -125,6 +125,65 @@
         <div class="table-card">
           <div class="section-title compact">
             <div>
+              <p class="eyebrow"><%= t("admin.terminalMixEyebrow") %></p>
+              <h4><%= t("admin.terminalMixTitle") %></h4>
+              <small><%= t("admin.terminalMixDescription") %></small>
+            </div>
+            <button
+              type="submit"
+              class="ghost-button compact-button"
+              formaction="/admin/<%= currentModuleKey %>/shipping-lines/<%= selectedLine.id %>/terminal-mix/add"
+              formmethod="post"
+            ><%= t("admin.addTerminalMix") %></button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th><%= t("customs.portLabel") %></th>
+                <th><%= t("customs.terminalLabel") %></th>
+                <th><%= t("admin.probabilityPercent") %></th>
+                <th><%= t("admin.actions") %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% for (const mix of selectedLine.terminalMix || []) { %>
+                <% const terminalMixPercent = Math.round(Number(mix.ratio || 0) * 10000) / 100; %>
+                <tr>
+                  <td><input type="text" name="terminal_mix_<%= mix.id %>_port" value="<%= mix.port || '' %>" /></td>
+                  <td><input type="text" name="terminal_mix_<%= mix.id %>_terminal" value="<%= mix.terminal || '' %>" /></td>
+                  <td>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      name="terminal_mix_<%= mix.id %>_ratio"
+                      value="<%= terminalMixPercent %>"
+                    />
+                  </td>
+                  <td>
+                    <button
+                      type="submit"
+                      class="ghost-button compact-button"
+                      formaction="/admin/<%= currentModuleKey %>/shipping-lines/<%= selectedLine.id %>/terminal-mix/<%= mix.id %>/delete"
+                      formmethod="post"
+                      data-confirm-submit="<%= t("admin.confirmDeleteRule") %>"
+                    ><%= t("admin.deleteTerminalMix") %></button>
+                  </td>
+                </tr>
+              <% } %>
+              <% if (!selectedLine.terminalMix?.length) { %>
+                <tr>
+                  <td colspan="4"><%= t("calculator.noTerminalMix") %></td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-card">
+          <div class="section-title compact">
+            <div>
               <p class="eyebrow">Garantia</p>
               <h4><%= t("admin.guaranteeTitle") %></h4>
             </div>

@@ -337,6 +337,44 @@ function buildCustomsYardDraft(moduleData, t) {
   };
 }
 
+function parsePercentRatio(value, fallback = 0) {
+  return Math.min(1, Math.max(0, parseNumber(value, fallback * 100) / 100));
+}
+
+function formatPercentValue(ratio) {
+  const percent = Math.round(parseNumber(ratio, 0) * 10000) / 100;
+  return Number.isInteger(percent) ? String(percent) : percent.toFixed(2);
+}
+
+function formatTerminalMixSummary(entries = [], t) {
+  if (!entries.length) {
+    return t("calculator.noTerminalMix");
+  }
+
+  const byPort = new Map();
+  for (const entry of entries) {
+    const port = entry.port || "MANZANILLO";
+    if (!byPort.has(port)) {
+      byPort.set(port, []);
+    }
+    byPort.get(port).push(`${entry.terminal} ${formatPercentValue(entry.ratio)}%`);
+  }
+
+  return [...byPort.entries()]
+    .map(([port, terminals]) => `${port}: ${terminals.join(" / ")}`)
+    .join(" | ");
+}
+
+function buildTerminalMixDraft(line, t) {
+  const existing = line.terminalMix || [];
+  return {
+    id: buildRuleId(`terminal-mix-${line.id}`),
+    port: existing[0]?.port || "MANZANILLO",
+    terminal: t("admin.newTerminalMixTerminal"),
+    ratio: 0,
+  };
+}
+
 function getModuleData(shippingData, moduleKey) {
   const normalizedModuleKey = normalizeModuleKey(moduleKey);
   return (
@@ -724,6 +762,7 @@ function buildHandoverDependencyData(moduleData, t) {
       guaranteeLabel: line.guarantee?.benefitEnabled
         ? t("calculator.metadataGuaranteeOn")
         : t("calculator.metadataGuaranteeOff"),
+      terminalMixLabel: formatTerminalMixSummary(line.terminalMix || [], t),
       taxControls: buildHandoverTaxControls(line, t),
     })),
   };
@@ -784,6 +823,10 @@ function renderHandoverWorkbench(req, res, payload) {
       moduleData: payload.moduleData,
       shippingLines: payload.moduleData.shippingLines || [],
       selectedLine: payload.selectedLine || null,
+      selectedLineTerminalMixLabel: formatTerminalMixSummary(
+        payload.selectedLine?.terminalMix || [],
+        req.t
+      ),
       result: payload.result || null,
       formData: payload.formData || null,
       priceModeOptions: getLocalizedOptions(PRICE_MODE_OPTIONS, req.t),
@@ -1588,6 +1631,104 @@ function createApp() {
   });
 
   app.post(
+    "/admin/:moduleKey/shipping-lines/:id/terminal-mix/add",
+    requireAuth,
+    async (req, res) => {
+      const module = getBusinessModule(req.params.moduleKey);
+      if (!module || module.key === "customs") {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = getModuleData(shippingData, module.key);
+      const lineIndex = moduleData.shippingLines.findIndex(
+        (entry) => entry.id === req.params.id
+      );
+
+      if (lineIndex < 0) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const updated = structuredClone(moduleData.shippingLines[lineIndex]);
+      const entry = buildTerminalMixDraft(updated, req.t);
+      updated.terminalMix = [...(updated.terminalMix || []), entry];
+      shippingData.modules[module.key].shippingLines[lineIndex] = updated;
+      await saveShippingData(shippingData);
+
+      return redirectWithFlash(
+        req,
+        res,
+        "success",
+        req.t("admin.terminalMixAdded", { name: entry.terminal }),
+        `/admin/${module.key}/shipping-lines/${updated.id}`
+      );
+    }
+  );
+
+  app.post(
+    "/admin/:moduleKey/shipping-lines/:id/terminal-mix/:mixId/delete",
+    requireAuth,
+    async (req, res) => {
+      const module = getBusinessModule(req.params.moduleKey);
+      if (!module || module.key === "customs") {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = getModuleData(shippingData, module.key);
+      const lineIndex = moduleData.shippingLines.findIndex(
+        (entry) => entry.id === req.params.id
+      );
+
+      if (lineIndex < 0) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const updated = structuredClone(moduleData.shippingLines[lineIndex]);
+      const beforeCount = updated.terminalMix?.length || 0;
+      updated.terminalMix = (updated.terminalMix || []).filter(
+        (entry) => entry.id !== req.params.mixId
+      );
+      shippingData.modules[module.key].shippingLines[lineIndex] = updated;
+      await saveShippingData(shippingData);
+
+      return redirectWithFlash(
+        req,
+        res,
+        beforeCount === updated.terminalMix.length ? "error" : "success",
+        beforeCount === updated.terminalMix.length
+          ? req.t("system.notFoundTitle")
+          : req.t("admin.terminalMixDeleted"),
+        `/admin/${module.key}/shipping-lines/${updated.id}`
+      );
+    }
+  );
+
+  app.post(
     "/admin/:moduleKey/shipping-lines/:id/demurrage-rule-sets/add",
     requireAuth,
     async (req, res) => {
@@ -1978,6 +2119,30 @@ function createApp() {
         `guarantee_${group.key}`
       );
     }
+
+    updated.terminalMix = (updated.terminalMix || [])
+      .map((entry) => {
+        const port = String(req.body[`terminal_mix_${entry.id}_port`] || entry.port || "")
+          .trim();
+        const terminal = String(
+          req.body[`terminal_mix_${entry.id}_terminal`] || entry.terminal || ""
+        ).trim();
+
+        if (!port || !terminal) {
+          return null;
+        }
+
+        return {
+          ...entry,
+          port,
+          terminal,
+          ratio: parsePercentRatio(
+            req.body[`terminal_mix_${entry.id}_ratio`],
+            entry.ratio
+          ),
+        };
+      })
+      .filter(Boolean);
 
     const validRuleSetIds = new Set((updated.demurrage.ruleSets || []).map((set) => set.id));
     updated.demurrage.assignmentsByContainerType = {};
