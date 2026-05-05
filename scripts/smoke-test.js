@@ -391,9 +391,66 @@ async function main() {
     assert.equal(response.status, 200);
     expectContains(response.text, "船公司与场站映射", "public admin access");
     expectContains(response.text, "新增阶梯", "customs add rule button");
+    expectContains(response.text, "新增码头", "customs add terminal button");
+    expectContains(response.text, "新增场站", "customs add yard button");
     expectContains(response.text, "section-jump-nav", "customs section navigation");
     expectContains(response.text, "data-admin-form", "customs dirty form guard");
     expectContains(response.text, "data-confirm-submit", "customs delete confirmation");
+
+    let shippingData = await getShippingData();
+    const firstCustomsPort = shippingData.modules.customs.ports[0];
+    const beforeTerminalCount = firstCustomsPort.terminals.length;
+    response = await request(
+      baseUrl,
+      `/admin/customs/ports/${firstCustomsPort.id}/terminals/add`,
+      {
+        method: "POST",
+        jar: publicJar,
+      }
+    );
+    assert.equal(response.status, 302);
+    assert.equal(response.location, "/admin/customs/shipping-lines");
+    shippingData = await getShippingData();
+    const updatedCustomsPort = shippingData.modules.customs.ports.find(
+      (port) => port.id === firstCustomsPort.id
+    );
+    assert.equal(updatedCustomsPort.terminals.length, beforeTerminalCount + 1);
+    const addedTerminal = updatedCustomsPort.terminals.at(-1);
+    assert.equal(addedTerminal.fixedCharges.length, 1);
+    for (const type of shippingData.modules.customs.containerTypes || []) {
+      assert.ok(
+        addedTerminal.fixedCharges[0].groupRates[type.key],
+        `new terminal fixed charge rate exists for ${type.key}`
+      );
+      assert.ok(
+        addedTerminal.storageRulesByContainer[type.key]?.length,
+        `new terminal storage rules exist for ${type.key}`
+      );
+    }
+
+    const beforeYardCount = shippingData.modules.customs.yards.length;
+    response = await request(baseUrl, "/admin/customs/yards/add", {
+      method: "POST",
+      jar: publicJar,
+    });
+    assert.equal(response.status, 302);
+    assert.equal(response.location, "/admin/customs/shipping-lines");
+    shippingData = await getShippingData();
+    assert.equal(shippingData.modules.customs.yards.length, beforeYardCount + 1);
+    const addedYard = shippingData.modules.customs.yards.at(-1);
+    assert.deepEqual(addedYard.portIds, [firstCustomsPort.id]);
+    assert.equal(addedYard.dropoffCharges.length, 1);
+    assert.equal(addedYard.customsCharges.length, 1);
+    for (const type of shippingData.modules.customs.containerTypes || []) {
+      assert.ok(
+        addedYard.dropoffCharges[0].groupRates[type.key],
+        `new yard dropoff rate exists for ${type.key}`
+      );
+      assert.ok(
+        addedYard.customsCharges[0].groupRates[type.key],
+        `new yard customs rate exists for ${type.key}`
+      );
+    }
 
     response = await request(baseUrl, "/admin/handover/shipping-lines/cma-cgm", {
       jar: publicJar,
@@ -426,7 +483,7 @@ async function main() {
     assert.equal(response.status, 200);
     expectContains(response.text, "总数", "negative handover input still renders");
 
-    let shippingData = await getShippingData();
+    shippingData = await getShippingData();
     const handoverLine = shippingData.modules.handover.shippingLines[0];
     const handoverRuleSetId = handoverLine.demurrage.ruleSets[0].id;
     const beforeHandoverRuleCount =

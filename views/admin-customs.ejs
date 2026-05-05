@@ -108,6 +108,12 @@
               <p class="eyebrow"><%= t("customs.portLabel") %></p>
               <h4><%= port.name %></h4>
             </div>
+            <button
+              type="submit"
+              class="ghost-button compact-button"
+              formaction="/admin/customs/ports/<%= port.id %>/terminals/add"
+              formmethod="post"
+            ><%= t("customs.addTerminal") %></button>
           </div>
 
           <div class="grid-form">
@@ -292,6 +298,12 @@
         <p class="eyebrow"><%= t("customs.yardRulesTitle") %></p>
         <h3><%= t("customs.yardRulesDescription") %></h3>
       </div>
+      <button
+        type="submit"
+        class="ghost-button compact-button"
+        formaction="/admin/customs/yards/add"
+        formmethod="post"
+      ><%= t("customs.addYard") %></button>
     </div>
 
     <div class="stack-form">

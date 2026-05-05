@@ -225,6 +225,118 @@ function findCustomsTerminal(moduleData, terminalId) {
   return { portEntry: null, terminal: null };
 }
 
+function buildZeroRatesByContainer(containerTypes = [], currency = "MXN") {
+  return Object.fromEntries(
+    (containerTypes || []).map((type) => [
+      type.key,
+      {
+        label: type.label,
+        qtyHint: 1,
+        currency,
+        rate: 0,
+      },
+    ])
+  );
+}
+
+function buildDefaultCustomsStorageRules(
+  containerTypes = [],
+  prefix,
+  currency = "MXN"
+) {
+  return Object.fromEntries(
+    (containerTypes || []).map((type) => [
+      type.key,
+      [
+        {
+          id: buildRuleId(`${prefix}-${type.key}-free`),
+          startDay: 1,
+          endDay: 7,
+          freeRule: true,
+          taxRate: 0,
+          rateConfig: {
+            label: type.label,
+            qtyHint: 1,
+            currency,
+            rate: 0,
+          },
+        },
+        {
+          id: buildRuleId(`${prefix}-${type.key}-tier`),
+          startDay: 8,
+          endDay: null,
+          freeRule: false,
+          taxRate: 0,
+          rateConfig: {
+            label: type.label,
+            qtyHint: 1,
+            currency,
+            rate: 0,
+          },
+        },
+      ],
+    ])
+  );
+}
+
+function buildCustomsTerminalDraft(moduleData, portEntry, t) {
+  const index = (portEntry.terminals || []).length + 1;
+  const id = buildRuleId(`${portEntry.id}-terminal`);
+  const currency = moduleData.settings?.defaultQuoteCurrency || "MXN";
+
+  return {
+    id,
+    name: t("customs.newTerminalName", { count: index }),
+    note: null,
+    fixedCharges: [
+      {
+        id: `${id}-fixed`,
+        concept: t("customs.defaultTerminalFixedCharge"),
+        note: null,
+        taxRate: 0,
+        groupRates: buildZeroRatesByContainer(moduleData.containerTypes, currency),
+      },
+    ],
+    storageRulesByContainer: buildDefaultCustomsStorageRules(
+      moduleData.containerTypes,
+      `${id}-storage`,
+      currency
+    ),
+  };
+}
+
+function buildCustomsYardDraft(moduleData, t) {
+  const index = (moduleData.yards || []).length + 1;
+  const id = buildRuleId("customs-yard");
+  const currency = moduleData.settings?.defaultQuoteCurrency || "MXN";
+
+  return {
+    id,
+    name: t("customs.newYardName", { count: index }),
+    note: null,
+    portIds: moduleData.ports?.[0]?.id ? [moduleData.ports[0].id] : [],
+    shippingLineIds: [],
+    dropoffCharges: [
+      {
+        id: `${id}-dropoff`,
+        concept: t("customs.defaultDropoffCharge"),
+        note: null,
+        taxRate: 0,
+        groupRates: buildZeroRatesByContainer(moduleData.containerTypes, currency),
+      },
+    ],
+    customsCharges: [
+      {
+        id: `${id}-customs`,
+        concept: t("customs.defaultCustomsYardCharge"),
+        note: null,
+        taxRate: 0,
+        groupRates: buildZeroRatesByContainer(moduleData.containerTypes, currency),
+      },
+    ],
+  };
+}
+
 function getModuleData(shippingData, moduleKey) {
   const normalizedModuleKey = normalizeModuleKey(moduleKey);
   return (
@@ -789,7 +901,13 @@ function createApp() {
   app.set("view engine", "ejs");
   app.set("views", path.join(__dirname, "../views"));
 
-  app.use(express.urlencoded({ extended: true }));
+  app.use(
+    express.urlencoded({
+      extended: true,
+      limit: "10mb",
+      parameterLimit: 50000,
+    })
+  );
   app.use(express.static(path.join(__dirname, "../public")));
   app.use(
     session({
@@ -1148,6 +1266,58 @@ function createApp() {
       moduleKey: "customs",
       moduleData: getModuleData(shippingData, "customs"),
     });
+  });
+
+  app.post(
+    "/admin/customs/ports/:portId/terminals/add",
+    requireAuth,
+    async (req, res) => {
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = structuredClone(getModuleData(shippingData, "customs"));
+      const portEntry = (moduleData.ports || []).find(
+        (entry) => entry.id === req.params.portId
+      );
+
+      if (!portEntry) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const terminal = buildCustomsTerminalDraft(moduleData, portEntry, req.t);
+      portEntry.terminals = [...(portEntry.terminals || []), terminal];
+      shippingData.modules.customs = moduleData;
+      await saveShippingData(shippingData);
+
+      return redirectWithFlash(
+        req,
+        res,
+        "success",
+        req.t("customs.entityAdded", { name: terminal.name }),
+        "/admin/customs/shipping-lines"
+      );
+    }
+  );
+
+  app.post("/admin/customs/yards/add", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const moduleData = structuredClone(getModuleData(shippingData, "customs"));
+    const yard = buildCustomsYardDraft(moduleData, req.t);
+    moduleData.yards = [...(moduleData.yards || []), yard];
+    shippingData.modules.customs = moduleData;
+    await saveShippingData(shippingData);
+
+    return redirectWithFlash(
+      req,
+      res,
+      "success",
+      req.t("customs.entityAdded", { name: yard.name }),
+      "/admin/customs/shipping-lines"
+    );
   });
 
   app.post(
