@@ -990,6 +990,31 @@ th {
   min-width: 0;
 }
 
+.container-demurrage-field {
+  display: grid;
+  grid-template-columns: minmax(160px, 240px);
+  margin-top: 0.72rem;
+  padding-top: 0.72rem;
+  border-top: 1px solid var(--line);
+}
+
+.container-demurrage-field label {
+  display: grid;
+  min-width: 0;
+}
+
+.container-demurrage-field label > span {
+  display: flex;
+  min-height: 2.15rem;
+  align-items: flex-end;
+  gap: 0.28rem;
+  line-height: 1.18;
+}
+
+.container-demurrage-field input {
+  height: 42px;
+}
+
 .compact-button {
   padding-inline: 0.75rem;
 }

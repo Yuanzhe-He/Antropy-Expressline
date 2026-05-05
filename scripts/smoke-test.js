@@ -314,6 +314,11 @@ async function main() {
     expectContains(response.text, "data-add-row", "handover add row button");
     expectContains(response.text, "tax-override-card", "handover visible tax overrides");
     expectContains(response.text, "field-help", "handover field help");
+    assert.ok(
+      response.text.indexOf('data-container-rows') <
+        response.text.indexOf('name="demurrageDays"'),
+      "handover demurrage days field follows container rows"
+    );
 
     response = await request(baseUrl, "/workbench/handover", {
       method: "POST",
