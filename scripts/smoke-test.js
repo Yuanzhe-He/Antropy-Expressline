@@ -88,6 +88,10 @@ function expectContains(haystack, needle, message) {
   assert.ok(haystack.includes(needle), `${message}: missing "${needle}"`);
 }
 
+function expectNotContains(haystack, needle, message) {
+  assert.ok(!haystack.includes(needle), `${message}: unexpected "${needle}"`);
+}
+
 function buildHandoverAdminForm(moduleData, line) {
   const entries = [
     ["invoiceNote", line.invoiceNote || ""],
@@ -291,7 +295,9 @@ async function main() {
     expectContains(response.text, "Antropy AI", "brand submark");
     expectContains(response.text, "data-theme-toggle", "theme toggle");
     expectContains(response.text, "compact-language-switcher", "compact language switcher");
-    expectContains(response.text, "业务性质", "handover page");
+    expectContains(response.text, "data-handover-line-select", "handover shipping line select");
+    expectContains(response.text, 'name="businessNature" value="handover_only"', "hidden default business nature");
+    expectNotContains(response.text, "业务性质", "hidden business nature selector");
     expectContains(response.text, "每项费用税率", "handover tax overrides");
     expectContains(response.text, "data-add-row", "handover add row button");
     expectContains(response.text, "tax-override-card", "handover visible tax overrides");
@@ -313,7 +319,7 @@ async function main() {
     });
     assert.equal(response.status, 200);
     expectContains(response.text, "继续到清关", "continuous workflow CTA");
-    expectContains(response.text, "换单 + 清关连续业务", "business nature result");
+    expectContains(response.text, "连续业务", "continuous workflow banner");
 
     response = await request(baseUrl, "/workbench/customs?useLinked=1", {
       jar: publicJar,

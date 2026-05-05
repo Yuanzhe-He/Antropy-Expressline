@@ -550,6 +550,29 @@ code {
   line-height: 1.15;
 }
 
+.hero-line-control {
+  display: grid;
+  gap: 0.32rem;
+  width: min(100%, 280px);
+}
+
+.hero-select-field {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.hero-select-field span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero-select-field select {
+  margin-top: 0;
+}
+
 .hero-split {
   min-height: 98px;
 }

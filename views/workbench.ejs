@@ -23,9 +23,18 @@
   </section>
 <% } else { %>
   <section class="hero-card compact-hero-card">
-    <div>
+    <div class="hero-line-control">
       <p class="eyebrow"><%= t("calculator.shippingInfo") %></p>
-      <h3 data-handover-line-name><%= selectedLine ? selectedLine.name : t("common.notConfigured") %></h3>
+      <label class="hero-select-field">
+        <span><%= t("calculator.shippingLine") %></span>
+        <select name="shippingLineId" form="handover-calculator-form" data-handover-line-select>
+          <% for (const line of shippingLines) { %>
+            <option value="<%= line.id %>" <%= formData.shippingLineId === line.id ? "selected" : "" %>>
+              <%= line.name %>
+            </option>
+          <% } %>
+        </select>
+      </label>
     </div>
 
     <% if (selectedLine) { %>
@@ -69,7 +78,8 @@
         </p>
       </div>
 
-      <form method="post" action="/workbench/<%= currentModuleKey %>" class="stack-form" data-calculator-form>
+      <form id="handover-calculator-form" method="post" action="/workbench/<%= currentModuleKey %>" class="stack-form" data-calculator-form>
+        <input type="hidden" name="businessNature" value="handover_only" />
         <div class="handover-field-layout">
           <section class="field-group-card default-field-card">
             <p class="field-group-label"><%= t("calculator.defaultGroupTitle") %></p>
@@ -107,28 +117,6 @@
           <section class="field-group-card">
             <p class="field-group-label"><%= t("calculator.requiredGroupTitle") %></p>
             <div class="grid-form field-group-grid">
-              <label>
-                <span><%= t("calculator.shippingLine") %></span>
-                <select name="shippingLineId" data-handover-line-select>
-                  <% for (const line of shippingLines) { %>
-                    <option value="<%= line.id %>" <%= formData.shippingLineId === line.id ? "selected" : "" %>>
-                      <%= line.name %>
-                    </option>
-                  <% } %>
-                </select>
-              </label>
-
-              <label>
-                <span><%= t("calculator.businessNature") %> <span class="field-help" title="<%= t("calculator.businessNatureHelp") %>">?</span></span>
-                <select name="businessNature">
-                  <% for (const option of businessNatureOptions) { %>
-                    <option value="<%= option.value %>" <%= formData.businessNature === option.value ? "selected" : "" %>>
-                      <%= option.label %>
-                    </option>
-                  <% } %>
-                </select>
-              </label>
-
               <label>
                 <span><%= t("calculator.demurrageDays") %> <span class="field-help" title="<%= t("calculator.demurrageDaysHelp") %>">?</span></span>
                 <input type="number" min="0" step="1" name="demurrageDays" value="<%= formData.demurrageDays %>" required />
@@ -280,10 +268,6 @@
           <article class="summary-card">
             <p><%= t("calculator.aftertaxTotal") %></p>
             <strong><%= result.afterTaxTotal.toFixed(2) %> <%= result.quoteCurrency %></strong>
-          </article>
-          <article class="summary-card">
-            <p><%= t("calculator.businessNature") %></p>
-            <strong><%= t(`businessNature.${result.businessNature === "handover_customs" ? "handoverCustoms" : "handoverOnly"}`) %></strong>
           </article>
         </section>
 

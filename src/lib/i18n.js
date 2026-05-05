@@ -34,11 +34,11 @@ const MESSAGES = {
     },
     modules: {
       handover: {
-        title: "换单",
+        title: "放单",
         subtitle: "Entrega / Release",
         description: "船公司、BL、混装箱型、押金、demoras、税率和汇率换算已接入同一套报价流程。",
         state: "已启用",
-        placeholderTitle: "换单模块已上线",
+        placeholderTitle: "放单模块已上线",
         placeholderDescription: "此模块当前可直接用于本地演示和规则维护。",
       },
       customs: {
@@ -103,9 +103,9 @@ const MESSAGES = {
       aftertax: "税后价",
     },
     businessNature: {
-      handoverOnly: "仅换单",
+      handoverOnly: "仅放单",
       customsOnly: "仅清关",
-      handoverCustoms: "换单 + 清关连续业务",
+      handoverCustoms: "放单 + 清关连续业务",
     },
     tax: {
       defaultOption: "跟后台默认",
@@ -183,7 +183,7 @@ const MESSAGES = {
       taxToggleToRate: "点一下改 {rate}",
       formulaDetails: "展开计算过程",
       keepOneContainer: "至少保留一组柜型。",
-      businessNatureHelp: "选择这票业务是仅换单，还是换单后继续清关。",
+      businessNatureHelp: "选择这票业务是仅放单，还是放单后继续清关。",
       blCountHelp: "默认 1；按这票业务实际提单数量填写。",
       demurrageDaysHelp: "可从 0 天开始录入；免费天由后台 0 费率阶梯决定。",
       itemExplanationLocal: "按 BL 数和混装柜型逐项计算；税率 {taxRate}。",
@@ -207,9 +207,9 @@ const MESSAGES = {
     },
     workflow: {
       continuousTitle: "连续业务",
-      continuousDescription: "这票业务包含换单和清关。可直接带着当前换单输入继续进入清关页。",
+      continuousDescription: "这票业务包含放单和清关。可直接带着当前放单输入继续进入清关页。",
       continueToCustoms: "继续到清关",
-      linkedFromHandover: "已承接换单上下文",
+      linkedFromHandover: "已承接放单上下文",
       linkedContextSummary: "船公司、柜型、数量、显示币种与价格口径已自动带入。",
     },
     customs: {
@@ -333,7 +333,7 @@ const MESSAGES = {
       noContainerTypes: "当前模块还没有柜型结构。",
       modulePlaceholderTitle: "这个模块的后台配置入口已经预留",
       modulePlaceholderDescription:
-        "你现在看到的是独立模块页，后续可以在这里接清关或陆运的独立字段，不会和换单混在一起。",
+        "你现在看到的是独立模块页，后续可以在这里接清关或陆运的独立字段，不会和放单混在一起。",
       statusCardLive: "当前模块已接报价逻辑",
       statusCardPlanned: "当前模块仅保留结构和配置入口",
       exchangeRatesHint: "USD / MXN 每日自动更新，管理员也可以手动刷新。",
