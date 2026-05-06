@@ -474,8 +474,14 @@ async function main() {
     expectContains(response.text, "data-storage-release-button", "customs release button state control");
     expectContains(response.text, "data-storage-rule-card", "customs collapsible storage rule cards");
     expectContains(response.text, "移除", "customs assignment removal");
+    expectContains(response.text, "删除码头", "customs terminal delete action");
     expectContains(response.text, "删除规则", "customs storage rule set delete action");
+    expectContains(response.text, "删除场站", "customs yard delete action");
     expectContains(response.text, "关联着", "customs storage rule set delete confirmation count");
+    expectContains(response.text, "当前编辑", "customs selected/open state indicator");
+    expectContains(response.text, "data-summary-action", "customs summary action controls");
+    expectContains(response.text, "data-preserve-scroll", "customs local action scroll preservation");
+    expectContains(response.text, "data-line-yard-map-card", "customs collapsible line-yard map cards");
     expectContains(response.text, "entity-collapsible", "customs collapsible sections");
     expectContains(response.text, "multiple", "customs multi-select assignments");
     expectContains(response.text, "新增码头", "customs add terminal button");
@@ -544,6 +550,24 @@ async function main() {
       );
     }
 
+    response = await request(
+      baseUrl,
+      `/admin/customs/terminals/${addedTerminal.id}/delete`,
+      {
+        method: "POST",
+        jar: publicJar,
+      }
+    );
+    assert.equal(response.status, 302);
+    assert.equal(response.location, "/admin/customs/shipping-lines#customs-terminal-rules");
+    shippingData = await getShippingData();
+    assert.equal(
+      shippingData.modules.customs.ports.find((port) => port.id === firstCustomsPort.id)
+        .terminals.length,
+      beforeTerminalCount,
+      "new customs terminal can be deleted from summary"
+    );
+
     const beforeYardCount = shippingData.modules.customs.yards.length;
     response = await request(baseUrl, "/admin/customs/yards/add", {
       method: "POST",
@@ -570,6 +594,26 @@ async function main() {
         `new yard customs rate exists for ${type.key}`
       );
     }
+
+    response = await request(baseUrl, `/admin/customs/yards/${addedYard.id}/delete`, {
+      method: "POST",
+      jar: publicJar,
+    });
+    assert.equal(response.status, 302);
+    assert.equal(response.location, "/admin/customs/shipping-lines#customs-yard-rules");
+    shippingData = await getShippingData();
+    assert.equal(
+      shippingData.modules.customs.yards.length,
+      beforeYardCount,
+      "new customs yard can be deleted from summary"
+    );
+    assert.equal(
+      shippingData.modules.customs.shippingLines.some((line) =>
+        (line.yardIds || []).includes(addedYard.id)
+      ),
+      false,
+      "deleted customs yard is removed from shipping-line mappings"
+    );
 
     response = await request(baseUrl, "/admin/handover/shipping-lines/cma-cgm", {
       jar: publicJar,

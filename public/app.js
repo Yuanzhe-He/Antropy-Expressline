@@ -58,7 +58,7 @@
     }
   }
 
-  function writeState() {
+  function writeState(options = {}) {
     const panels = {};
     document.querySelectorAll("[data-scroll-panel]").forEach((panel) => {
       panels[panel.dataset.scrollPanel] = panel.scrollTop;
@@ -72,6 +72,7 @@
           time: Date.now(),
           windowY: window.scrollY,
           panels,
+          preferRestore: Boolean(options.preferRestore),
         })
       );
     } catch (_error) {
@@ -122,28 +123,45 @@
     true
   );
 
-  document.addEventListener(
-    "submit",
-    (event) => {
-      if (scopeRoot.contains(event.target)) {
-        writeState();
-      }
-    },
-    true
-  );
+  let pendingPreferRestore = false;
 
   document.addEventListener(
     "click",
     (event) => {
       const button = event.target.closest("button[type='submit'], button[formaction]");
       if (button && scopeRoot.contains(button)) {
-        writeState();
+        pendingPreferRestore = button.hasAttribute("data-preserve-scroll");
+        writeState({ preferRestore: pendingPreferRestore });
       }
     },
     true
   );
 
-  window.addEventListener("beforeunload", writeState);
+  document.addEventListener(
+    "submit",
+    (event) => {
+      if (scopeRoot.contains(event.target)) {
+        const submitter = event.submitter;
+        const preferRestore =
+          pendingPreferRestore ||
+          Boolean(submitter && submitter.hasAttribute("data-preserve-scroll"));
+        writeState({ preferRestore });
+        pendingPreferRestore = false;
+      }
+    },
+    true
+  );
+
+  window.addEventListener("beforeunload", () => {
+    const state = readState();
+    writeState({
+      preferRestore: Boolean(
+        state &&
+          state.preferRestore &&
+          Date.now() - state.time <= 2000
+      ),
+    });
+  });
   if (window.location.hash) {
     requestAnimationFrame(() => {
       const targetId = decodeURIComponent(window.location.hash.slice(1));
@@ -155,6 +173,16 @@
       while (detail) {
         detail.open = true;
         detail = detail.parentElement?.closest("details");
+      }
+      const state = readState();
+      const shouldRestore =
+        state &&
+        state.preferRestore &&
+        state.path === window.location.pathname &&
+        Date.now() - state.time <= maxAgeMs;
+      if (shouldRestore) {
+        restoreState();
+        return;
       }
       target.scrollIntoView({
         block: "start",
@@ -256,6 +284,14 @@
     releaseSelect.addEventListener("change", updateReleaseState);
     updateReleaseState();
   }
+})();
+
+(function summaryActions() {
+  document.querySelectorAll("[data-summary-action]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+  });
 })();
 
 (function calculatorSubmitFlow() {

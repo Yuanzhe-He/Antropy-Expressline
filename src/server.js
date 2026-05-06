@@ -1545,6 +1545,47 @@ function createApp() {
     }
   );
 
+  app.post(
+    "/admin/customs/terminals/:terminalId/delete",
+    requireAuth,
+    async (req, res) => {
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = structuredClone(getModuleData(shippingData, "customs"));
+      const { portEntry, terminal } = findCustomsTerminal(
+        moduleData,
+        req.params.terminalId
+      );
+
+      if (!portEntry || !terminal) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const ruleSetCount = (terminal.storageRuleSets || []).length;
+      portEntry.terminals = (portEntry.terminals || []).filter(
+        (entry) => entry.id !== terminal.id
+      );
+      shippingData.modules.customs = moduleData;
+      await saveShippingData(shippingData);
+
+      return redirectWithFlash(
+        req,
+        res,
+        "success",
+        req.t("customs.terminalDeleted", {
+          name: terminal.name,
+          count: ruleSetCount,
+        }),
+        "/admin/customs/shipping-lines#customs-terminal-rules"
+      );
+    }
+  );
+
   app.post("/admin/customs/yards/add", requireAuth, async (req, res) => {
     const shippingData = await loadShippingData({ refreshRates: false });
     const moduleData = structuredClone(getModuleData(shippingData, "customs"));
@@ -1559,6 +1600,50 @@ function createApp() {
       "success",
       req.t("customs.entityAdded", { name: yard.name }),
       `/admin/customs/shipping-lines#customs-yard-${yard.id}`
+    );
+  });
+
+  app.post("/admin/customs/yards/:yardId/delete", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const moduleData = structuredClone(getModuleData(shippingData, "customs"));
+    const yard = (moduleData.yards || []).find(
+      (entry) => entry.id === req.params.yardId
+    );
+
+    if (!yard) {
+      return res.status(404).render(
+        "not-found",
+        baseView(req, {
+          pageTitle: req.t("system.notFoundTitle"),
+          languageReturnTo: req.originalUrl,
+        })
+      );
+    }
+
+    const portCount = (yard.portIds || []).length;
+    const linkedLineIds = new Set(yard.shippingLineIds || []);
+    for (const line of moduleData.shippingLines || []) {
+      if ((line.yardIds || []).includes(yard.id)) {
+        linkedLineIds.add(line.id);
+      }
+      line.yardIds = (line.yardIds || []).filter((yardId) => yardId !== yard.id);
+    }
+    moduleData.yards = (moduleData.yards || []).filter(
+      (entry) => entry.id !== yard.id
+    );
+    shippingData.modules.customs = moduleData;
+    await saveShippingData(shippingData);
+
+    return redirectWithFlash(
+      req,
+      res,
+      "success",
+      req.t("customs.yardDeleted", {
+        name: yard.name,
+        ports: portCount,
+        lines: linkedLineIds.size,
+      }),
+      "/admin/customs/shipping-lines#customs-yard-rules"
     );
   });
 

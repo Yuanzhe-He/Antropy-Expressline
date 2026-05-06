@@ -13,6 +13,7 @@ Upgrade customs terminal storage rules from direct per-container tier editing to
 - one shipping-line + container-type pair can only belong to one rule set at a time
 - quote calculation using the assigned storage rule set for the selected terminal, shipping line, and container type
 - anchor-based navigation after adding a terminal or yard
+- scroll-preserving navigation for local add/delete/release actions that should keep the operator in place
 
 ## Compatibility
 
@@ -40,8 +41,13 @@ When admin saves a terminal, rebuild `storageRulesByContainer` from the first sh
 ## Admin UX
 
 - Terminal cards are collapsible.
+- Terminal summary bars expose delete actions without expanding the card.
+- Shipping-line to yard mapping uses one collapsible card per shipping line, with mapped-yard counts on the summary bar.
 - Yard cards are collapsible because they have the same long-form problem.
+- Yard summary bars expose delete actions without expanding the card, and deletion cleans stale shipping-line yard references.
 - Storage rule sets live inside each terminal.
+- Storage rule set summary bars expose delete actions without expanding the rule set.
+- Expanded shipping-line, yard, terminal, and storage rule cards show a visible current-editing state.
 - Each rule set has a multi-select of shipping-line + container-type pairs.
 - Pairs already assigned to another rule set are disabled until the current assignment is removed.
 - Disabled pairs show their current owner and have an adjacent release action in the current rule card.

@@ -227,30 +227,12 @@ code {
 .brand-caption {
   display: inline-flex;
   align-items: center;
-  gap: 0.34rem;
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0;
   line-height: 1;
   text-transform: uppercase;
-}
-
-.brand-caption::before,
-.brand-caption::after {
-  content: "";
-  display: block;
-  width: 1.35rem;
-  height: 2px;
-  border-radius: 999px;
-}
-
-.brand-caption::before {
-  background: var(--brand-red);
-}
-
-.brand-caption::after {
-  background: var(--brand-blue);
 }
 
 .sidebar h1,
@@ -1024,6 +1006,16 @@ code {
   padding: 0;
 }
 
+.entity-collapsible[open] {
+  border-color: var(--line-strong);
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+:root[data-theme="light"] .entity-collapsible[open] {
+  background: rgba(0, 0, 0, 0.025);
+}
+
 .entity-collapsible > summary {
   display: flex;
   align-items: center;
@@ -1053,6 +1045,7 @@ code {
 
 .entity-collapsible[open] > summary {
   border-bottom: 1px solid var(--line);
+  background: var(--accent-soft);
 }
 
 .entity-collapsible[open] > summary::after {
@@ -1060,11 +1053,46 @@ code {
 }
 
 .collapsible-summary-meta {
-  margin-left: auto;
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.collapsible-summary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.42rem;
+  margin-left: auto;
+}
+
+.collapsible-summary-actions .danger-button {
+  flex: 0 0 auto;
+}
+
+.line-yard-map-list {
+  gap: 0.58rem;
+}
+
+.line-yard-map-card .grid-form {
+  align-items: start;
+}
+
+.selected-state-indicator {
+  display: none;
+  padding: 0.18rem 0.42rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  background: var(--panel-soft);
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.entity-collapsible[open] > summary .selected-state-indicator {
+  display: inline-flex;
 }
 
 .entity-collapsible-body {

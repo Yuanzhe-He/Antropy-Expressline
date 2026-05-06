@@ -62,21 +62,28 @@
         <h3><%= t("customs.shippingLineYardMapDescription") %></h3>
       </div>
     </div>
-    <div class="table-card">
-      <table>
-        <thead>
-          <tr>
-            <th><%= t("customs.shippingLineLabel") %></th>
-            <th><%= t("common.note") %></th>
-            <th><%= t("customs.availableYards") %></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% for (const line of businessModuleRules.shippingLines || []) { %>
-            <tr>
-              <td><strong><%= line.name %></strong></td>
-              <td><input type="text" name="customs_line_note_<%= line.id %>" value="<%= line.notes || '' %>" /></td>
-              <td>
+    <div class="stack-form line-yard-map-list">
+      <% for (const line of businessModuleRules.shippingLines || []) { %>
+        <details class="table-card nested-card entity-collapsible line-yard-map-card" id="customs-line-yard-map-<%= line.id %>" data-line-yard-map-card>
+          <summary class="collapsible-summary">
+            <div>
+              <p class="eyebrow"><%= t("customs.shippingLineLabel") %></p>
+              <h4><%= line.name %></h4>
+            </div>
+            <div class="collapsible-summary-actions">
+              <span class="selected-state-indicator"><%= t("admin.currentSelection") %></span>
+              <span class="collapsible-summary-meta"><%= t("customs.yardMappingCount", { count: (line.yardIds || []).length }) %></span>
+            </div>
+          </summary>
+
+          <div class="entity-collapsible-body">
+            <div class="grid-form">
+              <label>
+                <span><%= t("common.note") %></span>
+                <input type="text" name="customs_line_note_<%= line.id %>" value="<%= line.notes || '' %>" />
+              </label>
+              <label>
+                <span><%= t("customs.availableYards") %></span>
                 <select name="shippingLine_yardIds_<%= line.id %>" multiple size="<%= Math.min(6, Math.max(3, businessModuleRules.yards.length)) %>">
                   <% for (const yard of businessModuleRules.yards || []) { %>
                     <option value="<%= yard.id %>" <%= line.yardIds?.includes(yard.id) ? "selected" : "" %>>
@@ -84,11 +91,11 @@
                     </option>
                   <% } %>
                 </select>
-              </td>
-            </tr>
-          <% } %>
-        </tbody>
-      </table>
+              </label>
+            </div>
+          </div>
+        </details>
+      <% } %>
     </div>
   </section>
 
@@ -134,7 +141,19 @@
                   <p class="eyebrow"><%= t("customs.terminalLabel") %></p>
                   <h4><%= terminal.name %></h4>
                 </div>
-                <span class="collapsible-summary-meta"><%= (terminal.storageRuleSets || []).length %> <%= t("customs.storageRuleSetLabel") %></span>
+                <div class="collapsible-summary-actions">
+                  <span class="selected-state-indicator"><%= t("admin.currentSelection") %></span>
+                  <span class="collapsible-summary-meta"><%= (terminal.storageRuleSets || []).length %> <%= t("customs.storageRuleSetLabel") %></span>
+                  <button
+                    type="submit"
+                    class="ghost-button compact-button danger-button"
+                    formaction="/admin/customs/terminals/<%= terminal.id %>/delete"
+                    formmethod="post"
+                    data-summary-action
+                    data-preserve-scroll
+                    data-confirm-submit="<%= t("customs.confirmDeleteTerminal", { count: (terminal.storageRuleSets || []).length }) %>"
+                  ><%= t("customs.deleteTerminal") %></button>
+                </div>
               </summary>
 
               <div class="entity-collapsible-body">
@@ -214,6 +233,7 @@
                       class="ghost-button compact-button"
                       formaction="/admin/customs/terminals/<%= terminal.id %>/storage-rule-sets/add"
                       formmethod="post"
+                      data-preserve-scroll
                     ><%= t("admin.addRuleSet") %></button>
                   </div>
 
@@ -243,7 +263,20 @@
                           <p class="eyebrow"><%= t("customs.storageRuleSetLabel") %></p>
                           <h4><%= ruleSet.name %></h4>
                         </div>
-                        <span class="collapsible-summary-meta"><%= t("customs.assignmentCount", { count: selectedLineContainerAssignments.length }) %></span>
+                        <div class="collapsible-summary-actions">
+                          <span class="selected-state-indicator"><%= t("admin.currentSelection") %></span>
+                          <span class="collapsible-summary-meta"><%= t("customs.assignmentCount", { count: selectedLineContainerAssignments.length }) %></span>
+                          <button
+                            type="submit"
+                            class="ghost-button compact-button danger-button"
+                            formaction="/admin/customs/terminals/<%= terminal.id %>/storage-rule-sets/<%= ruleSet.id %>/delete"
+                            formmethod="post"
+                            data-summary-action
+                            data-preserve-scroll
+                            data-confirm-submit="<%= t("customs.confirmDeleteStorageRuleSet", { count: selectedLineContainerAssignments.length }) %>"
+                            <%= (terminal.storageRuleSets || []).length <= 1 ? "disabled" : "" %>
+                          ><%= t("customs.deleteStorageRuleSet") %></button>
+                        </div>
                       </summary>
 
                       <div class="entity-collapsible-body">
@@ -258,15 +291,8 @@
                             class="ghost-button compact-button"
                             formaction="/admin/customs/terminals/<%= terminal.id %>/storage-rule-sets/<%= ruleSet.id %>/add"
                             formmethod="post"
+                            data-preserve-scroll
                           ><%= t("admin.addRule") %></button>
-                          <button
-                            type="submit"
-                            class="ghost-button compact-button danger-button"
-                            formaction="/admin/customs/terminals/<%= terminal.id %>/storage-rule-sets/<%= ruleSet.id %>/delete"
-                            formmethod="post"
-                            data-confirm-submit="<%= t("customs.confirmDeleteStorageRuleSet", { count: selectedLineContainerAssignments.length }) %>"
-                            <%= (terminal.storageRuleSets || []).length <= 1 ? "disabled" : "" %>
-                          ><%= t("customs.deleteStorageRuleSet") %></button>
                         </div>
                       </div>
                       <div class="assignment-toolbar" data-storage-assignment-tools>
@@ -325,6 +351,7 @@
                                 formmethod="post"
                                 data-storage-release-assignment
                                 data-storage-release-button
+                                data-preserve-scroll
                                 disabled
                               ><%= t("customs.releaseStorageAssignment") %></button>
                             </div>
@@ -341,6 +368,7 @@
                                 class="ghost-button compact-button"
                                 formaction="/admin/customs/terminals/<%= terminal.id %>/storage-assignments/<%= assignment.line.id %>/<%= assignment.type.key %>/delete?returnRuleSetId=<%= ruleSet.id %>"
                                 formmethod="post"
+                                data-preserve-scroll
                               ><%= t("customs.removeStorageAssignment") %></button>
                             </span>
                           <% } %>
@@ -396,6 +424,7 @@
                                   class="ghost-button compact-button"
                                   formaction="/admin/customs/terminals/<%= terminal.id %>/storage-rule-sets/<%= ruleSet.id %>/<%= rule.id %>/delete"
                                   formmethod="post"
+                                  data-preserve-scroll
                                   data-confirm-submit="<%= t("admin.confirmDeleteRule") %>"
                                   <%= (ruleSet.rules || []).length <= 1 ? "disabled" : "" %>
                                 ><%= t("admin.deleteRule") %></button>
@@ -439,7 +468,19 @@
               <p class="eyebrow"><%= t("customs.yardLabel") %></p>
               <h4><%= yard.name %></h4>
             </div>
-            <span class="collapsible-summary-meta"><%= (yard.portIds || []).length %> <%= t("customs.portLabel") %> / <%= (yard.shippingLineIds || []).length %> <%= t("customs.shippingLineLabel") %></span>
+            <div class="collapsible-summary-actions">
+              <span class="selected-state-indicator"><%= t("admin.currentSelection") %></span>
+              <span class="collapsible-summary-meta"><%= (yard.portIds || []).length %> <%= t("customs.portLabel") %> / <%= (yard.shippingLineIds || []).length %> <%= t("customs.shippingLineLabel") %></span>
+              <button
+                type="submit"
+                class="ghost-button compact-button danger-button"
+                formaction="/admin/customs/yards/<%= yard.id %>/delete"
+                formmethod="post"
+                data-summary-action
+                data-preserve-scroll
+                data-confirm-submit="<%= t("customs.confirmDeleteYard", { ports: (yard.portIds || []).length, lines: (yard.shippingLineIds || []).length }) %>"
+              ><%= t("customs.deleteYard") %></button>
+            </div>
           </summary>
 
           <div class="entity-collapsible-body">
