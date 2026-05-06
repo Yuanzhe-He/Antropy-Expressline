@@ -436,6 +436,13 @@ async function main() {
     expectContains(response.text, "新增阶梯", "customs add rule button");
     expectContains(response.text, "码头堆存规则集", "customs storage rule sets");
     expectContains(response.text, "适用船公司 / 柜型", "customs line-container rule assignments");
+    expectContains(response.text, "同柜型所有船公司", "customs same-container batch assignment");
+    expectContains(response.text, "选择全部可选", "customs available batch assignment");
+    expectContains(response.text, "已被其他规则占用", "customs occupied assignment release panel");
+    expectContains(response.text, "选择要释放的组合", "customs occupied assignment release select");
+    expectContains(response.text, "data-storage-release-assignment", "customs occupied assignment release action");
+    expectContains(response.text, "data-storage-release-button", "customs release button state control");
+    expectContains(response.text, "data-storage-rule-card", "customs collapsible storage rule cards");
     expectContains(response.text, "移除", "customs assignment removal");
     expectContains(response.text, "entity-collapsible", "customs collapsible sections");
     expectContains(response.text, "multiple", "customs multi-select assignments");
@@ -469,6 +476,21 @@ async function main() {
     );
     assert.equal(addedTerminal.fixedCharges.length, 1);
     assert.ok(addedTerminal.storageRuleSets.length, "new terminal storage rule set exists");
+    assert.equal(
+      addedTerminal.storageRuleSets[0].rules.length,
+      2,
+      "new terminal storage rule set defaults to two tiers"
+    );
+    assert.deepEqual(
+      addedTerminal.storageRuleSets[0].rules.map((rule) => [
+        rule.startDay,
+        rule.endDay,
+      ]),
+      [
+        [1, 7],
+        [8, null],
+      ]
+    );
     for (const type of shippingData.modules.customs.containerTypes || []) {
       assert.ok(
         addedTerminal.fixedCharges[0].groupRates[type.key],
@@ -759,6 +781,7 @@ async function main() {
     assert.equal(terminal.storageRuleSets.length, beforeStorageRuleSetCount + 1);
 
     const customsRuleSet = terminal.storageRuleSets[0];
+    assert.equal(customsRuleSet.rules.length, 2, "customs storage starts with two tiers");
     const beforeCustomsRuleCount =
       customsRuleSet.rules.length;
 
@@ -809,16 +832,65 @@ async function main() {
       beforeCustomsRuleCount
     );
 
+    let occupiedCustomsAssignmentKey = "";
+    for (const line of shippingData.modules.customs.shippingLines || []) {
+      for (const type of shippingData.modules.customs.containerTypes || []) {
+        const assignedRuleSetId =
+          shippingData.modules.customs.ports[0].terminals[0]
+            .storageAssignmentsByLineContainer[line.id]?.[type.key];
+        if (assignedRuleSetId && assignedRuleSetId !== customsRuleSet.id) {
+          occupiedCustomsAssignmentKey = `${line.id}::${type.key}`;
+          break;
+        }
+      }
+      if (occupiedCustomsAssignmentKey) {
+        break;
+      }
+    }
+    assert.ok(occupiedCustomsAssignmentKey, "customs occupied assignment exists");
+
+    response = await request(
+      baseUrl,
+      `/admin/customs/terminals/${terminal.id}/storage-assignments/release`,
+      {
+        method: "POST",
+        jar: publicJar,
+        formEntries: [
+          ["releaseRuleSetId", customsRuleSet.id],
+          [
+            `releaseLineContainerKey_${customsRuleSet.id}`,
+            occupiedCustomsAssignmentKey,
+          ],
+        ],
+      }
+    );
+    assert.equal(response.status, 302);
+    assert.equal(
+      response.location,
+      `/admin/customs/shipping-lines#customs-storage-rule-${terminal.id}-${customsRuleSet.id}`
+    );
+    shippingData = await getShippingData();
+    assert.ok(
+      shippingData.modules.customs.ports[0].terminals[0].storageUnassignedLineContainers.includes(
+        occupiedCustomsAssignmentKey
+      ),
+      "released occupied customs storage assignment is tracked"
+    );
+
     const firstCustomsLineId = shippingData.modules.customs.shippingLines[0].id;
     response = await request(
       baseUrl,
-      `/admin/customs/terminals/${terminal.id}/storage-assignments/${firstCustomsLineId}/${customsGroupKey}/delete`,
+      `/admin/customs/terminals/${terminal.id}/storage-assignments/${firstCustomsLineId}/${customsGroupKey}/delete?returnRuleSetId=${customsRuleSet.id}`,
       {
         method: "POST",
         jar: publicJar,
       }
     );
     assert.equal(response.status, 302);
+    assert.equal(
+      response.location,
+      `/admin/customs/shipping-lines#customs-storage-rule-${terminal.id}-${customsRuleSet.id}`
+    );
     shippingData = await getShippingData();
     assert.ok(
       shippingData.modules.customs.ports[0].terminals[0].storageUnassignedLineContainers.includes(

@@ -28,7 +28,10 @@
       <aside class="sidebar">
         <div class="sidebar-top">
           <div class="brand-block">
-            <img src="/dewell-logo.svg" alt="DEWELL GROUP" class="brand-logo" />
+            <a href="/" class="brand-lockup" aria-label="DEWELL GROUP / <%= t("app.subtitle") %>">
+              <img src="/dewell-logo.svg" alt="DEWELL GROUP" class="brand-logo" />
+              <span class="brand-caption"><%= t("app.subtitle") %></span>
+            </a>
           </div>
 
           <% if (user) { %>

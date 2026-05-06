@@ -218,15 +218,40 @@
                   </div>
 
                   <% for (const ruleSet of terminal.storageRuleSets || []) { %>
-                    <div class="table-card nested-card storage-rule-card">
-                      <div class="section-title compact">
+                    <% const selectedLineContainerAssignments = []; %>
+                    <% const blockedLineContainerAssignments = []; %>
+                    <% for (const line of businessModuleRules.shippingLines || []) { %>
+                      <% for (const type of businessModuleRules.containerTypes || []) { %>
+                        <% const assignmentKey = `${line.id}::${type.key}`; %>
+                        <% const isUnassignedAssignment = (terminal.storageUnassignedLineContainers || []).includes(assignmentKey); %>
+                        <% const assignedRuleSetId = isUnassignedAssignment ? null : (terminal.storageAssignmentsByLineContainer?.[line.id]?.[type.key] || terminal.storageAssignmentsByContainerType?.[type.key] || null); %>
+                        <% if (assignedRuleSetId === ruleSet.id) { selectedLineContainerAssignments.push({ line, type }); } %>
+                        <% if (assignedRuleSetId && assignedRuleSetId !== ruleSet.id) { %>
+                          <% const assignedRuleSet = (terminal.storageRuleSets || []).find((entry) => entry.id === assignedRuleSetId); %>
+                          <% blockedLineContainerAssignments.push({ line, type, ruleSetName: assignedRuleSet?.name || assignedRuleSetId }); %>
+                        <% } %>
+                      <% } %>
+                    <% } %>
+                    <details
+                      class="table-card nested-card storage-rule-card entity-collapsible"
+                      id="customs-storage-rule-<%= terminal.id %>-<%= ruleSet.id %>"
+                      data-storage-rule-card
+                      data-default-container-key="<%= ruleSet.sourceContainerKey || '' %>"
+                    >
+                      <summary class="collapsible-summary storage-rule-summary">
                         <div>
                           <p class="eyebrow"><%= t("customs.storageRuleSetLabel") %></p>
+                          <h4><%= ruleSet.name %></h4>
+                        </div>
+                        <span class="collapsible-summary-meta"><%= t("customs.assignmentCount", { count: selectedLineContainerAssignments.length }) %></span>
+                      </summary>
+
+                      <div class="entity-collapsible-body">
+                        <div class="section-title compact">
                           <label class="rule-name-field">
                             <span><%= t("admin.ruleSetName") %></span>
                             <input type="text" name="terminal_storage_set_<%= terminal.id %>_<%= ruleSet.id %>_name" value="<%= ruleSet.name %>" />
                           </label>
-                        </div>
                         <button
                           type="submit"
                           class="ghost-button compact-button"
@@ -234,35 +259,68 @@
                           formmethod="post"
                         ><%= t("admin.addRule") %></button>
                       </div>
-                      <% const selectedLineContainerAssignments = []; %>
-                      <label class="rule-assignment-field line-container-assignment-field">
-                        <span><%= t("customs.assignedLineContainers") %></span>
-                        <select
-                          name="terminal_storage_set_<%= terminal.id %>_<%= ruleSet.id %>_lineContainers"
-                          multiple
-                          size="<%= Math.min(12, Math.max(5, businessModuleRules.shippingLines.length)) %>"
-                        >
-                          <% for (const line of businessModuleRules.shippingLines || []) { %>
-                            <optgroup label="<%= line.name %>">
-                              <% for (const type of businessModuleRules.containerTypes || []) { %>
-                                <% const assignmentKey = `${line.id}::${type.key}`; %>
-                                <% const isUnassignedAssignment = (terminal.storageUnassignedLineContainers || []).includes(assignmentKey); %>
-                                <% const assignedRuleSetId = isUnassignedAssignment ? null : (terminal.storageAssignmentsByLineContainer?.[line.id]?.[type.key] || terminal.storageAssignmentsByContainerType?.[type.key] || null); %>
-                                <% const isSelectedAssignment = assignedRuleSetId === ruleSet.id; %>
-                                <% const isDisabledAssignment = assignedRuleSetId && assignedRuleSetId !== ruleSet.id; %>
-                                <% if (isSelectedAssignment) { selectedLineContainerAssignments.push({ line, type }); } %>
-                                <option
-                                  value="<%= assignmentKey %>"
-                                  <%= isSelectedAssignment ? "selected" : "" %>
-                                  <%= isDisabledAssignment ? "disabled" : "" %>
-                                >
-                                  <%= line.name %> / <%= type.label %>
-                                </option>
-                              <% } %>
-                            </optgroup>
-                          <% } %>
-                        </select>
-                      </label>
+                      <div class="assignment-toolbar" data-storage-assignment-tools>
+                        <button type="button" class="ghost-button compact-button" data-storage-select="same-container"><%= t("customs.selectSameContainerLines") %></button>
+                        <button type="button" class="ghost-button compact-button" data-storage-select="available"><%= t("customs.selectAvailableAssignments") %></button>
+                        <button type="button" class="ghost-button compact-button" data-storage-select="clear"><%= t("customs.clearRuleAssignments") %></button>
+                      </div>
+                      <div class="assignment-picker-layout">
+                        <label class="rule-assignment-field line-container-assignment-field" data-storage-assignment-group>
+                          <span><%= t("customs.assignedLineContainers") %></span>
+                          <select
+                            name="terminal_storage_set_<%= terminal.id %>_<%= ruleSet.id %>_lineContainers"
+                            multiple
+                            size="<%= Math.min(12, Math.max(5, businessModuleRules.shippingLines.length)) %>"
+                            data-storage-assignment-select
+                          >
+                            <% for (const line of businessModuleRules.shippingLines || []) { %>
+                              <optgroup label="<%= line.name %>">
+                                <% for (const type of businessModuleRules.containerTypes || []) { %>
+                                  <% const assignmentKey = `${line.id}::${type.key}`; %>
+                                  <% const isUnassignedAssignment = (terminal.storageUnassignedLineContainers || []).includes(assignmentKey); %>
+                                  <% const assignedRuleSetId = isUnassignedAssignment ? null : (terminal.storageAssignmentsByLineContainer?.[line.id]?.[type.key] || terminal.storageAssignmentsByContainerType?.[type.key] || null); %>
+                                  <% const isSelectedAssignment = assignedRuleSetId === ruleSet.id; %>
+                                  <% const isDisabledAssignment = assignedRuleSetId && assignedRuleSetId !== ruleSet.id; %>
+                                  <% const assignedRuleSet = isDisabledAssignment ? (terminal.storageRuleSets || []).find((entry) => entry.id === assignedRuleSetId) : null; %>
+                                  <option
+                                    value="<%= assignmentKey %>"
+                                    data-line-id="<%= line.id %>"
+                                    data-container-key="<%= type.key %>"
+                                    <%= isSelectedAssignment ? "selected" : "" %>
+                                    <%= isDisabledAssignment ? "disabled" : "" %>
+                                  >
+                                    <%= line.name %> / <%= type.label %><%= assignedRuleSet ? ` - ${t("customs.assignmentOccupiedBy", { name: assignedRuleSet.name })}` : "" %>
+                                  </option>
+                                <% } %>
+                              </optgroup>
+                            <% } %>
+                          </select>
+                        </label>
+                        <% if (blockedLineContainerAssignments.length) { %>
+                          <div class="blocked-assignment-panel" data-storage-blocked-assignments>
+                            <label class="release-assignment-field">
+                              <span class="field-label"><%= t("customs.occupiedAssignmentsTitle") %></span>
+                              <select name="releaseLineContainerKey_<%= ruleSet.id %>" data-storage-release-select>
+                                <option value=""><%= t("customs.selectOccupiedAssignment") %></option>
+                              </select>
+                            </label>
+                            <div class="release-assignment-actions">
+                              <p class="helper-text"><%= t("customs.occupiedAssignmentsHint") %></p>
+                              <button
+                                type="submit"
+                                class="ghost-button compact-button"
+                                name="releaseRuleSetId"
+                                value="<%= ruleSet.id %>"
+                                formaction="/admin/customs/terminals/<%= terminal.id %>/storage-assignments/release"
+                                formmethod="post"
+                                data-storage-release-assignment
+                                data-storage-release-button
+                                disabled
+                              ><%= t("customs.releaseStorageAssignment") %></button>
+                            </div>
+                          </div>
+                        <% } %>
+                      </div>
                       <% if (selectedLineContainerAssignments.length) { %>
                         <div class="selected-assignment-list">
                           <% for (const assignment of selectedLineContainerAssignments) { %>
@@ -271,7 +329,7 @@
                               <button
                                 type="submit"
                                 class="ghost-button compact-button"
-                                formaction="/admin/customs/terminals/<%= terminal.id %>/storage-assignments/<%= assignment.line.id %>/<%= assignment.type.key %>/delete"
+                                formaction="/admin/customs/terminals/<%= terminal.id %>/storage-assignments/<%= assignment.line.id %>/<%= assignment.type.key %>/delete?returnRuleSetId=<%= ruleSet.id %>"
                                 formmethod="post"
                               ><%= t("customs.removeStorageAssignment") %></button>
                             </span>
@@ -337,7 +395,8 @@
                         </tbody>
                       </table>
                       <p class="helper-text"><%= t("admin.autoSequentialHint") %></p>
-                    </div>
+                      </div>
+                    </details>
                   <% } %>
                 </div>
               </div>

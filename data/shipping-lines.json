@@ -7835,24 +7835,9 @@
                   },
                   {
                     "id": "contecon-fr-20-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "FR 20'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 115
-                    }
-                  },
-                  {
-                    "id": "contecon-fr-20-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -7860,7 +7845,7 @@
                       "label": "FR 20'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 200
+                      "rate": 115
                     }
                   }
                 ],
@@ -7882,24 +7867,9 @@
                   },
                   {
                     "id": "contecon-fr-40-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "FR 40'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 140
-                    }
-                  },
-                  {
-                    "id": "contecon-fr-40-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -7907,7 +7877,7 @@
                       "label": "FR 40'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 240
+                      "rate": 140
                     }
                   }
                 ],
@@ -7929,24 +7899,9 @@
                   },
                   {
                     "id": "contecon-gp-hc-sd-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "GP HC SD",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 165
-                    }
-                  },
-                  {
-                    "id": "contecon-gp-hc-sd-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -7954,7 +7909,7 @@
                       "label": "GP HC SD",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 280
+                      "rate": 165
                     }
                   }
                 ],
@@ -7976,24 +7931,9 @@
                   },
                   {
                     "id": "contecon-gp-hq-dc-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "GP HQ DC",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 190
-                    }
-                  },
-                  {
-                    "id": "contecon-gp-hq-dc-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -8001,7 +7941,7 @@
                       "label": "GP HQ DC",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 320
+                      "rate": 190
                     }
                   }
                 ],
@@ -8023,24 +7963,9 @@
                   },
                   {
                     "id": "contecon-gp-hq-dc-20-40-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "GP HQ DC 20' 40'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 215
-                    }
-                  },
-                  {
-                    "id": "contecon-gp-hq-dc-20-40-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -8048,7 +7973,7 @@
                       "label": "GP HQ DC 20' 40'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 360
+                      "rate": 215
                     }
                   }
                 ],
@@ -8070,24 +7995,9 @@
                   },
                   {
                     "id": "contecon-imo-dry-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "IMO DRY",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 240
-                    }
-                  },
-                  {
-                    "id": "contecon-imo-dry-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -8095,7 +8005,7 @@
                       "label": "IMO DRY",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 400
+                      "rate": 240
                     }
                   }
                 ],
@@ -8117,24 +8027,9 @@
                   },
                   {
                     "id": "contecon-imo-reefer-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "IMO REEFER",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 265
-                    }
-                  },
-                  {
-                    "id": "contecon-imo-reefer-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -8142,7 +8037,7 @@
                       "label": "IMO REEFER",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 440
+                      "rate": 265
                     }
                   }
                 ],
@@ -8164,24 +8059,9 @@
                   },
                   {
                     "id": "contecon-imo-special-45-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "IMO SPECIAL & 45'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 290
-                    }
-                  },
-                  {
-                    "id": "contecon-imo-special-45-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -8189,7 +8069,7 @@
                       "label": "IMO SPECIAL & 45'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 480
+                      "rate": 290
                     }
                   }
                 ],
@@ -8211,24 +8091,9 @@
                   },
                   {
                     "id": "contecon-ot-20-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "OT 20'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 315
-                    }
-                  },
-                  {
-                    "id": "contecon-ot-20-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -8236,7 +8101,7 @@
                       "label": "OT 20'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 520
+                      "rate": 315
                     }
                   }
                 ],
@@ -8258,24 +8123,9 @@
                   },
                   {
                     "id": "contecon-ot-40-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "OT 40'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 340
-                    }
-                  },
-                  {
-                    "id": "contecon-ot-40-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -8283,7 +8133,7 @@
                       "label": "OT 40'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 560
+                      "rate": 340
                     }
                   }
                 ],
@@ -8305,24 +8155,9 @@
                   },
                   {
                     "id": "contecon-ot-fl-pl-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "OT FL PL",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 365
-                    }
-                  },
-                  {
-                    "id": "contecon-ot-fl-pl-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -8330,7 +8165,7 @@
                       "label": "OT FL PL",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 600
+                      "rate": 365
                     }
                   }
                 ],
@@ -8352,24 +8187,9 @@
                   },
                   {
                     "id": "contecon-ot-fr-rf-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "OT FR RF",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 390
-                    }
-                  },
-                  {
-                    "id": "contecon-ot-fr-rf-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -8377,7 +8197,7 @@
                       "label": "OT FR RF",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 640
+                      "rate": 390
                     }
                   }
                 ],
@@ -8399,24 +8219,9 @@
                   },
                   {
                     "id": "contecon-reefer-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "REEFER",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 415
-                    }
-                  },
-                  {
-                    "id": "contecon-reefer-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -8424,7 +8229,7 @@
                       "label": "REEFER",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 680
+                      "rate": 415
                     }
                   }
                 ],
@@ -8446,24 +8251,9 @@
                   },
                   {
                     "id": "contecon-rf-20-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "RF 20'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 440
-                    }
-                  },
-                  {
-                    "id": "contecon-rf-20-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -8471,7 +8261,7 @@
                       "label": "RF 20'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 720
+                      "rate": 440
                     }
                   }
                 ],
@@ -8493,24 +8283,9 @@
                   },
                   {
                     "id": "contecon-rf-40-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "RF 40'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 465
-                    }
-                  },
-                  {
-                    "id": "contecon-rf-40-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -8518,7 +8293,7 @@
                       "label": "RF 40'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 760
+                      "rate": 465
                     }
                   }
                 ],
@@ -8540,24 +8315,9 @@
                   },
                   {
                     "id": "contecon-rf-rq-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "RF RQ",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 490
-                    }
-                  },
-                  {
-                    "id": "contecon-rf-rq-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -8565,7 +8325,7 @@
                       "label": "RF RQ",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 800
+                      "rate": 490
                     }
                   }
                 ],
@@ -8587,24 +8347,9 @@
                   },
                   {
                     "id": "contecon-special-45-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "SPECIAL & 45'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 515
-                    }
-                  },
-                  {
-                    "id": "contecon-special-45-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -8612,7 +8357,7 @@
                       "label": "SPECIAL & 45'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 840
+                      "rate": 515
                     }
                   }
                 ]
@@ -8643,24 +8388,9 @@
                     },
                     {
                       "id": "contecon-fr-20-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "FR 20'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 115
-                      }
-                    },
-                    {
-                      "id": "contecon-fr-20-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -8668,7 +8398,7 @@
                         "label": "FR 20'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 200
+                        "rate": 115
                       }
                     }
                   ]
@@ -8698,24 +8428,9 @@
                     },
                     {
                       "id": "contecon-fr-40-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "FR 40'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 140
-                      }
-                    },
-                    {
-                      "id": "contecon-fr-40-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -8723,7 +8438,7 @@
                         "label": "FR 40'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 240
+                        "rate": 140
                       }
                     }
                   ]
@@ -8753,24 +8468,9 @@
                     },
                     {
                       "id": "contecon-gp-hc-sd-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "GP HC SD",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 165
-                      }
-                    },
-                    {
-                      "id": "contecon-gp-hc-sd-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -8778,7 +8478,7 @@
                         "label": "GP HC SD",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 280
+                        "rate": 165
                       }
                     }
                   ]
@@ -8808,24 +8508,9 @@
                     },
                     {
                       "id": "contecon-gp-hq-dc-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "GP HQ DC",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 190
-                      }
-                    },
-                    {
-                      "id": "contecon-gp-hq-dc-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -8833,7 +8518,7 @@
                         "label": "GP HQ DC",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 320
+                        "rate": 190
                       }
                     }
                   ]
@@ -8863,24 +8548,9 @@
                     },
                     {
                       "id": "contecon-gp-hq-dc-20-40-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "GP HQ DC 20' 40'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 215
-                      }
-                    },
-                    {
-                      "id": "contecon-gp-hq-dc-20-40-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -8888,7 +8558,7 @@
                         "label": "GP HQ DC 20' 40'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 360
+                        "rate": 215
                       }
                     }
                   ]
@@ -8918,24 +8588,9 @@
                     },
                     {
                       "id": "contecon-imo-dry-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "IMO DRY",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 240
-                      }
-                    },
-                    {
-                      "id": "contecon-imo-dry-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -8943,7 +8598,7 @@
                         "label": "IMO DRY",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 400
+                        "rate": 240
                       }
                     }
                   ]
@@ -8973,24 +8628,9 @@
                     },
                     {
                       "id": "contecon-imo-reefer-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "IMO REEFER",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 265
-                      }
-                    },
-                    {
-                      "id": "contecon-imo-reefer-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -8998,7 +8638,7 @@
                         "label": "IMO REEFER",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 440
+                        "rate": 265
                       }
                     }
                   ]
@@ -9028,24 +8668,9 @@
                     },
                     {
                       "id": "contecon-imo-special-45-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "IMO SPECIAL & 45'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 290
-                      }
-                    },
-                    {
-                      "id": "contecon-imo-special-45-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -9053,7 +8678,7 @@
                         "label": "IMO SPECIAL & 45'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 480
+                        "rate": 290
                       }
                     }
                   ]
@@ -9083,24 +8708,9 @@
                     },
                     {
                       "id": "contecon-ot-20-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "OT 20'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 315
-                      }
-                    },
-                    {
-                      "id": "contecon-ot-20-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -9108,7 +8718,7 @@
                         "label": "OT 20'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 520
+                        "rate": 315
                       }
                     }
                   ]
@@ -9138,24 +8748,9 @@
                     },
                     {
                       "id": "contecon-ot-40-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "OT 40'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 340
-                      }
-                    },
-                    {
-                      "id": "contecon-ot-40-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -9163,7 +8758,7 @@
                         "label": "OT 40'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 560
+                        "rate": 340
                       }
                     }
                   ]
@@ -9193,24 +8788,9 @@
                     },
                     {
                       "id": "contecon-ot-fl-pl-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "OT FL PL",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 365
-                      }
-                    },
-                    {
-                      "id": "contecon-ot-fl-pl-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -9218,7 +8798,7 @@
                         "label": "OT FL PL",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 600
+                        "rate": 365
                       }
                     }
                   ]
@@ -9248,24 +8828,9 @@
                     },
                     {
                       "id": "contecon-ot-fr-rf-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "OT FR RF",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 390
-                      }
-                    },
-                    {
-                      "id": "contecon-ot-fr-rf-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -9273,7 +8838,7 @@
                         "label": "OT FR RF",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 640
+                        "rate": 390
                       }
                     }
                   ]
@@ -9303,24 +8868,9 @@
                     },
                     {
                       "id": "contecon-reefer-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "REEFER",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 415
-                      }
-                    },
-                    {
-                      "id": "contecon-reefer-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -9328,7 +8878,7 @@
                         "label": "REEFER",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 680
+                        "rate": 415
                       }
                     }
                   ]
@@ -9358,24 +8908,9 @@
                     },
                     {
                       "id": "contecon-rf-20-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "RF 20'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 440
-                      }
-                    },
-                    {
-                      "id": "contecon-rf-20-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -9383,7 +8918,7 @@
                         "label": "RF 20'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 720
+                        "rate": 440
                       }
                     }
                   ]
@@ -9413,24 +8948,9 @@
                     },
                     {
                       "id": "contecon-rf-40-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "RF 40'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 465
-                      }
-                    },
-                    {
-                      "id": "contecon-rf-40-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -9438,7 +8958,7 @@
                         "label": "RF 40'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 760
+                        "rate": 465
                       }
                     }
                   ]
@@ -9468,24 +8988,9 @@
                     },
                     {
                       "id": "contecon-rf-rq-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "RF RQ",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 490
-                      }
-                    },
-                    {
-                      "id": "contecon-rf-rq-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -9493,7 +8998,7 @@
                         "label": "RF RQ",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 800
+                        "rate": 490
                       }
                     }
                   ]
@@ -9523,24 +9028,9 @@
                     },
                     {
                       "id": "contecon-special-45-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "SPECIAL & 45'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 515
-                      }
-                    },
-                    {
-                      "id": "contecon-special-45-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -9548,7 +9038,7 @@
                         "label": "SPECIAL & 45'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 840
+                        "rate": 515
                       }
                     }
                   ]
@@ -9963,10 +9453,10 @@
                 "fr-20": [
                   {
                     "id": "ssa-fr-20-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -9977,25 +9467,10 @@
                     }
                   },
                   {
-                    "id": "ssa-fr-20-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "FR 20'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 130
-                    }
-                  },
-                  {
                     "id": "ssa-fr-20-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10010,10 +9485,10 @@
                 "fr-40": [
                   {
                     "id": "ssa-fr-40-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10024,25 +9499,10 @@
                     }
                   },
                   {
-                    "id": "ssa-fr-40-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "FR 40'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 150
-                    }
-                  },
-                  {
                     "id": "ssa-fr-40-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10057,10 +9517,10 @@
                 "gp-hc-sd": [
                   {
                     "id": "ssa-gp-hc-sd-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10071,25 +9531,10 @@
                     }
                   },
                   {
-                    "id": "ssa-gp-hc-sd-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "GP HC SD",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 170
-                    }
-                  },
-                  {
                     "id": "ssa-gp-hc-sd-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10104,10 +9549,10 @@
                 "gp-hq-dc": [
                   {
                     "id": "ssa-gp-hq-dc-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10118,25 +9563,10 @@
                     }
                   },
                   {
-                    "id": "ssa-gp-hq-dc-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "GP HQ DC",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 190
-                    }
-                  },
-                  {
                     "id": "ssa-gp-hq-dc-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10151,10 +9581,10 @@
                 "gp-hq-dc-20-40": [
                   {
                     "id": "ssa-gp-hq-dc-20-40-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10165,25 +9595,10 @@
                     }
                   },
                   {
-                    "id": "ssa-gp-hq-dc-20-40-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "GP HQ DC 20' 40'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 210
-                    }
-                  },
-                  {
                     "id": "ssa-gp-hq-dc-20-40-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10198,10 +9613,10 @@
                 "imo-dry": [
                   {
                     "id": "ssa-imo-dry-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10212,25 +9627,10 @@
                     }
                   },
                   {
-                    "id": "ssa-imo-dry-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "IMO DRY",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 230
-                    }
-                  },
-                  {
                     "id": "ssa-imo-dry-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10245,10 +9645,10 @@
                 "imo-reefer": [
                   {
                     "id": "ssa-imo-reefer-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10259,25 +9659,10 @@
                     }
                   },
                   {
-                    "id": "ssa-imo-reefer-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "IMO REEFER",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 250
-                    }
-                  },
-                  {
                     "id": "ssa-imo-reefer-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10292,10 +9677,10 @@
                 "imo-special-45": [
                   {
                     "id": "ssa-imo-special-45-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10306,25 +9691,10 @@
                     }
                   },
                   {
-                    "id": "ssa-imo-special-45-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "IMO SPECIAL & 45'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 270
-                    }
-                  },
-                  {
                     "id": "ssa-imo-special-45-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10339,10 +9709,10 @@
                 "ot-20": [
                   {
                     "id": "ssa-ot-20-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10353,25 +9723,10 @@
                     }
                   },
                   {
-                    "id": "ssa-ot-20-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "OT 20'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 290
-                    }
-                  },
-                  {
                     "id": "ssa-ot-20-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10386,10 +9741,10 @@
                 "ot-40": [
                   {
                     "id": "ssa-ot-40-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10400,25 +9755,10 @@
                     }
                   },
                   {
-                    "id": "ssa-ot-40-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "OT 40'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 310
-                    }
-                  },
-                  {
                     "id": "ssa-ot-40-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10433,10 +9773,10 @@
                 "ot-fl-pl": [
                   {
                     "id": "ssa-ot-fl-pl-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10447,25 +9787,10 @@
                     }
                   },
                   {
-                    "id": "ssa-ot-fl-pl-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "OT FL PL",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 330
-                    }
-                  },
-                  {
                     "id": "ssa-ot-fl-pl-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10480,10 +9805,10 @@
                 "ot-fr-rf": [
                   {
                     "id": "ssa-ot-fr-rf-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10494,25 +9819,10 @@
                     }
                   },
                   {
-                    "id": "ssa-ot-fr-rf-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "OT FR RF",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 350
-                    }
-                  },
-                  {
                     "id": "ssa-ot-fr-rf-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10527,10 +9837,10 @@
                 "reefer": [
                   {
                     "id": "ssa-reefer-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10541,25 +9851,10 @@
                     }
                   },
                   {
-                    "id": "ssa-reefer-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "REEFER",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 370
-                    }
-                  },
-                  {
                     "id": "ssa-reefer-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10574,10 +9869,10 @@
                 "rf-20": [
                   {
                     "id": "ssa-rf-20-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10588,25 +9883,10 @@
                     }
                   },
                   {
-                    "id": "ssa-rf-20-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "RF 20'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 390
-                    }
-                  },
-                  {
                     "id": "ssa-rf-20-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10621,10 +9901,10 @@
                 "rf-40": [
                   {
                     "id": "ssa-rf-40-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10635,25 +9915,10 @@
                     }
                   },
                   {
-                    "id": "ssa-rf-40-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "RF 40'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 410
-                    }
-                  },
-                  {
                     "id": "ssa-rf-40-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10668,10 +9933,10 @@
                 "rf-rq": [
                   {
                     "id": "ssa-rf-rq-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10682,25 +9947,10 @@
                     }
                   },
                   {
-                    "id": "ssa-rf-rq-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "RF RQ",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 430
-                    }
-                  },
-                  {
                     "id": "ssa-rf-rq-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10715,10 +9965,10 @@
                 "special-45": [
                   {
                     "id": "ssa-special-45-free",
-                    "label": "0-5",
+                    "label": "0-7",
                     "note": null,
                     "startDay": 1,
-                    "endDay": 5,
+                    "endDay": 7,
                     "freeRule": true,
                     "taxRate": 0,
                     "rateConfig": {
@@ -10729,25 +9979,10 @@
                     }
                   },
                   {
-                    "id": "ssa-special-45-tier-2",
-                    "label": "6-9",
-                    "note": null,
-                    "startDay": 6,
-                    "endDay": 9,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "SPECIAL & 45'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 450
-                    }
-                  },
-                  {
                     "id": "ssa-special-45-tier-3",
-                    "label": ">9",
+                    "label": ">7",
                     "note": null,
-                    "startDay": 10,
+                    "startDay": 8,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -10771,10 +10006,10 @@
                   "rules": [
                     {
                       "id": "ssa-fr-20-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -10785,25 +10020,10 @@
                       }
                     },
                     {
-                      "id": "ssa-fr-20-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "FR 20'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 130
-                      }
-                    },
-                    {
                       "id": "ssa-fr-20-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -10826,10 +10046,10 @@
                   "rules": [
                     {
                       "id": "ssa-fr-40-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -10840,25 +10060,10 @@
                       }
                     },
                     {
-                      "id": "ssa-fr-40-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "FR 40'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 150
-                      }
-                    },
-                    {
                       "id": "ssa-fr-40-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -10881,10 +10086,10 @@
                   "rules": [
                     {
                       "id": "ssa-gp-hc-sd-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -10895,25 +10100,10 @@
                       }
                     },
                     {
-                      "id": "ssa-gp-hc-sd-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "GP HC SD",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 170
-                      }
-                    },
-                    {
                       "id": "ssa-gp-hc-sd-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -10936,10 +10126,10 @@
                   "rules": [
                     {
                       "id": "ssa-gp-hq-dc-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -10950,25 +10140,10 @@
                       }
                     },
                     {
-                      "id": "ssa-gp-hq-dc-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "GP HQ DC",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 190
-                      }
-                    },
-                    {
                       "id": "ssa-gp-hq-dc-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -10991,10 +10166,10 @@
                   "rules": [
                     {
                       "id": "ssa-gp-hq-dc-20-40-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -11005,25 +10180,10 @@
                       }
                     },
                     {
-                      "id": "ssa-gp-hq-dc-20-40-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "GP HQ DC 20' 40'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 210
-                      }
-                    },
-                    {
                       "id": "ssa-gp-hq-dc-20-40-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -11046,10 +10206,10 @@
                   "rules": [
                     {
                       "id": "ssa-imo-dry-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -11060,25 +10220,10 @@
                       }
                     },
                     {
-                      "id": "ssa-imo-dry-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "IMO DRY",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 230
-                      }
-                    },
-                    {
                       "id": "ssa-imo-dry-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -11101,10 +10246,10 @@
                   "rules": [
                     {
                       "id": "ssa-imo-reefer-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -11115,25 +10260,10 @@
                       }
                     },
                     {
-                      "id": "ssa-imo-reefer-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "IMO REEFER",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 250
-                      }
-                    },
-                    {
                       "id": "ssa-imo-reefer-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -11156,10 +10286,10 @@
                   "rules": [
                     {
                       "id": "ssa-imo-special-45-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -11170,25 +10300,10 @@
                       }
                     },
                     {
-                      "id": "ssa-imo-special-45-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "IMO SPECIAL & 45'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 270
-                      }
-                    },
-                    {
                       "id": "ssa-imo-special-45-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -11211,10 +10326,10 @@
                   "rules": [
                     {
                       "id": "ssa-ot-20-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -11225,25 +10340,10 @@
                       }
                     },
                     {
-                      "id": "ssa-ot-20-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "OT 20'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 290
-                      }
-                    },
-                    {
                       "id": "ssa-ot-20-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -11266,10 +10366,10 @@
                   "rules": [
                     {
                       "id": "ssa-ot-40-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -11280,25 +10380,10 @@
                       }
                     },
                     {
-                      "id": "ssa-ot-40-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "OT 40'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 310
-                      }
-                    },
-                    {
                       "id": "ssa-ot-40-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -11321,10 +10406,10 @@
                   "rules": [
                     {
                       "id": "ssa-ot-fl-pl-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -11335,25 +10420,10 @@
                       }
                     },
                     {
-                      "id": "ssa-ot-fl-pl-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "OT FL PL",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 330
-                      }
-                    },
-                    {
                       "id": "ssa-ot-fl-pl-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -11376,10 +10446,10 @@
                   "rules": [
                     {
                       "id": "ssa-ot-fr-rf-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -11390,25 +10460,10 @@
                       }
                     },
                     {
-                      "id": "ssa-ot-fr-rf-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "OT FR RF",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 350
-                      }
-                    },
-                    {
                       "id": "ssa-ot-fr-rf-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -11431,10 +10486,10 @@
                   "rules": [
                     {
                       "id": "ssa-reefer-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -11445,25 +10500,10 @@
                       }
                     },
                     {
-                      "id": "ssa-reefer-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "REEFER",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 370
-                      }
-                    },
-                    {
                       "id": "ssa-reefer-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -11486,10 +10526,10 @@
                   "rules": [
                     {
                       "id": "ssa-rf-20-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -11500,25 +10540,10 @@
                       }
                     },
                     {
-                      "id": "ssa-rf-20-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "RF 20'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 390
-                      }
-                    },
-                    {
                       "id": "ssa-rf-20-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -11541,10 +10566,10 @@
                   "rules": [
                     {
                       "id": "ssa-rf-40-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -11555,25 +10580,10 @@
                       }
                     },
                     {
-                      "id": "ssa-rf-40-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "RF 40'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 410
-                      }
-                    },
-                    {
                       "id": "ssa-rf-40-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -11596,10 +10606,10 @@
                   "rules": [
                     {
                       "id": "ssa-rf-rq-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -11610,25 +10620,10 @@
                       }
                     },
                     {
-                      "id": "ssa-rf-rq-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "RF RQ",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 430
-                      }
-                    },
-                    {
                       "id": "ssa-rf-rq-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -11651,10 +10646,10 @@
                   "rules": [
                     {
                       "id": "ssa-special-45-free",
-                      "label": "0-5",
+                      "label": "0-7",
                       "note": null,
                       "startDay": 1,
-                      "endDay": 5,
+                      "endDay": 7,
                       "freeRule": true,
                       "taxRate": 0,
                       "rateConfig": {
@@ -11665,25 +10660,10 @@
                       }
                     },
                     {
-                      "id": "ssa-special-45-tier-2",
-                      "label": "6-9",
-                      "note": null,
-                      "startDay": 6,
-                      "endDay": 9,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "SPECIAL & 45'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 450
-                      }
-                    },
-                    {
                       "id": "ssa-special-45-tier-3",
-                      "label": ">9",
+                      "label": ">7",
                       "note": null,
-                      "startDay": 10,
+                      "startDay": 8,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -12128,24 +11108,9 @@
                   },
                   {
                     "id": "hutchison-fr-20-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "FR 20'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 120
-                    }
-                  },
-                  {
-                    "id": "hutchison-fr-20-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12153,7 +11118,7 @@
                       "label": "FR 20'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 210
+                      "rate": 120
                     }
                   }
                 ],
@@ -12175,24 +11140,9 @@
                   },
                   {
                     "id": "hutchison-fr-40-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "FR 40'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 145
-                    }
-                  },
-                  {
-                    "id": "hutchison-fr-40-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12200,7 +11150,7 @@
                       "label": "FR 40'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 255
+                      "rate": 145
                     }
                   }
                 ],
@@ -12222,24 +11172,9 @@
                   },
                   {
                     "id": "hutchison-gp-hc-sd-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "GP HC SD",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 170
-                    }
-                  },
-                  {
-                    "id": "hutchison-gp-hc-sd-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12247,7 +11182,7 @@
                       "label": "GP HC SD",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 300
+                      "rate": 170
                     }
                   }
                 ],
@@ -12269,24 +11204,9 @@
                   },
                   {
                     "id": "hutchison-gp-hq-dc-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "GP HQ DC",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 195
-                    }
-                  },
-                  {
-                    "id": "hutchison-gp-hq-dc-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12294,7 +11214,7 @@
                       "label": "GP HQ DC",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 345
+                      "rate": 195
                     }
                   }
                 ],
@@ -12316,24 +11236,9 @@
                   },
                   {
                     "id": "hutchison-gp-hq-dc-20-40-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "GP HQ DC 20' 40'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 220
-                    }
-                  },
-                  {
-                    "id": "hutchison-gp-hq-dc-20-40-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12341,7 +11246,7 @@
                       "label": "GP HQ DC 20' 40'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 390
+                      "rate": 220
                     }
                   }
                 ],
@@ -12363,24 +11268,9 @@
                   },
                   {
                     "id": "hutchison-imo-dry-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "IMO DRY",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 245
-                    }
-                  },
-                  {
-                    "id": "hutchison-imo-dry-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12388,7 +11278,7 @@
                       "label": "IMO DRY",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 435
+                      "rate": 245
                     }
                   }
                 ],
@@ -12410,24 +11300,9 @@
                   },
                   {
                     "id": "hutchison-imo-reefer-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "IMO REEFER",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 270
-                    }
-                  },
-                  {
-                    "id": "hutchison-imo-reefer-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12435,7 +11310,7 @@
                       "label": "IMO REEFER",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 480
+                      "rate": 270
                     }
                   }
                 ],
@@ -12457,24 +11332,9 @@
                   },
                   {
                     "id": "hutchison-imo-special-45-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "IMO SPECIAL & 45'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 295
-                    }
-                  },
-                  {
-                    "id": "hutchison-imo-special-45-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12482,7 +11342,7 @@
                       "label": "IMO SPECIAL & 45'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 525
+                      "rate": 295
                     }
                   }
                 ],
@@ -12504,24 +11364,9 @@
                   },
                   {
                     "id": "hutchison-ot-20-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "OT 20'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 320
-                    }
-                  },
-                  {
-                    "id": "hutchison-ot-20-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12529,7 +11374,7 @@
                       "label": "OT 20'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 570
+                      "rate": 320
                     }
                   }
                 ],
@@ -12551,24 +11396,9 @@
                   },
                   {
                     "id": "hutchison-ot-40-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "OT 40'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 345
-                    }
-                  },
-                  {
-                    "id": "hutchison-ot-40-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12576,7 +11406,7 @@
                       "label": "OT 40'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 615
+                      "rate": 345
                     }
                   }
                 ],
@@ -12598,24 +11428,9 @@
                   },
                   {
                     "id": "hutchison-ot-fl-pl-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "OT FL PL",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 370
-                    }
-                  },
-                  {
-                    "id": "hutchison-ot-fl-pl-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12623,7 +11438,7 @@
                       "label": "OT FL PL",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 660
+                      "rate": 370
                     }
                   }
                 ],
@@ -12645,24 +11460,9 @@
                   },
                   {
                     "id": "hutchison-ot-fr-rf-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "OT FR RF",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 395
-                    }
-                  },
-                  {
-                    "id": "hutchison-ot-fr-rf-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12670,7 +11470,7 @@
                       "label": "OT FR RF",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 705
+                      "rate": 395
                     }
                   }
                 ],
@@ -12692,24 +11492,9 @@
                   },
                   {
                     "id": "hutchison-reefer-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "REEFER",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 420
-                    }
-                  },
-                  {
-                    "id": "hutchison-reefer-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12717,7 +11502,7 @@
                       "label": "REEFER",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 750
+                      "rate": 420
                     }
                   }
                 ],
@@ -12739,24 +11524,9 @@
                   },
                   {
                     "id": "hutchison-rf-20-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "RF 20'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 445
-                    }
-                  },
-                  {
-                    "id": "hutchison-rf-20-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12764,7 +11534,7 @@
                       "label": "RF 20'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 795
+                      "rate": 445
                     }
                   }
                 ],
@@ -12786,24 +11556,9 @@
                   },
                   {
                     "id": "hutchison-rf-40-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "RF 40'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 470
-                    }
-                  },
-                  {
-                    "id": "hutchison-rf-40-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12811,7 +11566,7 @@
                       "label": "RF 40'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 840
+                      "rate": 470
                     }
                   }
                 ],
@@ -12833,24 +11588,9 @@
                   },
                   {
                     "id": "hutchison-rf-rq-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "RF RQ",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 495
-                    }
-                  },
-                  {
-                    "id": "hutchison-rf-rq-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12858,7 +11598,7 @@
                       "label": "RF RQ",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 885
+                      "rate": 495
                     }
                   }
                 ],
@@ -12880,24 +11620,9 @@
                   },
                   {
                     "id": "hutchison-special-45-tier-2",
-                    "label": "8-10",
+                    "label": ">7",
                     "note": null,
                     "startDay": 8,
-                    "endDay": 10,
-                    "freeRule": false,
-                    "taxRate": 0.16,
-                    "rateConfig": {
-                      "label": "SPECIAL & 45'",
-                      "qtyHint": 1,
-                      "currency": "MXN",
-                      "rate": 520
-                    }
-                  },
-                  {
-                    "id": "hutchison-special-45-tier-3",
-                    "label": ">10",
-                    "note": null,
-                    "startDay": 11,
                     "endDay": null,
                     "freeRule": false,
                     "taxRate": 0.16,
@@ -12905,7 +11630,7 @@
                       "label": "SPECIAL & 45'",
                       "qtyHint": 1,
                       "currency": "MXN",
-                      "rate": 930
+                      "rate": 520
                     }
                   }
                 ]
@@ -12936,24 +11661,9 @@
                     },
                     {
                       "id": "hutchison-fr-20-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "FR 20'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 120
-                      }
-                    },
-                    {
-                      "id": "hutchison-fr-20-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -12961,7 +11671,7 @@
                         "label": "FR 20'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 210
+                        "rate": 120
                       }
                     }
                   ]
@@ -12991,24 +11701,9 @@
                     },
                     {
                       "id": "hutchison-fr-40-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "FR 40'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 145
-                      }
-                    },
-                    {
-                      "id": "hutchison-fr-40-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13016,7 +11711,7 @@
                         "label": "FR 40'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 255
+                        "rate": 145
                       }
                     }
                   ]
@@ -13046,24 +11741,9 @@
                     },
                     {
                       "id": "hutchison-gp-hc-sd-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "GP HC SD",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 170
-                      }
-                    },
-                    {
-                      "id": "hutchison-gp-hc-sd-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13071,7 +11751,7 @@
                         "label": "GP HC SD",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 300
+                        "rate": 170
                       }
                     }
                   ]
@@ -13101,24 +11781,9 @@
                     },
                     {
                       "id": "hutchison-gp-hq-dc-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "GP HQ DC",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 195
-                      }
-                    },
-                    {
-                      "id": "hutchison-gp-hq-dc-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13126,7 +11791,7 @@
                         "label": "GP HQ DC",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 345
+                        "rate": 195
                       }
                     }
                   ]
@@ -13156,24 +11821,9 @@
                     },
                     {
                       "id": "hutchison-gp-hq-dc-20-40-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "GP HQ DC 20' 40'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 220
-                      }
-                    },
-                    {
-                      "id": "hutchison-gp-hq-dc-20-40-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13181,7 +11831,7 @@
                         "label": "GP HQ DC 20' 40'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 390
+                        "rate": 220
                       }
                     }
                   ]
@@ -13211,24 +11861,9 @@
                     },
                     {
                       "id": "hutchison-imo-dry-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "IMO DRY",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 245
-                      }
-                    },
-                    {
-                      "id": "hutchison-imo-dry-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13236,7 +11871,7 @@
                         "label": "IMO DRY",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 435
+                        "rate": 245
                       }
                     }
                   ]
@@ -13266,24 +11901,9 @@
                     },
                     {
                       "id": "hutchison-imo-reefer-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "IMO REEFER",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 270
-                      }
-                    },
-                    {
-                      "id": "hutchison-imo-reefer-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13291,7 +11911,7 @@
                         "label": "IMO REEFER",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 480
+                        "rate": 270
                       }
                     }
                   ]
@@ -13321,24 +11941,9 @@
                     },
                     {
                       "id": "hutchison-imo-special-45-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "IMO SPECIAL & 45'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 295
-                      }
-                    },
-                    {
-                      "id": "hutchison-imo-special-45-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13346,7 +11951,7 @@
                         "label": "IMO SPECIAL & 45'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 525
+                        "rate": 295
                       }
                     }
                   ]
@@ -13376,24 +11981,9 @@
                     },
                     {
                       "id": "hutchison-ot-20-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "OT 20'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 320
-                      }
-                    },
-                    {
-                      "id": "hutchison-ot-20-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13401,7 +11991,7 @@
                         "label": "OT 20'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 570
+                        "rate": 320
                       }
                     }
                   ]
@@ -13431,24 +12021,9 @@
                     },
                     {
                       "id": "hutchison-ot-40-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "OT 40'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 345
-                      }
-                    },
-                    {
-                      "id": "hutchison-ot-40-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13456,7 +12031,7 @@
                         "label": "OT 40'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 615
+                        "rate": 345
                       }
                     }
                   ]
@@ -13486,24 +12061,9 @@
                     },
                     {
                       "id": "hutchison-ot-fl-pl-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "OT FL PL",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 370
-                      }
-                    },
-                    {
-                      "id": "hutchison-ot-fl-pl-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13511,7 +12071,7 @@
                         "label": "OT FL PL",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 660
+                        "rate": 370
                       }
                     }
                   ]
@@ -13541,24 +12101,9 @@
                     },
                     {
                       "id": "hutchison-ot-fr-rf-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "OT FR RF",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 395
-                      }
-                    },
-                    {
-                      "id": "hutchison-ot-fr-rf-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13566,7 +12111,7 @@
                         "label": "OT FR RF",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 705
+                        "rate": 395
                       }
                     }
                   ]
@@ -13596,24 +12141,9 @@
                     },
                     {
                       "id": "hutchison-reefer-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "REEFER",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 420
-                      }
-                    },
-                    {
-                      "id": "hutchison-reefer-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13621,7 +12151,7 @@
                         "label": "REEFER",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 750
+                        "rate": 420
                       }
                     }
                   ]
@@ -13651,24 +12181,9 @@
                     },
                     {
                       "id": "hutchison-rf-20-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "RF 20'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 445
-                      }
-                    },
-                    {
-                      "id": "hutchison-rf-20-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13676,7 +12191,7 @@
                         "label": "RF 20'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 795
+                        "rate": 445
                       }
                     }
                   ]
@@ -13706,24 +12221,9 @@
                     },
                     {
                       "id": "hutchison-rf-40-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "RF 40'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 470
-                      }
-                    },
-                    {
-                      "id": "hutchison-rf-40-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13731,7 +12231,7 @@
                         "label": "RF 40'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 840
+                        "rate": 470
                       }
                     }
                   ]
@@ -13761,24 +12261,9 @@
                     },
                     {
                       "id": "hutchison-rf-rq-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "RF RQ",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 495
-                      }
-                    },
-                    {
-                      "id": "hutchison-rf-rq-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13786,7 +12271,7 @@
                         "label": "RF RQ",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 885
+                        "rate": 495
                       }
                     }
                   ]
@@ -13816,24 +12301,9 @@
                     },
                     {
                       "id": "hutchison-special-45-tier-2",
-                      "label": "8-10",
+                      "label": ">7",
                       "note": null,
                       "startDay": 8,
-                      "endDay": 10,
-                      "freeRule": false,
-                      "taxRate": 0.16,
-                      "rateConfig": {
-                        "label": "SPECIAL & 45'",
-                        "qtyHint": 1,
-                        "currency": "MXN",
-                        "rate": 520
-                      }
-                    },
-                    {
-                      "id": "hutchison-special-45-tier-3",
-                      "label": ">10",
-                      "note": null,
-                      "startDay": 11,
                       "endDay": null,
                       "freeRule": false,
                       "taxRate": 0.16,
@@ -13841,7 +12311,7 @@
                         "label": "SPECIAL & 45'",
                         "qtyHint": 1,
                         "currency": "MXN",
-                        "rate": 930
+                        "rate": 520
                       }
                     }
                   ]

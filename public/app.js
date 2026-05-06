@@ -151,8 +151,10 @@
       if (!target) {
         return;
       }
-      if (target.tagName === "DETAILS") {
-        target.open = true;
+      let detail = target.tagName === "DETAILS" ? target : target.closest("details");
+      while (detail) {
+        detail.open = true;
+        detail = detail.parentElement?.closest("details");
       }
       target.scrollIntoView({
         block: "start",
@@ -162,6 +164,98 @@
     return;
   }
   restoreState();
+})();
+
+(function storageAssignmentShortcuts() {
+  const cards = [...document.querySelectorAll("[data-storage-rule-card]")];
+  if (!cards.length) {
+    return;
+  }
+
+  function markChanged(select) {
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function getTargetContainerKey(card, select) {
+    if (card.dataset.defaultContainerKey) {
+      return card.dataset.defaultContainerKey;
+    }
+
+    const selectedOption = [...select.options].find((option) => option.selected);
+    return selectedOption?.dataset.containerKey || "";
+  }
+
+  for (const card of cards) {
+    card.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-storage-select]");
+      if (!button || !card.contains(button)) {
+        return;
+      }
+
+      const select = card.querySelector("[data-storage-assignment-select]");
+      if (!select) {
+        return;
+      }
+
+      const mode = button.dataset.storageSelect;
+      const targetContainerKey = getTargetContainerKey(card, select);
+      for (const option of select.options) {
+        if (option.disabled) {
+          continue;
+        }
+
+        if (mode === "clear") {
+          option.selected = false;
+          continue;
+        }
+
+        if (mode === "available") {
+          option.selected = true;
+          continue;
+        }
+
+        if (mode === "same-container" && targetContainerKey) {
+          option.selected = option.dataset.containerKey === targetContainerKey;
+        }
+      }
+
+      markChanged(select);
+    });
+  }
+})();
+
+(function storageAssignmentReleaseControls() {
+  const cards = [...document.querySelectorAll("[data-storage-rule-card]")];
+  if (!cards.length) {
+    return;
+  }
+
+  for (const card of cards) {
+    const assignmentSelect = card.querySelector("[data-storage-assignment-select]");
+    const releaseSelect = card.querySelector("[data-storage-release-select]");
+    const releaseButton = card.querySelector("[data-storage-release-button]");
+    if (!assignmentSelect || !releaseSelect || !releaseButton) {
+      continue;
+    }
+
+    for (const option of assignmentSelect.options) {
+      if (!option.disabled) {
+        continue;
+      }
+
+      const releaseOption = document.createElement("option");
+      releaseOption.value = option.value;
+      releaseOption.textContent = option.textContent.replace(/\s+/g, " ").trim();
+      releaseSelect.append(releaseOption);
+    }
+
+    function updateReleaseState() {
+      releaseButton.disabled = !releaseSelect.value;
+    }
+
+    releaseSelect.addEventListener("change", updateReleaseState);
+    updateReleaseState();
+  }
 })();
 
 (function calculatorSubmitFlow() {

@@ -1747,62 +1747,101 @@ function createApp() {
     }
   );
 
+  async function removeCustomsStorageAssignment(
+    req,
+    res,
+    { terminalId, lineId, containerTypeKey, returnRuleSetId = "" }
+  ) {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const moduleData = structuredClone(getModuleData(shippingData, "customs"));
+    const { terminal } = findCustomsTerminal(moduleData, terminalId);
+    const shippingLine = (moduleData.shippingLines || []).find(
+      (line) => line.id === lineId
+    );
+    const containerType = (moduleData.containerTypes || []).find(
+      (type) => type.key === containerTypeKey
+    );
+
+    if (!terminal || !shippingLine || !containerType) {
+      return res.status(404).render(
+        "not-found",
+        baseView(req, {
+          pageTitle: req.t("system.notFoundTitle"),
+          languageReturnTo: req.originalUrl,
+        })
+      );
+    }
+
+    if (terminal.storageAssignmentsByLineContainer?.[shippingLine.id]) {
+      delete terminal.storageAssignmentsByLineContainer[shippingLine.id][
+        containerType.key
+      ];
+    }
+
+    const assignmentKey = getLineContainerAssignmentKey(
+      shippingLine.id,
+      containerType.key
+    );
+    terminal.storageUnassignedLineContainers = uniqueIds([
+      ...(terminal.storageUnassignedLineContainers || []),
+      assignmentKey,
+    ]);
+    syncTerminalStorageRulesByContainer(
+      terminal,
+      moduleData.shippingLines,
+      moduleData.containerTypes
+    );
+    shippingData.modules.customs = moduleData;
+    await saveShippingData(shippingData);
+
+    const safeReturnRuleSetId = String(returnRuleSetId || "");
+    const returnRuleSetExists = (terminal.storageRuleSets || []).some(
+      (ruleSet) => ruleSet.id === safeReturnRuleSetId
+    );
+    const returnHash = returnRuleSetExists
+      ? `customs-storage-rule-${terminal.id}-${safeReturnRuleSetId}`
+      : `customs-terminal-${terminal.id}`;
+
+    return redirectWithFlash(
+      req,
+      res,
+      "success",
+      req.t("customs.storageAssignmentRemoved", {
+        line: shippingLine.name,
+        type: containerType.label,
+      }),
+      `/admin/customs/shipping-lines#${returnHash}`
+    );
+  }
+
+  app.post(
+    "/admin/customs/terminals/:terminalId/storage-assignments/release",
+    requireAuth,
+    async (req, res) => {
+      const returnRuleSetId = String(req.body.releaseRuleSetId || "");
+      const assignmentKey = String(
+        req.body[`releaseLineContainerKey_${returnRuleSetId}`] || ""
+      );
+      const [lineId, containerTypeKey] = assignmentKey.split("::");
+      return removeCustomsStorageAssignment(req, res, {
+        terminalId: req.params.terminalId,
+        lineId,
+        containerTypeKey,
+        returnRuleSetId,
+      });
+    }
+  );
+
   app.post(
     "/admin/customs/terminals/:terminalId/storage-assignments/:lineId/:containerTypeKey/delete",
     requireAuth,
     async (req, res) => {
-      const shippingData = await loadShippingData({ refreshRates: false });
-      const moduleData = structuredClone(getModuleData(shippingData, "customs"));
-      const { terminal } = findCustomsTerminal(moduleData, req.params.terminalId);
-      const shippingLine = (moduleData.shippingLines || []).find(
-        (line) => line.id === req.params.lineId
-      );
-      const containerType = (moduleData.containerTypes || []).find(
-        (type) => type.key === req.params.containerTypeKey
-      );
-
-      if (!terminal || !shippingLine || !containerType) {
-        return res.status(404).render(
-          "not-found",
-          baseView(req, {
-            pageTitle: req.t("system.notFoundTitle"),
-            languageReturnTo: req.originalUrl,
-          })
-        );
-      }
-
-      if (terminal.storageAssignmentsByLineContainer?.[shippingLine.id]) {
-        delete terminal.storageAssignmentsByLineContainer[shippingLine.id][
-          containerType.key
-        ];
-      }
-
-      const assignmentKey = getLineContainerAssignmentKey(
-        shippingLine.id,
-        containerType.key
-      );
-      terminal.storageUnassignedLineContainers = uniqueIds([
-        ...(terminal.storageUnassignedLineContainers || []),
-        assignmentKey,
-      ]);
-      syncTerminalStorageRulesByContainer(
-        terminal,
-        moduleData.shippingLines,
-        moduleData.containerTypes
-      );
-      shippingData.modules.customs = moduleData;
-      await saveShippingData(shippingData);
-
-      return redirectWithFlash(
-        req,
-        res,
-        "success",
-        req.t("customs.storageAssignmentRemoved", {
-          line: shippingLine.name,
-          type: containerType.label,
-        }),
-        `/admin/customs/shipping-lines#customs-terminal-${terminal.id}`
-      );
+      return removeCustomsStorageAssignment(req, res, {
+        terminalId: req.params.terminalId,
+        lineId: req.params.lineId,
+        containerTypeKey: req.params.containerTypeKey,
+        returnRuleSetId: req.query.returnRuleSetId,
+      });
     }
   );
 

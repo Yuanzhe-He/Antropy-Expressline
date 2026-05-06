@@ -927,22 +927,6 @@ function buildDefaultProgressiveRules(containerType, prefix) {
       {
         id: `${prefix}-${containerType.key}-slab-2`,
         startDay: 8,
-        endDay: 10,
-        freeRule: false,
-        taxRate: 0,
-        rateConfig: {
-          label: containerType.label,
-          qtyHint: 1,
-          currency: DEFAULT_QUOTE_CURRENCY,
-          rate: 0,
-        },
-      },
-      `${prefix}-${containerType.key}-slab-2`
-    ),
-    normalizeDemurrageRule(
-      {
-        id: `${prefix}-${containerType.key}-slab-3`,
-        startDay: 11,
         endDay: null,
         freeRule: false,
         taxRate: 0,
@@ -953,7 +937,7 @@ function buildDefaultProgressiveRules(containerType, prefix) {
           rate: 0,
         },
       },
-      `${prefix}-${containerType.key}-slab-3`
+      `${prefix}-${containerType.key}-slab-2`
     ),
   ];
 }
@@ -1364,25 +1348,13 @@ function createDefaultCustomsSeedData(handoverModule) {
                   {
                     id: `contecon-${type.key}-tier-2`,
                     startDay: 8,
-                    endDay: 10,
-                    taxRate: 0.16,
-                    rateConfig: {
-                      label: type.label,
-                      qtyHint: 1,
-                      currency: "MXN",
-                      rate: 115 + index * 25,
-                    },
-                  },
-                  {
-                    id: `contecon-${type.key}-tier-3`,
-                    startDay: 11,
                     endDay: null,
                     taxRate: 0.16,
                     rateConfig: {
                       label: type.label,
                       qtyHint: 1,
                       currency: "MXN",
-                      rate: 200 + index * 40,
+                      rate: 115 + index * 25,
                     },
                   },
                 ],
@@ -1408,7 +1380,7 @@ function createDefaultCustomsSeedData(handoverModule) {
                   {
                     id: `ssa-${type.key}-free`,
                     startDay: 1,
-                    endDay: 5,
+                    endDay: 7,
                     freeRule: true,
                     taxRate: 0,
                     rateConfig: {
@@ -1420,26 +1392,14 @@ function createDefaultCustomsSeedData(handoverModule) {
                   },
                   {
                     id: `ssa-${type.key}-tier-2`,
-                    startDay: 6,
-                    endDay: 9,
-                    taxRate: 0.16,
-                    rateConfig: {
-                      label: type.label,
-                      qtyHint: 1,
-                      currency: "MXN",
-                      rate: 130 + index * 20,
-                    },
-                  },
-                  {
-                    id: `ssa-${type.key}-tier-3`,
-                    startDay: 10,
+                    startDay: 8,
                     endDay: null,
                     taxRate: 0.16,
                     rateConfig: {
                       label: type.label,
                       qtyHint: 1,
                       currency: "MXN",
-                      rate: 220 + index * 35,
+                      rate: 130 + index * 20,
                     },
                   },
                 ],
@@ -1484,25 +1444,13 @@ function createDefaultCustomsSeedData(handoverModule) {
                   {
                     id: `hutchison-${type.key}-tier-2`,
                     startDay: 8,
-                    endDay: 10,
-                    taxRate: 0.16,
-                    rateConfig: {
-                      label: type.label,
-                      qtyHint: 1,
-                      currency: "MXN",
-                      rate: 120 + index * 25,
-                    },
-                  },
-                  {
-                    id: `hutchison-${type.key}-tier-3`,
-                    startDay: 11,
                     endDay: null,
                     taxRate: 0.16,
                     rateConfig: {
                       label: type.label,
                       qtyHint: 1,
                       currency: "MXN",
-                      rate: 210 + index * 45,
+                      rate: 120 + index * 25,
                     },
                   },
                 ],
