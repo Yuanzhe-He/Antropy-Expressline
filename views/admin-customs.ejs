@@ -1,5 +1,15 @@
 <%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
 
+<%
+  const customsShippingLines = businessModuleRules.shippingLines || [];
+  const customsPorts = businessModuleRules.ports || [];
+  const customsYards = businessModuleRules.yards || [];
+  const customsTerminalCount = customsPorts.reduce((sum, port) => sum + (port.terminals?.length || 0), 0);
+  const customsLineYardMappingCount = customsShippingLines.reduce((sum, line) => sum + (line.yardIds?.length || 0), 0);
+  const customsYardPortAssignmentCount = customsYards.reduce((sum, yard) => sum + (yard.portIds?.length || 0), 0);
+  const customsYardLineAssignmentCount = customsYards.reduce((sum, yard) => sum + (yard.shippingLineIds?.length || 0), 0);
+%>
+
 <section class="hero-card hero-split">
   <div class="hero-copy">
     <p class="eyebrow"><%= t("admin.eyebrow") %></p>
@@ -32,19 +42,19 @@
   <section class="cards-grid">
     <article class="summary-card">
       <p><%= t("admin.shippingLineTable") %></p>
-      <strong><%= businessModuleRules.shippingLines.length %></strong>
+      <strong><%= customsShippingLines.length %></strong>
     </article>
     <article class="summary-card">
       <p><%= t("customs.portLabel") %></p>
-      <strong><%= businessModuleRules.ports.length %></strong>
+      <strong><%= customsPorts.length %></strong>
     </article>
     <article class="summary-card">
       <p><%= t("customs.terminalLabel") %></p>
-      <strong><%= businessModuleRules.ports.reduce((sum, port) => sum + (port.terminals?.length || 0), 0) %></strong>
+      <strong><%= customsTerminalCount %></strong>
     </article>
     <article class="summary-card">
       <p><%= t("customs.yardLabel") %></p>
-      <strong><%= businessModuleRules.yards.length %></strong>
+      <strong><%= customsYards.length %></strong>
     </article>
   </section>
 
@@ -62,41 +72,55 @@
         <h3><%= t("customs.shippingLineYardMapDescription") %></h3>
       </div>
     </div>
-    <div class="stack-form line-yard-map-list">
-      <% for (const line of businessModuleRules.shippingLines || []) { %>
-        <details class="table-card nested-card entity-collapsible line-yard-map-card" id="customs-line-yard-map-<%= line.id %>" data-line-yard-map-card>
-          <summary class="collapsible-summary">
-            <div>
-              <p class="eyebrow"><%= t("customs.shippingLineLabel") %></p>
-              <h4><%= line.name %></h4>
-            </div>
-            <div class="collapsible-summary-actions">
-              <span class="selected-state-indicator"><%= t("admin.currentSelection") %></span>
-              <span class="collapsible-summary-meta"><%= t("customs.yardMappingCount", { count: (line.yardIds || []).length }) %></span>
-            </div>
-          </summary>
+    <details class="table-card hierarchy-card entity-collapsible">
+      <summary class="collapsible-summary hierarchy-summary">
+        <div>
+          <h4><%= t("customs.shippingLineGroupSummary", { count: customsShippingLines.length }) %></h4>
+        </div>
+        <div class="collapsible-summary-actions">
+          <span class="selected-state-indicator"><%= t("admin.currentSelection") %></span>
+          <span class="collapsible-summary-meta"><%= t("customs.yardMappingTotal", { count: customsLineYardMappingCount }) %></span>
+        </div>
+      </summary>
 
-          <div class="entity-collapsible-body">
-            <div class="grid-form">
-              <label>
-                <span><%= t("common.note") %></span>
-                <input type="text" name="customs_line_note_<%= line.id %>" value="<%= line.notes || '' %>" />
-              </label>
-              <label>
-                <span><%= t("customs.availableYards") %></span>
-                <select name="shippingLine_yardIds_<%= line.id %>" multiple size="<%= Math.min(6, Math.max(3, businessModuleRules.yards.length)) %>">
-                  <% for (const yard of businessModuleRules.yards || []) { %>
-                    <option value="<%= yard.id %>" <%= line.yardIds?.includes(yard.id) ? "selected" : "" %>>
-                      <%= yard.name %>
-                    </option>
-                  <% } %>
-                </select>
-              </label>
-            </div>
-          </div>
-        </details>
-      <% } %>
-    </div>
+      <div class="entity-collapsible-body hierarchy-card-body">
+        <div class="stack-form line-yard-map-list">
+          <% for (const line of customsShippingLines) { %>
+            <details class="table-card nested-card entity-collapsible line-yard-map-card" id="customs-line-yard-map-<%= line.id %>" data-line-yard-map-card>
+              <summary class="collapsible-summary">
+                <div>
+                  <p class="eyebrow"><%= t("customs.shippingLineLabel") %></p>
+                  <h4><%= line.name %></h4>
+                </div>
+                <div class="collapsible-summary-actions">
+                  <span class="selected-state-indicator"><%= t("admin.currentSelection") %></span>
+                  <span class="collapsible-summary-meta"><%= t("customs.yardMappingCount", { count: (line.yardIds || []).length }) %></span>
+                </div>
+              </summary>
+
+              <div class="entity-collapsible-body">
+                <div class="grid-form">
+                  <label>
+                    <span><%= t("common.note") %></span>
+                    <input type="text" name="customs_line_note_<%= line.id %>" value="<%= line.notes || '' %>" />
+                  </label>
+                  <label>
+                    <span><%= t("customs.availableYards") %></span>
+                    <select name="shippingLine_yardIds_<%= line.id %>" multiple size="<%= Math.min(6, Math.max(3, customsYards.length)) %>">
+                      <% for (const yard of customsYards) { %>
+                        <option value="<%= yard.id %>" <%= line.yardIds?.includes(yard.id) ? "selected" : "" %>>
+                          <%= yard.name %>
+                        </option>
+                      <% } %>
+                    </select>
+                  </label>
+                </div>
+              </div>
+            </details>
+          <% } %>
+        </div>
+      </div>
+    </details>
   </section>
 
   <section class="panel" id="customs-terminal-rules">
@@ -107,35 +131,53 @@
       </div>
     </div>
 
-    <div class="stack-form">
-      <% for (const port of businessModuleRules.ports || []) { %>
-        <article class="table-card nested-card">
-          <div class="section-title compact">
-            <div>
-              <p class="eyebrow"><%= t("customs.portLabel") %></p>
-              <h4><%= port.name %></h4>
-            </div>
-            <button
-              type="submit"
-              class="ghost-button compact-button"
-              formaction="/admin/customs/ports/<%= port.id %>/terminals/add"
-              formmethod="post"
-            ><%= t("customs.addTerminal") %></button>
-          </div>
+    <details class="table-card hierarchy-card entity-collapsible">
+      <summary class="collapsible-summary hierarchy-summary">
+        <div>
+          <h4><%= t("customs.terminalGroupSummary", { count: customsTerminalCount }) %></h4>
+        </div>
+        <div class="collapsible-summary-actions">
+          <span class="selected-state-indicator"><%= t("admin.currentSelection") %></span>
+          <span class="collapsible-summary-meta"><%= t("customs.portGroupSummary", { count: customsPorts.length }) %></span>
+        </div>
+      </summary>
 
-          <div class="grid-form">
-            <label>
-              <span><%= t("customs.portLabel") %></span>
-              <input type="text" name="port_name_<%= port.id %>" value="<%= port.name %>" />
-            </label>
-            <label class="full-width">
-              <span><%= t("common.note") %></span>
-              <input type="text" name="port_note_<%= port.id %>" value="<%= port.note || '' %>" />
-            </label>
-          </div>
+      <div class="entity-collapsible-body hierarchy-card-body">
+        <div class="stack-form">
+          <% for (const port of customsPorts) { %>
+            <details class="table-card nested-card entity-collapsible port-group-card" id="customs-port-<%= port.id %>">
+              <summary class="collapsible-summary">
+                <div>
+                  <p class="eyebrow"><%= t("customs.portLabel") %></p>
+                  <h4><%= port.name %></h4>
+                </div>
+                <div class="collapsible-summary-actions">
+                  <span class="selected-state-indicator"><%= t("admin.currentSelection") %></span>
+                  <span class="collapsible-summary-meta"><%= t("customs.portTerminalCount", { count: (port.terminals || []).length }) %></span>
+                  <button
+                    type="submit"
+                    class="ghost-button compact-button"
+                    formaction="/admin/customs/ports/<%= port.id %>/terminals/add"
+                    formmethod="post"
+                    data-summary-action
+                  ><%= t("customs.addTerminal") %></button>
+                </div>
+              </summary>
 
-          <% for (const terminal of port.terminals || []) { %>
-            <details class="table-card nested-card entity-collapsible" id="customs-terminal-<%= terminal.id %>">
+              <div class="entity-collapsible-body">
+                <div class="grid-form">
+                  <label>
+                    <span><%= t("customs.portLabel") %></span>
+                    <input type="text" name="port_name_<%= port.id %>" value="<%= port.name %>" />
+                  </label>
+                  <label class="full-width">
+                    <span><%= t("common.note") %></span>
+                    <input type="text" name="port_note_<%= port.id %>" value="<%= port.note || '' %>" />
+                  </label>
+                </div>
+
+                <% for (const terminal of port.terminals || []) { %>
+                  <details class="table-card nested-card entity-collapsible" id="customs-terminal-<%= terminal.id %>">
               <summary class="collapsible-summary">
                 <div>
                   <p class="eyebrow"><%= t("customs.terminalLabel") %></p>
@@ -441,9 +483,12 @@
               </div>
             </details>
           <% } %>
-        </article>
-      <% } %>
-    </div>
+              </div>
+            </details>
+          <% } %>
+        </div>
+      </div>
+    </details>
   </section>
 
   <section class="panel" id="customs-yard-rules">
@@ -460,60 +505,72 @@
       ><%= t("customs.addYard") %></button>
     </div>
 
-    <div class="stack-form">
-      <% for (const yard of businessModuleRules.yards || []) { %>
-        <details class="table-card nested-card entity-collapsible" id="customs-yard-<%= yard.id %>">
-          <summary class="collapsible-summary">
-            <div>
-              <p class="eyebrow"><%= t("customs.yardLabel") %></p>
-              <h4><%= yard.name %></h4>
-            </div>
-            <div class="collapsible-summary-actions">
-              <span class="selected-state-indicator"><%= t("admin.currentSelection") %></span>
-              <span class="collapsible-summary-meta"><%= (yard.portIds || []).length %> <%= t("customs.portLabel") %> / <%= (yard.shippingLineIds || []).length %> <%= t("customs.shippingLineLabel") %></span>
-              <button
-                type="submit"
-                class="ghost-button compact-button danger-button"
-                formaction="/admin/customs/yards/<%= yard.id %>/delete"
-                formmethod="post"
-                data-summary-action
-                data-preserve-scroll
-                data-confirm-submit="<%= t("customs.confirmDeleteYard", { ports: (yard.portIds || []).length, lines: (yard.shippingLineIds || []).length }) %>"
-              ><%= t("customs.deleteYard") %></button>
-            </div>
-          </summary>
+    <details class="table-card hierarchy-card entity-collapsible">
+      <summary class="collapsible-summary hierarchy-summary">
+        <div>
+          <h4><%= t("customs.yardGroupSummary", { count: customsYards.length }) %></h4>
+        </div>
+        <div class="collapsible-summary-actions">
+          <span class="selected-state-indicator"><%= t("admin.currentSelection") %></span>
+          <span class="collapsible-summary-meta"><%= t("customs.yardGroupMeta", { ports: customsYardPortAssignmentCount, lines: customsYardLineAssignmentCount }) %></span>
+        </div>
+      </summary>
 
-          <div class="entity-collapsible-body">
-            <div class="grid-form">
-              <label>
-                <span><%= t("customs.yardLabel") %></span>
-                <input type="text" name="yard_name_<%= yard.id %>" value="<%= yard.name %>" />
-              </label>
-              <label class="full-width">
-                <span><%= t("common.note") %></span>
-                <input type="text" name="yard_note_<%= yard.id %>" value="<%= yard.note || '' %>" />
-              </label>
-              <label>
-                <span><%= t("customs.portLabel") %></span>
-                <select name="yard_portIds_<%= yard.id %>" multiple size="<%= Math.min(5, Math.max(2, businessModuleRules.ports.length)) %>">
-                  <% for (const port of businessModuleRules.ports || []) { %>
-                    <option value="<%= port.id %>" <%= yard.portIds?.includes(port.id) ? "selected" : "" %>>
-                      <%= port.name %>
-                    </option>
-                  <% } %>
-                </select>
-              </label>
-              <label>
-                <span><%= t("customs.shippingLineLabel") %></span>
-                <select name="yard_shippingLineIds_<%= yard.id %>" multiple size="<%= Math.min(6, Math.max(3, businessModuleRules.shippingLines.length)) %>">
-                  <% for (const line of businessModuleRules.shippingLines || []) { %>
-                    <option value="<%= line.id %>" <%= yard.shippingLineIds?.includes(line.id) ? "selected" : "" %>>
-                      <%= line.name %>
-                    </option>
-                  <% } %>
-                </select>
-              </label>
-            </div>
+      <div class="entity-collapsible-body hierarchy-card-body">
+        <div class="stack-form">
+          <% for (const yard of customsYards) { %>
+            <details class="table-card nested-card entity-collapsible" id="customs-yard-<%= yard.id %>">
+              <summary class="collapsible-summary">
+                <div>
+                  <p class="eyebrow"><%= t("customs.yardLabel") %></p>
+                  <h4><%= yard.name %></h4>
+                </div>
+                <div class="collapsible-summary-actions">
+                  <span class="selected-state-indicator"><%= t("admin.currentSelection") %></span>
+                  <span class="collapsible-summary-meta"><%= (yard.portIds || []).length %> <%= t("customs.portLabel") %> / <%= (yard.shippingLineIds || []).length %> <%= t("customs.shippingLineLabel") %></span>
+                  <button
+                    type="submit"
+                    class="ghost-button compact-button danger-button"
+                    formaction="/admin/customs/yards/<%= yard.id %>/delete"
+                    formmethod="post"
+                    data-summary-action
+                    data-preserve-scroll
+                    data-confirm-submit="<%= t("customs.confirmDeleteYard", { ports: (yard.portIds || []).length, lines: (yard.shippingLineIds || []).length }) %>"
+                  ><%= t("customs.deleteYard") %></button>
+                </div>
+              </summary>
+
+              <div class="entity-collapsible-body">
+                <div class="grid-form">
+                  <label>
+                    <span><%= t("customs.yardLabel") %></span>
+                    <input type="text" name="yard_name_<%= yard.id %>" value="<%= yard.name %>" />
+                  </label>
+                  <label class="full-width">
+                    <span><%= t("common.note") %></span>
+                    <input type="text" name="yard_note_<%= yard.id %>" value="<%= yard.note || '' %>" />
+                  </label>
+                  <label>
+                    <span><%= t("customs.portLabel") %></span>
+                    <select name="yard_portIds_<%= yard.id %>" multiple size="<%= Math.min(5, Math.max(2, customsPorts.length)) %>">
+                      <% for (const port of customsPorts) { %>
+                        <option value="<%= port.id %>" <%= yard.portIds?.includes(port.id) ? "selected" : "" %>>
+                          <%= port.name %>
+                        </option>
+                      <% } %>
+                    </select>
+                  </label>
+                  <label>
+                    <span><%= t("customs.shippingLineLabel") %></span>
+                    <select name="yard_shippingLineIds_<%= yard.id %>" multiple size="<%= Math.min(6, Math.max(3, customsShippingLines.length)) %>">
+                      <% for (const line of customsShippingLines) { %>
+                        <option value="<%= line.id %>" <%= yard.shippingLineIds?.includes(line.id) ? "selected" : "" %>>
+                          <%= line.name %>
+                        </option>
+                      <% } %>
+                    </select>
+                  </label>
+                </div>
 
             <% for (const chargeGroup of [
               { list: yard.dropoffCharges, prefix: "yard_dropoff", key: "customs.categories.yardDropoff", title: t("customs.dropoffFeeTable") },
@@ -574,8 +631,10 @@
             <% } %>
           </div>
         </details>
-      <% } %>
-    </div>
+          <% } %>
+        </div>
+      </div>
+    </details>
   </section>
 
   <div class="actions sticky-save-bar">

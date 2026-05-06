@@ -1075,6 +1075,32 @@ code {
   gap: 0.58rem;
 }
 
+.hierarchy-card {
+  margin-top: 0.7rem;
+}
+
+.hierarchy-card-body {
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+:root[data-theme="light"] .hierarchy-card-body {
+  background: rgba(0, 0, 0, 0.018);
+}
+
+.hierarchy-summary h4 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.port-group-card {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+:root[data-theme="light"] .port-group-card {
+  background: rgba(0, 0, 0, 0.02);
+}
+
 .line-yard-map-card .grid-form {
   align-items: start;
 }
