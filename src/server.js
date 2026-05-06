@@ -158,6 +158,47 @@ function removeProgressiveRule(rules, ruleId) {
   return true;
 }
 
+function unassignStorageRuleSetAssignments(
+  terminal,
+  ruleSetId,
+  shippingLines = [],
+  containerTypes = []
+) {
+  const unassignedKeys = new Set(terminal.storageUnassignedLineContainers || []);
+  let count = 0;
+
+  for (const line of shippingLines || []) {
+    const lineAssignments =
+      terminal.storageAssignmentsByLineContainer?.[line.id] || {};
+    for (const type of containerTypes || []) {
+      if (lineAssignments[type.key] !== ruleSetId) {
+        continue;
+      }
+      delete lineAssignments[type.key];
+      unassignedKeys.add(getLineContainerAssignmentKey(line.id, type.key));
+      count += 1;
+    }
+
+    if (
+      terminal.storageAssignmentsByLineContainer?.[line.id] &&
+      !Object.keys(lineAssignments).length
+    ) {
+      delete terminal.storageAssignmentsByLineContainer[line.id];
+    }
+  }
+
+  for (const [typeKey, assignedRuleSetId] of Object.entries(
+    terminal.storageAssignmentsByContainerType || {}
+  )) {
+    if (assignedRuleSetId === ruleSetId) {
+      delete terminal.storageAssignmentsByContainerType[typeKey];
+    }
+  }
+
+  terminal.storageUnassignedLineContainers = uniqueIds([...unassignedKeys]);
+  return count;
+}
+
 function applySequentialRuleUpdates({
   rules,
   body,
@@ -1596,6 +1637,66 @@ function createApp() {
         res,
         "success",
         req.t("admin.ruleAdded", { label: ruleSet.name }),
+        `/admin/customs/shipping-lines#customs-terminal-${terminal.id}`
+      );
+    }
+  );
+
+  app.post(
+    "/admin/customs/terminals/:terminalId/storage-rule-sets/:ruleSetId/delete",
+    requireAuth,
+    async (req, res) => {
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = structuredClone(getModuleData(shippingData, "customs"));
+      const { terminal } = findCustomsTerminal(moduleData, req.params.terminalId);
+      const ruleSets = terminal?.storageRuleSets || [];
+      const ruleSet = ruleSets.find((entry) => entry.id === req.params.ruleSetId);
+
+      if (!terminal || !ruleSet) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      if (ruleSets.length <= 1) {
+        return redirectWithFlash(
+          req,
+          res,
+          "error",
+          req.t("admin.cannotDeleteLastRuleSet"),
+          `/admin/customs/shipping-lines#customs-storage-rule-${terminal.id}-${ruleSet.id}`
+        );
+      }
+
+      const assignmentCount = unassignStorageRuleSetAssignments(
+        terminal,
+        ruleSet.id,
+        moduleData.shippingLines,
+        moduleData.containerTypes
+      );
+      terminal.storageRuleSets = ruleSets.filter(
+        (entry) => entry.id !== ruleSet.id
+      );
+      syncTerminalStorageRulesByContainer(
+        terminal,
+        moduleData.shippingLines,
+        moduleData.containerTypes
+      );
+      shippingData.modules.customs = moduleData;
+      await saveShippingData(shippingData);
+
+      return redirectWithFlash(
+        req,
+        res,
+        "success",
+        req.t("customs.storageRuleSetDeleted", {
+          name: ruleSet.name,
+          count: assignmentCount,
+        }),
         `/admin/customs/shipping-lines#customs-terminal-${terminal.id}`
       );
     }

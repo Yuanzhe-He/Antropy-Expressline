@@ -92,6 +92,35 @@ function expectNotContains(haystack, needle, message) {
   assert.ok(!haystack.includes(needle), `${message}: unexpected "${needle}"`);
 }
 
+function addLegacyCustomsStorageTierFixture(data) {
+  const customs = data.modules?.customs;
+  const terminal = customs?.ports?.[0]?.terminals?.[0];
+  const ruleSet = terminal?.storageRuleSets?.[0];
+  const secondRule = ruleSet?.rules?.[1];
+  const containerTypeKey = customs?.containerTypes?.[0]?.key;
+  if (!customs || !terminal || !ruleSet || !secondRule || !containerTypeKey) {
+    return;
+  }
+
+  delete customs.settings.storageTierPolicyVersion;
+  secondRule.endDay = 10;
+  secondRule.label = "8-10";
+  const legacyThirdRule = {
+    ...secondRule,
+    id: `${secondRule.id}-legacy-tier-3`,
+    label: ">10",
+    startDay: 11,
+    endDay: null,
+    rateConfig: {
+      ...secondRule.rateConfig,
+      rate: Number(secondRule.rateConfig?.rate || 0) + 85,
+    },
+  };
+  ruleSet.rules = [ruleSet.rules[0], secondRule, legacyThirdRule];
+  terminal.storageRulesByContainer = terminal.storageRulesByContainer || {};
+  terminal.storageRulesByContainer[containerTypeKey] = ruleSet.rules;
+}
+
 function buildHandoverAdminForm(moduleData, line) {
   const entries = [
     ["invoiceNote", line.invoiceNote || ""],
@@ -308,6 +337,7 @@ async function main() {
       { base: "MXN", quote: "USD", rate: 1 / 17.2 },
     ],
   };
+  addLegacyCustomsStorageTierFixture(seededData);
   await fs.writeFile(dataFile, JSON.stringify(seededData, null, 2), "utf8");
   const app = createApp();
   const server = await new Promise((resolve) => {
@@ -444,6 +474,8 @@ async function main() {
     expectContains(response.text, "data-storage-release-button", "customs release button state control");
     expectContains(response.text, "data-storage-rule-card", "customs collapsible storage rule cards");
     expectContains(response.text, "移除", "customs assignment removal");
+    expectContains(response.text, "删除规则", "customs storage rule set delete action");
+    expectContains(response.text, "关联着", "customs storage rule set delete confirmation count");
     expectContains(response.text, "entity-collapsible", "customs collapsible sections");
     expectContains(response.text, "multiple", "customs multi-select assignments");
     expectContains(response.text, "新增码头", "customs add terminal button");
@@ -937,6 +969,62 @@ async function main() {
       jar: publicJar,
     });
     expectContains(response.text, "Mesa integral de despacho", "spanish customs");
+
+    shippingData = await getShippingData();
+    terminal = shippingData.modules.customs.ports[0].terminals[0];
+    const deletableRuleSet = (terminal.storageRuleSets || []).find((ruleSet) =>
+      Object.values(terminal.storageAssignmentsByLineContainer || {}).some(
+        (lineAssignments) =>
+          Object.values(lineAssignments || {}).includes(ruleSet.id)
+      )
+    );
+    assert.ok(deletableRuleSet, "deletable customs storage rule set exists");
+    assert.ok(
+      terminal.storageRuleSets.length > 1,
+      "customs storage has more than one rule set before delete"
+    );
+    const associatedAssignmentKeys = [];
+    for (const [lineId, lineAssignments] of Object.entries(
+      terminal.storageAssignmentsByLineContainer || {}
+    )) {
+      for (const [typeKey, assignedRuleSetId] of Object.entries(
+        lineAssignments || {}
+      )) {
+        if (assignedRuleSetId === deletableRuleSet.id) {
+          associatedAssignmentKeys.push(`${lineId}::${typeKey}`);
+        }
+      }
+    }
+    assert.ok(
+      associatedAssignmentKeys.length > 0,
+      "customs storage rule set has linked assignments before delete"
+    );
+    response = await request(
+      baseUrl,
+      `/admin/customs/terminals/${terminal.id}/storage-rule-sets/${deletableRuleSet.id}/delete`,
+      {
+        method: "POST",
+        jar: publicJar,
+      }
+    );
+    assert.equal(response.status, 302);
+    assert.equal(
+      response.location,
+      `/admin/customs/shipping-lines#customs-terminal-${terminal.id}`
+    );
+    shippingData = await getShippingData();
+    terminal = shippingData.modules.customs.ports[0].terminals[0];
+    assert.equal(
+      terminal.storageRuleSets.some((ruleSet) => ruleSet.id === deletableRuleSet.id),
+      false,
+      "customs storage rule set is deleted"
+    );
+    assert.ok(
+      terminal.storageUnassignedLineContainers.includes(
+        associatedAssignmentKeys[0]
+      ),
+      "deleted customs storage rule set clears linked assignments"
+    );
 
     console.log("smoke-test-ok");
   } finally {

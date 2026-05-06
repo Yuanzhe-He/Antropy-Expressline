@@ -28,6 +28,7 @@ const seedShippingLinesFile = path.join(bundledDataDir, "shipping-lines.json");
 const seedUsersFile = path.join(bundledDataDir, "users.json");
 const shippingDataStateKey = "shipping-data";
 const usersStateKey = "users";
+const CUSTOMS_STORAGE_TIER_POLICY_VERSION = 2;
 
 const RATE_GROUPS = Object.freeze({
   dry: ["gp-hq-dc", "gp-hc-sd", "gp-hq-dc-20-40", "imo-dry"],
@@ -601,6 +602,38 @@ function normalizeDemurrageRuleList(rules = [], prefix) {
     });
 }
 
+function isLegacyThreeTierStorageDefault(rules = []) {
+  if (!Array.isArray(rules) || rules.length !== 3) {
+    return false;
+  }
+
+  const [first, second, third] = rules;
+  const firstRate = parseNumber(first.rateConfig?.rate, 0);
+  return (
+    first.startDay === 1 &&
+    first.endDay === 7 &&
+    firstRate === 0 &&
+    second.startDay === 8 &&
+    second.endDay === 10 &&
+    third.startDay === 11 &&
+    (third.endDay === null || third.endDay === undefined)
+  );
+}
+
+function migrateLegacyStorageRulesToTwoTiers(rules = []) {
+  if (!isLegacyThreeTierStorageDefault(rules)) {
+    return rules;
+  }
+
+  const [freeRule, paidRule] = rules;
+  const migratedPaidRule = {
+    ...paidRule,
+    endDay: null,
+    label: formatDemurrageRuleLabel(paidRule.startDay, null, false),
+  };
+  return [freeRule, migratedPaidRule];
+}
+
 function buildDemurrageRuleSetsFromGroups(shippingLine, containerGroups, rulesByGroup) {
   return (containerGroups || []).map((group, index) => {
     const id = `demurrage-set-${slugifyId(group.key, `group-${index + 1}`)}`;
@@ -942,7 +975,12 @@ function buildDefaultProgressiveRules(containerType, prefix) {
   ];
 }
 
-function normalizeStorageRulesByContainer(storageRulesByContainer = {}, containerTypes = [], prefix) {
+function normalizeStorageRulesByContainer(
+  storageRulesByContainer = {},
+  containerTypes = [],
+  prefix,
+  options = {}
+) {
   const normalized = {};
   for (const type of containerTypes) {
     const sourceRules = storageRulesByContainer[type.key];
@@ -966,7 +1004,9 @@ function normalizeStorageRulesByContainer(storageRulesByContainer = {}, containe
         return left.startDay - right.startDay;
       });
 
-    normalized[type.key] = normalizedRules;
+    normalized[type.key] = options.migrateLegacyStorageTiers
+      ? migrateLegacyStorageRulesToTwoTiers(normalizedRules)
+      : normalizedRules;
   }
   return normalized;
 }
@@ -1013,7 +1053,12 @@ function buildStorageRuleSetsFromContainers(terminal, containerTypes, rulesByCon
   return [...groups.values()];
 }
 
-function normalizeStorageRuleSets(terminal, containerTypes, rulesByContainer) {
+function normalizeStorageRuleSets(
+  terminal,
+  containerTypes,
+  rulesByContainer,
+  options = {}
+) {
   const sourceSets = Array.isArray(terminal.storageRuleSets)
     ? terminal.storageRuleSets
     : [];
@@ -1035,6 +1080,9 @@ function normalizeStorageRuleSets(terminal, containerTypes, rulesByContainer) {
       set.rules || [],
       `${terminal.id || "terminal"}-${id}`
     );
+    const migratedRules = options.migrateLegacyStorageTiers
+      ? migrateLegacyStorageRulesToTwoTiers(rules)
+      : rules;
 
     return {
       id,
@@ -1051,8 +1099,8 @@ function normalizeStorageRuleSets(terminal, containerTypes, rulesByContainer) {
           ].filter(Boolean)
         ),
       ],
-      rules: rules.length
-        ? rules
+      rules: migratedRules.length
+        ? migratedRules
         : buildDefaultProgressiveRules(
             { key: id, label: name },
             `${terminal.id || "terminal"}-${id}`
@@ -1171,17 +1219,94 @@ function assignStorageRuleSetsToLineContainers({
   return assignments;
 }
 
-function normalizeCustomsTerminal(terminal, shippingLines, containerTypes, fallbackId) {
+function syncNormalizedTerminalStorageRulesByContainer(
+  terminal,
+  shippingLines = [],
+  containerTypes = []
+) {
+  const ruleSets = Array.isArray(terminal.storageRuleSets)
+    ? terminal.storageRuleSets
+    : [];
+  if (!ruleSets.length) {
+    return;
+  }
+
+  const lineAssignments = terminal.storageAssignmentsByLineContainer || {};
+  const containerAssignments = terminal.storageAssignmentsByContainerType || {};
+  const validRuleSetIds = new Set(ruleSets.map((ruleSet) => ruleSet.id));
+  const unassignedKeys = new Set(terminal.storageUnassignedLineContainers || []);
+  terminal.storageAssignmentsByLineContainer = {};
+  terminal.storageAssignmentsByContainerType = {};
+  terminal.storageRulesByContainer = terminal.storageRulesByContainer || {};
+
+  for (const line of shippingLines || []) {
+    terminal.storageAssignmentsByLineContainer[line.id] = {};
+
+    for (const type of containerTypes || []) {
+      const assignmentKey = getLineContainerAssignmentKey(line.id, type.key);
+      if (unassignedKeys.has(assignmentKey)) {
+        continue;
+      }
+
+      const assignedRuleSetId = lineAssignments[line.id]?.[type.key];
+      let ruleSetId = validRuleSetIds.has(assignedRuleSetId)
+        ? assignedRuleSetId
+        : null;
+
+      if (!ruleSetId) {
+        const containerRuleSetId = containerAssignments[type.key];
+        ruleSetId = validRuleSetIds.has(containerRuleSetId)
+          ? containerRuleSetId
+          : null;
+      }
+
+      if (!ruleSetId) {
+        ruleSetId =
+          ruleSets.find((ruleSet) => ruleSet.sourceContainerKey === type.key)
+            ?.id || ruleSets[0].id;
+      }
+
+      terminal.storageAssignmentsByLineContainer[line.id][type.key] = ruleSetId;
+    }
+
+    if (!Object.keys(terminal.storageAssignmentsByLineContainer[line.id]).length) {
+      delete terminal.storageAssignmentsByLineContainer[line.id];
+    }
+  }
+
+  const firstLineId = shippingLines?.[0]?.id;
+  for (const type of containerTypes || []) {
+    const ruleSetId =
+      firstLineId &&
+      terminal.storageAssignmentsByLineContainer[firstLineId]?.[type.key];
+    const ruleSet =
+      ruleSets.find((entry) => entry.id === ruleSetId) || ruleSets[0];
+    terminal.storageAssignmentsByContainerType[type.key] = ruleSet.id;
+    terminal.storageRulesByContainer[type.key] = structuredClone(
+      ruleSet.rules || []
+    );
+  }
+}
+
+function normalizeCustomsTerminal(
+  terminal,
+  shippingLines,
+  containerTypes,
+  fallbackId,
+  options = {}
+) {
   const id = terminal.id || fallbackId;
   const storageRulesByContainer = normalizeStorageRulesByContainer(
     terminal.storageRulesByContainer,
     containerTypes,
-    `${id}-storage`
+    `${id}-storage`,
+    options
   );
   const storageRuleSets = normalizeStorageRuleSets(
     { ...terminal, id },
     containerTypes,
-    storageRulesByContainer
+    storageRulesByContainer,
+    options
   );
   const storageAssignmentsByContainerType = assignStorageRuleSetsToContainerTypes(
     terminal,
@@ -1202,7 +1327,7 @@ function normalizeCustomsTerminal(terminal, shippingLines, containerTypes, fallb
     unassignedLineContainers: storageUnassignedLineContainers,
   });
 
-  return {
+  const normalizedTerminal = {
     id,
     name: terminal.name || fallbackId,
     note: terminal.note || null,
@@ -1219,9 +1344,21 @@ function normalizeCustomsTerminal(terminal, shippingLines, containerTypes, fallb
     storageAssignmentsByLineContainer,
     storageUnassignedLineContainers,
   };
+  syncNormalizedTerminalStorageRulesByContainer(
+    normalizedTerminal,
+    shippingLines,
+    containerTypes
+  );
+  return normalizedTerminal;
 }
 
-function normalizeCustomsPort(port, shippingLines, containerTypes, fallbackId) {
+function normalizeCustomsPort(
+  port,
+  shippingLines,
+  containerTypes,
+  fallbackId,
+  options = {}
+) {
   return {
     id: port.id || fallbackId,
     name: port.name || fallbackId,
@@ -1231,7 +1368,8 @@ function normalizeCustomsPort(port, shippingLines, containerTypes, fallbackId) {
         terminal,
         shippingLines,
         containerTypes,
-        `${port.id || fallbackId}-terminal-${index + 1}`
+        `${port.id || fallbackId}-terminal-${index + 1}`,
+        options
       )
     ),
   };
@@ -1553,12 +1691,21 @@ function normalizeCustomsModuleData(moduleData = {}, handoverModule) {
   ).map((line, index) =>
     normalizeSimpleShippingLine(line, `customs-line-${index + 1}`)
   );
+  const storageTierPolicyVersion = parseNumber(
+    source.settings?.storageTierPolicyVersion,
+    0
+  );
+  const normalizeOptions = {
+    migrateLegacyStorageTiers:
+      storageTierPolicyVersion < CUSTOMS_STORAGE_TIER_POLICY_VERSION,
+  };
   const ports = (source.ports || fallbackSeed.ports).map((port, index) =>
     normalizeCustomsPort(
       port,
       shippingLines,
       containerTypes,
-      `customs-port-${index + 1}`
+      `customs-port-${index + 1}`,
+      normalizeOptions
     )
   );
   const yards = (source.yards || fallbackSeed.yards).map((yard, index) =>
@@ -1572,6 +1719,7 @@ function normalizeCustomsModuleData(moduleData = {}, handoverModule) {
         DEFAULT_QUOTE_CURRENCY
       ),
       defaultPriceMode: normalizePriceMode(source.settings?.defaultPriceMode),
+      storageTierPolicyVersion: CUSTOMS_STORAGE_TIER_POLICY_VERSION,
     },
     taxRatePresets: normalizeTaxRatePresets(source.taxRatePresets),
     shippingLines,

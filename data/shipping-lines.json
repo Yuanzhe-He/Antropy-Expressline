@@ -7510,7 +7510,8 @@
     "customs": {
       "settings": {
         "defaultQuoteCurrency": "MXN",
-        "defaultPriceMode": "aftertax"
+        "defaultPriceMode": "aftertax",
+        "storageTierPolicyVersion": 2
       },
       "taxRatePresets": [
         {

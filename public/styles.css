@@ -520,6 +520,10 @@ code {
   background: var(--accent-soft);
 }
 
+.danger-button {
+  color: var(--danger);
+}
+
 .content {
   position: relative;
   padding: 1.35rem;
@@ -1087,6 +1091,13 @@ code {
 
 .storage-rule-summary h4 {
   margin: 0;
+}
+
+.rule-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.38rem;
 }
 
 .storage-assignment-card {

@@ -45,6 +45,8 @@ When admin saves a terminal, rebuild `storageRulesByContainer` from the first sh
 - Each rule set has a multi-select of shipping-line + container-type pairs.
 - Pairs already assigned to another rule set are disabled until the current assignment is removed.
 - Disabled pairs show their current owner and have an adjacent release action in the current rule card.
+- Legacy persisted three-tier defaults (`1-7`, `8-10`, `11+`) migrate once to the two-tier default (`1-7`, `8+`); manually added tiers remain supported after migration.
+- Storage rule sets can be deleted except for the last remaining set; the delete confirmation must show how many shipping-line / container-type combinations are assigned, and deletion clears those assignments instead of silently reassigning them.
 - Tier rows are denser than the old per-container blocks.
 - Adding a terminal redirects to the new terminal summary.
 - Adding a yard redirects to the new yard summary.

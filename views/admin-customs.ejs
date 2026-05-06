@@ -252,12 +252,22 @@
                             <span><%= t("admin.ruleSetName") %></span>
                             <input type="text" name="terminal_storage_set_<%= terminal.id %>_<%= ruleSet.id %>_name" value="<%= ruleSet.name %>" />
                           </label>
-                        <button
-                          type="submit"
-                          class="ghost-button compact-button"
-                          formaction="/admin/customs/terminals/<%= terminal.id %>/storage-rule-sets/<%= ruleSet.id %>/add"
-                          formmethod="post"
-                        ><%= t("admin.addRule") %></button>
+                        <div class="rule-card-actions">
+                          <button
+                            type="submit"
+                            class="ghost-button compact-button"
+                            formaction="/admin/customs/terminals/<%= terminal.id %>/storage-rule-sets/<%= ruleSet.id %>/add"
+                            formmethod="post"
+                          ><%= t("admin.addRule") %></button>
+                          <button
+                            type="submit"
+                            class="ghost-button compact-button danger-button"
+                            formaction="/admin/customs/terminals/<%= terminal.id %>/storage-rule-sets/<%= ruleSet.id %>/delete"
+                            formmethod="post"
+                            data-confirm-submit="<%= t("customs.confirmDeleteStorageRuleSet", { count: selectedLineContainerAssignments.length }) %>"
+                            <%= (terminal.storageRuleSets || []).length <= 1 ? "disabled" : "" %>
+                          ><%= t("customs.deleteStorageRuleSet") %></button>
+                        </div>
                       </div>
                       <div class="assignment-toolbar" data-storage-assignment-tools>
                         <button type="button" class="ghost-button compact-button" data-storage-select="same-container"><%= t("customs.selectSameContainerLines") %></button>
