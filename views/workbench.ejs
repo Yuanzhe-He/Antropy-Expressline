@@ -155,10 +155,14 @@
           </div>
         </div>
 
+        <div class="actions primary-actions">
+          <button type="submit" class="primary-calculate-button" data-calculate-submit><%= t("common.calculate") %></button>
+        </div>
+
         <% if (taxControls?.length) { %>
           <% const changedTaxOverrideCount = Object.values(formData.taxOverrides || {}).filter((value) => value && value !== "default").length; %>
-          <section class="table-card tax-override-card" data-tax-overrides-card>
-            <div class="section-title compact">
+          <details class="table-card tax-override-card advanced-tax-card" data-tax-overrides-card <%= changedTaxOverrideCount ? "open" : "" %>>
+            <summary class="advanced-tax-summary">
               <div>
                 <p class="eyebrow"><%= t("calculator.taxOverrideTitle") %></p>
                 <h4><%= t("calculator.taxOverrideDescription") %></h4>
@@ -167,7 +171,7 @@
               <% if (changedTaxOverrideCount) { %>
                 <span class="change-badge"><%= t("calculator.taxOverrideChangedCount", { count: changedTaxOverrideCount }) %></span>
               <% } %>
-            </div>
+            </summary>
             <div class="tax-grid" data-tax-controls>
               <% for (const control of taxControls) { %>
                 <% const taxOverrideValue = String(formData.taxOverrides?.[control.key] || "default"); %>
@@ -205,12 +209,8 @@
                 </div>
               <% } %>
             </div>
-          </section>
+          </details>
         <% } %>
-
-        <div class="actions">
-          <button type="submit" data-calculate-submit><%= t("common.calculate") %></button>
-        </div>
       </form>
     </section>
 

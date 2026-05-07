@@ -10,8 +10,8 @@ const DEFAULT_LANGUAGE = SUPPORTED_LANGUAGES[0].code;
 const MESSAGES = {
   zh: {
     app: {
-      brand: "Express Line",
-      name: "Express Line",
+      brand: "DEWELL GROUP",
+      name: "DEWELL Workbench",
       subtitle: "Antropy AI",
     },
     languages: {
@@ -431,8 +431,8 @@ const MESSAGES = {
   },
   es: {
     app: {
-      brand: "Express Line",
-      name: "Express Line",
+      brand: "DEWELL GROUP",
+      name: "DEWELL Workbench",
       subtitle: "Antropy AI",
     },
     languages: {

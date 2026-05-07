@@ -23,6 +23,27 @@
 - 前端局部联动实现：[public/calculator.js](../public/calculator.js#L243)
 - 服务端只输出局部联动需要的精简依赖数据：[src/server.js](../src/server.js#L590)
 
+## 0.1 2026-05-06 首页首屏落地记录
+
+本轮只改 `/workbench/handover` 的首屏表层体验，不改变费用计算、后台规则、store、数据 JSON、数据库或迁移：
+
+- 移动端左侧导航改成更紧凑的顶部工作台入口，减少手机首屏被导航占满的问题。
+- `立即计算` 提到主要报价输入之后，销售填完船公司、BL、币种、柜型、数量和 demoras 天数后即可计算。
+- 税率覆盖区下移为高级展开项；字段名和值保持原样，仍只影响本次报价。
+- `仅放单 / 放单 + 清关` 本轮不显式化，隐藏的 `businessNature=handover_only` 保持不变。
+- DEWELL logo 作为主要品牌露出，Antropy AI 保持次要。
+- 增加 DEWELL 风格 favicon，修复浏览器标签页缺图标的问题。
+
+代码证据：
+
+- 隐藏业务性质保持不变：[views/workbench.ejs](../views/workbench.ejs#L82)
+- 主计算按钮位置：[views/workbench.ejs](../views/workbench.ejs#L159)
+- 税率高级展开项：[views/workbench.ejs](../views/workbench.ejs#L164)
+- 移动端导航压缩样式：[public/styles.css](../public/styles.css#L1798)
+- DEWELL 页面标题文案：[src/lib/i18n.js](../src/lib/i18n.js#L13)
+- favicon 引入：[views/partials/header.ejs](../views/partials/header.ejs#L7)
+- favicon 资产：[public/favicon.svg](../public/favicon.svg)
+
 ## 1. 我用了什么 skill，怎么搜的
 
 当前 Codex 本地可用 skill 列表里没有专门的 `Product/UIUX` skill。因此这份报告没有调用某个本地 UIUX skill 文件，而是组合使用了以下三类方法论：

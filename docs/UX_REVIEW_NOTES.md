@@ -58,3 +58,26 @@ Landed in:
 - `views/admin-customs.ejs`
 - `public/styles.css`
 - `src/lib/i18n.js`
+
+## 2026-05-06 - Workbench Home First Screen Compaction
+
+User feedback:
+- For `/workbench/handover`, improve the first viewport for sales workbench use.
+- Do not expose the `仅放单 / 放单 + 清关` choice in this pass.
+- Use the DEWELL logo as the general customer-facing brand; keep Antropy AI secondary.
+
+Project-specific interpretation:
+- The mobile sidebar should become a compact workbench header so users reach the quote form faster.
+- `立即计算` belongs immediately after the essential quote inputs, before optional tax overrides.
+- The hidden `businessNature=handover_only` default remains unchanged so the current handover flow does not change behavior.
+- Brand polish can be handled with DEWELL-first header/title/favicon treatment without touching pricing logic.
+
+Reusable scale candidate:
+- Workbench first screens should prioritize direct operational progress over navigation chrome.
+
+Landed in:
+- `views/workbench.ejs`
+- `views/partials/header.ejs`
+- `public/styles.css`
+- `src/lib/i18n.js`
+- `public/favicon.svg`
