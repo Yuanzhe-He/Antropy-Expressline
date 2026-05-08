@@ -7,6 +7,8 @@ process.env.STORAGE_DRIVER = "json";
 
 const { createApp } = require("../src/server");
 const { getShippingData } = require("../src/lib/store");
+const { computeCalculator } = require("../src/lib/calculate");
+const { buildTranslator } = require("../src/lib/i18n");
 
 const dataFile = path.join(__dirname, "../data/shipping-lines.json");
 
@@ -138,6 +140,7 @@ function buildHandoverAdminForm(moduleData, line) {
   }
 
   for (const charge of line.localCharges || []) {
+    entries.push([`charge_concept_${charge.id}`, charge.concept]);
     entries.push([`charge_tax_${charge.id}`, charge.taxRate]);
     if (charge.blRate) {
       entries.push([`charge_bl_${charge.id}_rate`, charge.blRate.rate]);
@@ -345,6 +348,7 @@ async function main() {
   });
   const port = server.address().port;
   const baseUrl = `http://127.0.0.1:${port}`;
+  const t = buildTranslator("zh");
 
   const publicJar = new CookieJar();
 
@@ -620,6 +624,7 @@ async function main() {
     });
     assert.equal(response.status, 200);
     expectContains(response.text, "新增阶梯", "handover add rule button");
+    expectContains(response.text, "新增费用名目", "handover add local charge button");
     expectContains(response.text, "柜型规则分配", "handover rule assignment table");
     expectContains(response.text, "新增规则集", "handover add rule set button");
     expectContains(response.text, "码头概率配置", "handover terminal mix admin table");
@@ -649,6 +654,100 @@ async function main() {
 
     shippingData = await getShippingData();
     const handoverLine = shippingData.modules.handover.shippingLines[0];
+    const handoverModule = {
+      ...shippingData.modules.handover,
+      exchangeRates: shippingData.exchangeRates,
+    };
+    const localChargeCalculationInput = {
+      blCount: 1,
+      demurrageDays: 0,
+      priceMode: "pretax",
+      quoteCurrency: "USD",
+      containerRows: [
+        {
+          containerGroupKey: handoverModule.containerTypes[0].key,
+          quantity: 2,
+        },
+      ],
+    };
+    const beforeLocalChargeTotal = computeCalculator(
+      handoverLine,
+      localChargeCalculationInput,
+      handoverModule,
+      { t }
+    ).localCharges.pretaxTotal;
+    const beforeLocalChargeCount = handoverLine.localCharges.length;
+    response = await request(
+      baseUrl,
+      `/admin/handover/shipping-lines/${handoverLine.id}/local-charges/add`,
+      {
+        method: "POST",
+        jar: publicJar,
+      }
+    );
+    assert.equal(response.status, 302);
+    assert.equal(response.location, `/admin/handover/shipping-lines/${handoverLine.id}`);
+    shippingData = await getShippingData();
+    let updatedHandoverLine = shippingData.modules.handover.shippingLines.find(
+      (line) => line.id === handoverLine.id
+    );
+    assert.equal(updatedHandoverLine.localCharges.length, beforeLocalChargeCount + 1);
+    const addedLocalCharge = updatedHandoverLine.localCharges.at(-1);
+    assert.ok(addedLocalCharge.blRate, "new local charge has BL rate input");
+    for (const group of updatedHandoverLine.containerGroups || []) {
+      assert.ok(
+        addedLocalCharge.groupRates[group.key],
+        `new local charge has ${group.key} rate input`
+      );
+    }
+    const localChargeForm = buildHandoverAdminForm(
+      shippingData.modules.handover,
+      updatedHandoverLine
+    );
+    const firstChargeGroupKey = updatedHandoverLine.containerGroups[0].key;
+    const localChargeOverrides = new Map([
+      [`charge_concept_${addedLocalCharge.id}`, "Documentation Handling Fee"],
+      [`charge_bl_${addedLocalCharge.id}_rate`, "11"],
+      [`charge_bl_${addedLocalCharge.id}_currency`, "USD"],
+      [`charge_${addedLocalCharge.id}_${firstChargeGroupKey}_rate`, "7"],
+      [`charge_${addedLocalCharge.id}_${firstChargeGroupKey}_currency`, "USD"],
+    ]);
+    for (const entry of localChargeForm) {
+      if (localChargeOverrides.has(entry[0])) {
+        entry[1] = localChargeOverrides.get(entry[0]);
+      }
+    }
+    response = await request(
+      baseUrl,
+      `/admin/handover/shipping-lines/${handoverLine.id}`,
+      {
+        method: "POST",
+        jar: publicJar,
+        formEntries: localChargeForm,
+      }
+    );
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    updatedHandoverLine = shippingData.modules.handover.shippingLines.find(
+      (line) => line.id === handoverLine.id
+    );
+    const savedLocalCharge = updatedHandoverLine.localCharges.find(
+      (charge) => charge.id === addedLocalCharge.id
+    );
+    assert.equal(savedLocalCharge.concept, "Documentation Handling Fee");
+    assert.equal(savedLocalCharge.blRate.rate, 11);
+    assert.equal(savedLocalCharge.groupRates[firstChargeGroupKey].rate, 7);
+    const afterLocalChargeTotal = computeCalculator(
+      updatedHandoverLine,
+      localChargeCalculationInput,
+      {
+        ...shippingData.modules.handover,
+        exchangeRates: shippingData.exchangeRates,
+      },
+      { t }
+    ).localCharges.pretaxTotal;
+    assert.equal(afterLocalChargeTotal, beforeLocalChargeTotal + 25);
+
     const beforeTerminalMixCount = handoverLine.terminalMix.length;
     response = await request(
       baseUrl,
@@ -661,7 +760,7 @@ async function main() {
     assert.equal(response.status, 302);
     assert.equal(response.location, `/admin/handover/shipping-lines/${handoverLine.id}`);
     shippingData = await getShippingData();
-    let updatedHandoverLine = shippingData.modules.handover.shippingLines.find(
+    updatedHandoverLine = shippingData.modules.handover.shippingLines.find(
       (line) => line.id === handoverLine.id
     );
     assert.equal(updatedHandoverLine.terminalMix.length, beforeTerminalMixCount + 1);

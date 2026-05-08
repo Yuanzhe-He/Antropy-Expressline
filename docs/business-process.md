@@ -46,6 +46,7 @@
 - 船公司表
 - 每家船公司的柜型
 - `cargos locales`
+  - 后台可新增费用名目，并维护名称、税率、BL 金额和柜型金额
 - `garantia`
 - `demoras`
 - 发票规则
@@ -152,6 +153,19 @@
 - 区间金额 = `0`
 
 来表示。
+
+### 5.4 本地费用名目
+
+`cargos locales` 可以按船公司新增费用名目。新增名目不是新的业务流程，而是和原有本地费用逐项相加。
+
+例如：
+
+- `Service Fee`
+- `Electronic Data Interchange`
+- `Delivery Order Fee`
+- 新增的 `Documentation Handling Fee`
+
+系统会把这些本地费用一起纳入 `cargos locales` 小计，再进入换单总价。
 
 ## 6. 天数口径
 

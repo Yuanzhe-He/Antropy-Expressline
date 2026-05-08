@@ -280,6 +280,49 @@ function buildZeroRatesByContainer(containerTypes = [], currency = "MXN") {
   );
 }
 
+function inferLocalChargeCurrency(shippingLine, moduleData) {
+  for (const charge of shippingLine.localCharges || []) {
+    if (charge.blRate?.currency) {
+      return charge.blRate.currency;
+    }
+
+    const groupRate = Object.values(charge.groupRates || {}).find(
+      (rate) => rate?.currency
+    );
+    if (groupRate?.currency) {
+      return groupRate.currency;
+    }
+  }
+
+  return (
+    shippingLine.quoteDefaults?.quoteCurrency ||
+    moduleData.settings?.defaultQuoteCurrency ||
+    "USD"
+  );
+}
+
+function buildLocalChargeDraft(shippingLine, moduleData, t) {
+  const localCharges = shippingLine.localCharges || [];
+  const currency = inferLocalChargeCurrency(shippingLine, moduleData);
+  const id = buildRuleId(`${shippingLine.id}-local-charge`);
+
+  return {
+    id,
+    concept: t("admin.newLocalChargeName", { count: localCharges.length + 1 }),
+    note: null,
+    taxRate: 0,
+    groupRates: buildZeroRatesByContainer(
+      shippingLine.containerGroups || moduleData.containerTypes || [],
+      currency
+    ),
+    blRate: {
+      qtyHint: 1,
+      currency,
+      rate: 0,
+    },
+  };
+}
+
 function buildDefaultCustomsStorageRules(
   containerTypes = [],
   prefix,
@@ -2379,6 +2422,53 @@ function createApp() {
   );
 
   app.post(
+    "/admin/:moduleKey/shipping-lines/:id/local-charges/add",
+    requireAuth,
+    async (req, res) => {
+      const module = getBusinessModule(req.params.moduleKey);
+      if (!module || module.key === "customs") {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = getModuleData(shippingData, module.key);
+      const lineIndex = moduleData.shippingLines.findIndex(
+        (entry) => entry.id === req.params.id
+      );
+
+      if (lineIndex < 0) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const updated = structuredClone(moduleData.shippingLines[lineIndex]);
+      const charge = buildLocalChargeDraft(updated, moduleData, req.t);
+      updated.localCharges = [...(updated.localCharges || []), charge];
+      shippingData.modules[module.key].shippingLines[lineIndex] = updated;
+      await saveShippingData(shippingData);
+
+      return redirectWithFlash(
+        req,
+        res,
+        "success",
+        req.t("admin.localChargeAdded", { name: charge.concept }),
+        `/admin/${module.key}/shipping-lines/${updated.id}`
+      );
+    }
+  );
+
+  app.post(
     "/admin/:moduleKey/shipping-lines/:id/demurrage-rule-sets/add",
     requireAuth,
     async (req, res) => {
@@ -2749,6 +2839,12 @@ function createApp() {
     );
 
     for (const charge of updated.localCharges || []) {
+      const concept = String(
+        req.body[`charge_concept_${charge.id}`] ?? charge.concept
+      ).trim();
+      if (concept) {
+        charge.concept = concept;
+      }
       charge.taxRate = parseNumber(req.body[`charge_tax_${charge.id}`], charge.taxRate);
       if (charge.blRate) {
         applyRateCellUpdates(charge.blRate, req.body, `charge_bl_${charge.id}`);

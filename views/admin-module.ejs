@@ -236,6 +236,12 @@
               <p class="eyebrow">Local Charges</p>
               <h4><%= t("admin.localChargesTitle") %></h4>
             </div>
+            <button
+              type="submit"
+              class="ghost-button compact-button"
+              formaction="/admin/<%= currentModuleKey %>/shipping-lines/<%= selectedLine.id %>/local-charges/add"
+              formmethod="post"
+            ><%= t("admin.addLocalCharge") %></button>
           </div>
           <table>
             <thead>
@@ -251,7 +257,9 @@
             <tbody>
               <% for (const charge of selectedLine.localCharges || []) { %>
                 <tr>
-                  <td><%= charge.concept %></td>
+                  <td>
+                    <input type="text" name="charge_concept_<%= charge.id %>" value="<%= charge.concept %>" />
+                  </td>
                   <td>
                     <select name="charge_tax_<%= charge.id %>">
                       <% for (const preset of moduleData.taxRatePresets) { %>
