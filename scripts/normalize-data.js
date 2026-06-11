@@ -9,6 +9,12 @@ async function main() {
   const modules = data.modules || {};
   const summary = Object.entries(modules)
     .map(([key, moduleData]) => {
+      if (key === "inland") {
+        const destinations = moduleData.destinations?.length || 0;
+        const rateEntries = moduleData.rateEntries?.length || 0;
+        const routeCache = moduleData.routeCache?.length || 0;
+        return `${key}: ${destinations} destinations, ${rateEntries} rate entries, ${routeCache} routes`;
+      }
       const shippingLines = moduleData.shippingLines?.length || 0;
       const ports = moduleData.ports?.length || 0;
       const yards = moduleData.yards?.length || 0;
