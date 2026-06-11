@@ -994,10 +994,118 @@ function computeCustomsCalculator(moduleData, formData, referenceData, options =
   };
 }
 
+const INLAND_DEFAULT_TAX_RATE = 0.16;
+
+// Inland (Transporte) quote: pick the highest per-supplier rate for the chosen
+// service type at the destination, multiply by quantity, apply IVA. Sencillo and
+// Full are resolved independently and may come from different suppliers.
+function computeInlandCalculator(moduleData, formData, options = {}) {
+  const t = options.t || ((key) => key);
+  const priceMode = normalizePriceMode(formData.priceMode);
+  const quoteCurrency = "MXN";
+  const serviceType = formData.serviceType === "full" ? "full" : "sencillo";
+  const quantity = Math.max(0, parseNumber(formData.quantity, 1));
+
+  const destination =
+    (moduleData.destinations || []).find((dest) => dest.id === formData.destinationId) ||
+    null;
+
+  const entries = (moduleData.rateEntries || []).filter(
+    (entry) => entry.enabled && entry.destinationId === formData.destinationId
+  );
+
+  const allEntries = entries.map((entry) => ({
+    proveedor: entry.proveedor,
+    sencillo: entry.sencillo,
+    full: entry.full,
+    cliente: entry.cliente,
+    commodity: entry.commodity,
+    codigoCw: entry.codigoCw,
+    note: entry.note,
+  }));
+
+  const overrideRaw = formData.taxRateOverride;
+  const taxRate =
+    overrideRaw === undefined || overrideRaw === "" || overrideRaw === "default"
+      ? INLAND_DEFAULT_TAX_RATE
+      : normalizeTaxRate(overrideRaw, INLAND_DEFAULT_TAX_RATE);
+  const taxRateLabel = getTaxRateLabel(taxRate);
+
+  const candidates = entries.filter(
+    (entry) => entry[serviceType] !== null && entry[serviceType] !== undefined
+  );
+
+  if (!destination || !candidates.length) {
+    return {
+      noRate: true,
+      destination,
+      serviceType,
+      quantity,
+      quoteCurrency,
+      priceMode,
+      taxRate,
+      taxRateLabel,
+      allEntries,
+      pretaxTotal: 0,
+      afterTaxTotal: 0,
+      total: 0,
+      maxRate: null,
+      maxProvider: null,
+      totalExplanation: t("inland.noRateExplanation", {
+        service:
+          serviceType === "full" ? t("inland.serviceFull") : t("inland.serviceSencillo"),
+      }),
+    };
+  }
+
+  let best = candidates[0];
+  for (const entry of candidates) {
+    if (Number(entry[serviceType]) > Number(best[serviceType])) {
+      best = entry;
+    }
+  }
+  const maxRate = Number(best[serviceType]);
+  const maxProvider = best.proveedor;
+
+  const pretaxTotal = roundMoney(maxRate * quantity);
+  const afterTaxTotal = roundMoney(pretaxTotal * (1 + taxRate));
+  const total = priceMode === "aftertax" ? afterTaxTotal : pretaxTotal;
+
+  const totalFormula =
+    priceMode === "aftertax"
+      ? `${formatAmount(maxRate)} × ${quantity} × (1 + ${taxRateLabel}) = ${formatAmount(total)} ${quoteCurrency}`
+      : `${formatAmount(maxRate)} × ${quantity} = ${formatAmount(total)} ${quoteCurrency}`;
+
+  return {
+    noRate: false,
+    destination,
+    serviceType,
+    quantity,
+    quoteCurrency,
+    priceMode,
+    maxRate,
+    maxProvider,
+    taxRate,
+    taxRateLabel,
+    pretaxTotal,
+    afterTaxTotal,
+    total,
+    allEntries,
+    totalFormula,
+    totalExplanation: t("inland.totalExplanation", {
+      service:
+        serviceType === "full" ? t("inland.serviceFull") : t("inland.serviceSencillo"),
+      provider: maxProvider,
+      mode: priceMode === "aftertax" ? t("priceMode.aftertax") : t("priceMode.pretax"),
+    }),
+  };
+}
+
 module.exports = {
   computeCalculator: computeHandoverCalculator,
   computeCustomsCalculator,
   computeHandoverCalculator,
+  computeInlandCalculator,
   formatTierLabel,
   parseNumber,
   roundMoney,
