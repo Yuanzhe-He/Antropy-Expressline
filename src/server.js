@@ -4,6 +4,7 @@ const path = require("node:path");
 const {
   computeCalculator,
   computeCustomsCalculator,
+  computeInlandCalculator,
   parseNumber,
 } = require("./lib/calculate");
 const { refreshExchangeRatesIfStale } = require("./lib/exchange-rates");
@@ -1156,9 +1157,132 @@ function renderCustomsWorkbench(req, res, payload) {
   );
 }
 
+function buildDefaultInlandFormData(moduleData, destQuery) {
+  const destinations = moduleData.destinations || [];
+  const requested = destinations.find((dest) => dest.id === destQuery && dest.enabled);
+  return {
+    destinationId: requested ? requested.id : "",
+    serviceType: "sencillo",
+    quantity: 1,
+    priceMode: moduleData.settings?.defaultPriceMode || "pretax",
+    taxRateOverride: "default",
+    precisePointId: "",
+  };
+}
+
+function buildInlandFormData(moduleData, body = {}) {
+  return {
+    destinationId: String(body.destinationId || "").trim(),
+    serviceType: body.serviceType === "full" ? "full" : "sencillo",
+    quantity: parseWholeNumber(body.quantity, 1),
+    priceMode: body.priceMode || moduleData.settings?.defaultPriceMode || "pretax",
+    taxRateOverride: body.taxRateOverride || "default",
+    precisePointId: String(body.precisePointId || "").trim(),
+  };
+}
+
+// Compact map + quote payload for the front-end (client-side instant quoting).
+function buildInlandMapData(moduleData) {
+  const origin = (moduleData.origins && moduleData.origins[0]) || null;
+  const entriesByDest = new Map();
+  for (const entry of moduleData.rateEntries || []) {
+    if (!entry.enabled) {
+      continue;
+    }
+    if (!entriesByDest.has(entry.destinationId)) {
+      entriesByDest.set(entry.destinationId, []);
+    }
+    entriesByDest.get(entry.destinationId).push(entry);
+  }
+
+  const pickMax = (entries, key) => {
+    let best = null;
+    for (const entry of entries) {
+      const value = entry[key];
+      if (value === null || value === undefined) {
+        continue;
+      }
+      if (!best || Number(value) > Number(best[key])) {
+        best = entry;
+      }
+    }
+    return best;
+  };
+
+  const destinations = (moduleData.destinations || []).map((dest) => {
+    const entries = entriesByDest.get(dest.id) || [];
+    const maxSencillo = pickMax(entries, "sencillo");
+    const maxFull = pickMax(entries, "full");
+    return {
+      id: dest.id,
+      name: dest.name,
+      state: dest.state,
+      lat: dest.lat,
+      lng: dest.lng,
+      enabled: dest.enabled,
+      needsReview: dest.needsReview,
+      entryCount: entries.length,
+      maxSencillo: maxSencillo ? Number(maxSencillo.sencillo) : null,
+      maxSencilloProvider: maxSencillo ? maxSencillo.proveedor : null,
+      maxFull: maxFull ? Number(maxFull.full) : null,
+      maxFullProvider: maxFull ? maxFull.proveedor : null,
+      precisePoints: (dest.precisePoints || []).map((point) => ({
+        id: point.id,
+        name: point.name,
+        lat: point.lat,
+        lng: point.lng,
+      })),
+      entries: entries.map((entry) => ({
+        proveedor: entry.proveedor,
+        sencillo: entry.sencillo,
+        full: entry.full,
+        cliente: entry.cliente,
+        commodity: entry.commodity,
+      })),
+    };
+  });
+
+  const routes = (moduleData.routeCache || []).map((rc) => ({
+    destinationId: rc.destinationId,
+    targetType: rc.targetType,
+    targetId: rc.targetId,
+    encodedPolyline: rc.encodedPolyline,
+    distanceKm: rc.distanceKm,
+    durationMin: rc.durationMin,
+    viaCities: rc.viaCities,
+    stale: rc.stale,
+    hasFerry: rc.hasFerry,
+  }));
+
+  return { origin, destinations, routes };
+}
+
+function renderInlandWorkbench(req, res, payload) {
+  const moduleMeta = getModulePresentation(payload.moduleKey, req.language);
+  res.render(
+    "workbench-inland",
+    baseView(req, {
+      pageTitle: `${moduleMeta.title} | ${req.t("app.name")}`,
+      currentArea: "sales",
+      currentModuleKey: payload.moduleKey,
+      selectedModule: moduleMeta,
+      moduleData: payload.moduleData,
+      formData: payload.formData,
+      result: payload.result || null,
+      inlandMapData: buildInlandMapData(payload.moduleData),
+      priceModeOptions: getLocalizedOptions(PRICE_MODE_OPTIONS, req.t),
+      taxRatePresets: payload.moduleData.taxRatePresets || [],
+      languageReturnTo: `/workbench/${payload.moduleKey}?restoreLast=1`,
+    })
+  );
+}
+
 function renderWorkbench(req, res, payload) {
   if (payload.moduleKey === "customs") {
     return renderCustomsWorkbench(req, res, payload);
+  }
+  if (payload.moduleKey === "inland") {
+    return renderInlandWorkbench(req, res, payload);
   }
   return renderHandoverWorkbench(req, res, payload);
 }
@@ -1359,6 +1483,22 @@ function createApp() {
       });
     }
 
+    if (module.key === "inland") {
+      const formData =
+        restoreLast && rememberedForm
+          ? buildInlandFormData(moduleData, rememberedForm)
+          : buildDefaultInlandFormData(moduleData, req.query.dest);
+      const result = formData.destinationId
+        ? computeInlandCalculator(moduleData, formData, { t: req.t })
+        : null;
+      return renderWorkbench(req, res, {
+        moduleKey: module.key,
+        moduleData,
+        formData,
+        result,
+      });
+    }
+
     if (!module.implemented || !moduleData.shippingLines.length) {
       return renderWorkbench(req, res, {
         moduleKey: module.key,
@@ -1490,6 +1630,22 @@ function createApp() {
       result,
       customsSelections,
       linkedHandoverContext: linkedContext,
+    });
+  });
+
+  app.post("/workbench/inland", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData();
+    const moduleData = getModuleData(shippingData, "inland");
+    const formData = buildInlandFormData(moduleData, req.body);
+    const result = formData.destinationId
+      ? computeInlandCalculator(moduleData, formData, { t: req.t })
+      : null;
+    rememberCalculatorState(req, "inland", formData);
+    return renderWorkbench(req, res, {
+      moduleKey: "inland",
+      moduleData,
+      formData,
+      result,
     });
   });
 

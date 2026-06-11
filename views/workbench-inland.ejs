@@ -1,0 +1,132 @@
+<%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
+
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+
+<section class="page-heading page-heading-card">
+  <div class="page-heading-title">
+    <h2><%= selectedModule.title %></h2>
+  </div>
+  <div class="module-intro-card">
+    <p><%= selectedModule.description %></p>
+  </div>
+</section>
+
+<section class="inland-shell" data-inland-shell>
+  <div class="inland-map-wrap">
+    <div class="inland-map" id="inland-map" data-inland-map></div>
+    <div class="inland-map-legend">
+      <span class="eyebrow"><%= t("inland.mapTitle") %></span>
+      <small><%= t("inland.mapHint") %></small>
+    </div>
+  </div>
+
+  <aside class="inland-panel" data-inland-panel>
+    <form
+      id="inland-calculator-form"
+      method="post"
+      action="/workbench/inland"
+      class="inland-panel-form"
+      data-inland-form
+    >
+      <label class="inland-field">
+        <span><%= t("inland.destinationLabel") %></span>
+        <select name="destinationId" data-inland-destination>
+          <option value=""><%= t("inland.pickDestination") %></option>
+          <% for (const dest of moduleData.destinations || []) { %>
+            <% if (dest.enabled) { %>
+              <option value="<%= dest.id %>" <%= formData.destinationId === dest.id ? "selected" : "" %>>
+                <%= dest.name %><%= dest.state ? ` · ${dest.state}` : "" %>
+              </option>
+            <% } %>
+          <% } %>
+        </select>
+      </label>
+
+      <div class="inland-service-toggle" data-inland-service role="group" aria-label="<%= t('inland.serviceLabel') %>">
+        <button type="button" class="inland-seg <%= formData.serviceType !== 'full' ? 'is-active' : '' %>" data-service-value="sencillo"><%= t("inland.serviceSencillo") %></button>
+        <button type="button" class="inland-seg <%= formData.serviceType === 'full' ? 'is-active' : '' %>" data-service-value="full"><%= t("inland.serviceFull") %></button>
+        <input type="hidden" name="serviceType" value="<%= formData.serviceType %>" data-inland-service-input />
+      </div>
+
+      <div class="inland-field-row">
+        <label class="inland-field">
+          <span><%= t("inland.quantityLabel") %></span>
+          <div class="inland-stepper">
+            <button type="button" class="ghost-button compact-button" data-qty-step="-1" aria-label="-">−</button>
+            <input type="number" min="0" step="1" name="quantity" value="<%= formData.quantity %>" data-inland-quantity />
+            <button type="button" class="ghost-button compact-button" data-qty-step="1" aria-label="+">+</button>
+          </div>
+        </label>
+        <div class="inland-field">
+          <span><%= t("inland.ivaLabel") %></span>
+          <div class="inland-iva-toggle" data-inland-iva role="group">
+            <button type="button" class="inland-seg" data-iva-value="0">0%</button>
+            <button type="button" class="inland-seg is-active" data-iva-value="0.16">16%</button>
+            <input type="hidden" name="taxRateOverride" value="<%= formData.taxRateOverride %>" data-inland-iva-input />
+          </div>
+        </div>
+      </div>
+
+      <input type="hidden" name="priceMode" value="<%= formData.priceMode %>" data-inland-pricemode />
+      <input type="hidden" name="precisePointId" value="<%= formData.precisePointId %>" data-inland-precise-input />
+    </form>
+
+    <div class="inland-result" data-inland-result hidden>
+      <div class="inland-route-meta" data-inland-route-meta></div>
+      <article class="summary-card accent inland-total-card">
+        <p data-inland-total-label></p>
+        <strong data-inland-total>—</strong>
+        <small data-inland-formula></small>
+      </article>
+      <p class="inland-max-provider"><span data-inland-maxprovider-label></span> <strong data-inland-maxprovider></strong></p>
+
+      <details class="table-card inland-all-quotes" data-inland-allquotes-card>
+        <summary><span data-inland-allquotes-label></span></summary>
+        <div class="inland-quote-table" data-inland-allquotes></div>
+      </details>
+
+      <div class="inland-precise" data-inland-precise hidden>
+        <span class="eyebrow" data-inland-precise-label></span>
+        <div class="inland-chip-row" data-inland-precise-chips></div>
+      </div>
+    </div>
+
+    <div class="inland-empty empty-state" data-inland-empty>
+      <h3><%= t("inland.pickDestination") %></h3>
+      <p><%= t("inland.pickDestinationHint") %></p>
+    </div>
+  </aside>
+</section>
+
+<script id="inland-map-data" type="application/json"><%- JSON.stringify(inlandMapData || {}) %></script>
+<script id="inland-initial" type="application/json"><%- JSON.stringify({ formData, hasResult: Boolean(result) }) %></script>
+<script id="inland-i18n" type="application/json"><%- JSON.stringify({
+  serviceSencillo: t("inland.serviceSencillo"),
+  serviceFull: t("inland.serviceFull"),
+  total: t("inland.total"),
+  pretax: t("inland.pretax"),
+  aftertax: t("inland.aftertax"),
+  maxProvider: t("inland.maxProvider"),
+  allQuotes: t("inland.allQuotes"),
+  via: t("inland.via"),
+  distance: t("inland.distance"),
+  duration: t("inland.duration"),
+  routeNotCached: t("inland.routeNotCached"),
+  routeStale: t("inland.routeStale"),
+  hasFerry: t("inland.hasFerry"),
+  noRate: t("inland.noRate"),
+  precisePoints: t("inland.precisePoints"),
+  precisePointDefault: t("inland.precisePointDefault"),
+  needsReview: t("inland.needsReview"),
+  supplier: t("inland.supplier"),
+  client: t("inland.client"),
+  commodity: t("inland.commodity"),
+  noQuotesForDestination: t("inland.noQuotesForDestination"),
+  hours: t("inland.hours"),
+  km: t("inland.km"),
+  mxn: "MXN",
+}) %></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="/inland-map.js"></script>
+
+<%- include("partials/footer") %>

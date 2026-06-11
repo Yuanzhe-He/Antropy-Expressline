@@ -27,13 +27,16 @@ function parseArgs(argv) {
   return flags;
 }
 
-function buildTargets(inland, onlyId) {
+function buildTargets(inland, onlyArg) {
+  const onlySet = onlyArg
+    ? new Set(String(onlyArg).split(",").map((id) => id.trim()).filter(Boolean))
+    : null;
   const targets = [];
   for (const dest of inland.destinations || []) {
     if (!dest.enabled || dest.lat == null || dest.lng == null) {
       continue;
     }
-    if (onlyId && dest.id !== onlyId) {
+    if (onlySet && !onlySet.has(dest.id)) {
       continue;
     }
     targets.push({

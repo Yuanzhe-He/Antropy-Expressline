@@ -1,0 +1,538 @@
+/* Inland (Transporte) map workbench: real route geometry + instant client-side
+   quoting. No third-party deps beyond MapLibre GL (loaded globally). */
+(function inlandMap() {
+  const mapEl = document.querySelector("[data-inland-map]");
+  if (!mapEl || typeof maplibregl === "undefined") {
+    return;
+  }
+
+  const readJson = (id, fallback) => {
+    const node = document.getElementById(id);
+    if (!node) return fallback;
+    try {
+      return JSON.parse(node.textContent);
+    } catch (_error) {
+      return fallback;
+    }
+  };
+
+  const data = readJson("inland-map-data", { origin: null, destinations: [], routes: [] });
+  const initial = readJson("inland-initial", { formData: {}, hasResult: false });
+  const i18n = readJson("inland-i18n", {});
+
+  const STYLES = {
+    light: "https://tiles.openfreemap.org/styles/positron",
+    dark: "https://tiles.openfreemap.org/styles/dark",
+  };
+  const ACCENT = "#e23b3b";
+  const currentTheme = () =>
+    document.documentElement.dataset.theme === "light" ? "light" : "dark";
+
+  // --- polyline decode (precision 5) ---
+  function decodePolyline(encoded) {
+    if (!encoded) return [];
+    const factor = 1e5;
+    const coords = [];
+    let index = 0;
+    let lat = 0;
+    let lng = 0;
+    while (index < encoded.length) {
+      let result = 0;
+      let shift = 0;
+      let byte;
+      do {
+        byte = encoded.charCodeAt(index++) - 63;
+        result |= (byte & 0x1f) << shift;
+        shift += 5;
+      } while (byte >= 0x20);
+      lat += result & 1 ? ~(result >> 1) : result >> 1;
+      result = 0;
+      shift = 0;
+      do {
+        byte = encoded.charCodeAt(index++) - 63;
+        result |= (byte & 0x1f) << shift;
+        shift += 5;
+      } while (byte >= 0x20);
+      lng += result & 1 ? ~(result >> 1) : result >> 1;
+      coords.push([lng / factor, lat / factor]); // GeoJSON [lng, lat]
+    }
+    return coords;
+  }
+
+  const destById = new Map(data.destinations.map((d) => [d.id, d]));
+  const routeByKey = new Map();
+  data.routes.forEach((r) => {
+    routeByKey.set(`${r.destinationId}|${r.targetType}|${r.targetId || ""}`, r);
+  });
+  const routeForDestination = (id) => routeByKey.get(`${id}|destination|`) || null;
+
+  const fmtMoney = (value) =>
+    Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // --- GeoJSON builders ---
+  function routesGeoJson() {
+    const features = [];
+    data.routes
+      .filter((r) => r.targetType === "destination" && r.encodedPolyline)
+      .forEach((r) => {
+        const coords = decodePolyline(r.encodedPolyline);
+        if (coords.length < 2) return;
+        features.push({
+          type: "Feature",
+          properties: { destinationId: r.destinationId, stale: r.stale ? 1 : 0 },
+          geometry: { type: "LineString", coordinates: coords },
+        });
+      });
+    return { type: "FeatureCollection", features };
+  }
+
+  function fallbackArc(dest) {
+    // Great-circle-ish dashed arc when no cached route geometry exists.
+    if (!data.origin || dest.lat == null || dest.lng == null) return null;
+    const a = [data.origin.lng, data.origin.lat];
+    const b = [dest.lng, dest.lat];
+    const mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + Math.hypot(b[0] - a[0], b[1] - a[1]) * 0.12];
+    const pts = [];
+    for (let t = 0; t <= 1.0001; t += 0.05) {
+      const x = (1 - t) * (1 - t) * a[0] + 2 * (1 - t) * t * mid[0] + t * t * b[0];
+      const y = (1 - t) * (1 - t) * a[1] + 2 * (1 - t) * t * mid[1] + t * t * b[1];
+      pts.push([x, y]);
+    }
+    return { type: "Feature", properties: { destinationId: dest.id }, geometry: { type: "LineString", coordinates: pts } };
+  }
+
+  function destinationsGeoJson() {
+    return {
+      type: "FeatureCollection",
+      features: data.destinations
+        .filter((d) => d.enabled && d.lat != null && d.lng != null)
+        .map((d) => ({
+          type: "Feature",
+          properties: {
+            id: d.id,
+            name: d.name,
+            label: d.maxSencillo != null ? `${d.name} · $${Math.round(d.maxSencillo / 1000)}k` : d.name,
+          },
+          geometry: { type: "Point", coordinates: [d.lng, d.lat] },
+        })),
+    };
+  }
+
+  // --- map init ---
+  const map = new maplibregl.Map({
+    container: mapEl,
+    style: STYLES[currentTheme()],
+    center: data.origin ? [data.origin.lng + 6, data.origin.lat + 4] : [-102, 23],
+    zoom: 4.2,
+    attributionControl: true,
+  });
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+
+  let selectedId = "";
+  let originMarker = null;
+
+  function addLayers() {
+    if (!map.getSource("inland-routes")) {
+      map.addSource("inland-routes", { type: "geojson", data: routesGeoJson() });
+    }
+    if (!map.getSource("inland-selected")) {
+      map.addSource("inland-selected", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    }
+    if (!map.getSource("inland-destinations")) {
+      map.addSource("inland-destinations", { type: "geojson", data: destinationsGeoJson() });
+    }
+
+    if (!map.getLayer("inland-route-casing")) {
+      map.addLayer({
+        id: "inland-route-casing",
+        type: "line",
+        source: "inland-routes",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": currentTheme() === "light" ? "#ffffff" : "#000000",
+          "line-width": 5,
+          "line-opacity": 0.5,
+        },
+      });
+    }
+    if (!map.getLayer("inland-route-line")) {
+      map.addLayer({
+        id: "inland-route-line",
+        type: "line",
+        source: "inland-routes",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": ["case", ["==", ["get", "stale"], 1], "#8a8a8a", "#7aa2ff"],
+          "line-width": 2.2,
+          "line-opacity": 0.85,
+        },
+      });
+    }
+    if (!map.getLayer("inland-selected-line")) {
+      map.addLayer({
+        id: "inland-selected-line",
+        type: "line",
+        source: "inland-selected",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": ACCENT,
+          "line-width": 4,
+          "line-dasharray": [2, 2],
+        },
+      });
+    }
+    if (!map.getLayer("inland-dest-dot")) {
+      map.addLayer({
+        id: "inland-dest-dot",
+        type: "circle",
+        source: "inland-destinations",
+        paint: {
+          "circle-radius": ["case", ["==", ["get", "id"], selectedId], 7, 4.5],
+          "circle-color": ["case", ["==", ["get", "id"], selectedId], ACCENT, "#cfd6e4"],
+          "circle-stroke-color": currentTheme() === "light" ? "#1d2333" : "#0b0d12",
+          "circle-stroke-width": 1.5,
+        },
+      });
+    }
+    if (!map.getLayer("inland-dest-label")) {
+      map.addLayer({
+        id: "inland-dest-label",
+        type: "symbol",
+        source: "inland-destinations",
+        layout: {
+          "text-field": ["get", "label"],
+          "text-size": 11,
+          "text-offset": [0, 1.2],
+          "text-anchor": "top",
+          "text-allow-overlap": false,
+        },
+        paint: {
+          "text-color": currentTheme() === "light" ? "#1d2333" : "#e7ecf5",
+          "text-halo-color": currentTheme() === "light" ? "#ffffff" : "#0b0d12",
+          "text-halo-width": 1.4,
+        },
+      });
+    }
+
+    if (selectedId) {
+      applySelectionLayer();
+    }
+    fitAll();
+  }
+
+  function setOriginMarker() {
+    if (!data.origin || data.origin.lat == null) return;
+    if (originMarker) originMarker.remove();
+    const el = document.createElement("div");
+    el.className = "inland-origin-pulse";
+    originMarker = new maplibregl.Marker({ element: el })
+      .setLngLat([data.origin.lng, data.origin.lat])
+      .setPopup(new maplibregl.Popup({ offset: 14, closeButton: false }).setText(data.origin.name))
+      .addTo(map);
+  }
+
+  function fitAll() {
+    const pts = data.destinations.filter((d) => d.enabled && d.lat != null).map((d) => [d.lng, d.lat]);
+    if (data.origin) pts.push([data.origin.lng, data.origin.lat]);
+    if (pts.length < 2) return;
+    const bounds = pts.reduce(
+      (acc, p) => acc.extend(p),
+      new maplibregl.LngLatBounds(pts[0], pts[0])
+    );
+    map.fitBounds(bounds, { padding: 60, duration: 0 });
+  }
+
+  function applySelectionLayer() {
+    const dest = destById.get(selectedId);
+    let feature = null;
+    const cached = routeForDestination(selectedId);
+    if (cached && cached.encodedPolyline) {
+      const coords = decodePolyline(cached.encodedPolyline);
+      if (coords.length >= 2) {
+        feature = { type: "Feature", properties: { destinationId: selectedId }, geometry: { type: "LineString", coordinates: coords } };
+      }
+    }
+    if (!feature && dest) {
+      feature = fallbackArc(dest);
+    }
+    const src = map.getSource("inland-selected");
+    if (src) src.setData({ type: "FeatureCollection", features: feature ? [feature] : [] });
+
+    // dim base routes, emphasize dots
+    if (map.getLayer("inland-route-line")) {
+      map.setPaintProperty("inland-route-line", "line-opacity", selectedId ? 0.25 : 0.85);
+    }
+    if (map.getLayer("inland-route-casing")) {
+      map.setPaintProperty("inland-route-casing", "line-opacity", selectedId ? 0.2 : 0.5);
+    }
+    if (map.getLayer("inland-dest-dot")) {
+      map.setPaintProperty("inland-dest-dot", "circle-radius", ["case", ["==", ["get", "id"], selectedId], 7, 4.5]);
+      map.setPaintProperty("inland-dest-dot", "circle-color", ["case", ["==", ["get", "id"], selectedId], ACCENT, "#cfd6e4"]);
+    }
+
+    if (feature && feature.geometry.coordinates.length >= 2) {
+      const coords = feature.geometry.coordinates;
+      const bounds = coords.reduce(
+        (acc, c) => acc.extend(c),
+        new maplibregl.LngLatBounds(coords[0], coords[0])
+      );
+      map.fitBounds(bounds, { padding: 70, duration: 700 });
+    }
+  }
+
+  // --- dash flow animation on the selected line ---
+  let dashStep = 0;
+  function animateDash() {
+    if (map.getLayer("inland-selected-line") && selectedId) {
+      dashStep = (dashStep + 1) % 8;
+      const seq = [
+        [0, 4, 3], [1, 4, 2], [2, 4, 1], [3, 4, 0],
+        [0, 1, 3, 3], [0, 2, 3, 2], [0, 3, 3, 1], [0, 4, 3, 0],
+      ];
+      map.setPaintProperty("inland-selected-line", "line-dasharray", seq[dashStep]);
+    }
+    setTimeout(() => requestAnimationFrame(animateDash), 90);
+  }
+
+  // --- quote panel ---
+  const panel = {
+    form: document.querySelector("[data-inland-form]"),
+    destSelect: document.querySelector("[data-inland-destination]"),
+    serviceInput: document.querySelector("[data-inland-service-input]"),
+    qtyInput: document.querySelector("[data-inland-quantity]"),
+    ivaInput: document.querySelector("[data-inland-iva-input]"),
+    preciseInput: document.querySelector("[data-inland-precise-input]"),
+    result: document.querySelector("[data-inland-result]"),
+    empty: document.querySelector("[data-inland-empty]"),
+    routeMeta: document.querySelector("[data-inland-route-meta]"),
+    totalLabel: document.querySelector("[data-inland-total-label]"),
+    total: document.querySelector("[data-inland-total]"),
+    formula: document.querySelector("[data-inland-formula]"),
+    maxProviderLabel: document.querySelector("[data-inland-maxprovider-label]"),
+    maxProvider: document.querySelector("[data-inland-maxprovider]"),
+    allQuotesCard: document.querySelector("[data-inland-allquotes-card]"),
+    allQuotesLabel: document.querySelector("[data-inland-allquotes-label]"),
+    allQuotes: document.querySelector("[data-inland-allquotes]"),
+    precise: document.querySelector("[data-inland-precise]"),
+    preciseLabel: document.querySelector("[data-inland-precise-label]"),
+    preciseChips: document.querySelector("[data-inland-precise-chips]"),
+  };
+
+  function currentService() {
+    return panel.serviceInput.value === "full" ? "full" : "sencillo";
+  }
+  function currentTaxRatio() {
+    const v = panel.ivaInput.value;
+    return v === "0" ? 0 : 0.16;
+  }
+  function currentQty() {
+    return Math.max(0, parseInt(panel.qtyInput.value, 10) || 0);
+  }
+
+  function renderQuote() {
+    const dest = destById.get(selectedId);
+    if (!dest) {
+      panel.result.hidden = true;
+      panel.empty.hidden = false;
+      return;
+    }
+    panel.empty.hidden = true;
+    panel.result.hidden = false;
+
+    const service = currentService();
+    const maxRate = service === "full" ? dest.maxFull : dest.maxSencillo;
+    const provider = service === "full" ? dest.maxFullProvider : dest.maxSencilloProvider;
+    const qty = currentQty();
+    const tax = currentTaxRatio();
+
+    // route meta
+    const route = routeForDestination(selectedId);
+    let metaHtml = "";
+    if (route) {
+      const via = (route.viaCities || []).join(" → ");
+      const hours = route.durationMin ? `≈${Math.round(route.durationMin / 60)} ${i18n.hours}` : "";
+      metaHtml = `${via ? `<span>${i18n.via}: ${via}</span>` : ""}` +
+        `<span>${route.distanceKm} ${i18n.km}${hours ? ` · ${hours}` : ""}</span>` +
+        `${route.hasFerry ? `<span class="inland-flag">${i18n.hasFerry}</span>` : ""}` +
+        `${route.stale ? `<span class="inland-flag">${i18n.routeStale}</span>` : ""}`;
+    } else {
+      metaHtml = `<span class="inland-flag">${i18n.routeNotCached}</span>`;
+    }
+    if (dest.needsReview) {
+      metaHtml += `<span class="inland-flag">${i18n.needsReview}</span>`;
+    }
+    panel.routeMeta.innerHTML = metaHtml;
+
+    panel.totalLabel.textContent = `${i18n.total} · ${tax === 0 ? i18n.pretax : i18n.aftertax}`;
+
+    if (maxRate == null) {
+      panel.total.textContent = i18n.noRate.replace("{service}", service === "full" ? i18n.serviceFull : i18n.serviceSencillo);
+      panel.formula.textContent = "";
+      panel.maxProviderLabel.textContent = "";
+      panel.maxProvider.textContent = "";
+    } else {
+      const pretax = maxRate * qty;
+      const total = tax === 0 ? pretax : pretax * (1 + tax);
+      panel.total.textContent = `${fmtMoney(total)} ${i18n.mxn}`;
+      panel.formula.textContent =
+        tax === 0
+          ? `${fmtMoney(maxRate)} × ${qty} = ${fmtMoney(total)} ${i18n.mxn}`
+          : `${fmtMoney(maxRate)} × ${qty} × 1.16 = ${fmtMoney(total)} ${i18n.mxn}`;
+      panel.maxProviderLabel.textContent = `${i18n.maxProvider}:`;
+      panel.maxProvider.textContent = provider || "—";
+    }
+
+    renderAllQuotes(dest);
+    renderPrecise(dest);
+  }
+
+  function renderAllQuotes(dest) {
+    const entries = (dest.entries || []).slice();
+    panel.allQuotesLabel.textContent = `${i18n.allQuotes} (${entries.length})`;
+    if (!entries.length) {
+      panel.allQuotes.innerHTML = `<p class="muted">${i18n.noQuotesForDestination}</p>`;
+      return;
+    }
+    const service = currentService();
+    entries.sort((a, b) => (Number(b[service] || 0) - Number(a[service] || 0)));
+    const rows = entries
+      .map((e) => {
+        const tag = e.cliente ? `<span class="inland-client-tag">${escapeHtml(e.cliente)}</span>` : "";
+        return `<tr>
+          <td>${escapeHtml(e.proveedor || "—")} ${tag}</td>
+          <td>${e.sencillo != null ? fmtMoney(e.sencillo) : "—"}</td>
+          <td>${e.full != null ? fmtMoney(e.full) : "—"}</td>
+          <td>${escapeHtml(e.commodity || "")}</td>
+        </tr>`;
+      })
+      .join("");
+    panel.allQuotes.innerHTML = `<table><thead><tr>
+      <th>${i18n.supplier}</th><th>${i18n.serviceSencillo}</th><th>${i18n.serviceFull}</th><th>${i18n.commodity}</th>
+    </tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  function renderPrecise(dest) {
+    const points = dest.precisePoints || [];
+    if (!points.length) {
+      panel.precise.hidden = true;
+      return;
+    }
+    panel.precise.hidden = false;
+    panel.preciseLabel.textContent = i18n.precisePoints;
+    const chips = [`<button type="button" class="inland-chip is-active" data-precise-id="">${i18n.precisePointDefault}</button>`]
+      .concat(
+        points.map(
+          (p) => `<button type="button" class="inland-chip" data-precise-id="${escapeHtml(p.id)}">${escapeHtml(p.name)}</button>`
+        )
+      )
+      .join("");
+    panel.preciseChips.innerHTML = chips;
+  }
+
+  function escapeHtml(str) {
+    return String(str == null ? "" : str).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+    );
+  }
+
+  function selectDestination(id, { fly = true } = {}) {
+    selectedId = id || "";
+    if (panel.destSelect.value !== selectedId) panel.destSelect.value = selectedId;
+    panel.preciseInput.value = "";
+    if (selectedId && map.isStyleLoaded()) {
+      applySelectionLayer();
+    }
+    const url = new URL(window.location.href);
+    if (selectedId) url.searchParams.set("dest", selectedId);
+    else url.searchParams.delete("dest");
+    window.history.replaceState({}, "", url);
+    renderQuote();
+    void fly;
+  }
+
+  // --- wire interactions ---
+  panel.destSelect.addEventListener("change", () => selectDestination(panel.destSelect.value));
+
+  document.querySelectorAll("[data-service-value]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-service-value]").forEach((b) => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      panel.serviceInput.value = btn.dataset.serviceValue;
+      renderQuote();
+    });
+  });
+  document.querySelectorAll("[data-iva-value]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-iva-value]").forEach((b) => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      panel.ivaInput.value = btn.dataset.ivaValue;
+      renderQuote();
+    });
+  });
+  document.querySelectorAll("[data-qty-step]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const step = parseInt(btn.dataset.qtyStep, 10) || 0;
+      panel.qtyInput.value = Math.max(0, currentQty() + step);
+      renderQuote();
+    });
+  });
+  panel.qtyInput.addEventListener("input", renderQuote);
+  panel.preciseChips.addEventListener("click", (event) => {
+    const chip = event.target.closest("[data-precise-id]");
+    if (!chip) return;
+    panel.preciseChips.querySelectorAll(".inland-chip").forEach((c) => c.classList.remove("is-active"));
+    chip.classList.add("is-active");
+    panel.preciseInput.value = chip.dataset.preciseId || "";
+    const dest = destById.get(selectedId);
+    const point = (dest?.precisePoints || []).find((p) => p.id === chip.dataset.preciseId);
+    const route = routeByKey.get(`${selectedId}|precisePoint|${chip.dataset.preciseId}`);
+    if (route && route.encodedPolyline) {
+      applySelectionLayer();
+    } else if (point && point.lat != null) {
+      map.flyTo({ center: [point.lng, point.lat], zoom: 9 });
+    }
+  });
+
+  map.on("load", () => {
+    addLayers();
+    setOriginMarker();
+    requestAnimationFrame(animateDash);
+    if (initial.formData && initial.formData.destinationId) {
+      selectDestination(initial.formData.destinationId);
+    }
+  });
+  map.on("style.load", () => {
+    // re-add custom layers after a base style swap
+    if (map.getSource("inland-routes")) return;
+    addLayers();
+    setOriginMarker();
+  });
+
+  // hover + click on dots and routes
+  ["inland-dest-dot", "inland-route-line"].forEach((layer) => {
+    map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));
+    map.on("mouseleave", layer, () => (map.getCanvas().style.cursor = ""));
+  });
+  const hoverPopup = new maplibregl.Popup({ offset: 12, closeButton: false, closeOnClick: false });
+  map.on("mousemove", "inland-dest-dot", (e) => {
+    const f = e.features[0];
+    const dest = destById.get(f.properties.id);
+    if (!dest) return;
+    const sLine = dest.maxSencillo != null ? `S $${fmtMoney(dest.maxSencillo)}` : "S —";
+    const fLine = dest.maxFull != null ? `F $${fmtMoney(dest.maxFull)}` : "F —";
+    hoverPopup
+      .setLngLat(e.lngLat)
+      .setHTML(`<strong>${escapeHtml(dest.name)}</strong><br>${sLine} · ${fLine}<br>${dest.entryCount} ${i18n.allQuotes}`)
+      .addTo(map);
+  });
+  map.on("mouseleave", "inland-dest-dot", () => hoverPopup.remove());
+  map.on("click", "inland-dest-dot", (e) => selectDestination(e.features[0].properties.id));
+  map.on("click", "inland-route-line", (e) => selectDestination(e.features[0].properties.destinationId));
+
+  // follow app theme
+  const themeObserver = new MutationObserver(() => {
+    const next = STYLES[currentTheme()];
+    map.setStyle(next);
+  });
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+})();
