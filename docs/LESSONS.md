@@ -54,3 +54,11 @@ Only record lessons that may change future behavior.
 - scope: project
 - landed_in: public/styles.css
 - next_action: include Spanish mobile admin overflow checks when changing shared sidebar, header, cards, or grid wrappers.
+
+## 2026-06-10 - Inland module: OSRM, link resolution, seed-data diff hygiene
+
+- source_type: ai-self-correction
+- lesson: (1) OSRM public routing needs a base-URL fallback chain + retries + serial spacing; `steps=true` gives ferry detection via `step.mode === "ferry"`. (2) Mexican tariff CSVs are often semicolon-delimited because `,` is the thousands separator — detect the delimiter from the header instead of hardcoding. (3) Google Maps link resolution must whitelist domains and follow short links manually (capped redirects, no cookies) to avoid SSRF; coordinate priority is `!3d!4d` > `@` > `q/ll` > `/dir` > bare text. (4) When `saveShippingData` runs full normalization, re-saving the seed JSON re-applies other modules' (idempotent) migrations and pollutes the diff — inject only the changed module section back into the HEAD file to keep PR diffs scoped.
+- scope: project
+- landed_in: src/lib/inland-routes.js, src/lib/inland-csv.js, src/lib/inland-link-resolver.js, data/shipping-lines.json
+- next_action: when seeding/editing data files via the store, verify `git diff` is scoped to the intended module; reuse the OSRM fallback + delimiter-detection patterns for future data imports.
