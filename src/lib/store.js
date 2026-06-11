@@ -7,6 +7,11 @@ const {
   shouldUseDatabase,
 } = require("./db");
 const {
+  INLAND_ORIGINS,
+  INLAND_DESTINATION_CATALOG,
+  DEFAULT_INLAND_ORIGIN_ID,
+} = require("./inland-catalog");
+const {
   DEFAULT_DEMURRAGE_CUTOFF,
   DEFAULT_PRICE_MODE,
   DEFAULT_QUOTE_CURRENCY,
@@ -1842,6 +1847,159 @@ function normalizeHandoverModuleData(moduleData = {}) {
   };
 }
 
+// Bumped to (re)seed the inland destination catalog from INLAND_DESTINATION_CATALOG.
+const INLAND_SEED_VERSION = 1;
+
+function parseNullableNumber(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function normalizeInlandPrecisePoint(point = {}, fallbackId) {
+  return {
+    id: slugifyId(point.id, fallbackId),
+    name: String(point.name || "").trim() || fallbackId,
+    lat: parseNullableNumber(point.lat),
+    lng: parseNullableNumber(point.lng),
+    note: String(point.note || ""),
+    source: ["gmaps-link", "manual", "seed-catalog"].includes(point.source)
+      ? point.source
+      : "manual",
+    link: typeof point.link === "string" ? point.link : "",
+  };
+}
+
+function normalizeInlandDestination(dest = {}, fallbackId) {
+  const id = slugifyId(dest.id, fallbackId);
+  return {
+    id,
+    name: String(dest.name || id).trim(),
+    state: String(dest.state || "").trim(),
+    lat: parseNullableNumber(dest.lat),
+    lng: parseNullableNumber(dest.lng),
+    coordSource: ["seed-catalog", "gmaps-link", "manual"].includes(dest.coordSource)
+      ? dest.coordSource
+      : "seed-catalog",
+    needsReview: Boolean(dest.needsReview),
+    precisePoints: (Array.isArray(dest.precisePoints) ? dest.precisePoints : []).map(
+      (point, index) => normalizeInlandPrecisePoint(point, `${id}-pp-${index + 1}`)
+    ),
+    enabled: dest.enabled !== false,
+    note: String(dest.note || ""),
+  };
+}
+
+function normalizeInlandRateEntry(entry = {}, fallbackId) {
+  return {
+    id: slugifyId(entry.id, fallbackId),
+    originId:
+      slugifyId(entry.originId, DEFAULT_INLAND_ORIGIN_ID) ||
+      DEFAULT_INLAND_ORIGIN_ID,
+    destinationId: String(entry.destinationId || "").trim(),
+    proveedor: String(entry.proveedor || "").trim(),
+    sencillo: parseNullableNumber(entry.sencillo),
+    full: parseNullableNumber(entry.full),
+    currency: "MXN",
+    cliente: String(entry.cliente || "").trim(),
+    codigoCw: String(entry.codigoCw || "").trim(),
+    commodity: String(entry.commodity || "").trim(),
+    enabled: entry.enabled !== false,
+    note: String(entry.note || ""),
+    extras:
+      entry.extras && typeof entry.extras === "object" && !Array.isArray(entry.extras)
+        ? entry.extras
+        : {},
+  };
+}
+
+function normalizeInlandRouteCacheEntry(rc = {}, fallbackId) {
+  return {
+    id: slugifyId(rc.id, fallbackId),
+    originId:
+      slugifyId(rc.originId, DEFAULT_INLAND_ORIGIN_ID) || DEFAULT_INLAND_ORIGIN_ID,
+    destinationId: String(rc.destinationId || "").trim(),
+    targetType: rc.targetType === "precisePoint" ? "precisePoint" : "destination",
+    targetId: rc.targetId ? String(rc.targetId).trim() : null,
+    encodedPolyline: typeof rc.encodedPolyline === "string" ? rc.encodedPolyline : "",
+    distanceKm: parseNullableNumber(rc.distanceKm),
+    durationMin: parseNullableNumber(rc.durationMin),
+    viaCities: Array.isArray(rc.viaCities)
+      ? rc.viaCities.map((city) => String(city)).filter(Boolean)
+      : [],
+    engine: String(rc.engine || "osrm"),
+    fetchedAt: rc.fetchedAt || null,
+    stale: Boolean(rc.stale),
+    hasFerry: Boolean(rc.hasFerry),
+  };
+}
+
+function buildInlandDestinationSeed() {
+  return INLAND_DESTINATION_CATALOG.map((dest) => ({
+    id: dest.id,
+    name: dest.name,
+    state: dest.state,
+    lat: dest.lat,
+    lng: dest.lng,
+    coordSource: "seed-catalog",
+    needsReview: Boolean(dest.needsReview),
+    precisePoints: [],
+    enabled: true,
+    note: "",
+  }));
+}
+
+function normalizeInlandModuleData(moduleData = {}) {
+  const seedVersion = parseNumber(moduleData.settings?.inlandSeedVersion, 0);
+  const seedNeeded =
+    seedVersion < INLAND_SEED_VERSION ||
+    !Array.isArray(moduleData.destinations) ||
+    !moduleData.destinations.length;
+
+  const origins = (
+    Array.isArray(moduleData.origins) && moduleData.origins.length
+      ? moduleData.origins
+      : INLAND_ORIGINS
+  ).map((origin, index) => ({
+    id: slugifyId(origin.id, `origin-${index + 1}`),
+    name: String(origin.name || origin.id || `Origin ${index + 1}`).trim(),
+    lat: parseNullableNumber(origin.lat),
+    lng: parseNullableNumber(origin.lng),
+  }));
+
+  const destinations = (
+    seedNeeded ? buildInlandDestinationSeed() : moduleData.destinations
+  ).map((dest, index) => normalizeInlandDestination(dest, `dest-${index + 1}`));
+  const destinationIds = new Set(destinations.map((dest) => dest.id));
+
+  const rateEntries = (
+    Array.isArray(moduleData.rateEntries) ? moduleData.rateEntries : []
+  )
+    .map((entry, index) => normalizeInlandRateEntry(entry, `re-${index + 1}`))
+    .filter((entry) => destinationIds.has(entry.destinationId));
+
+  const routeCache = (
+    Array.isArray(moduleData.routeCache) ? moduleData.routeCache : []
+  )
+    .map((rc, index) => normalizeInlandRouteCacheEntry(rc, `rc-${index + 1}`))
+    .filter((rc) => destinationIds.has(rc.destinationId));
+
+  return {
+    settings: {
+      defaultQuoteCurrency: "MXN",
+      defaultPriceMode: normalizePriceMode(moduleData.settings?.defaultPriceMode),
+      inlandSeedVersion: INLAND_SEED_VERSION,
+    },
+    taxRatePresets: normalizeTaxRatePresets(moduleData.taxRatePresets),
+    origins,
+    destinations,
+    rateEntries,
+    routeCache,
+  };
+}
+
 function normalizeGenericModuleData(moduleData = {}) {
   return {
     settings: {
@@ -1879,8 +2037,8 @@ function normalizeModules(data) {
     normalizedModules.handover
   );
 
-  normalizedModules.inland = normalizeGenericModuleData(
-    sourceModules.inland || createDefaultModuleData()
+  normalizedModules.inland = normalizeInlandModuleData(
+    sourceModules.inland || {}
   );
 
   for (const module of BUSINESS_MODULES) {
