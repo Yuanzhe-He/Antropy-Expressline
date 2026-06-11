@@ -10,6 +10,8 @@
     "db:seed": "node scripts/db-seed.js",
     "dev": "node --watch src/server.js",
     "fx:refresh": "node scripts/refresh-exchange-rates.js",
+    "inland:seed": "node scripts/seed-inland-from-csv.js",
+    "inland:routes": "node scripts/refresh-inland-routes.js",
     "start": "node src/server.js",
     "templates:excel": "python3 scripts/generate_bulk_upload_templates.py",
     "test": "node scripts/smoke-test.js"
