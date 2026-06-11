@@ -547,6 +547,19 @@ function buildCustomsTerminalDraft(moduleData, portEntry, t) {
   return terminal;
 }
 
+function buildCustomsPortDraft(moduleData, t) {
+  const index = (moduleData.ports || []).length + 1;
+  const id = buildRuleId("customs-port");
+  const port = {
+    id,
+    name: t("customs.newPortName", { count: index }),
+    note: null,
+    terminals: [],
+  };
+  port.terminals = [buildCustomsTerminalDraft(moduleData, port, t)];
+  return port;
+}
+
 function buildCustomsYardDraft(moduleData, t) {
   const index = (moduleData.yards || []).length + 1;
   const id = buildRuleId("customs-yard");
@@ -1551,6 +1564,23 @@ function createApp() {
       moduleKey: "customs",
       moduleData: getModuleData(shippingData, "customs"),
     });
+  });
+
+  app.post("/admin/customs/ports/add", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const moduleData = structuredClone(getModuleData(shippingData, "customs"));
+    const port = buildCustomsPortDraft(moduleData, req.t);
+    moduleData.ports = [...(moduleData.ports || []), port];
+    shippingData.modules.customs = moduleData;
+    await saveShippingData(shippingData);
+
+    return redirectWithFlash(
+      req,
+      res,
+      "success",
+      req.t("customs.entityAdded", { name: port.name }),
+      `/admin/customs/shipping-lines#customs-port-${port.id}`
+    );
   });
 
   app.post(

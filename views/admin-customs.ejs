@@ -129,6 +129,12 @@
         <p class="eyebrow"><%= t("customs.portTerminalRules") %></p>
         <h3><%= t("customs.portTerminalRulesDescription") %></h3>
       </div>
+      <button
+        type="submit"
+        class="ghost-button compact-button"
+        formaction="/admin/customs/ports/add"
+        formmethod="post"
+      ><%= t("customs.addPort") %></button>
     </div>
 
     <details class="table-card hierarchy-card entity-collapsible">
@@ -154,13 +160,6 @@
                 <div class="collapsible-summary-actions">
                   <span class="selected-state-indicator"><%= t("admin.currentSelection") %></span>
                   <span class="collapsible-summary-meta"><%= t("customs.portTerminalCount", { count: (port.terminals || []).length }) %></span>
-                  <button
-                    type="submit"
-                    class="ghost-button compact-button"
-                    formaction="/admin/customs/ports/<%= port.id %>/terminals/add"
-                    formmethod="post"
-                    data-summary-action
-                  ><%= t("customs.addTerminal") %></button>
                 </div>
               </summary>
 
@@ -174,6 +173,15 @@
                     <span><%= t("common.note") %></span>
                     <input type="text" name="port_note_<%= port.id %>" value="<%= port.note || '' %>" />
                   </label>
+                </div>
+
+                <div class="actions">
+                  <button
+                    type="submit"
+                    class="ghost-button compact-button"
+                    formaction="/admin/customs/ports/<%= port.id %>/terminals/add"
+                    formmethod="post"
+                  ><%= t("customs.addTerminal") %></button>
                 </div>
 
                 <% for (const terminal of port.terminals || []) { %>
