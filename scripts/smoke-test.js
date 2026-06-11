@@ -1209,6 +1209,85 @@ async function main() {
       "deleted customs storage rule set clears linked assignments"
     );
 
+    // --- Editable container-type master (shared by handover + customs) ---
+    response = await request(baseUrl, "/admin/handover/settings", {
+      jar: publicJar,
+    });
+    assert.equal(response.status, 200);
+    expectContains(response.text, "ct_new_key", "container type editor add form");
+    expectContains(response.text, "ct_rateGroup_", "container type rate-group selects");
+
+    response = await request(baseUrl, "/admin/handover/container-types/add", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: [
+        ["ct_new_key", "TESTCT"],
+        ["ct_new_label", "Test container"],
+        ["ct_new_rateGroup", "dry"],
+      ],
+    });
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    const addedMasterType = shippingData.modules.handover.containerTypes.find(
+      (type) => type.key === "TESTCT"
+    );
+    assert.ok(addedMasterType, "container type added to handover master");
+    assert.ok(
+      Array.isArray(addedMasterType.rateGroupKeys) &&
+        addedMasterType.rateGroupKeys.length > 0,
+      "added container type resolves rate group keys"
+    );
+    assert.ok(
+      shippingData.modules.customs.containerTypes.some(
+        (type) => type.key === "TESTCT"
+      ),
+      "added container type propagates to customs"
+    );
+
+    response = await request(baseUrl, "/admin/handover/container-types/save", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: [
+        ["ct_label_TESTCT", "Test container renamed"],
+        ["ct_rateGroup_TESTCT", "reefer20"],
+      ],
+    });
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    const renamedMasterType = shippingData.modules.handover.containerTypes.find(
+      (type) => type.key === "TESTCT"
+    );
+    assert.equal(
+      renamedMasterType.label,
+      "Test container renamed",
+      "container type label saved"
+    );
+    assert.equal(
+      renamedMasterType.rateGroup,
+      "reefer20",
+      "container type rate group saved"
+    );
+
+    response = await request(
+      baseUrl,
+      "/admin/handover/container-types/TESTCT/delete",
+      { method: "POST", jar: publicJar }
+    );
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    assert.ok(
+      !shippingData.modules.handover.containerTypes.some(
+        (type) => type.key === "TESTCT"
+      ),
+      "container type removed from handover master"
+    );
+    assert.ok(
+      !shippingData.modules.customs.containerTypes.some(
+        (type) => type.key === "TESTCT"
+      ),
+      "container type removal propagates to customs"
+    );
+
     console.log("smoke-test-ok");
   } finally {
     await fs.writeFile(dataFile, originalData, "utf8");

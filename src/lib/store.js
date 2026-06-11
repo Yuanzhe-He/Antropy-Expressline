@@ -55,6 +55,15 @@ const RATE_GROUPS = Object.freeze({
   fortyFiveOpenTop: ["special-45", "imo-special-45", "ot-40", "ot-fr-rf", "ot-fl-pl"],
 });
 
+// Editable display container-type master. Bumped to (re)seed the persisted
+// master from STANDARD_HANDOVER_CONTAINER_TYPES on first load.
+const CONTAINER_TYPE_MASTER_VERSION = 1;
+// Reverse lookup: a container type's rateGroupKeys array → its named rate group.
+const RATE_GROUP_NAME_BY_SIGNATURE = new Map(
+  Object.entries(RATE_GROUPS).map(([name, keys]) => [keys.join("|"), name])
+);
+const RATE_GROUP_NAMES = Object.freeze(Object.keys(RATE_GROUPS));
+
 const STANDARD_HANDOVER_CONTAINER_TYPES = Object.freeze([
   {
     key: "40GP",
@@ -865,18 +874,51 @@ function deriveContainerTypes(shippingLines) {
     .sort((left, right) => left.label.localeCompare(right.label));
 }
 
-function buildStandardHandoverContainerTypes(shippingLines = []) {
+// Seed the editable container-type master from the built-in standard list.
+// Each master entry stores only { key, label, rateGroup }; rateGroup is the
+// named rate group (resolved back from the standard rateGroupKeys signature).
+function buildSeedContainerTypeMaster() {
+  return STANDARD_HANDOVER_CONTAINER_TYPES.map((type) => ({
+    key: type.key,
+    label: type.label,
+    rateGroup:
+      RATE_GROUP_NAME_BY_SIGNATURE.get((type.rateGroupKeys || []).join("|")) ||
+      RATE_GROUP_NAMES[0],
+  }));
+}
+
+// Turn persisted master entries ({ key, label, rateGroup }) into the full
+// container-type objects the app uses (rateGroupKeys derived from rateGroup,
+// decorated with the current shipping-line coverage).
+function normalizeContainerTypeMaster(entries, shippingLines = []) {
   const lineNames = (shippingLines || [])
     .map((line) => line.name)
     .filter(Boolean)
     .sort();
+  const seen = new Set();
 
-  return STANDARD_HANDOVER_CONTAINER_TYPES.map((type) => ({
-    ...type,
-    rateGroupKeys: [...type.rateGroupKeys],
-    shippingLineCount: lineNames.length,
-    shippingLines: lineNames,
-  }));
+  return (Array.isArray(entries) ? entries : [])
+    .map((entry) => {
+      const key = String(entry?.key || "").trim();
+      if (!key || seen.has(key)) {
+        return null;
+      }
+      seen.add(key);
+      const rateGroup = RATE_GROUPS[entry?.rateGroup]
+        ? entry.rateGroup
+        : RATE_GROUP_NAME_BY_SIGNATURE.get(
+            (entry?.rateGroupKeys || []).join("|")
+          ) || RATE_GROUP_NAMES[0];
+      return {
+        key,
+        label: String(entry?.label || key).trim() || key,
+        rateGroup,
+        rateGroupKeys: [...RATE_GROUPS[rateGroup]],
+        shippingLineCount: lineNames.length,
+        shippingLines: lineNames,
+      };
+    })
+    .filter(Boolean);
 }
 
 function normalizeIdList(value) {
@@ -1769,6 +1811,22 @@ function createDefaultModuleData() {
 function normalizeHandoverModuleData(moduleData = {}) {
   const shippingLines = (moduleData.shippingLines || []).map(normalizeShippingLine);
 
+  // Container types come from an editable master persisted on the handover
+  // module. On first load (or a version bump) seed it from the standard list;
+  // afterwards persisted edits win. Customs derives its types from this master.
+  const masterVersion = parseNumber(
+    moduleData.settings?.containerTypeMasterVersion,
+    0
+  );
+  const seedMaster =
+    masterVersion < CONTAINER_TYPE_MASTER_VERSION ||
+    !Array.isArray(moduleData.containerTypes) ||
+    !moduleData.containerTypes.length;
+  const containerTypes = normalizeContainerTypeMaster(
+    seedMaster ? buildSeedContainerTypeMaster() : moduleData.containerTypes,
+    shippingLines
+  );
+
   return {
     settings: {
       defaultQuoteCurrency: normalizeCurrencyCode(
@@ -1776,10 +1834,11 @@ function normalizeHandoverModuleData(moduleData = {}) {
         DEFAULT_QUOTE_CURRENCY
       ),
       defaultPriceMode: normalizePriceMode(moduleData.settings?.defaultPriceMode),
+      containerTypeMasterVersion: CONTAINER_TYPE_MASTER_VERSION,
     },
     taxRatePresets: normalizeTaxRatePresets(moduleData.taxRatePresets),
     shippingLines,
-    containerTypes: buildStandardHandoverContainerTypes(shippingLines),
+    containerTypes,
   };
 }
 
@@ -1908,4 +1967,5 @@ module.exports = {
   parseDemurrageRange,
   saveShippingData,
   saveUsers,
+  RATE_GROUP_NAMES,
 };

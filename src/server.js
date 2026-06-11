@@ -35,6 +35,7 @@ const {
   getShippingData,
   getUsers,
   saveShippingData,
+  RATE_GROUP_NAMES,
 } = require("./lib/store");
 
 const port = process.env.PORT || 3000;
@@ -558,6 +559,31 @@ function buildCustomsPortDraft(moduleData, t) {
   };
   port.terminals = [buildCustomsTerminalDraft(moduleData, port, t)];
   return port;
+}
+
+// Count non-zero customs rates keyed by a container type. Used to warn before
+// deleting a container type from the master (handover rates are keyed by rate
+// group, not by container type, so only customs holds per-container references).
+function countCustomsContainerReferences(customsData, key) {
+  let count = 0;
+  const scanCharges = (charges) => {
+    for (const charge of charges || []) {
+      const rate = charge.groupRates?.[key];
+      if (rate && Number(rate.rate) > 0) {
+        count += 1;
+      }
+    }
+  };
+  for (const port of customsData?.ports || []) {
+    for (const terminal of port.terminals || []) {
+      scanCharges(terminal.fixedCharges);
+    }
+  }
+  for (const yard of customsData?.yards || []) {
+    scanCharges(yard.dropoffCharges);
+    scanCharges(yard.customsCharges);
+  }
+  return count;
 }
 
 function buildCustomsYardDraft(moduleData, t) {
@@ -1152,6 +1178,7 @@ function renderAdminSettings(req, res, payload) {
       languageReturnTo: req.originalUrl,
       priceModeOptions: getLocalizedOptions(PRICE_MODE_OPTIONS, req.t),
       currencyOptions: CURRENCY_OPTIONS,
+      rateGroupNames: RATE_GROUP_NAMES,
     })
   );
 }
@@ -1555,6 +1582,110 @@ function createApp() {
         message: req.t("admin.exchangeRatesSaved"),
       };
       return res.redirect(`/admin/${module.key}/settings`);
+    }
+  );
+
+  // --- Container type master (editable on handover; shared with customs) ---
+  app.post(
+    "/admin/handover/container-types/add",
+    requireAuth,
+    async (req, res) => {
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = structuredClone(getModuleData(shippingData, "handover"));
+      const existing = moduleData.containerTypes || [];
+      const key = String(req.body.ct_new_key || "").trim();
+      const label = String(req.body.ct_new_label || "").trim();
+      const rateGroup = String(req.body.ct_new_rateGroup || "").trim();
+      const target = "/admin/handover/settings#container-types";
+
+      if (!key) {
+        return redirectWithFlash(req, res, "error", req.t("containerTypes.keyRequired"), target);
+      }
+      if (existing.some((type) => type.key === key)) {
+        return redirectWithFlash(req, res, "error", req.t("containerTypes.keyExists", { key }), target);
+      }
+      if (!RATE_GROUP_NAMES.includes(rateGroup)) {
+        return redirectWithFlash(req, res, "error", req.t("containerTypes.rateGroupRequired"), target);
+      }
+
+      moduleData.containerTypes = [...existing, { key, label: label || key, rateGroup }];
+      shippingData.modules.handover = moduleData;
+      await saveShippingData(shippingData);
+      return redirectWithFlash(req, res, "success", req.t("containerTypes.added", { name: label || key }), target);
+    }
+  );
+
+  app.post(
+    "/admin/handover/container-types/save",
+    requireAuth,
+    async (req, res) => {
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = structuredClone(getModuleData(shippingData, "handover"));
+      moduleData.containerTypes = (moduleData.containerTypes || []).map((type) => {
+        const label =
+          String(req.body[`ct_label_${type.key}`] ?? type.label).trim() || type.key;
+        const rateGroupInput = String(req.body[`ct_rateGroup_${type.key}`] || "").trim();
+        const rateGroup = RATE_GROUP_NAMES.includes(rateGroupInput)
+          ? rateGroupInput
+          : type.rateGroup;
+        return { key: type.key, label, rateGroup };
+      });
+      shippingData.modules.handover = moduleData;
+      await saveShippingData(shippingData);
+      return redirectWithFlash(
+        req,
+        res,
+        "success",
+        req.t("containerTypes.saved"),
+        "/admin/handover/settings#container-types"
+      );
+    }
+  );
+
+  app.post(
+    "/admin/handover/container-types/:key/delete",
+    requireAuth,
+    async (req, res) => {
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = structuredClone(getModuleData(shippingData, "handover"));
+      const existing = moduleData.containerTypes || [];
+      const key = req.params.key;
+      const target = "/admin/handover/settings#container-types";
+
+      if (!existing.some((type) => type.key === key)) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+      if (existing.length <= 1) {
+        return redirectWithFlash(req, res, "error", req.t("containerTypes.keepOne"), target);
+      }
+
+      const force = req.query.force === "1";
+      const refs = countCustomsContainerReferences(
+        getModuleData(shippingData, "customs"),
+        key
+      );
+      if (refs > 0 && !force) {
+        return redirectWithFlash(
+          req,
+          res,
+          "error",
+          req.t("containerTypes.deleteBlocked", { key, count: refs }),
+          target
+        );
+      }
+
+      // Removing the type from the master drops its customs rate entries
+      // automatically on the next normalize (ensureRatesForContainerTypes).
+      moduleData.containerTypes = existing.filter((type) => type.key !== key);
+      shippingData.modules.handover = moduleData;
+      await saveShippingData(shippingData);
+      return redirectWithFlash(req, res, "success", req.t("containerTypes.deleted", { name: key }), target);
     }
   );
 

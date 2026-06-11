@@ -172,15 +172,16 @@
     </div>
   </section>
 
-  <section class="panel">
+  <section class="panel" id="container-types">
     <div class="section-title">
       <div>
-        <p class="eyebrow"><%= t("admin.containerTable") %></p>
+        <p class="eyebrow"><%= t("containerTypes.editorTitle") %></p>
         <h3><%= t("admin.containerTable") %></h3>
       </div>
     </div>
     <div class="table-card">
       <% if (currentModuleKey === "customs") { %>
+        <p class="helper-text"><%= t("containerTypes.readonlyNote") %></p>
         <table>
           <thead>
             <tr>
@@ -207,31 +208,80 @@
           </tbody>
         </table>
       <% } else { %>
-        <table>
-          <thead>
-            <tr>
-              <th><%= t("admin.typeKey") %></th>
-              <th><%= t("admin.typeName") %></th>
-              <th><%= t("admin.lineCoverage") %></th>
-              <th><%= t("admin.lineNames") %></th>
-            </tr>
-          </thead>
-          <tbody>
-            <% for (const type of moduleData.containerTypes) { %>
+        <p class="helper-text"><%= t("containerTypes.editorDescription") %></p>
+        <form method="post" action="/admin/handover/container-types/save" class="stack-form">
+          <table>
+            <thead>
               <tr>
-                <td><%= type.key %></td>
-                <td><%= type.label %></td>
-                <td><%= type.shippingLineCount %></td>
-                <td><%= type.shippingLines.join(" / ") %></td>
+                <th><%= t("admin.typeKey") %></th>
+                <th><%= t("admin.typeName") %></th>
+                <th><%= t("containerTypes.rateGroupLabel") %></th>
+                <th><%= t("admin.lineCoverage") %></th>
+                <th></th>
               </tr>
-            <% } %>
-            <% if (!moduleData.containerTypes.length) { %>
-              <tr>
-                <td colspan="4"><%= t("admin.noContainerTypes") %></td>
-              </tr>
-            <% } %>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <% for (const type of moduleData.containerTypes) { %>
+                <tr>
+                  <td><%= type.key %></td>
+                  <td><input type="text" name="ct_label_<%= type.key %>" value="<%= type.label %>" /></td>
+                  <td>
+                    <select name="ct_rateGroup_<%= type.key %>">
+                      <% for (const name of rateGroupNames) { %>
+                        <option value="<%= name %>" <%= type.rateGroup === name ? "selected" : "" %>><%= t("containerTypes.rateGroups." + name) %></option>
+                      <% } %>
+                    </select>
+                  </td>
+                  <td><%= type.shippingLineCount %></td>
+                  <td class="container-type-row-actions">
+                    <button
+                      type="submit"
+                      class="ghost-button compact-button danger-button"
+                      formaction="/admin/handover/container-types/<%= type.key %>/delete"
+                      formmethod="post"
+                      data-confirm-submit="<%= t("containerTypes.confirmDelete", { name: type.label }) %>"
+                    ><%= t("containerTypes.delete") %></button>
+                    <button
+                      type="submit"
+                      class="ghost-button compact-button"
+                      formaction="/admin/handover/container-types/<%= type.key %>/delete?force=1"
+                      formmethod="post"
+                      data-confirm-submit="<%= t("containerTypes.confirmForceDelete", { name: type.label }) %>"
+                    ><%= t("containerTypes.forceDelete") %></button>
+                  </td>
+                </tr>
+              <% } %>
+              <% if (!moduleData.containerTypes.length) { %>
+                <tr>
+                  <td colspan="5"><%= t("admin.noContainerTypes") %></td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+          <div class="actions">
+            <button type="submit" class="primary-calculate-button"><%= t("containerTypes.save") %></button>
+          </div>
+        </form>
+
+        <form method="post" action="/admin/handover/container-types/add" class="grid-form container-type-add-form">
+          <label>
+            <span><%= t("admin.typeKey") %></span>
+            <input type="text" name="ct_new_key" required />
+          </label>
+          <label>
+            <span><%= t("admin.typeName") %></span>
+            <input type="text" name="ct_new_label" />
+          </label>
+          <label>
+            <span><%= t("containerTypes.rateGroupLabel") %></span>
+            <select name="ct_new_rateGroup">
+              <% for (const name of rateGroupNames) { %>
+                <option value="<%= name %>"><%= t("containerTypes.rateGroups." + name) %></option>
+              <% } %>
+            </select>
+          </label>
+          <button type="submit" class="ghost-button"><%= t("containerTypes.add") %></button>
+        </form>
       <% } %>
     </div>
   </section>
