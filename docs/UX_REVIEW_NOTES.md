@@ -94,18 +94,26 @@ Landed in:
 - `src/lib/i18n.js` (`addPort`, `newPortName` — zh + es)
 - `views/admin-customs.ejs` (add-port button in section header; add-terminal button moved into port body)
 
-## 2026-06-10 - Deferred: Unify Customs Container Types With Handover
+## 2026-06-10 - Unify Customs Container Types With Handover
 
 User feedback:
-- The 港口和码头 (customs) module container types should match the 换单 (handover) module's.
+- The 港口和码头 (customs) module container types should be identical to the 换单 (handover) module's.
 
-Why deferred (not shipped):
-- Handover uses ISO container keys (`40GP`, `20GP`, `20FR`, …, 20 types); customs uses a separate tariff taxonomy (`fr-20`, `gp-hc-sd`, `gp-hq-dc`, `imo-dry`, …, 17 types). There is no clean key mapping.
-- Every customs rate map (terminal fixed charges, yard drop-off/customs charges, storage rule-set assignments) is keyed by the customs taxonomy. Re-keying to handover keys resets all per-container rates to defaults and collapses the per-container storage rule-set structure.
-- Local JSON rates are sample data, but production runs on Postgres whose real customs config is not visible here; unifying would silently reset it on the next load.
+Decision:
+- The two taxonomies had zero key overlap — handover uses ISO keys (`40GP`, `20GP`, `20FR`, …, 20 types); customs used tariff buckets (`fr-20`, `gp-hc-sd`, `gp-hq-dc`, `imo-dry`, …, 17 types). User confirmed: replace the customs taxonomy with handover's, accepting that per-container customs rates reset (they were sample data; no clean mapping exists).
 
-Decision needed before implementing:
-- Confirm it is acceptable to reset customs per-container rates / storage assignments, then implement cleanly (sync container types + regenerate customs rate structure around handover types + make the storage-assignment smoke test set up its own occupied assignment instead of relying on seed variety).
+How it was implemented:
+- `normalizeCustomsModuleData` now derives `containerTypes` from the handover module (key + label + order), so customs is always identical to handover.
+- All customs rate maps re-key onto handover keys via `ensureRatesForContainerTypes`, which now returns exactly the current container types (preserving matches, dropping stale keys).
+- Stale storage rule sets are rebuilt onto the new taxonomy once, gated by a new `containerTaxonomyVersion` (mirrors the existing `storageTierPolicyVersion` migration) so it runs exactly once and never re-triggers (which would otherwise resurrect deleted rule sets). Result: one default storage rule set covering all container types; admins can split it as needed.
+- Smoke test updated: linked-workflow keys use `40GP`; because unified types share one default rule set, the storage-assignment release test now sets up its own occupied assignment instead of relying on seed variety.
+
+Data impact:
+- On first load after deploy (production Postgres has no `containerTaxonomyVersion`), customs per-container fixed/drop-off/yard rates reset to 0 and storage rule sets collapse to one default; persists on the next save. Re-enter customs rates afterward.
+
+Landed in:
+- `src/lib/store.js` (`CUSTOMS_CONTAINER_TAXONOMY_VERSION`, `normalizeCustomsModuleData`, `normalizeStorageRuleSets`, `ensureRatesForContainerTypes`)
+- `scripts/smoke-test.js`
 
 ## 2026-05-06 - Workbench Home First Screen Compaction
 

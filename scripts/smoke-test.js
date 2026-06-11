@@ -407,7 +407,7 @@ async function main() {
         ["demurrageDays", 9],
         ["priceMode", "aftertax"],
         ["quoteCurrency", "MXN"],
-        ["containerGroupKey[]", "gp-hq-dc"],
+        ["containerGroupKey[]", "40GP"],
         ["containerCount[]", 2],
       ],
     });
@@ -438,7 +438,7 @@ async function main() {
     assert.equal(response.status, 200);
     expectContains(response.text, "清关一页式工作台", "customs page");
     expectContains(response.text, 'value="cma-cgm" selected', "linked shipping line");
-    expectContains(response.text, 'value="gp-hq-dc" selected', "linked container type");
+    expectContains(response.text, 'value="40GP" selected', "linked container type");
     expectContains(response.text, "tax-override-card", "customs visible tax overrides");
 
     response = await request(baseUrl, "/workbench/customs", {
@@ -453,7 +453,7 @@ async function main() {
         ["storageDays", 12],
         ["priceMode", "aftertax"],
         ["quoteCurrency", "MXN"],
-        ["containerGroupKey[]", "gp-hq-dc"],
+        ["containerGroupKey[]", "40GP"],
         ["containerCount[]", 2],
       ],
     });
@@ -472,10 +472,6 @@ async function main() {
     expectContains(response.text, "适用船公司 / 柜型", "customs line-container rule assignments");
     expectContains(response.text, "同柜型所有船公司", "customs same-container batch assignment");
     expectContains(response.text, "选择全部可选", "customs available batch assignment");
-    expectContains(response.text, "已被其他规则占用", "customs occupied assignment release panel");
-    expectContains(response.text, "选择要释放的组合", "customs occupied assignment release select");
-    expectContains(response.text, "data-storage-release-assignment", "customs occupied assignment release action");
-    expectContains(response.text, "data-storage-release-button", "customs release button state control");
     expectContains(response.text, "data-storage-rule-card", "customs collapsible storage rule cards");
     expectContains(response.text, "移除", "customs assignment removal");
     expectContains(response.text, "删除码头", "customs terminal delete action");
@@ -1006,6 +1002,50 @@ async function main() {
       ).rules.length,
       beforeCustomsRuleCount
     );
+
+    // Unified customs container types share a single default storage rule set,
+    // so set up an occupied assignment explicitly: move one line+container onto
+    // the second rule set the test added above.
+    const occupiedSetupTerminal =
+      shippingData.modules.customs.ports[0].terminals[0];
+    const occupiedOtherRuleSet = occupiedSetupTerminal.storageRuleSets.find(
+      (ruleSet) => ruleSet.id !== customsRuleSet.id
+    );
+    assert.ok(
+      occupiedOtherRuleSet,
+      "second customs rule set available for occupied setup"
+    );
+    const occupiedSetupLineId =
+      shippingData.modules.customs.shippingLines[0].id;
+    const occupiedSetupKey = `${occupiedSetupLineId}::${customsGroupKey}`;
+    const occupiedSetupForm = buildCustomsAdminForm(
+      shippingData.modules.customs
+    ).map(([key, value]) =>
+      key ===
+        `terminal_storage_set_${terminal.id}_${customsRuleSet.id}_lineContainers` &&
+      value === occupiedSetupKey
+        ? [
+            `terminal_storage_set_${terminal.id}_${occupiedOtherRuleSet.id}_lineContainers`,
+            value,
+          ]
+        : [key, value]
+    );
+    response = await request(baseUrl, "/admin/customs/shipping-lines", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: occupiedSetupForm,
+    });
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+
+    response = await request(baseUrl, "/admin/customs/shipping-lines", {
+      jar: publicJar,
+    });
+    assert.equal(response.status, 200);
+    expectContains(response.text, "已被其他规则占用", "customs occupied assignment release panel");
+    expectContains(response.text, "选择要释放的组合", "customs occupied assignment release select");
+    expectContains(response.text, "data-storage-release-assignment", "customs occupied assignment release action");
+    expectContains(response.text, "data-storage-release-button", "customs release button state control");
 
     let occupiedCustomsAssignmentKey = "";
     for (const line of shippingData.modules.customs.shippingLines || []) {

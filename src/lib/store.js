@@ -29,6 +29,9 @@ const seedUsersFile = path.join(bundledDataDir, "users.json");
 const shippingDataStateKey = "shipping-data";
 const usersStateKey = "users";
 const CUSTOMS_STORAGE_TIER_POLICY_VERSION = 2;
+// Bumped when customs container types were unified with the handover module.
+// Triggers a one-time rebuild of storage rule sets onto the new taxonomy.
+const CUSTOMS_CONTAINER_TAXONOMY_VERSION = 1;
 
 const RATE_GROUPS = Object.freeze({
   dry: ["gp-hq-dc", "gp-hc-sd", "gp-hq-dc-20-40", "imo-dry"],
@@ -912,17 +915,19 @@ function normalizeContainerTypeList(rawTypes = [], fallbackTypes = []) {
 
 function ensureRatesForContainerTypes(groupRates = {}, containerTypes = []) {
   const normalized = normalizeGroupRates(groupRates);
+  // Container types are the source of truth: keep a rate entry for each current
+  // type (preserving existing values) and drop stale keys left over from a
+  // previous container taxonomy.
+  const result = {};
   for (const type of containerTypes) {
-    if (!normalized[type.key]) {
-      normalized[type.key] = {
-        label: type.label,
-        qtyHint: 1,
-        currency: DEFAULT_QUOTE_CURRENCY,
-        rate: 0,
-      };
-    }
+    result[type.key] = normalized[type.key] || {
+      label: type.label,
+      qtyHint: 1,
+      currency: DEFAULT_QUOTE_CURRENCY,
+      rate: 0,
+    };
   }
-  return normalized;
+  return result;
 }
 
 function normalizeCustomsCharge(charge, fallbackId, containerTypes) {
@@ -1062,7 +1067,12 @@ function normalizeStorageRuleSets(
   const sourceSets = Array.isArray(terminal.storageRuleSets)
     ? terminal.storageRuleSets
     : [];
-  const rawSets = sourceSets.length
+  // After unifying customs container types with handover, the persisted rule
+  // sets are keyed to the old taxonomy and can no longer be assigned to any
+  // current container. options.rebuildStorageRuleSets is a one-time taxonomy
+  // migration (gated by containerTaxonomyVersion) that rebuilds them from the
+  // current container types.
+  const rawSets = sourceSets.length && !options.rebuildStorageRuleSets
     ? sourceSets
     : buildStorageRuleSetsFromContainers(terminal, containerTypes, rulesByContainer);
   const seenIds = new Set();
@@ -1678,13 +1688,21 @@ function normalizeCustomsModuleData(moduleData = {}, handoverModule) {
     (moduleData.ports && moduleData.ports.length) || (moduleData.yards && moduleData.yards.length)
       ? moduleData
       : fallbackSeed;
-  const sourceContainerTypes = Array.isArray(source.containerTypes)
-    ? source.containerTypes
-    : [];
-  const containerTypes = normalizeContainerTypeList(
-    sourceContainerTypes,
-    sourceContainerTypes.length ? [] : fallbackSeed.containerTypes
-  );
+  // Customs container types are kept identical to the handover module so both
+  // quote flows share the same container vocabulary (key + label + order).
+  // The customs taxonomy has no key overlap with handover, so per-container
+  // rate maps re-key onto handover keys (missing rates default to 0) and stale
+  // storage rule sets are regenerated downstream in normalizeStorageRuleSets.
+  const handoverContainerTypes = (handoverModule?.containerTypes || []).map((type) => ({
+    key: type.key,
+    label: type.label,
+  }));
+  const containerTypes = handoverContainerTypes.length
+    ? handoverContainerTypes
+    : normalizeContainerTypeList(
+        Array.isArray(source.containerTypes) ? source.containerTypes : [],
+        fallbackSeed.containerTypes
+      );
   const shippingLines = (source.shippingLines?.length
     ? source.shippingLines
     : fallbackSeed.shippingLines
@@ -1695,9 +1713,15 @@ function normalizeCustomsModuleData(moduleData = {}, handoverModule) {
     source.settings?.storageTierPolicyVersion,
     0
   );
+  const containerTaxonomyVersion = parseNumber(
+    source.settings?.containerTaxonomyVersion,
+    0
+  );
   const normalizeOptions = {
     migrateLegacyStorageTiers:
       storageTierPolicyVersion < CUSTOMS_STORAGE_TIER_POLICY_VERSION,
+    rebuildStorageRuleSets:
+      containerTaxonomyVersion < CUSTOMS_CONTAINER_TAXONOMY_VERSION,
   };
   const ports = (source.ports || fallbackSeed.ports).map((port, index) =>
     normalizeCustomsPort(
@@ -1720,6 +1744,7 @@ function normalizeCustomsModuleData(moduleData = {}, handoverModule) {
       ),
       defaultPriceMode: normalizePriceMode(source.settings?.defaultPriceMode),
       storageTierPolicyVersion: CUSTOMS_STORAGE_TIER_POLICY_VERSION,
+      containerTaxonomyVersion: CUSTOMS_CONTAINER_TAXONOMY_VERSION,
     },
     taxRatePresets: normalizeTaxRatePresets(source.taxRatePresets),
     shippingLines,
