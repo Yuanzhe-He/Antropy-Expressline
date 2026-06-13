@@ -1,0 +1,20 @@
+{
+  "settings": {
+    "defaultPriceMode": "aftertax",
+    "defaultQuoteCurrency": "MXN"
+  },
+  "shippingLines": [],
+  "containerTypes": [],
+  "taxRatePresets": [
+    {
+      "id": "vat-0",
+      "rate": 0,
+      "label": "0%"
+    },
+    {
+      "id": "vat-16",
+      "rate": 0.16,
+      "label": "16%"
+    }
+  ]
+}
