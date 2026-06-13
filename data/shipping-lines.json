@@ -13327,7 +13327,7 @@
       "settings": {
         "defaultQuoteCurrency": "MXN",
         "defaultPriceMode": "aftertax",
-        "inlandSeedVersion": 1
+        "inlandSeedVersion": 2
       },
       "taxRatePresets": [
         {
@@ -13642,8 +13642,8 @@
           "state": "EDOMEX",
           "lat": 19.2826,
           "lng": -99.6557,
-          "coordSource": "seed-catalog",
-          "needsReview": true,
+          "coordSource": "seed-catalog-confirmed",
+          "needsReview": false,
           "precisePoints": [],
           "enabled": true,
           "note": ""
@@ -13738,8 +13738,8 @@
           "state": "MOR",
           "lat": 18.835,
           "lng": -99.178,
-          "coordSource": "seed-catalog",
-          "needsReview": true,
+          "coordSource": "seed-catalog-confirmed",
+          "needsReview": false,
           "precisePoints": [],
           "enabled": true,
           "note": ""

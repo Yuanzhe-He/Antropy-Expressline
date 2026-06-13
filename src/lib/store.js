@@ -1848,7 +1848,9 @@ function normalizeHandoverModuleData(moduleData = {}) {
 }
 
 // Bumped to (re)seed the inland destination catalog from INLAND_DESTINATION_CATALOG.
-const INLAND_SEED_VERSION = 1;
+// v2: morelos/edomex confirmed (needsReview cleared, coordSource seed-catalog-confirmed);
+// the bump re-seeds persisted destinations so the confirmation reaches existing stores.
+const INLAND_SEED_VERSION = 2;
 
 function parseNullableNumber(value) {
   if (value === null || value === undefined || value === "") {
@@ -1880,7 +1882,9 @@ function normalizeInlandDestination(dest = {}, fallbackId) {
     state: String(dest.state || "").trim(),
     lat: parseNullableNumber(dest.lat),
     lng: parseNullableNumber(dest.lng),
-    coordSource: ["seed-catalog", "gmaps-link", "manual"].includes(dest.coordSource)
+    coordSource: ["seed-catalog", "seed-catalog-confirmed", "gmaps-link", "manual"].includes(
+      dest.coordSource
+    )
       ? dest.coordSource
       : "seed-catalog",
     needsReview: Boolean(dest.needsReview),
@@ -1945,7 +1949,7 @@ function buildInlandDestinationSeed() {
     state: dest.state,
     lat: dest.lat,
     lng: dest.lng,
-    coordSource: "seed-catalog",
+    coordSource: dest.coordSource || "seed-catalog",
     needsReview: Boolean(dest.needsReview),
     precisePoints: [],
     enabled: true,
