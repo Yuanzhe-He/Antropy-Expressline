@@ -179,6 +179,47 @@ SHEETS = [
         ],
         "validations": {"fee_type": "yard_fee_type", "currency": "currency"},
     },
+    {
+        "name": "inland_destinations",
+        "columns": [
+            ("id", "Stable destination ID (lowercase-kebab). Blank = derive from name."),
+            ("name", "Destination name shown on the map."),
+            ("state", "State abbreviation, e.g. NL, JAL."),
+            ("lat", "Latitude (decimal). Optional if set later via link."),
+            ("lng", "Longitude (decimal). Optional if set later via link."),
+            ("enabled", "TRUE or FALSE."),
+            ("note", "Optional note."),
+        ],
+        "validations": {"enabled": "boolean"},
+    },
+    {
+        "name": "inland_rate_entries",
+        "columns": [
+            ("destination_id", "Must exist in inland_destinations."),
+            ("proveedor", "Carrier / supplier name."),
+            ("sencillo", "Sencillo rate (MXN). Blank if not offered."),
+            ("full", "Full rate (MXN). Blank if not offered."),
+            ("cliente", "Optional client name (tags the entry)."),
+            ("codigo_cw", "Optional CW code."),
+            ("commodity", "Optional commodity."),
+            ("enabled", "TRUE or FALSE."),
+            ("note", "Optional note."),
+        ],
+        "validations": {"enabled": "boolean"},
+    },
+    {
+        "name": "inland_precise_points",
+        "columns": [
+            ("destination_id", "Must exist in inland_destinations."),
+            ("point_id", "Stable precise-point ID. Blank = auto."),
+            ("name", "Precise receiving point name."),
+            ("lat", "Latitude (decimal). Optional if gmaps_link given."),
+            ("lng", "Longitude (decimal). Optional if gmaps_link given."),
+            ("gmaps_link", "Google Maps link to resolve to coordinates."),
+            ("note", "Optional note."),
+        ],
+        "validations": {},
+    },
 ]
 
 

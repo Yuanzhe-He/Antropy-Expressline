@@ -9,7 +9,7 @@ const BUSINESS_MODULES = Object.freeze([
   },
   {
     key: "inland",
-    implemented: false,
+    implemented: true,
   },
 ]);
 

@@ -1,0 +1,176 @@
+<%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
+
+<%
+  const inlandDestinations = inlandData.destinations || [];
+  const inlandRates = inlandData.rateEntries || [];
+  const inlandRoutes = inlandData.routeCache || [];
+  const ratesByDest = new Map();
+  for (const entry of inlandRates) {
+    if (!ratesByDest.has(entry.destinationId)) ratesByDest.set(entry.destinationId, []);
+    ratesByDest.get(entry.destinationId).push(entry);
+  }
+  const routeStatusOf = (destId) => {
+    const rc = inlandRoutes.find((r) => r.destinationId === destId && r.targetType === "destination");
+    if (!rc) return { key: "none", label: t("inland.routeNone") };
+    return rc.stale ? { key: "stale", label: t("inland.routeStaleStatus") } : { key: "cached", label: t("inland.routeCached") };
+  };
+  const maxOf = (entries, key) => {
+    let best = null;
+    for (const e of entries) {
+      if (e[key] == null) continue;
+      if (best == null || Number(e[key]) > Number(best)) best = Number(e[key]);
+    }
+    return best;
+  };
+%>
+
+<section class="page-heading page-heading-card">
+  <div class="page-heading-title">
+    <h2><%= t("inland.adminTitle") %></h2>
+  </div>
+  <div class="module-intro-card">
+    <p><%= t("inland.adminDescription") %></p>
+  </div>
+</section>
+
+<%- include("partials/admin-tabs", { modules, currentModuleKey, currentAdminSection, t }) %>
+
+<section class="panel" id="inland-destinations">
+  <div class="section-title">
+    <div>
+      <p class="eyebrow"><%= t("inland.destinationsSection") %></p>
+      <h3><%= inlandDestinations.length %> · <%= t("inland.destinationLabel") %></h3>
+    </div>
+    <form method="post" action="/admin/inland/routes/refresh">
+      <button type="submit" class="ghost-button compact-button"><%= t("inland.refreshAll") %></button>
+    </form>
+  </div>
+
+  <form method="post" action="/admin/inland/destinations/add" class="grid-form inland-add-dest">
+    <label><span><%= t("inland.destinationLabel") %></span><input type="text" name="name" required /></label>
+    <label><span>Estado</span><input type="text" name="state" /></label>
+    <label><span>Lat</span><input type="text" name="lat" /></label>
+    <label><span>Lng</span><input type="text" name="lng" /></label>
+    <button type="submit" class="ghost-button"><%= t("inland.addDestination") %></button>
+  </form>
+
+  <div class="stack-form">
+    <% for (const dest of inlandDestinations) { %>
+      <% const status = routeStatusOf(dest.id); const rates = ratesByDest.get(dest.id) || []; %>
+      <details class="table-card nested-card entity-collapsible" id="dest-<%= dest.id %>">
+        <summary class="collapsible-summary">
+          <div>
+            <p class="eyebrow"><%= dest.state || "—" %></p>
+            <h4><%= dest.name %><%= dest.needsReview ? ` · ${t("inland.needsReview")}` : "" %></h4>
+          </div>
+          <div class="collapsible-summary-actions">
+            <span class="inland-flag inland-route-<%= status.key %>"><%= t("inland.routeStatus") %>: <%= status.label %></span>
+            <span class="collapsible-summary-meta"><%= rates.length %> <%= t("inland.entries") %></span>
+            <%= dest.enabled ? "" : "✕" %>
+          </div>
+        </summary>
+
+        <div class="entity-collapsible-body">
+          <form method="post" action="/admin/inland/destinations/save" class="grid-form">
+            <input type="hidden" name="dest_present_<%= dest.id %>" value="1" />
+            <input type="hidden" name="destinationId" value="<%= dest.id %>" />
+            <label><span><%= t("inland.destinationLabel") %></span><input type="text" name="dest_name_<%= dest.id %>" value="<%= dest.name %>" /></label>
+            <label><span>Estado</span><input type="text" name="dest_state_<%= dest.id %>" value="<%= dest.state || '' %>" /></label>
+            <label><span>Lat</span><input type="text" name="dest_lat_<%= dest.id %>" value="<%= dest.lat == null ? '' : dest.lat %>" /></label>
+            <label><span>Lng</span><input type="text" name="dest_lng_<%= dest.id %>" value="<%= dest.lng == null ? '' : dest.lng %>" /></label>
+            <label class="full-width"><span><%= t("inland.pasteLinkOrCoords") %></span><input type="text" name="dest_coordlink_<%= dest.id %>" placeholder="https://maps.app.goo.gl/... | 25.78,-100.18" /></label>
+            <label><span><%= t("inland.coordSource") %></span><input type="text" value="<%= dest.coordSource %>" readonly /></label>
+            <label class="full-width"><span><%= t("common.note") %></span><input type="text" name="dest_note_<%= dest.id %>" value="<%= dest.note || '' %>" /></label>
+            <label class="inline-check"><input type="checkbox" name="dest_enabled_<%= dest.id %>" <%= dest.enabled ? "checked" : "" %> /> <span><%= t("inland.enabledLabel") %></span></label>
+            <div class="actions full-width">
+              <button type="submit" class="primary-calculate-button"><%= t("inland.saveDestinations") %></button>
+              <button type="submit" class="ghost-button compact-button" formaction="/admin/inland/routes/refresh"><%= t("inland.refreshRoute") %></button>
+              <button type="submit" class="ghost-button compact-button danger-button" formaction="/admin/inland/destinations/<%= dest.id %>/delete" data-confirm-submit="<%= t("inland.confirmDeleteDestination", { name: dest.name }) %>"><%= t("inland.deleteDestination") %></button>
+            </div>
+          </form>
+
+          <div class="inland-precise-admin">
+            <p class="eyebrow"><%= t("inland.precisePoints") %></p>
+            <% for (const point of dest.precisePoints || []) { %>
+              <div class="inland-precise-row">
+                <span><strong><%= point.name %></strong> <small><%= point.lat %>, <%= point.lng %></small></span>
+                <form method="post" action="/admin/inland/destinations/<%= dest.id %>/precise-points/<%= point.id %>/delete">
+                  <button type="submit" class="ghost-button compact-button danger-button"><%= t("inland.deleteRate") %></button>
+                </form>
+              </div>
+            <% } %>
+            <form method="post" action="/admin/inland/destinations/<%= dest.id %>/precise-points/add" class="grid-form">
+              <label><span><%= t("inland.precisePoints") %></span><input type="text" name="name" placeholder="东风维修厂" /></label>
+              <label class="full-width"><span><%= t("inland.pasteLinkOrCoords") %></span><input type="text" name="link" placeholder="https://maps.app.goo.gl/..." /></label>
+              <button type="submit" class="ghost-button compact-button"><%= t("inland.addPrecise") %></button>
+            </form>
+          </div>
+        </div>
+      </details>
+    <% } %>
+  </div>
+</section>
+
+<section class="panel" id="inland-rates">
+  <div class="section-title">
+    <div>
+      <p class="eyebrow"><%= t("inland.ratesSection") %></p>
+      <h3><%= inlandRates.length %> · <%= t("inland.entries") %></h3>
+    </div>
+  </div>
+
+  <div class="stack-form">
+    <% for (const dest of inlandDestinations) { %>
+      <% const rates = ratesByDest.get(dest.id) || []; const mS = maxOf(rates, "sencillo"); const mF = maxOf(rates, "full"); %>
+      <details class="table-card nested-card entity-collapsible">
+        <summary class="collapsible-summary">
+          <div><h4><%= dest.name %></h4></div>
+          <div class="collapsible-summary-actions">
+            <span class="collapsible-summary-meta">S <%= mS == null ? "—" : mS.toLocaleString() %> · F <%= mF == null ? "—" : mF.toLocaleString() %></span>
+            <span class="collapsible-summary-meta"><%= rates.length %> <%= t("inland.entries") %></span>
+          </div>
+        </summary>
+        <div class="entity-collapsible-body">
+          <form method="post" action="/admin/inland/rate-entries/save">
+            <table>
+              <thead>
+                <tr>
+                  <th><%= t("inland.supplier") %></th>
+                  <th><%= t("inland.serviceSencillo") %></th>
+                  <th><%= t("inland.serviceFull") %></th>
+                  <th><%= t("inland.client") %></th>
+                  <th><%= t("inland.commodity") %></th>
+                  <th><%= t("inland.enabledLabel") %></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% for (const entry of rates) { %>
+                  <tr>
+                    <td><input type="hidden" name="re_present_<%= entry.id %>" value="1" /><input type="text" name="re_proveedor_<%= entry.id %>" value="<%= entry.proveedor || '' %>" /></td>
+                    <td><input type="text" name="re_sencillo_<%= entry.id %>" value="<%= entry.sencillo == null ? '' : entry.sencillo %>" /></td>
+                    <td><input type="text" name="re_full_<%= entry.id %>" value="<%= entry.full == null ? '' : entry.full %>" /></td>
+                    <td><input type="text" name="re_cliente_<%= entry.id %>" value="<%= entry.cliente || '' %>" /></td>
+                    <td><input type="text" name="re_commodity_<%= entry.id %>" value="<%= entry.commodity || '' %>" /></td>
+                    <td><input type="checkbox" name="re_enabled_<%= entry.id %>" <%= entry.enabled ? "checked" : "" %> /></td>
+                    <td><button type="submit" class="ghost-button compact-button danger-button" formaction="/admin/inland/rate-entries/<%= entry.id %>/delete"><%= t("inland.deleteRate") %></button></td>
+                  </tr>
+                <% } %>
+                <% if (!rates.length) { %>
+                  <tr><td colspan="7" class="muted"><%= t("inland.noQuotesForDestination") %></td></tr>
+                <% } %>
+              </tbody>
+            </table>
+            <div class="actions">
+              <button type="submit" class="primary-calculate-button"><%= t("inland.saveRates") %></button>
+              <button type="submit" class="ghost-button compact-button" formaction="/admin/inland/rate-entries/add"><%= t("inland.addRate") %></button>
+            </div>
+            <input type="hidden" name="destinationId" value="<%= dest.id %>" />
+          </form>
+        </div>
+      </details>
+    <% } %>
+  </div>
+</section>
+
+<%- include("partials/footer") %>

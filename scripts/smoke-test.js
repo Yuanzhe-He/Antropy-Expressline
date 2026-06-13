@@ -7,8 +7,11 @@ process.env.STORAGE_DRIVER = "json";
 
 const { createApp } = require("../src/server");
 const { getShippingData } = require("../src/lib/store");
-const { computeCalculator } = require("../src/lib/calculate");
+const { computeCalculator, computeInlandCalculator } = require("../src/lib/calculate");
 const { buildTranslator } = require("../src/lib/i18n");
+const { cleanInlandCsv, mergeRateEntries, parseAmount, decodeCsvBuffer } = require("../src/lib/inland-csv");
+const { computeViaCities, decodePolyline } = require("../src/lib/inland-routes");
+const { resolveLink, extractCoords } = require("../src/lib/inland-link-resolver");
 
 const dataFile = path.join(__dirname, "../data/shipping-lines.json");
 
@@ -1287,6 +1290,154 @@ async function main() {
       ),
       "container type removal propagates to customs"
     );
+
+    // --- Inland: CSV cleaning ---
+    assert.equal(parseAmount(" $72,000.00 "), 72000, "inland amount parse");
+    assert.equal(parseAmount("N/A"), null, "inland amount parse null");
+    const inlandCsv = [
+      "ORIGEN;DESTINO;PROVEEDOR;SENCILLO;FULL;VIGENCIA;CONSIGNATARIO;CODIGO CW;COMODITY;MANIOBRAS",
+      "MANANILLO;APODACA;MAMUT; $72,000.00 ; $92,000.00 ;2026;CF MOTOS;CW1;REFACCIONES;INCLUIDO",
+      "MANZANILLO;LEON/SILAO /IRAPUATO;TRANSX; $50,000.00 ; ;2026;;;;",
+      "MANZANILLO;CDMX EDOMEX;PROVY; $40,000.00 ; $55,000.00 ;2026;;;;",
+      "MANZANILLO;JALISCO/GUADALAJARA/ ZAPOPAN;PROVZ; $30,000.00 ; $35,000.00 ;2026;;;;",
+    ].join("\n");
+    const cleaned = cleanInlandCsv(inlandCsv);
+    const cleanedIds = cleaned.rateEntries.map((e) => e.destinationId);
+    assert.deepEqual(
+      cleanedIds,
+      ["apodaca", "leon", "silao", "irapuato", "cdmx", "edomex", "guadalajara", "zapopan"],
+      "inland CSV splits expand correctly"
+    );
+    assert.equal(cleaned.rateEntries[0].originId, "manzanillo", "MANANILLO typo fixed to manzanillo");
+    assert.equal(cleaned.rateEntries[0].sencillo, 72000, "inland CSV amount");
+    assert.equal(cleaned.rateEntries.find((e) => e.destinationId === "leon").full, null, "inland CSV keeps null FULL");
+    assert.equal(cleaned.report.splitRows.length, 3, "inland CSV split rows counted");
+    const merge1 = mergeRateEntries([], cleaned.rateEntries);
+    const merge2 = mergeRateEntries(merge1.entries, cleaned.rateEntries);
+    assert.equal(merge2.added, 0, "inland CSV merge idempotent (no new on re-run)");
+    assert.equal(merge1.entries.length, merge2.entries.length, "inland CSV merge stable count");
+
+    // --- Inland: CSV encoding auto-detection (latin1 + utf8 both resolve Ñ row) ---
+    const acunaRow = "ORIGEN;DESTINO;PROVEEDOR;SENCILLO;FULL\nMANZANILLO;CIUDAD ACUÑA COAH;P;$80000;$90000";
+    const fromLatin1 = cleanInlandCsv(decodeCsvBuffer(Buffer.from(acunaRow, "latin1")));
+    const fromUtf8 = cleanInlandCsv(decodeCsvBuffer(Buffer.from(acunaRow, "utf8")));
+    assert.equal(fromLatin1.rateEntries[0]?.destinationId, "ciudad-acuna", "latin1 bytes resolve ciudad-acuna");
+    assert.equal(fromUtf8.rateEntries[0]?.destinationId, "ciudad-acuna", "utf8 bytes resolve ciudad-acuna");
+
+    // --- Inland: same-key rows with different prices kept distinct (dupIndex) ---
+    const dupCsv = [
+      "ORIGEN,DESTINO,PROVEEDOR,SENCILLO,FULL",
+      "MANZANILLO,GUADALAJARA,LTP,29000,43000",
+      "MANZANILLO,GUADALAJARA,LTP,43000,66000",
+    ].join("\n");
+    const dupCleaned = cleanInlandCsv(dupCsv);
+    assert.equal(dupCleaned.rateEntries.length, 2, "dup-key rows produce 2 entries");
+    const dupMerged = mergeRateEntries([], dupCleaned.rateEntries);
+    assert.equal(dupMerged.entries.length, 2, "dup-key rows merge to 2 entries (not collapsed)");
+    assert.notEqual(dupMerged.entries[0].id, dupMerged.entries[1].id, "dup-key entries get distinct ids");
+    assert.equal(dupCleaned.report.duplicateKeyGroups.length, 1, "dup-key group reported");
+    const dupReMerge = mergeRateEntries(dupMerged.entries, dupCleaned.rateEntries);
+    assert.equal(dupReMerge.added, 0, "dup-key re-merge adds nothing (idempotent)");
+    assert.equal(dupReMerge.entries.length, 2, "dup-key re-merge stays at 2");
+
+    // --- Inland: calculator ---
+    const inlandModule = {
+      settings: { defaultQuoteCurrency: "MXN", defaultPriceMode: "pretax" },
+      destinations: [{ id: "apodaca", name: "Apodaca", enabled: true }],
+      rateEntries: [
+        { enabled: true, destinationId: "apodaca", proveedor: "MAMUT", sencillo: 72000, full: 92000 },
+        { enabled: true, destinationId: "apodaca", proveedor: "TRANSX", sencillo: 75000, full: 88000 },
+        { enabled: true, destinationId: "apodaca", proveedor: "NOFULL", sencillo: 70000, full: null },
+      ],
+    };
+    const inlandT = (key) => key;
+    const sencilloQuote = computeInlandCalculator(
+      inlandModule,
+      { destinationId: "apodaca", serviceType: "sencillo", quantity: 2, priceMode: "pretax" },
+      { t: inlandT }
+    );
+    assert.equal(sencilloQuote.maxRate, 75000, "inland sencillo max across suppliers");
+    assert.equal(sencilloQuote.maxProvider, "TRANSX", "inland sencillo max provider");
+    assert.equal(sencilloQuote.pretaxTotal, 150000, "inland quantity multiply");
+    const fullQuote = computeInlandCalculator(
+      inlandModule,
+      { destinationId: "apodaca", serviceType: "full", quantity: 1, priceMode: "aftertax" },
+      { t: inlandT }
+    );
+    assert.equal(fullQuote.maxProvider, "MAMUT", "inland full max from a different supplier");
+    assert.equal(fullQuote.afterTaxTotal, 106720, "inland aftertax (16%)");
+    const noFull = computeInlandCalculator(
+      { settings: {}, destinations: [{ id: "x", name: "X", enabled: true }], rateEntries: [{ enabled: true, destinationId: "x", proveedor: "P", sencillo: 1000, full: null }] },
+      { destinationId: "x", serviceType: "full", quantity: 1 },
+      { t: inlandT }
+    );
+    assert.equal(noFull.noRate, true, "inland noRate when service unavailable");
+
+    // --- Inland: viaCities snapping ---
+    const synthetic = decodePolyline("_p~iF~ps|U_ulLnnqC_mqNvxq`@");
+    assert.ok(Array.isArray(synthetic) && synthetic.length === 3, "polyline decode length");
+    const viaLine = [
+      [19.05, -104.32], [19.7, -103.46], [20.67, -103.35],
+      [21.88, -102.29], [22.77, -102.58], [25.44, -101.0], [25.69, -100.32],
+    ];
+    const via = computeViaCities(viaLine);
+    assert.ok(via.includes("Guadalajara") && via.includes("Aguascalientes"), "viaCities hits on-route cities");
+    assert.ok(!via.includes("Monterrey"), "viaCities excludes the destination city");
+    assert.ok(via.length <= 6, "viaCities cap");
+
+    // --- Inland: link resolver ---
+    assert.equal(extractCoords("https://www.google.com/maps/place/X/data=!3d25.79!4d-100.17").via, "pin", "link !3d!4d priority");
+    const bareResolve = await resolveLink("25.78, -100.18");
+    assert.equal(bareResolve.lat, 25.78, "link bare coords");
+    const outBbox = await resolveLink("48.85, 2.35");
+    assert.equal(outBbox.warning, "outside-mexico-bbox", "link bbox warning");
+    const nonGoogle = await resolveLink("https://evil.example.com/maps/@25,-100");
+    assert.equal(nonGoogle.error, "non-google-domain", "link non-google rejected");
+    const evilShort = await resolveLink("https://maps.app.goo.gl/x", {
+      fetch: async () => ({ status: 301, headers: { get: (k) => (k === "location" ? "https://evil.example.com/x" : null) } }),
+    });
+    assert.equal(evilShort.error, "untrusted-redirect", "link short untrusted redirect rejected");
+
+    // --- Inland: i18n zh/es parity ---
+    const inlandKeys = [
+      "inland.serviceSencillo", "inland.serviceFull", "inland.total", "inland.maxProvider",
+      "inland.adminTitle", "inland.routeRefreshed", "inland.deleteDestination", "inland.pasteLinkOrCoords",
+    ];
+    const tzh = buildTranslator("zh");
+    const tes = buildTranslator("es");
+    for (const key of inlandKeys) {
+      assert.notEqual(tzh(key), key, `inland zh key present: ${key}`);
+      assert.notEqual(tes(key), key, `inland es key present: ${key}`);
+    }
+
+    // --- Inland: HTTP surfaces ---
+    response = await request(baseUrl, "/workbench/inland", { jar: publicJar });
+    assert.equal(response.status, 200, "inland workbench loads");
+    expectContains(response.text, "data-inland-map", "inland map present");
+    expectContains(response.text, "inland-map-data", "inland map data present");
+    response = await request(baseUrl, "/workbench/inland?dest=apodaca", { jar: publicJar });
+    assert.equal(response.status, 200, "inland deeplink loads");
+    response = await request(baseUrl, "/admin/inland/shipping-lines", { jar: publicJar });
+    assert.equal(response.status, 200, "inland admin loads");
+    expectContains(response.text, "inland-destinations", "inland admin destinations section");
+    response = await request(baseUrl, "/admin/inland/settings", { jar: publicJar });
+    assert.equal(response.status, 302, "inland settings redirects");
+    assert.ok(
+      String(response.location || "").includes("/admin/inland/shipping-lines"),
+      "inland settings redirects to rules page"
+    );
+    response = await request(baseUrl, "/admin/inland/resolve-link", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: [["link", "25.78,-100.18"]],
+    });
+    assert.equal(response.status, 200, "inland resolve-link ok");
+    response = await request(baseUrl, "/admin/inland/resolve-link", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: [["link", "https://evil.example.com/maps"]],
+    });
+    assert.equal(response.status, 422, "inland resolve-link rejects non-google");
 
     console.log("smoke-test-ok");
   } finally {

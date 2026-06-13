@@ -4,8 +4,15 @@ const path = require("node:path");
 const {
   computeCalculator,
   computeCustomsCalculator,
+  computeInlandCalculator,
   parseNumber,
 } = require("./lib/calculate");
+const { resolveLink } = require("./lib/inland-link-resolver");
+const {
+  fetchOsrmRoute,
+  decodePolyline,
+  computeViaCities,
+} = require("./lib/inland-routes");
 const { refreshExchangeRatesIfStale } = require("./lib/exchange-rates");
 const { startExchangeRateScheduler } = require("./lib/exchange-rate-scheduler");
 const {
@@ -1156,9 +1163,132 @@ function renderCustomsWorkbench(req, res, payload) {
   );
 }
 
+function buildDefaultInlandFormData(moduleData, destQuery) {
+  const destinations = moduleData.destinations || [];
+  const requested = destinations.find((dest) => dest.id === destQuery && dest.enabled);
+  return {
+    destinationId: requested ? requested.id : "",
+    serviceType: "sencillo",
+    quantity: 1,
+    priceMode: moduleData.settings?.defaultPriceMode || "pretax",
+    taxRateOverride: "default",
+    precisePointId: "",
+  };
+}
+
+function buildInlandFormData(moduleData, body = {}) {
+  return {
+    destinationId: String(body.destinationId || "").trim(),
+    serviceType: body.serviceType === "full" ? "full" : "sencillo",
+    quantity: parseWholeNumber(body.quantity, 1),
+    priceMode: body.priceMode || moduleData.settings?.defaultPriceMode || "pretax",
+    taxRateOverride: body.taxRateOverride || "default",
+    precisePointId: String(body.precisePointId || "").trim(),
+  };
+}
+
+// Compact map + quote payload for the front-end (client-side instant quoting).
+function buildInlandMapData(moduleData) {
+  const origin = (moduleData.origins && moduleData.origins[0]) || null;
+  const entriesByDest = new Map();
+  for (const entry of moduleData.rateEntries || []) {
+    if (!entry.enabled) {
+      continue;
+    }
+    if (!entriesByDest.has(entry.destinationId)) {
+      entriesByDest.set(entry.destinationId, []);
+    }
+    entriesByDest.get(entry.destinationId).push(entry);
+  }
+
+  const pickMax = (entries, key) => {
+    let best = null;
+    for (const entry of entries) {
+      const value = entry[key];
+      if (value === null || value === undefined) {
+        continue;
+      }
+      if (!best || Number(value) > Number(best[key])) {
+        best = entry;
+      }
+    }
+    return best;
+  };
+
+  const destinations = (moduleData.destinations || []).map((dest) => {
+    const entries = entriesByDest.get(dest.id) || [];
+    const maxSencillo = pickMax(entries, "sencillo");
+    const maxFull = pickMax(entries, "full");
+    return {
+      id: dest.id,
+      name: dest.name,
+      state: dest.state,
+      lat: dest.lat,
+      lng: dest.lng,
+      enabled: dest.enabled,
+      needsReview: dest.needsReview,
+      entryCount: entries.length,
+      maxSencillo: maxSencillo ? Number(maxSencillo.sencillo) : null,
+      maxSencilloProvider: maxSencillo ? maxSencillo.proveedor : null,
+      maxFull: maxFull ? Number(maxFull.full) : null,
+      maxFullProvider: maxFull ? maxFull.proveedor : null,
+      precisePoints: (dest.precisePoints || []).map((point) => ({
+        id: point.id,
+        name: point.name,
+        lat: point.lat,
+        lng: point.lng,
+      })),
+      entries: entries.map((entry) => ({
+        proveedor: entry.proveedor,
+        sencillo: entry.sencillo,
+        full: entry.full,
+        cliente: entry.cliente,
+        commodity: entry.commodity,
+      })),
+    };
+  });
+
+  const routes = (moduleData.routeCache || []).map((rc) => ({
+    destinationId: rc.destinationId,
+    targetType: rc.targetType,
+    targetId: rc.targetId,
+    encodedPolyline: rc.encodedPolyline,
+    distanceKm: rc.distanceKm,
+    durationMin: rc.durationMin,
+    viaCities: rc.viaCities,
+    stale: rc.stale,
+    hasFerry: rc.hasFerry,
+  }));
+
+  return { origin, destinations, routes };
+}
+
+function renderInlandWorkbench(req, res, payload) {
+  const moduleMeta = getModulePresentation(payload.moduleKey, req.language);
+  res.render(
+    "workbench-inland",
+    baseView(req, {
+      pageTitle: `${moduleMeta.title} | ${req.t("app.name")}`,
+      currentArea: "sales",
+      currentModuleKey: payload.moduleKey,
+      selectedModule: moduleMeta,
+      moduleData: payload.moduleData,
+      formData: payload.formData,
+      result: payload.result || null,
+      inlandMapData: buildInlandMapData(payload.moduleData),
+      priceModeOptions: getLocalizedOptions(PRICE_MODE_OPTIONS, req.t),
+      taxRatePresets: payload.moduleData.taxRatePresets || [],
+      languageReturnTo: `/workbench/${payload.moduleKey}?restoreLast=1`,
+    })
+  );
+}
+
 function renderWorkbench(req, res, payload) {
   if (payload.moduleKey === "customs") {
     return renderCustomsWorkbench(req, res, payload);
+  }
+  if (payload.moduleKey === "inland") {
+    return renderInlandWorkbench(req, res, payload);
   }
   return renderHandoverWorkbench(req, res, payload);
 }
@@ -1205,6 +1335,16 @@ function renderAdminRules(req, res, payload) {
       baseView(req, {
         ...commonView,
         businessModuleRules: payload.moduleData,
+      })
+    );
+  }
+
+  if (payload.moduleKey === "inland") {
+    return res.render(
+      "admin-inland",
+      baseView(req, {
+        ...commonView,
+        inlandData: payload.moduleData,
       })
     );
   }
@@ -1359,6 +1499,22 @@ function createApp() {
       });
     }
 
+    if (module.key === "inland") {
+      const formData =
+        restoreLast && rememberedForm
+          ? buildInlandFormData(moduleData, rememberedForm)
+          : buildDefaultInlandFormData(moduleData, req.query.dest);
+      const result = formData.destinationId
+        ? computeInlandCalculator(moduleData, formData, { t: req.t })
+        : null;
+      return renderWorkbench(req, res, {
+        moduleKey: module.key,
+        moduleData,
+        formData,
+        result,
+      });
+    }
+
     if (!module.implemented || !moduleData.shippingLines.length) {
       return renderWorkbench(req, res, {
         moduleKey: module.key,
@@ -1493,6 +1649,343 @@ function createApp() {
     });
   });
 
+  app.post("/workbench/inland", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData();
+    const moduleData = getModuleData(shippingData, "inland");
+    const formData = buildInlandFormData(moduleData, req.body);
+    const result = formData.destinationId
+      ? computeInlandCalculator(moduleData, formData, { t: req.t })
+      : null;
+    rememberCalculatorState(req, "inland", formData);
+    return renderWorkbench(req, res, {
+      moduleKey: "inland",
+      moduleData,
+      formData,
+      result,
+    });
+  });
+
+  // --- Inland admin ---
+  const INLAND_ADMIN_TARGET = "/admin/inland/shipping-lines";
+
+  app.post("/admin/inland/resolve-link", requireAuth, async (req, res) => {
+    const result = await resolveLink(req.body.link || "");
+    if (result.error) {
+      return res.status(422).json({ error: result.error });
+    }
+    return res.json({
+      lat: result.lat,
+      lng: result.lng,
+      name: result.name,
+      normalizedLink: result.normalizedLink,
+      warning: result.warning,
+    });
+  });
+
+  function markRouteStale(inland, destinationId) {
+    (inland.routeCache || []).forEach((rc) => {
+      if (rc.destinationId === destinationId) {
+        rc.stale = true;
+      }
+    });
+  }
+
+  async function refreshOneInlandRoute(inland, origin, target) {
+    const route = await fetchOsrmRoute(origin, { lat: target.lat, lng: target.lng });
+    const viaCities = computeViaCities(decodePolyline(route.encodedPolyline));
+    const entry = {
+      id: `rc-${target.destinationId}-${target.targetType}${target.targetId ? `-${target.targetId}` : ""}`,
+      originId: origin.id,
+      destinationId: target.destinationId,
+      targetType: target.targetType,
+      targetId: target.targetId,
+      encodedPolyline: route.encodedPolyline,
+      distanceKm: route.distanceKm,
+      durationMin: route.durationMin,
+      viaCities,
+      engine: route.engine,
+      fetchedAt: new Date().toISOString(),
+      stale: false,
+      hasFerry: route.hasFerry,
+    };
+    inland.routeCache = inland.routeCache || [];
+    const existing = inland.routeCache.find(
+      (rc) =>
+        rc.destinationId === target.destinationId &&
+        rc.targetType === target.targetType &&
+        (rc.targetId || null) === (target.targetId || null)
+    );
+    if (existing) {
+      Object.assign(existing, entry, { id: existing.id });
+    } else {
+      inland.routeCache.push(entry);
+    }
+  }
+
+  app.post("/admin/inland/routes/refresh", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    const origin = (inland.origins && inland.origins[0]) || null;
+    if (!origin) {
+      return redirectWithFlash(req, res, "error", req.t("inland.routeRefreshFailed"), INLAND_ADMIN_TARGET);
+    }
+
+    const onlyId = String(req.body.destinationId || "").trim();
+    const targets = [];
+    for (const dest of inland.destinations || []) {
+      if (dest.lat == null || dest.lng == null) continue;
+      if (onlyId && dest.id !== onlyId) continue;
+      const cache = (inland.routeCache || []).find(
+        (rc) => rc.destinationId === dest.id && rc.targetType === "destination"
+      );
+      if (!onlyId && cache && !cache.stale) continue; // "all" only fills missing/stale
+      targets.push({ destinationId: dest.id, targetType: "destination", targetId: null, lat: dest.lat, lng: dest.lng });
+      for (const point of dest.precisePoints || []) {
+        if (point.lat != null && point.lng != null) {
+          targets.push({ destinationId: dest.id, targetType: "precisePoint", targetId: point.id, lat: point.lat, lng: point.lng });
+        }
+      }
+    }
+
+    let ok = 0;
+    let failed = 0;
+    for (const target of targets) {
+      try {
+        await refreshOneInlandRoute(inland, origin, target);
+        ok += 1;
+      } catch (_error) {
+        failed += 1;
+      }
+    }
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(
+      req,
+      res,
+      failed ? "error" : "success",
+      req.t("inland.routeRefreshed", { ok, failed }),
+      INLAND_ADMIN_TARGET
+    );
+  });
+
+  app.post("/admin/inland/destinations/add", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    const name = String(req.body.name || "").trim();
+    if (!name) {
+      return redirectWithFlash(req, res, "error", req.t("inland.nameRequired"), INLAND_ADMIN_TARGET);
+    }
+    const baseId = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || `dest-${Date.now()}`;
+    let id = baseId;
+    let n = 2;
+    while ((inland.destinations || []).some((d) => d.id === id)) {
+      id = `${baseId}-${n++}`;
+    }
+    inland.destinations = inland.destinations || [];
+    inland.destinations.push({
+      id,
+      name,
+      state: String(req.body.state || "").trim(),
+      lat: req.body.lat ? Number(req.body.lat) : null,
+      lng: req.body.lng ? Number(req.body.lng) : null,
+      coordSource: "manual",
+      needsReview: false,
+      precisePoints: [],
+      enabled: true,
+      note: "",
+    });
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(req, res, "success", req.t("inland.destAdded", { name }), `${INLAND_ADMIN_TARGET}#dest-${id}`);
+  });
+
+  app.post("/admin/inland/destinations/save", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    for (const dest of inland.destinations || []) {
+      if (req.body[`dest_present_${dest.id}`] === undefined) continue;
+      const name = req.body[`dest_name_${dest.id}`];
+      if (name !== undefined) dest.name = String(name).trim() || dest.name;
+      const state = req.body[`dest_state_${dest.id}`];
+      if (state !== undefined) dest.state = String(state).trim();
+      const note = req.body[`dest_note_${dest.id}`];
+      if (note !== undefined) dest.note = String(note);
+      dest.enabled = req.body[`dest_enabled_${dest.id}`] !== undefined;
+
+      const link = String(req.body[`dest_coordlink_${dest.id}`] || "").trim();
+      if (link) {
+        const resolved = await resolveLink(link);
+        if (!resolved.error) {
+          dest.lat = resolved.lat;
+          dest.lng = resolved.lng;
+          dest.coordSource = /^https?:/i.test(link) ? "gmaps-link" : "manual";
+          dest.needsReview = false;
+          markRouteStale(inland, dest.id);
+        }
+      } else {
+        const lat = req.body[`dest_lat_${dest.id}`];
+        const lng = req.body[`dest_lng_${dest.id}`];
+        if (lat !== undefined && lng !== undefined && lat !== "" && lng !== "") {
+          const nextLat = Number(lat);
+          const nextLng = Number(lng);
+          if (nextLat !== dest.lat || nextLng !== dest.lng) {
+            dest.lat = nextLat;
+            dest.lng = nextLng;
+            dest.coordSource = "manual";
+            markRouteStale(inland, dest.id);
+          }
+        }
+      }
+    }
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(req, res, "success", req.t("inland.saved"), INLAND_ADMIN_TARGET);
+  });
+
+  app.post("/admin/inland/destinations/:id/delete", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    const dest = (inland.destinations || []).find((d) => d.id === req.params.id);
+    if (!dest) {
+      return res.status(404).render("not-found", baseView(req, { pageTitle: req.t("system.notFoundTitle"), languageReturnTo: req.originalUrl }));
+    }
+    inland.destinations = inland.destinations.filter((d) => d.id !== req.params.id);
+    inland.rateEntries = (inland.rateEntries || []).filter((e) => e.destinationId !== req.params.id);
+    inland.routeCache = (inland.routeCache || []).filter((rc) => rc.destinationId !== req.params.id);
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(req, res, "success", req.t("inland.destDeleted", { name: dest.name }), INLAND_ADMIN_TARGET);
+  });
+
+  app.post("/admin/inland/destinations/:id/precise-points/add", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    const dest = (inland.destinations || []).find((d) => d.id === req.params.id);
+    if (!dest) {
+      return res.status(404).render("not-found", baseView(req, { pageTitle: req.t("system.notFoundTitle"), languageReturnTo: req.originalUrl }));
+    }
+    const link = String(req.body.link || "").trim();
+    let lat = req.body.lat ? Number(req.body.lat) : null;
+    let lng = req.body.lng ? Number(req.body.lng) : null;
+    let name = String(req.body.name || "").trim();
+    let source = "manual";
+    if (link) {
+      const resolved = await resolveLink(link);
+      if (resolved.error) {
+        return redirectWithFlash(req, res, "error", req.t("inland.linkFailed", { error: resolved.error }), `${INLAND_ADMIN_TARGET}#dest-${dest.id}`);
+      }
+      lat = resolved.lat;
+      lng = resolved.lng;
+      if (!name && resolved.name) name = resolved.name;
+      source = /^https?:/i.test(link) ? "gmaps-link" : "manual";
+    }
+    if (!name) {
+      return redirectWithFlash(req, res, "error", req.t("inland.nameRequired"), `${INLAND_ADMIN_TARGET}#dest-${dest.id}`);
+    }
+    dest.precisePoints = dest.precisePoints || [];
+    dest.precisePoints.push({
+      id: `pp-${dest.id}-${Date.now().toString(36)}`,
+      name,
+      lat,
+      lng,
+      note: String(req.body.note || ""),
+      source,
+      link: /^https?:/i.test(link) ? link : "",
+    });
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(req, res, "success", req.t("inland.preciseAdded", { name }), `${INLAND_ADMIN_TARGET}#dest-${dest.id}`);
+  });
+
+  app.post("/admin/inland/destinations/:id/precise-points/:pointId/delete", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    const dest = (inland.destinations || []).find((d) => d.id === req.params.id);
+    if (!dest) {
+      return res.status(404).render("not-found", baseView(req, { pageTitle: req.t("system.notFoundTitle"), languageReturnTo: req.originalUrl }));
+    }
+    dest.precisePoints = (dest.precisePoints || []).filter((p) => p.id !== req.params.pointId);
+    inland.routeCache = (inland.routeCache || []).filter(
+      (rc) => !(rc.destinationId === dest.id && rc.targetType === "precisePoint" && rc.targetId === req.params.pointId)
+    );
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(req, res, "success", req.t("inland.preciseDeleted"), `${INLAND_ADMIN_TARGET}#dest-${dest.id}`);
+  });
+
+  app.post("/admin/inland/rate-entries/add", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    const destinationId = String(req.body.destinationId || "").trim();
+    if (!(inland.destinations || []).some((d) => d.id === destinationId)) {
+      return redirectWithFlash(req, res, "error", req.t("inland.destRequired"), INLAND_ADMIN_TARGET);
+    }
+    inland.rateEntries = inland.rateEntries || [];
+    inland.rateEntries.push({
+      id: `re-${destinationId}-${Date.now().toString(36)}`,
+      originId: (inland.origins && inland.origins[0] && inland.origins[0].id) || "manzanillo",
+      destinationId,
+      proveedor: "",
+      sencillo: null,
+      full: null,
+      currency: "MXN",
+      cliente: "",
+      codigoCw: "",
+      commodity: "",
+      enabled: true,
+      note: "",
+      extras: {},
+    });
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(req, res, "success", req.t("inland.rateAdded"), `${INLAND_ADMIN_TARGET}#dest-${destinationId}`);
+  });
+
+  app.post("/admin/inland/rate-entries/save", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    const toAmount = (value) => {
+      if (value === undefined || value === null || String(value).trim() === "") return null;
+      const n = Number(String(value).replace(/[^0-9.\-]/g, ""));
+      return Number.isFinite(n) ? n : null;
+    };
+    for (const entry of inland.rateEntries || []) {
+      if (req.body[`re_present_${entry.id}`] === undefined) continue;
+      const p = req.body[`re_proveedor_${entry.id}`];
+      if (p !== undefined) entry.proveedor = String(p).trim();
+      if (req.body[`re_sencillo_${entry.id}`] !== undefined) entry.sencillo = toAmount(req.body[`re_sencillo_${entry.id}`]);
+      if (req.body[`re_full_${entry.id}`] !== undefined) entry.full = toAmount(req.body[`re_full_${entry.id}`]);
+      const cli = req.body[`re_cliente_${entry.id}`];
+      if (cli !== undefined) entry.cliente = String(cli).trim();
+      const cw = req.body[`re_codigocw_${entry.id}`];
+      if (cw !== undefined) entry.codigoCw = String(cw).trim();
+      const com = req.body[`re_commodity_${entry.id}`];
+      if (com !== undefined) entry.commodity = String(com).trim();
+      const note = req.body[`re_note_${entry.id}`];
+      if (note !== undefined) entry.note = String(note);
+      entry.enabled = req.body[`re_enabled_${entry.id}`] !== undefined;
+    }
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(req, res, "success", req.t("inland.saved"), INLAND_ADMIN_TARGET);
+  });
+
+  app.post("/admin/inland/rate-entries/:id/delete", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    const entry = (inland.rateEntries || []).find((e) => e.id === req.params.id);
+    inland.rateEntries = (inland.rateEntries || []).filter((e) => e.id !== req.params.id);
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(
+      req,
+      res,
+      "success",
+      req.t("inland.rateDeleted"),
+      entry ? `${INLAND_ADMIN_TARGET}#dest-${entry.destinationId}` : INLAND_ADMIN_TARGET
+    );
+  });
+
   app.get("/admin", requireAuth, (_req, res) => {
     res.redirect(`/admin/${DEFAULT_MODULE_KEY}/settings`);
   });
@@ -1507,6 +2000,12 @@ function createApp() {
           languageReturnTo: req.originalUrl,
         })
       );
+    }
+
+    // Inland has no shipping-line / container-type settings; its admin lives on
+    // the rules page (destinations, addresses, routes, rates).
+    if (module.key === "inland") {
+      return res.redirect("/admin/inland/shipping-lines");
     }
 
     const shippingData = await loadShippingData();
