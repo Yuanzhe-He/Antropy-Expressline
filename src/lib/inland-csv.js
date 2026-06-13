@@ -21,6 +21,26 @@ const FIELD_BY_HEADER = {
   VIGENCIA: "__drop__",
 };
 
+// Decode a CSV file Buffer with encoding auto-detection: strict UTF-8 first
+// (so a UTF-8/CP1252 re-export from Excel is read correctly), falling back to
+// Latin-1 (ISO-8859-1) when the bytes are not valid UTF-8. Strips a UTF-8 BOM.
+function decodeCsvBuffer(buffer) {
+  let bytes = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+  if (bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
+    bytes = bytes.subarray(3);
+  }
+  let text;
+  try {
+    text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch (_error) {
+    text = bytes.toString("latin1");
+  }
+  if (text.charCodeAt(0) === 0xfeff) {
+    text = text.slice(1);
+  }
+  return text;
+}
+
 function normalizeHeader(header) {
   return String(header || "")
     .normalize("NFD")
@@ -101,13 +121,25 @@ function parseCsvRows(text, delimiter) {
   return rows.filter((cells) => cells.some((cell) => String(cell).trim() !== ""));
 }
 
-function buildRateEntryId(originId, destinationId, proveedor, cliente, commodity) {
-  const key = [originId, destinationId, proveedor, cliente, commodity].join("|");
+// dupIndex disambiguates rows that are identical on the base identity columns
+// (destinationId, proveedor, cliente, commodity) but differ only in price — so
+// such rows get distinct ids instead of colliding. size=1 groups use dupIndex=1.
+function buildRateEntryId(originId, destinationId, proveedor, cliente, commodity, dupIndex = 1) {
+  const key = [originId, destinationId, proveedor, cliente, commodity, dupIndex].join("|");
   let hash = 0;
   for (let i = 0; i < key.length; i += 1) {
     hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
   }
   return `re-${destinationId}-${hash.toString(36)}`;
+}
+
+function baseRateEntryKey(entry) {
+  return [
+    entry.destinationId,
+    String(entry.proveedor || "").toLowerCase(),
+    String(entry.cliente || "").toLowerCase(),
+    String(entry.commodity || "").toLowerCase(),
+  ].join("||");
 }
 
 // Clean a decoded CSV string into normalized rate entries + a cleaning report.
@@ -119,6 +151,7 @@ function cleanInlandCsv(text) {
     splitRows: [],
     nullFullRows: 0,
     unmappedDestinos: [],
+    duplicateKeyGroups: [],
     touchedDestinations: new Set(),
   };
   const rateEntries = [];
@@ -177,13 +210,7 @@ function cleanInlandCsv(text) {
         report.nullFullRows += 1;
       }
       rateEntries.push({
-        id: buildRateEntryId(
-          originId,
-          destinationId,
-          known.proveedor || "",
-          known.cliente || "",
-          known.commodity || ""
-        ),
+        id: "",
         originId,
         destinationId,
         proveedor: known.proveedor || "",
@@ -201,20 +228,57 @@ function cleanInlandCsv(text) {
     }
   }
 
+  // Assign dupIndex per base-key group (in file order) and build the final id.
+  // Idempotency: re-seeding the same file yields the same order -> same dupIndex
+  // -> same ids -> in-place update. If the file rows are reordered, two entries
+  // swap identities but the resulting set is identical, so the end state is
+  // still correct.
+  const groupRunning = new Map();
+  for (const entry of rateEntries) {
+    const key = baseRateEntryKey(entry);
+    const dupIndex = (groupRunning.get(key) || 0) + 1;
+    groupRunning.set(key, dupIndex);
+    entry.dupIndex = dupIndex;
+    entry.id = buildRateEntryId(
+      entry.originId,
+      entry.destinationId,
+      entry.proveedor,
+      entry.cliente,
+      entry.commodity,
+      dupIndex
+    );
+  }
+
+  // Report duplicate-key groups (same base key, >1 price tier kept).
+  const groups = new Map();
+  for (const entry of rateEntries) {
+    const key = baseRateEntryKey(entry);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(entry);
+  }
+  for (const [, entries] of groups) {
+    if (entries.length > 1) {
+      report.duplicateKeyGroups.push({
+        destinationId: entries[0].destinationId,
+        proveedor: entries[0].proveedor,
+        cliente: entries[0].cliente,
+        commodity: entries[0].commodity,
+        count: entries.length,
+        tiers: entries.map((e) => ({ sencillo: e.sencillo, full: e.full })),
+      });
+    }
+  }
+
   report.touchedDestinations = [...report.touchedDestinations];
   return { rateEntries, report };
 }
 
-// Idempotent merge by (destinationId, proveedor, cliente, commodity).
+// Idempotent merge by (destinationId, proveedor, cliente, commodity, dupIndex).
+// dupIndex (default 1) keeps rows that differ only in price as distinct entries.
 // Existing entries keep their id and are updated in place; new ones are appended.
 function mergeRateEntries(existing, incoming) {
   const keyOf = (entry) =>
-    [
-      entry.destinationId,
-      String(entry.proveedor || "").toLowerCase(),
-      String(entry.cliente || "").toLowerCase(),
-      String(entry.commodity || "").toLowerCase(),
-    ].join("||");
+    [baseRateEntryKey(entry), entry.dupIndex || 1].join("##");
 
   const byKey = new Map();
   const entries = (Array.isArray(existing) ? existing : []).map((entry) => ({ ...entry }));
@@ -241,6 +305,7 @@ module.exports = {
   parseAmount,
   parseCsvRows,
   detectDelimiter,
+  decodeCsvBuffer,
   cleanInlandCsv,
   mergeRateEntries,
   normalizeHeader,

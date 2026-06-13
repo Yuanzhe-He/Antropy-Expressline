@@ -62,3 +62,11 @@ Only record lessons that may change future behavior.
 - scope: project
 - landed_in: src/lib/inland-routes.js, src/lib/inland-csv.js, src/lib/inland-link-resolver.js, data/shipping-lines.json
 - next_action: when seeding/editing data files via the store, verify `git diff` is scoped to the intended module; reuse the OSRM fallback + delimiter-detection patterns for future data imports.
+
+## 2026-06-11 - Inland finalize: real tarifario seed, encoding, same-key tiers, ferry
+
+- source_type: ai-self-correction
+- lesson: (1) CSV encoding must be auto-detected from the file Buffer — strict UTF-8 first (TextDecoder fatal:true), fall back to Latin-1, strip BOM — because operator re-exports from Excel are UTF-8/CP1252 and a hardcoded latin1 read mojibakes accented rows (e.g. CIUDAD ACUÑA) and silently drops them. (2) An idempotent rate-merge key of (destinationId,proveedor,cliente,commodity) is insufficient: the real data has two LTP rows for the GDL/Zapopan corridor identical on every column except price (29,000/43,000 vs 43,000/66,000). Fix = a file-order dupIndex appended to both the merge key and the id hash (also fixed a latent bug where the two rows produced the same entry id); size-1 groups keep dupIndex=1 so existing identities are unchanged; idempotency holds because same file -> same order -> same dupIndex -> in-place update. (3) Verify *post-merge final counts*, not just pre-merge produced counts, against acceptance. (4) The public OSRM car profile does NOT take the Mazatlán→La Paz ferry — it routes ~3614 km all-land down Baja — so step-mode ferry detection alone misses it; a road/straight-line detour-ratio (>2.5x) flags it cleanly and isolates only La Paz.
+- scope: project
+- landed_in: src/lib/inland-csv.js, src/lib/inland-routes.js, src/lib/store.js, scripts/seed-inland-from-csv.js
+- next_action: when importing operator CSVs, decode by buffer with UTF-8→latin1 fallback; when deduping rows, confirm the chosen identity key actually distinguishes real-world rows and validate final counts; validate routing-engine assumptions (ferry/profile) against the live engine before encoding them as acceptance.

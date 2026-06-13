@@ -12,6 +12,12 @@ const OSRM_DEFAULT_BASE_URLS = [
   "https://routing.openstreetmap.de/routed-car",
 ];
 const EARTH_RADIUS_KM = 6371;
+// A driving route whose road distance hugely exceeds the straight-line distance
+// implies the road router took a long land detour around water (i.e. the real
+// freight route uses a ferry). La Paz (BCS) road-routes ~4.3x crow-flies down
+// the Baja peninsula; every mainland route is ~1.2-1.4x. This catches the ferry
+// case that OSRM's car profile does not model as a ferry step.
+const FERRY_DETOUR_RATIO = 2.5;
 
 // Decode a Google/OSRM encoded polyline (precision 5) -> [[lat, lng], ...].
 function decodePolyline(encoded, precision = 5) {
@@ -175,12 +181,21 @@ async function fetchOsrmRoute(origin, destination, options = {}) {
           throw new Error(`OSRM code ${data.code || "unknown"}`);
         }
         const route = data.routes[0];
-        const hasFerry = (route.legs || []).some((leg) =>
+        const distanceKm = Math.round((route.distance || 0) / 1000);
+        const ferryStep = (route.legs || []).some((leg) =>
           (leg.steps || []).some((step) => step.mode === "ferry")
         );
+        const straightLineKm = equirectKm(
+          origin.lat,
+          origin.lng,
+          destination.lat,
+          destination.lng
+        );
+        const detourRatio = straightLineKm > 0 ? distanceKm / straightLineKm : 0;
+        const hasFerry = ferryStep || detourRatio > FERRY_DETOUR_RATIO;
         return {
           encodedPolyline: route.geometry,
-          distanceKm: Math.round((route.distance || 0) / 1000),
+          distanceKm,
           durationMin: Math.round((route.duration || 0) / 60),
           hasFerry,
           engine: "osrm",

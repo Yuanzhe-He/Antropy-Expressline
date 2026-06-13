@@ -1900,6 +1900,8 @@ function normalizeInlandRateEntry(entry = {}, fallbackId) {
       DEFAULT_INLAND_ORIGIN_ID,
     destinationId: String(entry.destinationId || "").trim(),
     proveedor: String(entry.proveedor || "").trim(),
+    dupIndex:
+      Number.isInteger(entry.dupIndex) && entry.dupIndex > 0 ? entry.dupIndex : 1,
     sencillo: parseNullableNumber(entry.sencillo),
     full: parseNullableNumber(entry.full),
     currency: "MXN",

@@ -9,7 +9,7 @@ const { createApp } = require("../src/server");
 const { getShippingData } = require("../src/lib/store");
 const { computeCalculator, computeInlandCalculator } = require("../src/lib/calculate");
 const { buildTranslator } = require("../src/lib/i18n");
-const { cleanInlandCsv, mergeRateEntries, parseAmount } = require("../src/lib/inland-csv");
+const { cleanInlandCsv, mergeRateEntries, parseAmount, decodeCsvBuffer } = require("../src/lib/inland-csv");
 const { computeViaCities, decodePolyline } = require("../src/lib/inland-routes");
 const { resolveLink, extractCoords } = require("../src/lib/inland-link-resolver");
 
@@ -1316,6 +1316,29 @@ async function main() {
     const merge2 = mergeRateEntries(merge1.entries, cleaned.rateEntries);
     assert.equal(merge2.added, 0, "inland CSV merge idempotent (no new on re-run)");
     assert.equal(merge1.entries.length, merge2.entries.length, "inland CSV merge stable count");
+
+    // --- Inland: CSV encoding auto-detection (latin1 + utf8 both resolve Ñ row) ---
+    const acunaRow = "ORIGEN;DESTINO;PROVEEDOR;SENCILLO;FULL\nMANZANILLO;CIUDAD ACUÑA COAH;P;$80000;$90000";
+    const fromLatin1 = cleanInlandCsv(decodeCsvBuffer(Buffer.from(acunaRow, "latin1")));
+    const fromUtf8 = cleanInlandCsv(decodeCsvBuffer(Buffer.from(acunaRow, "utf8")));
+    assert.equal(fromLatin1.rateEntries[0]?.destinationId, "ciudad-acuna", "latin1 bytes resolve ciudad-acuna");
+    assert.equal(fromUtf8.rateEntries[0]?.destinationId, "ciudad-acuna", "utf8 bytes resolve ciudad-acuna");
+
+    // --- Inland: same-key rows with different prices kept distinct (dupIndex) ---
+    const dupCsv = [
+      "ORIGEN,DESTINO,PROVEEDOR,SENCILLO,FULL",
+      "MANZANILLO,GUADALAJARA,LTP,29000,43000",
+      "MANZANILLO,GUADALAJARA,LTP,43000,66000",
+    ].join("\n");
+    const dupCleaned = cleanInlandCsv(dupCsv);
+    assert.equal(dupCleaned.rateEntries.length, 2, "dup-key rows produce 2 entries");
+    const dupMerged = mergeRateEntries([], dupCleaned.rateEntries);
+    assert.equal(dupMerged.entries.length, 2, "dup-key rows merge to 2 entries (not collapsed)");
+    assert.notEqual(dupMerged.entries[0].id, dupMerged.entries[1].id, "dup-key entries get distinct ids");
+    assert.equal(dupCleaned.report.duplicateKeyGroups.length, 1, "dup-key group reported");
+    const dupReMerge = mergeRateEntries(dupMerged.entries, dupCleaned.rateEntries);
+    assert.equal(dupReMerge.added, 0, "dup-key re-merge adds nothing (idempotent)");
+    assert.equal(dupReMerge.entries.length, 2, "dup-key re-merge stays at 2");
 
     // --- Inland: calculator ---
     const inlandModule = {
