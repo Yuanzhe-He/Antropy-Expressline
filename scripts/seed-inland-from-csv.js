@@ -3,11 +3,15 @@
 // Usage:
 //   node scripts/seed-inland-from-csv.js <path-to-csv>            # local JSON only
 //   node scripts/seed-inland-from-csv.js <csv> --target=production --confirm-production
+//   node scripts/seed-inland-from-csv.js <csv> ... --replace       # full rateEntries replacement
 //
 // CSV is decoded from Latin-1. The cleaning/split logic lives in
-// src/lib/inland-csv.js (unit-tested). Merge is idempotent by
-// (destinationId, proveedor, cliente, commodity). Excel/CSV is never a runtime
-// data source — this writes through the store layer (JSON or Postgres).
+// src/lib/inland-csv.js (unit-tested). Default merge is idempotent by
+// (destinationId, proveedor, cliente, commodity, dupIndex). With --replace the
+// store's inland.rateEntries is replaced wholesale by the freshly parsed entries
+// (existing/demo/seed entries are discarded) so real and placeholder data can
+// never coexist — used for go-live. Excel/CSV is never a runtime data source —
+// this writes through the store layer (JSON or Postgres).
 
 const fs = require("node:fs");
 const path = require("node:path");
@@ -43,7 +47,9 @@ function buildReportMarkdown(report, merge, csvPath) {
     `- Destinations touched: ${report.touchedDestinations.length}`,
     `- Split rows: ${report.splitRows.length}`,
     `- Entries with null FULL: ${report.nullFullRows}`,
-    `- Merge: ${merge.added} added, ${merge.updated} updated`,
+    merge.removed
+      ? `- Replace: ${merge.added} written, ${merge.removed} existing discarded`
+      : `- Merge: ${merge.added} added, ${merge.updated} updated`,
     "",
     "## Split rows",
     ...(report.splitRows.length
@@ -110,7 +116,25 @@ async function main() {
   data.modules = data.modules || {};
   data.modules.inland = data.modules.inland || {};
   const existing = data.modules.inland.rateEntries || [];
-  const merge = mergeRateEntries(existing, rateEntries);
+
+  const replaceMode = Boolean(flags.replace);
+  let merge;
+  if (replaceMode) {
+    // Full replacement: discard ALL existing rate entries (demo/seed/stale) and
+    // write only the freshly parsed entries. ids/dupIndex are already assigned by
+    // cleanInlandCsv, so the result is the exact CSV set with no coexistence.
+    merge = {
+      entries: rateEntries,
+      added: rateEntries.length,
+      updated: 0,
+      removed: existing.length,
+    };
+    console.log(
+      `\nREPLACE mode: discarding ${existing.length} existing rate entr${existing.length === 1 ? "y" : "ies"}, writing ${rateEntries.length} fresh.`
+    );
+  } else {
+    merge = mergeRateEntries(existing, rateEntries);
+  }
   data.modules.inland.rateEntries = merge.entries;
 
   const reportMd = buildReportMarkdown(report, merge, resolvedCsv);
@@ -124,7 +148,11 @@ async function main() {
   fs.writeFileSync(reportPath, reportMd, "utf8");
 
   console.log(reportMd);
-  console.log(`\nWriting to ${target} store: ${merge.added} added, ${merge.updated} updated.`);
+  console.log(
+    replaceMode
+      ? `\nWriting to ${target} store (REPLACE): ${merge.added} written, ${merge.removed} discarded.`
+      : `\nWriting to ${target} store: ${merge.added} added, ${merge.updated} updated.`
+  );
   if (report.unmappedDestinos.length) {
     console.log(
       `WARNING: ${report.unmappedDestinos.length} unmapped DESTINO value(s) skipped — see report.`
