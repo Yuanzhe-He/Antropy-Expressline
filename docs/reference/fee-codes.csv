@@ -1,0 +1,346 @@
+code,description
+ACC,Alameda Corridor Charge
+ACI,Advance Commercial Information
+ADD-ON,International Freight
+AGS,Aden Gulf Surcharge
+AIRTRF,AIRPORT TRANSFER
+AMS,AMS Filing
+APSF,Airport Service Fee
+ATLAS,ATLAS FEE
+BAC,BURNASIA FREIGHT
+BAF,Bunker Adjustment Factor
+BARG,Barge Charge
+BC CB TAX,BC carbon tax
+BCOFEE,BCO ISA MANAGEMENT FEE
+BKF,BANK FEE
+BKG,Booking
+CAF,Currency Adjustment Factor
+CARP,Carp fee
+CBO,Continuous Bond
+CCFEE,Credit Card Fee
+CCINS,Customs Broker Pre-Inspection Fee
+CCLR,Import Customs Clearance
+CCLR-VAT,Import Customs Clearance (VAT)
+CCLR-VAT3,Import Customs Clearance (VAT)
+CENG,Censoring Charge
+CFC,CONTAINER FACILITY CHARGE
+CGS,US and Canada Congestion surcharge
+CHSG,Terminal Gate Fee
+CLM,Claim
+CLS,CHINA LOW SULPHUR
+CNCL,Booking Cancellation Fee
+COC,Certificate of Origin Fee
+COLOADER,COLOADER FEE
+COMB,B/L Combination Charge
+COV,Change of Vessel
+CPIY,Container Pickup In Yangshan
+CRF,Container Releasing Fee
+CSC/ESS,Origin Container Service Charge / Origin Equipment Service Surcharge
+CTN DMG,Container Damage Fee
+CVIP,CARRIER VIP REBATE
+CWAFEE,CARGOWISE AUTOMATION FEE
+D/O FEE,Delivery Order Fee
+DADMN,Destination Administration Fee
+DAGNT,Destination Agent Fee
+DAMED,Destination Amendment Fee
+DCART,Delivery Cartage/Drayage
+DCART-VAT,Delivery Cartage/Drayage (VAT9%)
+DCDEM,Destination Demurrage
+DCDET-I,Destination Container Detention-In Gate
+DCDET-O,Destination Container Detention-Out Gate
+DCFS,Destination Container Freight Station
+DCHS,Destination Chassis Rental
+DCIS,Destination Container Imbalance Surcharge
+DCLN,Destination Container Cleaning
+DCLOSS,Destination Commercial Loss
+DCNT,Destination Customer Nominated Trucking Fee
+DCOD,Change Original Destination at Destination
+DCOURIER,Destination Document Courier Services
+DCRC,Destination Container Return Charge
+DCTF,Destination Clean Truck Fee
+DCTRF,Destination Customs Transfer Fee
+D-CWAF,DESTINATION CARGOWISE AUTOMATION FEE
+DDC,Destination Delivery Charge
+DDGF,Destination Dangerous Goods Fee
+DDF,Destination Documentation Fee
+DDF-VAT,Destination Documentation Fee (VAT)
+DDRN,Destination Dry Run
+DEHC,Destination Equipment Handover Charge (LoLo)
+DEV,Devanning Fee
+DEXAM,Destination Customs Exam Charges
+DEXDR,Destination Exam Drayage
+DEXPRS,Destination Express Fee
+DEXPRS-DP,Destination Express Fee-Dispute
+DFLIP,Destination Rail Flip
+DFRT,Dead Freight
+DFSC,Delivery Fuel Surcharge
+DFSTN,Destination Fasten Fee
+DFUMI,Destination Fumigation
+DHDL,Destination Handling fee
+DHDL-VAT,Destination Handling Fee (VAT)
+DIO,Destination In&out Warehouse Fee
+DIO-VAT,Destination In&out Warehouse Fee (VAT)
+DIVERSION,FREIGHT REDIRECT
+DKALT,DARK ALERT FEE
+DLAB,Destination Labour Charges
+DLAYO,Destination Layover
+DLGF,Destination Late Gate Fee
+DLIFT,Destination Container Lifting
+DLUL,Destination Loading & unloading
+DMD,Destination Magnetic Detection
+DMGRP FEE,DAMAGE REPORT FEE
+DOFE,DUTY OUTLAY FEE - external
+DOFE-NON,DUTY OUTLAY FEE - external
+DOFI,DUTY OUTLAY FEE - internal
+DOM-CWAF,DOMESTIC CARGOWISE AUTOMATION FEE
+DOT,Destination Overtime
+DOVWE,Destination Over Weight Charge
+DPACK,Destination Repackaging
+DPACK-VAT,Destination Repackaging (VAT)
+DPCH,Destination Port Charges
+DPCS,Destination Port Congestion Surcharge
+DPHF,Pre-Inspection Handling Fee
+DPIER,Destination Pier Pass
+DPKG,Destination Parking
+DPLT,Destination Pallet Charges
+DPNLT,Destination Customs Penalty
+DPOM,Destination POM
+DPPK,Destination Pick & Pack
+DPRD,Destination Per Diem
+DPREP,Destination Prepull
+DQUAR,Destination Quarantine Inspection
+DRDET,Destination Rail Detention
+DRESTIG,Destination Restuffing
+DRPOS,Destination Chassis Repositioning
+DROP,Destination Container Drop Fee
+DRYS,Drayage (Yangshan)
+DSB FEE,DISBURSEMENT FEE
+DSEC,Destination Security Surcharge
+DSECU,Destination Security
+DSEG,Destination Segregation / Labeling Fee
+DSEG-VAT,Destination Segregation / Labeling Fee (VAT)
+DSOC,Destination Stop Off Charge
+DSTOR,Destination Rail Storage
+DSTOR-VAT,Destination Rail Storage (VAT)
+DSTR,Destination Yard Storage Fee
+DTALY,Destination Tally
+DTCA,Destination OT Carrier
+DTHC,Destination Terminal Handling Charges
+DTHC-VAT,Destination Terminal Handling Charges (VAT)
+DTOFE,Destination Toll Fee
+DTRXL,Destination Tri-axle
+DTTRP,Destination Transit Transportation
+DUTYDP,DUTY Deposit
+DWAIT,Destination Waiting Fee
+DWHARF,Destination Wharfage Charge
+ECA,ECA REG Surcharge
+ECCLR,Export Customs Clearance
+ECCLR-VAT,Export Customs Clearance (VAT)
+ECCLR-VAT3,Export Customs Clearance (VAT1%)
+ECN,EQUIPMENT CLEANING
+EDD,EXCESS DWELL DEPOSIT
+EDF,EXCESS DWELL FEE
+EDI,EDI
+EDI-VAT,EDI (VAT)
+EFAF,Emergency Fuel Adjustment Factor
+EMF,Equipment Management Fee
+EMP,EQUIPMENT MAINTENANCE PREMIUM
+ENS,ENS Customs Declaration
+EQPD,Equipment Per Diem
+ERS,Express Rail Service
+ESF,Export Service Fee
+ESF-VAT,Export Service Fee (VAT)
+ESP,EASY STOCKING FEES AT THE PORT
+EXTRAHS,EXTRA HS CODE
+FDA,FDA Charges
+FISHWILD,Fish and Wild Lift
+FRT,International Freight
+FSC,Fuel Surcharge
+GBP,General Bunk Floating
+GOH,Garment On Hanger
+GRI,General Rate Increase
+HMF,Harbor Maintenance Fee
+HRC,Hazardous Rail Charge
+INSUR,Freight Insurance
+ISF,ISF Filing
+ISPM,International Standards for Phytosanitary Measures
+ISPS,INTERNATIONAL SHIP AND PORT FACILITY SECURITY SURCHARGE
+IT,I.T.FEE
+ITFE,I.T. Cancel Fee
+LBHDL,Li battery handling fee
+LOT,Local Other Fees
+LSL,Lump Sum Local (Canada)
+LSS,Low Sulphur Surcharge
+LTPA,Late P/A Fee
+MANI,Manifest Fee
+MCART-VAT,Delivery Cartage/Drayage (VAT9%)
+MCCLR,Import Customs Clearance
+MCCLR-VAT,Import Customs Clearance (VAT)
+MDJO FEE,Delivery Order
+MDCART,Delivery Cartage/Drayage
+MDEXAM,Destination Customs Exam Charges
+MDESTN,Destination Storage Fee
+MECCLR,Export Customs Clearance
+MECCLR-VAT,Export Customs Clearance (VAT)
+MENSF-VAT,Import Service Fee (VAT)
+MIN,Mining Fees Error
+MOEXAM,Origin Customs Exam Charges
+MPCH-VAT,Port Charges (VAT)
+MPP,Mechandise Processing Fee
+MRNCL,MRN close fee
+MSC,MSK Chassis
+MSRT,API- MSRATING
+NAV,Navigation Fee
+NOMI,Container Nomination
+OADMN,Origin Administration Fee
+OAGNT,Origin Agent Fee
+OAMED,Origin Amendment Fee
+OAWB,Origin Airway Bill Fee
+OBBTL,Origin Bobtail
+OBRCD,Origin Bar Code
+OCART,Origin Cartage
+OCART-VAT,Origin Cartage (VAT6%)
+OCDEM,Origin Demurrage
+OCDET,Origin Container Detention
+OCFS,Origin Container Freight Station
+OCFS-VAT,Origin Freight Station (VAT)
+OCHS,Origin Chassis Rental
+OCIS,Origin Container Imbalance Surcharge
+OCLN,Origin Container Cleaning
+OCLOSS,Origin Commercial Loss
+OCOD,Change Original Destination at Origin
+OCOU,Origin Document Courier Services
+OCRC,Origin Container Return Charge
+OCTF,Origin Clean Truck Fee
+OCTRF,Origin Customs Transfer Fee
+O-CWAF,ORIGIN CARGOWISE AUTOMATION FEE
+ODANG,Origin Dangerous Goods Fee
+ODOC,Origin Documentation Fee
+ODRN,Origin Dry Run
+ODROP,Origin Container Drop Fee
+OEHC,Origin Equipment Handover Charge (LoLo)
+OEXAM,Origin Customs Exam Charges
+OEXDR,Origin Exam Drayage
+OFLIP,Origin Rail Flip
+OFSTN,Origin Fasten Fee
+OFUMI,Origin Fumigation
+OGA,Other Government Agency
+OGAC,OGA Clearance
+OHDL,Origin Handling fee
+OHDL-NON,Origin Handling fee
+OIO,Origin In&out Warehouse Fee
+OIO-VAT,Origin In&out Warehouse Fee (VAT)
+OLAB,Origin Labour Charges
+OLAYO,Origin Layover
+OLGF,Origin Late Gate Fee
+OLIFT,Origin Container Lifting
+OLOSS,Operations Loss
+OMD,Origin Magnetic Detection
+OOT,Origin Overtime
+OOVLG,Origin OverLength Charge
+OOVWE,Origin Over Weight Charge
+OPACK,Origin Repackaging
+OPC,Origin Port Channel Fee
+OPCH,Origin Port Charges
+OPCH-VAT,Origin Port Charges (VAT)
+OPCS,Origin Port Congestion Surcharge
+OPIER,Origin Pier Pass
+OPKG,Origin Parking
+OPLT,Origin Pallet Charges
+OPNLT,Origin Customs Penalty
+OPOM,Origin POM
+OPPK,Origin Pick & Pack
+OPRDM,Origin Per Diem
+OPREP,Origin Prepull
+OQUAR,Origin Quarantine Inspection
+ORELD,Origin Restuffing
+OREPO,Origin Chassis Repositioning
+OSEC,Origin Security Surcharge
+OSECU,Origin Security
+OSEG,Origin Segregation / Labeling Fee
+OSOC,Origin Stop Off Charge
+OSTOR,Origin Storage / Warehousing
+OSTR,Origin Yard Storage Fee
+OTALY,Origin Tally Fee
+OTCA,Origin OT Carrier
+OTHC,Origin Terminal Handling
+OTOFE,Origin Toll Fee
+OTRXL,Origin Tri-axle
+OTTRP,Origin Transit Transportation
+OVD IN,OVERDUE INTEREST
+OWAIT,Origin Waiting Fee
+OWHARF,Origin Wharfage Charge
+PAAP,Pre-arrival at Port
+PARCEL,PARCEL
+PCF,Panama Canal Fee
+PCFE,Port Construction Fee
+PCFE-VAT,Port Construction Fee (VAT)
+PMS,Periodic Monthly Statement Surcharge
+PRIT,Printing Charge
+PRM-DCBU,Promotion Service Fee-ICBU
+PS,Profit Share / Rebate
+PS-WH,Profit Share-Warehouse
+PUCART,Pick Up Cartage
+ROD,REDUCTION OF DISTRIBUTIONS
+SBO,Single Bond
+SCREENING,SCREENING FEE
+SCS,Suez Canal Surcharge
+SEAL,Seal
+SFS,SANITARY FEE SURCHARGE
+SHTL,Shuttle
+SKWCH,Shockwatch
+SLF,Steel License Fee
+SPLT,B/L Split Charge
+SPR,SUPPLY PRICE CHARGES
+SPS,Shanghai Port Surcharge
+SWB,Sea waybill
+T86EXPRS,T86 Express Fee
+TEC-ICBU,Techenical Service fee-ICBU
+TLIFT,Taillift fee
+TLX,TELEX Release (BL Surrender)
+TRSL,Trans Loading
+TSC,Terminal Shifting Charge
+ULD,ULD building
+UNSTK,Unstackable Fee
+VGM,VGM Fee
+VGM-VAT,VGM Fee (VAT)
+WAABR,Warehouse all in fee for airline
+WACC,Warehouse Accessorials
+WACC-VAT,Warehouse Accessorials (VAT)
+WASF,Warehouse Supplies Fee
+WH D/C,WAREHOUSE SALES DISCOUNT
+WHCOMCR,Warehouse other Fee
+WHDEL,Destination Delivery Fee
+WHDEL-DP,Destination Delivery Fee-Parcel Dispute
+WHENO,warehouse operation error/failure
+WHIHDL,Warehouse Inbound Handling Fee
+WHLOAD,Warehouse Loading Fee
+WHOHDL,Warehouse Outbound Handling Fee
+WHOTHERS,Warehouse other Fee
+WHPAL,Warehouse Pallet
+WHRALL,Warehouse Revenue Allowance
+WHSTR,Warehouse Storage
+WHSUP,Warehouse Supplies Fee
+WHSVC,Warehouse Service Fee
+WHSVC-VAT,Warehouse Service Fee (VAT)
+WHTRANS,Transportation Service Fee
+WKEDDEL,WEEKEND DELIVERY
+WRS,Wear Risk Surcharge
+XAPPT,Appointment Fees
+XDDC,Destination Delivery Charge
+XDDRN,Destination Dry Run
+XDFSC,Delivery Fuel Surcharge
+XDEL,Inside Delivery Fees
+XLIFT,Liftgate Fee
+XOVWE,Destination Over Weight Charge
+XRAY,X-Ray Exam
+XREDEL,Redelivery Fees
+XRESDEL,Residential Fees
+XREWEIGHT,Reweight / Class Correction Fees
+XSORT,Sort & Segregation Fees
+XSTR,Destination Yard Storage Fee
+XTOFE,Destination Toll Fee
+XTRSL,Trans Loading
+XWAIT,Destination Waiting Fee
+XWKEDDEL,WEEKEND DELIVERY
+YSPB,Yangshan PB

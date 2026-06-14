@@ -12,6 +12,7 @@ const { buildTranslator } = require("../src/lib/i18n");
 const { cleanInlandCsv, mergeRateEntries, parseAmount, decodeCsvBuffer } = require("../src/lib/inland-csv");
 const { computeViaCities, decodePolyline } = require("../src/lib/inland-routes");
 const { resolveLink, extractCoords } = require("../src/lib/inland-link-resolver");
+const { closeQuoteBrowser } = require("../src/lib/quote-pdf");
 
 const dataFile = path.join(__dirname, "../data/shipping-lines.json");
 
@@ -1439,8 +1440,94 @@ async function main() {
     });
     assert.equal(response.status, 422, "inland resolve-link rejects non-google");
 
+    // --- Quote section ---
+    response = await request(baseUrl, "/workbench/handover?lang=zh", { jar: publicJar });
+    expectContains(response.text, "报价", "quote module appears in navigation");
+
+    response = await request(baseUrl, "/workbench/quote", { jar: publicJar });
+    assert.equal(response.status, 200, "quote workbench loads");
+    expectContains(response.text, "data-quote-form", "quote builder form");
+    expectContains(response.text, "MEXICO LOCAL CHARGES", "quote charges table");
+    expectContains(response.text, "SHIPPING LINE", "quote group shipping line");
+    expectContains(response.text, "TRANSPORTATION", "quote group transportation");
+    expectContains(response.text, "换单费", "quote concept zh present");
+    expectContains(response.text, 'id="fee-codes"', "quote fee-code datalist");
+
+    response = await request(baseUrl, "/admin/quote/settings", { jar: publicJar });
+    assert.equal(response.status, 302, "quote admin settings redirects");
+    assert.ok(
+      String(response.location || "").includes("/workbench/quote"),
+      "quote admin redirects to workbench"
+    );
+
+    // Pull from calculators then recompute.
+    response = await request(baseUrl, "/workbench/quote", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: [
+        ["action", "pull"],
+        ["quotationNumber", "ELCMEX-SI-009E"],
+        ["operation", "IMPORT"],
+        ["department", "OCEAN"],
+        ["pull_shippingLineId", "cma-cgm"],
+        ["pull_destinationId", "apodaca"],
+        ["pull_containerTypeKey", "40GP"],
+        ["pull_quantity", "2"],
+        ["pull_demurrageDays", "9"],
+        ["pull_storageDays", "12"],
+        ["li_id[]", "li-7"],
+        ["li_category[]", "TRANSPORTATION"],
+        ["li_code[]", ""],
+        ["li_conceptEn[]", "SINGLE"],
+        ["li_conceptZh[]", "单拖"],
+        ["li_unit[]", "1"],
+        ["li_unitPrice[]", "68000"],
+        ["li_currency[]", "MXN"],
+        ["li_remark[]", "Weight <= 25 tons"],
+        ["li_atCost[]", "0"],
+        ["li_source[]", "calc"],
+        ["li_calcModule[]", "inland"],
+        ["li_calcField[]", "sencillo"],
+      ],
+    });
+    assert.equal(response.status, 200, "quote pull recompute ok");
+    expectContains(response.text, "data-quote-form", "quote pull re-renders builder");
+
+    // Generate the PDF (real headless Chromium render).
+    response = await request(baseUrl, "/workbench/quote/pdf", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: [
+        ["quotationNumber", "ELCMEX-SI-009E"],
+        ["operation", "IMPORT"],
+        ["department", "OCEAN"],
+        ["incoterm", "CIF"],
+        ["pol", "CHINA"],
+        ["pod", "MANZANILLO"],
+        ["cargoType", "FCL"],
+        ["commodity", "General container cargo"],
+        ["delivery", "Apodaca, Nuevo Leon"],
+        ["li_id[]", "li-1"],
+        ["li_category[]", "SHIPPING LINE"],
+        ["li_code[]", "DESTINATION HANDLING FEE"],
+        ["li_conceptEn[]", "DESTINATION HANDLING FEE"],
+        ["li_conceptZh[]", "换单服务费"],
+        ["li_unit[]", "1"],
+        ["li_unitPrice[]", "1000"],
+        ["li_currency[]", "MXN"],
+        ["li_remark[]", "per container"],
+        ["li_atCost[]", "0"],
+        ["li_source[]", "manual"],
+        ["li_calcModule[]", ""],
+        ["li_calcField[]", ""],
+      ],
+    });
+    assert.equal(response.status, 200, "quote pdf endpoint ok");
+    assert.ok(response.text.startsWith("%PDF"), "quote pdf body starts with %PDF");
+
     console.log("smoke-test-ok");
   } finally {
+    await closeQuoteBrowser();
     await fs.writeFile(dataFile, originalData, "utf8");
     await new Promise((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));

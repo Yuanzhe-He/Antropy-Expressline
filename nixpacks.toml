@@ -1,0 +1,42 @@
+# NOTE (2026-06): Railway 当前使用 railpack builder，会忽略本文件。
+# 线上 Chromium 依赖由 railpack 的 puppeteer provider 自动安装；
+# 中文渲染由 quote-document.ejs 内嵌的 @font-face Noto Sans SC (base64) 保证，不依赖系统字体。
+# 本文件仅作 fallback：仅当 builder 被切回 nixpacks 时才生效。
+#
+# Railway / Nixpacks config for the quote-section PDF pipeline (Puppeteer +
+# headless Chromium). Report §D.3: Railway is a long-running container (NOT
+# serverless), so we use full `puppeteer` (bundled Chromium) and only add the
+# system shared libraries Chromium needs + CJK fonts as a fallback. The quote
+# document also embeds Noto Sans + Noto Sans SC via @font-face, so CJK renders
+# even without the system fonts; noto-fonts-cjk here is belt-and-suspenders.
+#
+# NOTE: Chromium on Railway is the highest-risk item — verify with an actual
+# deploy + a real PDF render before relying on it (tracked as a separate step).
+
+[phases.setup]
+# Nix packages (fonts available to the whole image, incl. headless Chromium).
+nixPkgs = ["...", "fontconfig", "noto-fonts", "noto-fonts-cjk"]
+
+# Debian/apt libraries required by the Chromium that `puppeteer` downloads.
+aptPkgs = [
+  "libnss3",
+  "libatk1.0-0",
+  "libatk-bridge2.0-0",
+  "libcups2",
+  "libdrm2",
+  "libxkbcommon0",
+  "libxcomposite1",
+  "libxdamage1",
+  "libxfixes3",
+  "libxrandr2",
+  "libgbm1",
+  "libpango-1.0-0",
+  "libcairo2",
+  "libasound2",
+  "libatspi2.0-0",
+  "fonts-noto-cjk",
+]
+
+# If you prefer the system/Nix Chromium instead of puppeteer's bundled binary,
+# add "chromium" to nixPkgs above and set PUPPETEER_EXECUTABLE_PATH in Railway
+# Variables to its path (quote-pdf.js already honours that env var).
