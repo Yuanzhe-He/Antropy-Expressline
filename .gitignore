@@ -17,3 +17,6 @@ Thumbs.db
 
 *.local
 *.tmp
+
+# generated quote preview (re-creatable from the quote section; source 报价.pdf is tracked)
+docs/reference/quote-preview.pdf

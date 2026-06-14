@@ -11,6 +11,10 @@ const BUSINESS_MODULES = Object.freeze([
     key: "inland",
     implemented: true,
   },
+  {
+    key: "quote",
+    implemented: true,
+  },
 ]);
 
 const DEFAULT_MODULE_KEY = BUSINESS_MODULES[0].key;

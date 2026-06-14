@@ -22,6 +22,13 @@ const {
   normalizeTaxRate,
 } = require("./options");
 const { BUSINESS_MODULES, DEFAULT_MODULE_KEY } = require("./modules");
+const {
+  QUOTE_TEMPLATE_ROWS,
+  QUOTE_NOTES,
+  QUOTE_GROUP_ORDER,
+  QUOTE_TEMPLATE_VERSION,
+  DEFAULT_QUOTE_HEADER,
+} = require("./quote");
 
 loadLocalEnv();
 
@@ -2021,6 +2028,123 @@ function normalizeGenericModuleData(moduleData = {}) {
   };
 }
 
+function normalizeQuoteLineItem(item = {}, fallbackId) {
+  const atCost =
+    Boolean(item.isAtCost) ||
+    String(item.unitPrice ?? "").trim().toUpperCase() === "AT COST";
+  const cur = String(item.currency || "").trim().toUpperCase();
+  const currency = cur === "USD" ? "USD" : cur === "MXN" ? "MXN" : atCost ? "" : "MXN";
+  const source = ["calc", "manual", "atcost"].includes(item.source)
+    ? item.source
+    : atCost
+      ? "atcost"
+      : "manual";
+  const calcRef =
+    item.calcRef &&
+    typeof item.calcRef === "object" &&
+    item.calcRef.module &&
+    item.calcRef.field
+      ? { module: String(item.calcRef.module), field: String(item.calcRef.field) }
+      : null;
+  return {
+    id: slugifyId(item.id, fallbackId),
+    code: String(item.code || "").trim(),
+    category: QUOTE_GROUP_ORDER.includes(item.category)
+      ? item.category
+      : QUOTE_GROUP_ORDER[0],
+    conceptEn: String(item.conceptEn || "").trim(),
+    conceptZh: String(item.conceptZh || "").trim(),
+    unit:
+      item.unit === null || item.unit === "" || item.unit === undefined
+        ? null
+        : Math.max(0, parseNumber(item.unit, 1)),
+    unitPrice: atCost ? "AT COST" : parseNumber(item.unitPrice, 0),
+    currency,
+    remark: String(item.remark || ""),
+    isAtCost: atCost,
+    source,
+    calcRef,
+  };
+}
+
+function normalizeQuoteHeader(header = {}) {
+  const operation = String(header.operation || "").toUpperCase();
+  const department = String(header.department || "").toUpperCase();
+  const cargoType = String(header.cargoType || "").toUpperCase();
+  return {
+    operation: ["IMPORT", "EXPORT"].includes(operation) ? operation : "IMPORT",
+    department: ["OCEAN", "AIR"].includes(department) ? department : "OCEAN",
+    incoterm: String(header.incoterm ?? DEFAULT_QUOTE_HEADER.incoterm).trim(),
+    pol: String(header.pol ?? DEFAULT_QUOTE_HEADER.pol).trim(),
+    pod: String(header.pod ?? DEFAULT_QUOTE_HEADER.pod).trim(),
+    commodity: String(header.commodity || "").trim(),
+    cargoType: ["FCL", "LCL"].includes(cargoType) ? cargoType : "FCL",
+    delivery: String(header.delivery || "").trim(),
+  };
+}
+
+function normalizeQuoteNote(note = {}) {
+  return { en: String(note.en || "").trim(), zh: String(note.zh || "").trim() };
+}
+
+function normalizeQuoteDraft(draft = {}, fallbackId) {
+  const id = slugifyId(draft.id, fallbackId);
+  return {
+    id,
+    number: String(draft.number || "").trim(),
+    date: String(draft.date || "").trim(),
+    header: normalizeQuoteHeader(draft.header),
+    lineItems: (Array.isArray(draft.lineItems) ? draft.lineItems : []).map(
+      (item, index) => normalizeQuoteLineItem(item, `${id}-li-${index + 1}`)
+    ),
+    createdAt: draft.createdAt || null,
+    updatedAt: draft.updatedAt || null,
+  };
+}
+
+function normalizeQuoteModuleData(moduleData = {}) {
+  const settingsIn = moduleData.settings || {};
+  const templateVersion = parseNumber(settingsIn.templateVersion, 0);
+  const seedTemplate =
+    templateVersion < QUOTE_TEMPLATE_VERSION ||
+    !Array.isArray(moduleData.templateRows) ||
+    !moduleData.templateRows.length;
+  const seedNotes = !Array.isArray(moduleData.notes) || !moduleData.notes.length;
+  const pad = Math.min(
+    8,
+    Math.max(1, Math.trunc(parseNumber(settingsIn.quoteNumberPad, 3)) || 3)
+  );
+
+  return {
+    settings: {
+      defaultQuoteCurrency: normalizeCurrencyCode(
+        settingsIn.defaultQuoteCurrency,
+        "MXN"
+      ),
+      quoteNumberPrefix:
+        typeof settingsIn.quoteNumberPrefix === "string"
+          ? settingsIn.quoteNumberPrefix
+          : "ELCMEX-SI-",
+      quoteNumberSuffix:
+        typeof settingsIn.quoteNumberSuffix === "string"
+          ? settingsIn.quoteNumberSuffix
+          : "E",
+      quoteNumberPad: pad,
+      lastQuoteSeq: Math.max(0, Math.trunc(parseNumber(settingsIn.lastQuoteSeq, 4))),
+      showIndicativeConversion: Boolean(settingsIn.showIndicativeConversion),
+      indicativeCurrency: normalizeCurrencyCode(settingsIn.indicativeCurrency, "MXN"),
+      templateVersion: QUOTE_TEMPLATE_VERSION,
+    },
+    templateRows: (seedTemplate ? QUOTE_TEMPLATE_ROWS : moduleData.templateRows).map(
+      (row, index) => normalizeQuoteLineItem(row, `tpl-${index + 1}`)
+    ),
+    notes: (seedNotes ? QUOTE_NOTES : moduleData.notes).map(normalizeQuoteNote),
+    drafts: (Array.isArray(moduleData.drafts) ? moduleData.drafts : []).map(
+      (draft, index) => normalizeQuoteDraft(draft, `q-${index + 1}`)
+    ),
+  };
+}
+
 function normalizeModules(data) {
   const legacyModule = {
     settings: data.settings || {},
@@ -2046,6 +2170,8 @@ function normalizeModules(data) {
   normalizedModules.inland = normalizeInlandModuleData(
     sourceModules.inland || {}
   );
+
+  normalizedModules.quote = normalizeQuoteModuleData(sourceModules.quote || {});
 
   for (const module of BUSINESS_MODULES) {
     if (!normalizedModules[module.key]) {

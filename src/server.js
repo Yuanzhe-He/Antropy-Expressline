@@ -44,6 +44,17 @@ const {
   saveShippingData,
   RATE_GROUP_NAMES,
 } = require("./lib/store");
+const {
+  DEFAULT_QUOTE_HEADER,
+  buildInitialLineItems,
+  computeQuoteTotals,
+  groupRowsForRender,
+  pullCalculatorValues,
+  generateQuoteNumber,
+  loadFeeCodes,
+} = require("./lib/quote");
+const { renderQuotePdf } = require("./lib/quote-pdf");
+const { shouldUseDatabase, insertQuoteSnapshot } = require("./lib/db");
 
 const port = process.env.PORT || 3000;
 const sessionSecret =
@@ -1360,6 +1371,135 @@ function renderAdminRules(req, res, payload) {
   );
 }
 
+function parseQuoteHeader(body = {}) {
+  return {
+    operation: body.operation || DEFAULT_QUOTE_HEADER.operation,
+    department: body.department || DEFAULT_QUOTE_HEADER.department,
+    incoterm: body.incoterm ?? DEFAULT_QUOTE_HEADER.incoterm,
+    pol: body.pol ?? DEFAULT_QUOTE_HEADER.pol,
+    pod: body.pod ?? DEFAULT_QUOTE_HEADER.pod,
+    commodity: body.commodity || "",
+    cargoType: body.cargoType || DEFAULT_QUOTE_HEADER.cargoType,
+    delivery: body.delivery || "",
+  };
+}
+
+function parseQuoteLineItems(body = {}) {
+  const ids = ensureArray(body.li_id);
+  const cell = (name, index) => ensureArray(body[name])[index] ?? "";
+  return ids.map((id, index) => {
+    const calcModule = cell("li_calcModule", index);
+    const calcField = cell("li_calcField", index);
+    return {
+      id: id || `li-${index + 1}`,
+      category: cell("li_category", index),
+      code: cell("li_code", index),
+      conceptEn: cell("li_conceptEn", index),
+      conceptZh: cell("li_conceptZh", index),
+      unit: cell("li_unit", index),
+      unitPrice: cell("li_unitPrice", index),
+      currency: cell("li_currency", index),
+      remark: cell("li_remark", index),
+      isAtCost: String(cell("li_atCost", index)) === "1",
+      source: cell("li_source", index) || "manual",
+      calcRef: calcModule && calcField ? { module: calcModule, field: calcField } : null,
+    };
+  });
+}
+
+function parseQuotePullInputs(body = {}) {
+  return {
+    shippingLineId: body.pull_shippingLineId || "",
+    portId: body.pull_portId || "",
+    terminalId: body.pull_terminalId || "",
+    destinationId: body.pull_destinationId || "",
+    containerTypeKey: body.pull_containerTypeKey || "",
+    quantity: parseWholeNumber(body.pull_quantity, 1) || 1,
+    demurrageDays: parseWholeNumber(body.pull_demurrageDays, 0),
+    storageDays: parseWholeNumber(body.pull_storageDays, 0),
+  };
+}
+
+function buildQuoteSelectorData(shippingData) {
+  const handover = getModuleData(shippingData, "handover");
+  const customs = getModuleData(shippingData, "customs");
+  const inland = getModuleData(shippingData, "inland");
+  return {
+    shippingLines: (handover.shippingLines || []).map((line) => ({
+      id: line.id,
+      name: line.name,
+    })),
+    containerTypes: (handover.containerTypes || []).map((type) => ({
+      key: type.key,
+      label: type.label,
+    })),
+    ports: (customs.ports || []).map((port) => ({
+      id: port.id,
+      name: port.name,
+      terminals: (port.terminals || []).map((terminal) => ({
+        id: terminal.id,
+        name: terminal.name,
+      })),
+    })),
+    destinations: (inland.destinations || [])
+      .filter((dest) => dest.enabled)
+      .map((dest) => ({ id: dest.id, name: dest.name, state: dest.state })),
+  };
+}
+
+function assembleQuoteView(quoteModule, formData, shippingData) {
+  const totals = computeQuoteTotals(formData.lineItems, {
+    exchangeRates: shippingData.exchangeRates,
+    showIndicativeConversion: quoteModule.settings.showIndicativeConversion,
+    indicativeCurrency: quoteModule.settings.indicativeCurrency,
+  });
+  return {
+    number: formData.number,
+    date: formData.date,
+    header: formData.header,
+    rows: totals.rows,
+    groups: groupRowsForRender(totals.rows),
+    subtotals: totals.subtotals,
+    indicative: totals.indicative,
+    notes: quoteModule.notes,
+  };
+}
+
+function buildQuoteFormData(quoteModule, body = {}, options = {}) {
+  const hasPostedRows = ensureArray(body.li_id).length > 0;
+  const lineItems = hasPostedRows ? parseQuoteLineItems(body) : buildInitialLineItems();
+  const number =
+    (body.quotationNumber || "").trim() || generateQuoteNumber(quoteModule.settings).number;
+  const today = new Date().toISOString().slice(0, 10);
+  return {
+    number,
+    date: (body.date || "").trim() || options.date || today,
+    header: parseQuoteHeader(body),
+    lineItems,
+    pullInputs: parseQuotePullInputs(body),
+  };
+}
+
+function renderQuoteWorkbench(req, res, payload) {
+  const moduleMeta = getModulePresentation(payload.moduleKey, req.language);
+  res.render(
+    "workbench-quote",
+    baseView(req, {
+      pageTitle: `${moduleMeta.title} | ${req.t("app.name")}`,
+      currentArea: "sales",
+      currentModuleKey: payload.moduleKey,
+      selectedModule: moduleMeta,
+      quoteSettings: payload.quoteModule.settings,
+      quoteView: payload.quoteView,
+      formData: payload.formData,
+      selectorData: payload.selectorData,
+      feeCodes: payload.feeCodes,
+      currencyOptions: CURRENCY_OPTIONS,
+      languageReturnTo: `/workbench/${payload.moduleKey}`,
+    })
+  );
+}
+
 function createApp() {
   const app = express();
 
@@ -1515,6 +1655,19 @@ function createApp() {
       });
     }
 
+    if (module.key === "quote") {
+      const quoteModule = moduleData;
+      const formData = buildQuoteFormData(quoteModule, {});
+      return renderQuoteWorkbench(req, res, {
+        moduleKey: module.key,
+        quoteModule,
+        formData,
+        quoteView: assembleQuoteView(quoteModule, formData, shippingData),
+        selectorData: buildQuoteSelectorData(shippingData),
+        feeCodes: loadFeeCodes(),
+      });
+    }
+
     if (!module.implemented || !moduleData.shippingLines.length) {
       return renderWorkbench(req, res, {
         moduleKey: module.key,
@@ -1667,6 +1820,132 @@ function createApp() {
 
   // --- Inland admin ---
   const INLAND_ADMIN_TARGET = "/admin/inland/shipping-lines";
+
+  app.post("/workbench/quote", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const quoteModule = getModuleData(shippingData, "quote");
+    const formData = buildQuoteFormData(quoteModule, req.body);
+    const action = req.body.action || "recompute";
+
+    if (action === "pull") {
+      formData.lineItems = pullCalculatorValues({
+        shippingData,
+        inputs: formData.pullInputs,
+        lineItems: formData.lineItems,
+        calculators: {
+          computeHandoverCalculator: computeCalculator,
+          computeCustomsCalculator,
+          computeInlandCalculator,
+        },
+        t: req.t,
+      });
+      const hasData =
+        (shippingData.modules.handover?.shippingLines?.length || 0) +
+          (shippingData.modules.customs?.ports?.length || 0) +
+          (shippingData.modules.inland?.destinations?.length || 0) >
+        0;
+      req.flash = {
+        type: hasData ? "success" : "info",
+        message: hasData ? req.t("quote.pulled") : req.t("quote.noShippingData"),
+      };
+    } else if (action === "saveDraft") {
+      const provided = (req.body.quotationNumber || "").trim();
+      let advanceTo = null;
+      if (provided) {
+        formData.number = provided;
+      } else {
+        const generated = generateQuoteNumber(quoteModule.settings);
+        formData.number = generated.number;
+        advanceTo = generated.nextSeq;
+      }
+      const now = new Date().toISOString();
+      quoteModule.drafts = [
+        ...(quoteModule.drafts || []),
+        {
+          id: buildRuleId("quote"),
+          number: formData.number,
+          date: formData.date,
+          header: formData.header,
+          lineItems: formData.lineItems,
+          createdAt: now,
+          updatedAt: now,
+        },
+      ];
+      if (advanceTo !== null) {
+        quoteModule.settings.lastQuoteSeq = advanceTo;
+      }
+      await saveShippingData(shippingData);
+      req.flash = {
+        type: "success",
+        message: `${req.t("quote.draftSaved")}${formData.number}`,
+      };
+    }
+
+    return renderQuoteWorkbench(req, res, {
+      moduleKey: "quote",
+      quoteModule,
+      formData,
+      quoteView: assembleQuoteView(quoteModule, formData, shippingData),
+      selectorData: buildQuoteSelectorData(shippingData),
+      feeCodes: loadFeeCodes(),
+    });
+  });
+
+  app.post("/workbench/quote/pdf", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const quoteModule = getModuleData(shippingData, "quote");
+    const formData = buildQuoteFormData(quoteModule, req.body);
+
+    const provided = (req.body.quotationNumber || "").trim();
+    let advanceTo = null;
+    if (provided) {
+      formData.number = provided;
+    } else {
+      const generated = generateQuoteNumber(quoteModule.settings);
+      formData.number = generated.number;
+      advanceTo = generated.nextSeq;
+    }
+
+    const quoteView = assembleQuoteView(quoteModule, formData, shippingData);
+
+    try {
+      const pdf = await renderQuotePdf(quoteView);
+
+      if (advanceTo !== null) {
+        quoteModule.settings.lastQuoteSeq = advanceTo;
+        await saveShippingData(shippingData);
+      }
+
+      if (shouldUseDatabase()) {
+        try {
+          await insertQuoteSnapshot({
+            moduleKey: "quote",
+            businessNature: quoteView.header.operation,
+            input: {
+              number: formData.number,
+              header: formData.header,
+              lineItems: formData.lineItems,
+            },
+            result: {
+              rows: quoteView.rows,
+              subtotals: quoteView.subtotals,
+              indicative: quoteView.indicative,
+            },
+          });
+        } catch (snapshotError) {
+          console.error("quote snapshot failed", snapshotError);
+        }
+      }
+
+      const safeName = String(formData.number || "quote").replace(/[^A-Za-z0-9._-]+/g, "_");
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${safeName}.pdf"`);
+      return res.send(pdf);
+    } catch (error) {
+      console.error("quote pdf generation failed", error);
+      return redirectWithFlash(req, res, "error", req.t("quote.pdfError"), "/workbench/quote");
+    }
+  });
 
   app.post("/admin/inland/resolve-link", requireAuth, async (req, res) => {
     const result = await resolveLink(req.body.link || "");
@@ -2008,6 +2287,12 @@ function createApp() {
       return res.redirect("/admin/inland/shipping-lines");
     }
 
+    // Quote has no separate admin surface in v1; defaults live in modules.quote
+    // and are edited from the workbench.
+    if (module.key === "quote") {
+      return res.redirect("/workbench/quote");
+    }
+
     const shippingData = await loadShippingData();
     return renderAdminSettings(req, res, {
       moduleKey: module.key,
@@ -2026,6 +2311,10 @@ function createApp() {
           languageReturnTo: req.originalUrl,
         })
       );
+    }
+
+    if (module.key === "quote") {
+      return res.redirect("/workbench/quote");
     }
 
     const shippingData = await loadShippingData({ refreshRates: false });
@@ -2935,6 +3224,10 @@ function createApp() {
           languageReturnTo: req.originalUrl,
         })
       );
+    }
+
+    if (module.key === "quote") {
+      return res.redirect("/workbench/quote");
     }
 
     const shippingData = await loadShippingData();

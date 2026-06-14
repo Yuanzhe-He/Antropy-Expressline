@@ -143,6 +143,40 @@ async function saveAppState(key, payload) {
   );
 }
 
+// Insert an immutable audit snapshot of a generated quote. DB-only: callers
+// must guard with shouldUseDatabase() and skip in JSON-fallback mode. The
+// quote_snapshots table is created in migrateDatabase() (zero extra migration).
+async function insertQuoteSnapshot({ moduleKey = "quote", businessNature = null, input, result }) {
+  await ensureDatabase();
+  const schema = quoteIdentifier(getDatabaseSchema());
+  const { rows } = await getPool().query(
+    `
+      insert into ${schema}.quote_snapshots
+        (module_key, business_nature, input_payload, result_payload)
+      values ($1, $2, $3::jsonb, $4::jsonb)
+      returning id, created_at
+    `,
+    [moduleKey, businessNature, JSON.stringify(input ?? {}), JSON.stringify(result ?? {})]
+  );
+  return rows[0] || null;
+}
+
+async function listQuoteSnapshots(limit = 50) {
+  await ensureDatabase();
+  const schema = quoteIdentifier(getDatabaseSchema());
+  const safeLimit = Math.min(500, Math.max(1, Math.trunc(Number(limit) || 50)));
+  const { rows } = await getPool().query(
+    `
+      select id, module_key, business_nature, input_payload, result_payload, created_at
+      from ${schema}.quote_snapshots
+      order by created_at desc
+      limit $1
+    `,
+    [safeLimit]
+  );
+  return rows;
+}
+
 async function closeDatabase() {
   if (pool) {
     await pool.end();
@@ -155,6 +189,8 @@ module.exports = {
   closeDatabase,
   getAppState,
   getDatabaseSchema,
+  insertQuoteSnapshot,
+  listQuoteSnapshots,
   migrateDatabase,
   saveAppState,
   shouldUseDatabase,

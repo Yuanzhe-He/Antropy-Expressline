@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="color-scheme" content="light only" />
+<title><%= number %></title>
+<style>
+  :root { color-scheme: light; }
+  <% if (assets.fontSans) { %>
+  @font-face { font-family: "Noto Sans"; font-style: normal; font-weight: 400; src: url("<%= assets.fontSans %>") format("woff2"); }
+  <% } %>
+  <% if (assets.fontSansBold) { %>
+  @font-face { font-family: "Noto Sans"; font-style: normal; font-weight: 700; src: url("<%= assets.fontSansBold %>") format("woff2"); }
+  <% } %>
+  <% if (assets.fontCjk) { %>
+  @font-face { font-family: "Noto Sans SC"; font-style: normal; font-weight: 400; src: url("<%= assets.fontCjk %>") format("woff2"); }
+  @font-face { font-family: "Noto Sans SC"; font-style: normal; font-weight: 700; src: url("<%= assets.fontCjk %>") format("woff2"); }
+  <% } %>
+
+  @page { size: A4; margin: 12mm 10mm 16mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #ffffff; }
+  body {
+    font-family: "Noto Sans", "Noto Sans SC", Arial, sans-serif;
+    color: #15202b; font-size: 9.5px; line-height: 1.35;
+    background: #ffffff;
+    padding-bottom: 16mm;
+  }
+  .zh { font-family: "Noto Sans SC", "Noto Sans", sans-serif; }
+
+  .doc-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .logo-box { height: 46px; display: flex; align-items: center; }
+  .logo-box img { height: 44px; width: auto; max-width: 230px; object-fit: contain; }
+  .logo-ph { border: 1px dashed #9aa7b4; color: #6b7785; font-size: 8px; padding: 6px 10px; border-radius: 4px; height: 46px; display: flex; align-items: center; justify-content: center; min-width: 150px; text-align: center; }
+
+  .quote-meta { display: flex; gap: 0; margin: 10px 0 6px; border: 1px solid #2f3b8c; }
+  .quote-meta div { flex: 1; padding: 4px 8px; }
+  .quote-meta .lbl { font-weight: 700; color: #2f3b8c; font-size: 8px; letter-spacing: 0.04em; }
+  .quote-meta div + div { border-left: 1px solid #2f3b8c; }
+
+  .band { background: #2f3b8c; color: #fff; font-weight: 700; letter-spacing: 0.05em; padding: 4px 8px; font-size: 9px; margin-top: 10px; }
+
+  table.general { width: 100%; border-collapse: collapse; }
+  table.general td { border: 1px solid #b9c2cc; padding: 3px 7px; }
+  table.general td.k { background: #eef1f8; font-weight: 700; width: 120px; white-space: nowrap; }
+
+  table.charges { width: 100%; border-collapse: collapse; margin-top: 0; }
+  table.charges th { background: #3b4ab0; color: #fff; padding: 4px 6px; font-size: 8px; letter-spacing: 0.03em; border: 1px solid #2f3b8c; text-align: left; }
+  table.charges td { border: 1px solid #b9c2cc; padding: 3px 6px; vertical-align: middle; }
+  table.charges td.cat { font-weight: 700; background: #eef1f8; width: 92px; vertical-align: middle; }
+  table.charges td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.charges td.cur { text-align: center; }
+  .concept-en { font-weight: 700; }
+  .concept-zh { font-size: 8.5px; color: #41505f; }
+  .atcost { color: #6b7785; }
+
+  .subtotals { display: flex; gap: 22px; margin-top: 8px; font-size: 10px; }
+  .subtotals b { font-size: 12px; }
+  .indicative { color: #6b7785; margin-top: 2px; font-size: 8px; }
+
+  .notes { margin-top: 12px; }
+  .notes ol { margin: 4px 0 0; padding-left: 16px; }
+  .notes li { margin-bottom: 3px; }
+  .notes .zh { color: #41505f; }
+
+  .doc-footer {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 13mm;
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid #2f3b8c; padding-top: 4px;
+  }
+  .doc-footer .brand { font-weight: 700; color: #2f3b8c; font-size: 10px; }
+  .doc-footer .marks { display: flex; align-items: center; gap: 10px; }
+  .doc-footer .marks img { height: 24px; width: auto; max-width: 90px; object-fit: contain; }
+  .doc-footer .mark-ph { border: 1px dashed #9aa7b4; color: #6b7785; font-size: 7px; padding: 3px 6px; border-radius: 3px; }
+</style>
+</head>
+<body>
+  <header class="doc-header">
+    <div class="logo-box">
+      <% if (assets.logoExpressLine) { %><img src="<%= assets.logoExpressLine %>" alt="Express Line Corporation" /><% } else { %><div class="logo-ph">Express Line Corporation<br/>(logo pending)</div><% } %>
+    </div>
+    <div class="logo-box">
+      <% if (assets.logoDewell) { %><img src="<%= assets.logoDewell %>" alt="DE WELL GROUP" /><% } else { %><div class="logo-ph">DE WELL GROUP<br/>(logo pending)</div><% } %>
+    </div>
+  </header>
+
+  <div class="quote-meta">
+    <div><div class="lbl">DATE</div><div><%= date %></div></div>
+    <div><div class="lbl">QUOTATION NUMBER</div><div><%= number %></div></div>
+  </div>
+
+  <div class="band">GENERAL DATA</div>
+  <table class="general">
+    <tr><td class="k">OPERATION</td><td><%= header.operation %></td><td class="k">INCOTERM</td><td><%= header.incoterm %></td></tr>
+    <tr><td class="k">DEPARTMENT</td><td><%= header.department %></td><td class="k">POL</td><td><%= header.pol %></td></tr>
+    <tr><td class="k">CARGO TYPE</td><td><%= header.cargoType %></td><td class="k">POD</td><td><%= header.pod %></td></tr>
+    <tr><td class="k">COMMODITY</td><td colspan="3"><%= header.commodity %></td></tr>
+    <tr><td class="k">DELIVERY</td><td colspan="3"><%= header.delivery %></td></tr>
+  </table>
+
+  <div class="band">MEXICO LOCAL CHARGES</div>
+  <table class="charges">
+    <thead>
+      <tr>
+        <th style="width:92px;">CHARGE CATEGORY</th>
+        <th>CONCEPT</th>
+        <th style="width:34px;">UNIT</th>
+        <th style="width:78px;">UNIT PRICE</th>
+        <th style="width:78px;">TOTAL PRICE</th>
+        <th style="width:46px;">CURRENCY</th>
+        <th style="width:150px;">REMARKS</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% groups.forEach((group) => { group.items.forEach((row, idx) => { %>
+        <tr>
+          <% if (idx === 0) { %><td class="cat" rowspan="<%= group.items.length %>"><%= group.category %></td><% } %>
+          <td>
+            <div class="concept-en"><%= row.conceptEn %></div>
+            <% if (row.conceptZh) { %><div class="concept-zh zh"><%= row.conceptZh %></div><% } %>
+          </td>
+          <td class="num"><%= row.unit === null ? "" : row.unit %></td>
+          <td class="num <%= row.isAtCost ? 'atcost' : '' %>"><%= row.unitPriceLabel %></td>
+          <td class="num <%= row.total === null ? 'atcost' : '' %>"><%= row.totalLabel %></td>
+          <td class="cur"><%= row.currency %></td>
+          <td><%= row.remark %></td>
+        </tr>
+      <% }); }); %>
+    </tbody>
+  </table>
+
+  <div class="subtotals">
+    <% subtotals.forEach((s) => { %>
+      <div><%= s.currency %> SUBTOTAL: <b><%= s.amountLabel %> <%= s.currency %></b></div>
+    <% }); %>
+    <% if (!subtotals.length) { %><div class="atcost">All line items are AT COST / TBD.</div><% } %>
+  </div>
+  <% if (indicative) { %>
+    <div class="indicative">Indicative total ≈ <%= indicative.amountLabel %> <%= indicative.currency %><%= indicative.asOfDate ? ` (FX as of ${indicative.asOfDate})` : "" %> — reference only, settled at invoicing-date FX.</div>
+  <% } %>
+
+  <div class="notes">
+    <div class="band">NOTES</div>
+    <ol>
+      <% notes.forEach((note) => { %>
+        <li><div><%= note.en %></div><% if (note.zh) { %><div class="zh"><%= note.zh %></div><% } %></li>
+      <% }); %>
+    </ol>
+  </div>
+
+  <footer class="doc-footer">
+    <div class="brand">Express Line Corporation</div>
+    <div class="marks">
+      <% if (assets.logoIata) { %><img src="<%= assets.logoIata %>" alt="IATA" /><% } else { %><div class="mark-ph">IATA (logo pending)</div><% } %>
+      <% if (assets.logoCtpat) { %><img src="<%= assets.logoCtpat %>" alt="C-TPAT" /><% } else { %><div class="mark-ph">C-TPAT (logo pending)</div><% } %>
+    </div>
+  </footer>
+</body>
+</html>

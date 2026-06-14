@@ -1,0 +1,227 @@
+<%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
+
+<style>
+  .quote-shell { display: grid; gap: 1.25rem; }
+  .quote-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .quote-field { display: grid; gap: 0.35rem; font-size: 0.85rem; }
+  .quote-field span { font-weight: 600; opacity: 0.85; }
+  .quote-field input, .quote-field select, .quote-field textarea {
+    padding: 0.5rem 0.6rem; border-radius: 8px; border: 1px solid var(--border, #4444); background: transparent; color: inherit; font: inherit;
+  }
+  .quote-card { border: 1px solid var(--border, #4444); border-radius: 12px; padding: 1rem 1.1rem; }
+  .quote-card > h3 { margin: 0 0 0.75rem; font-size: 1rem; }
+  .quote-hint { font-size: 0.8rem; opacity: 0.7; margin: 0.25rem 0 0.75rem; }
+  .quote-table-wrap { overflow-x: auto; }
+  table.quote-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  table.quote-table th, table.quote-table td { border: 1px solid var(--border, #3334); padding: 0.4rem 0.45rem; vertical-align: top; text-align: left; }
+  table.quote-table th { font-weight: 600; opacity: 0.85; white-space: nowrap; }
+  table.quote-table input, table.quote-table select { width: 100%; box-sizing: border-box; padding: 0.35rem; border-radius: 6px; border: 1px solid var(--border, #4444); background: transparent; color: inherit; font: inherit; }
+  table.quote-table .concept-cell input { margin-bottom: 0.25rem; }
+  .cat-head td { background: rgba(127,127,127,0.12); font-weight: 700; letter-spacing: 0.04em; }
+  .quote-total-cell { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; font-weight: 600; }
+  .quote-atcost { opacity: 0.6; }
+  .quote-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+  .quote-subtotals { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: baseline; }
+  .quote-subtotals strong { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+  .quote-row-remove { cursor: pointer; }
+  .quote-notes-list { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.4rem; font-size: 0.8rem; }
+  .quote-notes-list .zh { opacity: 0.75; }
+  .quote-source-pill { font-size: 0.7rem; opacity: 0.7; }
+</style>
+
+<section class="page-heading page-heading-card">
+  <div class="page-heading-title"><h2><%= selectedModule.title %></h2></div>
+  <div class="module-intro-card"><p><%= t("quote.intro") %></p></div>
+</section>
+
+<form id="quote-form" method="post" action="/workbench/quote" class="quote-shell" data-quote-form>
+  <!-- General Data -->
+  <section class="quote-card">
+    <h3><%= t("quote.generalData") %></h3>
+    <div class="quote-grid">
+      <label class="quote-field"><span><%= t("quote.quotationNumber") %></span>
+        <input type="text" name="quotationNumber" value="<%= formData.number %>" /></label>
+      <label class="quote-field"><span><%= t("quote.date") %></span>
+        <input type="date" name="date" value="<%= formData.date %>" /></label>
+      <label class="quote-field"><span><%= t("quote.operation") %></span>
+        <select name="operation">
+          <option value="IMPORT" <%= formData.header.operation === "IMPORT" ? "selected" : "" %>><%= t("quote.operationImport") %></option>
+          <option value="EXPORT" <%= formData.header.operation === "EXPORT" ? "selected" : "" %>><%= t("quote.operationExport") %></option>
+        </select></label>
+      <label class="quote-field"><span><%= t("quote.department") %></span>
+        <select name="department">
+          <option value="OCEAN" <%= formData.header.department === "OCEAN" ? "selected" : "" %>><%= t("quote.departmentOcean") %></option>
+          <option value="AIR" <%= formData.header.department === "AIR" ? "selected" : "" %>><%= t("quote.departmentAir") %></option>
+        </select></label>
+      <label class="quote-field"><span><%= t("quote.incoterm") %></span>
+        <input type="text" name="incoterm" value="<%= formData.header.incoterm %>" /></label>
+      <label class="quote-field"><span><%= t("quote.pol") %></span>
+        <input type="text" name="pol" value="<%= formData.header.pol %>" /></label>
+      <label class="quote-field"><span><%= t("quote.pod") %></span>
+        <input type="text" name="pod" value="<%= formData.header.pod %>" /></label>
+      <label class="quote-field"><span><%= t("quote.cargoType") %></span>
+        <select name="cargoType">
+          <option value="FCL" <%= formData.header.cargoType === "FCL" ? "selected" : "" %>><%= t("quote.cargoFcl") %></option>
+          <option value="LCL" <%= formData.header.cargoType === "LCL" ? "selected" : "" %>><%= t("quote.cargoLcl") %></option>
+        </select></label>
+      <label class="quote-field"><span><%= t("quote.commodity") %></span>
+        <input type="text" name="commodity" value="<%= formData.header.commodity %>" /></label>
+      <label class="quote-field" style="grid-column: 1 / -1;"><span><%= t("quote.delivery") %></span>
+        <textarea name="delivery" rows="2"><%= formData.header.delivery %></textarea></label>
+    </div>
+  </section>
+
+  <!-- Pull from calculators -->
+  <section class="quote-card">
+    <h3><%= t("quote.pullSection") %></h3>
+    <p class="quote-hint"><%= t("quote.pullHint") %></p>
+    <div class="quote-grid">
+      <label class="quote-field"><span><%= t("quote.pullShippingLine") %></span>
+        <select name="pull_shippingLineId">
+          <option value="">—</option>
+          <% for (const line of selectorData.shippingLines) { %>
+            <option value="<%= line.id %>" <%= formData.pullInputs.shippingLineId === line.id ? "selected" : "" %>><%= line.name %></option>
+          <% } %>
+        </select></label>
+      <label class="quote-field"><span><%= t("quote.pullPortTerminal") %></span>
+        <select name="pull_portId" data-quote-port>
+          <option value="">—</option>
+          <% for (const port of selectorData.ports) { %>
+            <option value="<%= port.id %>" <%= formData.pullInputs.portId === port.id ? "selected" : "" %>><%= port.name %></option>
+          <% } %>
+        </select></label>
+      <label class="quote-field"><span>&nbsp;</span>
+        <select name="pull_terminalId" data-quote-terminal>
+          <option value="">—</option>
+        </select></label>
+      <label class="quote-field"><span><%= t("quote.pullDestination") %></span>
+        <select name="pull_destinationId">
+          <option value="">—</option>
+          <% for (const dest of selectorData.destinations) { %>
+            <option value="<%= dest.id %>" <%= formData.pullInputs.destinationId === dest.id ? "selected" : "" %>><%= dest.name %><%= dest.state ? ` · ${dest.state}` : "" %></option>
+          <% } %>
+        </select></label>
+      <label class="quote-field"><span><%= t("quote.pullContainerType") %></span>
+        <select name="pull_containerTypeKey">
+          <option value="">—</option>
+          <% for (const type of selectorData.containerTypes) { %>
+            <option value="<%= type.key %>" <%= formData.pullInputs.containerTypeKey === type.key ? "selected" : "" %>><%= type.label %></option>
+          <% } %>
+        </select></label>
+      <label class="quote-field"><span><%= t("quote.pullQuantity") %></span>
+        <input type="number" min="1" step="1" name="pull_quantity" value="<%= formData.pullInputs.quantity %>" /></label>
+      <label class="quote-field"><span><%= t("quote.pullDemurrageDays") %></span>
+        <input type="number" min="0" step="1" name="pull_demurrageDays" value="<%= formData.pullInputs.demurrageDays %>" /></label>
+      <label class="quote-field"><span><%= t("quote.pullStorageDays") %></span>
+        <input type="number" min="0" step="1" name="pull_storageDays" value="<%= formData.pullInputs.storageDays %>" /></label>
+    </div>
+    <div class="quote-actions" style="margin-top: 0.75rem;">
+      <button type="submit" name="action" value="pull" class="primary-button"><%= t("quote.pullAction") %></button>
+      <button type="submit" name="action" value="recompute" class="ghost-button"><%= t("quote.recompute") %></button>
+    </div>
+  </section>
+
+  <!-- Line items -->
+  <section class="quote-card">
+    <h3><%= t("quote.lineItems") %></h3>
+    <div class="quote-table-wrap">
+      <table class="quote-table" data-quote-table>
+        <thead>
+          <tr>
+            <th><%= t("quote.colCategory") %></th>
+            <th style="min-width: 220px;"><%= t("quote.colConcept") %></th>
+            <th><%= t("quote.colCode") %></th>
+            <th><%= t("quote.colUnit") %></th>
+            <th><%= t("quote.colUnitPrice") %></th>
+            <th><%= t("quote.colCurrency") %></th>
+            <th><%= t("quote.colTotal") %></th>
+            <th style="min-width: 160px;"><%= t("quote.colRemark") %></th>
+            <th><%= t("quote.colSource") %></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody data-quote-rows>
+          <% quoteView.rows.forEach((row) => { %>
+            <tr data-quote-row data-currency="<%= row.currency %>">
+              <td>
+                <select name="li_category[]">
+                  <% ["SHIPPING LINE","PORT FEES","CUSTOMS CLEARANCE","TRANSPORTATION","DUTY"].forEach((cat) => { %>
+                    <option value="<%= cat %>" <%= row.category === cat ? "selected" : "" %>><%= cat %></option>
+                  <% }) %>
+                </select>
+              </td>
+              <td class="concept-cell">
+                <input type="text" name="li_conceptEn[]" value="<%= row.conceptEn %>" placeholder="<%= t('quote.conceptEnPlaceholder') %>" />
+                <input type="text" name="li_conceptZh[]" value="<%= row.conceptZh %>" placeholder="<%= t('quote.conceptZhPlaceholder') %>" lang="zh" />
+              </td>
+              <td>
+                <input type="text" name="li_code[]" value="<%= row.code %>" list="fee-codes" data-quote-code title="<%= t('quote.pickCode') %>" />
+              </td>
+              <td><input type="number" min="0" step="1" name="li_unit[]" value="<%= row.unit === null ? '' : row.unit %>" data-quote-unit /></td>
+              <td><input type="number" min="0" step="0.01" name="li_unitPrice[]" value="<%= row.isAtCost ? '' : row.unitPrice %>" data-quote-price <%= row.isAtCost ? "disabled" : "" %> /></td>
+              <td>
+                <select name="li_currency[]" data-quote-currency>
+                  <option value="" <%= row.currency === "" ? "selected" : "" %>>—</option>
+                  <option value="MXN" <%= row.currency === "MXN" ? "selected" : "" %>>MXN</option>
+                  <option value="USD" <%= row.currency === "USD" ? "selected" : "" %>>USD</option>
+                </select>
+              </td>
+              <td class="quote-total-cell <%= row.total === null ? 'quote-atcost' : '' %>" data-quote-rowtotal><%= row.totalLabel %></td>
+              <td><input type="text" name="li_remark[]" value="<%= row.remark %>" /></td>
+              <td>
+                <label class="quote-source-pill"><input type="checkbox" data-quote-atcost-toggle <%= row.isAtCost ? "checked" : "" %> /> <%= t("quote.atCostToggle") %></label>
+                <input type="hidden" name="li_atCost[]" value="<%= row.isAtCost ? '1' : '0' %>" data-quote-atcost />
+                <input type="hidden" name="li_id[]" value="<%= row.id %>" />
+                <input type="hidden" name="li_source[]" value="<%= row.source %>" />
+                <input type="hidden" name="li_calcModule[]" value="<%= row.calcRef ? row.calcRef.module : '' %>" />
+                <input type="hidden" name="li_calcField[]" value="<%= row.calcRef ? row.calcRef.field : '' %>" />
+              </td>
+              <td><button type="button" class="ghost-button compact-button quote-row-remove" data-quote-remove aria-label="<%= t('quote.removeRow') %>">✕</button></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <div class="quote-actions" style="margin-top: 0.75rem;">
+      <button type="button" class="ghost-button" data-quote-add><%= t("quote.addRow") %></button>
+    </div>
+  </section>
+
+  <!-- Subtotals -->
+  <section class="quote-card">
+    <h3><%= t("quote.subtotals") %></h3>
+    <div class="quote-subtotals" data-quote-subtotals>
+      <div><span><%= t("quote.subtotalMxn") %>:</span> <strong data-quote-subtotal-mxn><%= (quoteView.subtotals.find((s) => s.currency === "MXN") || {}).amountLabel || "0.00" %></strong> MXN</div>
+      <div><span><%= t("quote.subtotalUsd") %>:</span> <strong data-quote-subtotal-usd><%= (quoteView.subtotals.find((s) => s.currency === "USD") || {}).amountLabel || "0.00" %></strong> USD</div>
+      <% if (quoteView.indicative) { %>
+        <div class="quote-atcost"><span><%= t("quote.indicative") %>:</span> <strong><%= quoteView.indicative.amountLabel %></strong> <%= quoteView.indicative.currency %> · <small><%= t("quote.indicativeHint") %></small></div>
+      <% } %>
+    </div>
+  </section>
+
+  <!-- Notes -->
+  <section class="quote-card">
+    <h3><%= t("quote.notesTitle") %></h3>
+    <ol class="quote-notes-list">
+      <% quoteView.notes.forEach((note) => { %>
+        <li><div><%= note.en %></div><div class="zh" lang="zh"><%= note.zh %></div></li>
+      <% }) %>
+    </ol>
+  </section>
+
+  <div class="quote-actions">
+    <button type="submit" name="action" value="saveDraft" class="ghost-button"><%= t("quote.saveDraft") %></button>
+    <button type="submit" formaction="/workbench/quote/pdf" formtarget="_blank" class="primary-button"><%= t("quote.generatePdf") %></button>
+  </div>
+</form>
+
+<datalist id="fee-codes">
+  <% feeCodes.forEach((fc) => { %><option value="<%= fc.code %>" data-desc="<%= fc.description.replace(/\"/g, '&quot;') %>"><%= fc.code %> — <%= fc.description %></option><% }) %>
+</datalist>
+
+<script id="quote-selector-data" type="application/json"><%- JSON.stringify(selectorData) %></script>
+<script id="quote-fee-codes" type="application/json"><%- JSON.stringify(feeCodes) %></script>
+<script id="quote-initial" type="application/json"><%- JSON.stringify({ selectedPortId: formData.pullInputs.portId, selectedTerminalId: formData.pullInputs.terminalId }) %></script>
+<script src="/quote.js"></script>
+
+<%- include("partials/footer") %>
