@@ -14,6 +14,7 @@
     if (!rc) return { key: "none", label: t("inland.routeNone") };
     return rc.stale ? { key: "stale", label: t("inland.routeStaleStatus") } : { key: "cached", label: t("inland.routeCached") };
   };
+  const routeOf = (destId) => inlandRoutes.find((r) => r.destinationId === destId && r.targetType === "destination");
   const maxOf = (entries, key) => {
     let best = null;
     for (const e of entries) {
@@ -81,6 +82,17 @@
             <label class="full-width"><span><%= t("inland.pasteLinkOrCoords") %></span><input type="text" name="dest_coordlink_<%= dest.id %>" placeholder="https://maps.app.goo.gl/... | 25.78,-100.18" /></label>
             <label><span><%= t("inland.coordSource") %></span><input type="text" value="<%= dest.coordSource %>" readonly /></label>
             <label class="full-width"><span><%= t("common.note") %></span><input type="text" name="dest_note_<%= dest.id %>" value="<%= dest.note || '' %>" /></label>
+            <label class="full-width">
+              <span><%= t("inland.casePhotos") %></span>
+              <textarea name="dest_images_<%= dest.id %>" rows="2" placeholder="https://... (一行一个 / una URL por línea)"><%= (dest.imageUrls || []).join("\n") %></textarea>
+            </label>
+            <% if ((dest.imageUrls || []).length) { %>
+              <div class="full-width inland-photo-preview">
+                <% for (const url of dest.imageUrls) { %>
+                  <a href="<%= url %>" target="_blank" rel="noopener noreferrer"><img src="<%= url %>" alt="case photo" loading="lazy" /></a>
+                <% } %>
+              </div>
+            <% } %>
             <label class="inline-check"><input type="checkbox" name="dest_enabled_<%= dest.id %>" <%= dest.enabled ? "checked" : "" %> /> <span><%= t("inland.enabledLabel") %></span></label>
             <div class="actions full-width">
               <button type="submit" class="primary-calculate-button"><%= t("inland.saveDestinations") %></button>
@@ -104,6 +116,28 @@
               <label class="full-width"><span><%= t("inland.pasteLinkOrCoords") %></span><input type="text" name="link" placeholder="https://maps.app.goo.gl/..." /></label>
               <button type="submit" class="ghost-button compact-button"><%= t("inland.addPrecise") %></button>
             </form>
+          </div>
+
+          <% const rc = routeOf(dest.id); %>
+          <div class="inland-route-override">
+            <p class="eyebrow"><%= t("inland.routeOverride") %>
+              <% if (rc) { %>
+                <small>(<%= t("inland.routeSource") %>: <%= rc.manualOverride ? "manual" : (rc.engine || "osrm") %><%= rc.distanceKm != null ? ` · ${rc.distanceKm} km` : "" %><%= rc.durationMin != null ? ` · ≈${Math.round(rc.durationMin / 60)} h` : "" %>)</small>
+              <% } %>
+            </p>
+            <% if (rc) { %>
+              <form method="post" action="/admin/inland/routes/<%= dest.id %>/override" class="grid-form">
+                <label><span><%= t("inland.routeOverrideKm") %></span><input type="text" name="ovr_km" value="<%= rc.manualOverride && rc.manualOverride.distanceKm != null ? rc.manualOverride.distanceKm : '' %>" placeholder="<%= rc.distanceKm != null ? rc.distanceKm : '' %>" /></label>
+                <label><span><%= t("inland.routeOverrideMin") %></span><input type="text" name="ovr_min" value="<%= rc.manualOverride && rc.manualOverride.durationMin != null ? rc.manualOverride.durationMin : '' %>" placeholder="<%= rc.durationMin != null ? rc.durationMin : '' %>" /></label>
+                <label class="full-width"><span><%= t("inland.routeOverrideVia") %></span><input type="text" name="ovr_via" value="<%= rc.manualOverride && rc.manualOverride.viaCities ? rc.manualOverride.viaCities.join(', ') : '' %>" placeholder="<%= (rc.viaCities || []).join(', ') %>" /></label>
+                <div class="actions full-width">
+                  <button type="submit" class="ghost-button compact-button"><%= t("inland.routeOverrideSave") %></button>
+                  <button type="submit" class="ghost-button compact-button danger-button" formaction="/admin/inland/routes/<%= dest.id %>/clear-override"><%= t("inland.routeOverrideClear") %></button>
+                </div>
+              </form>
+            <% } else { %>
+              <p class="muted"><%= t("inland.routeNone") %></p>
+            <% } %>
           </div>
         </div>
       </details>
@@ -138,6 +172,10 @@
                   <th><%= t("inland.supplier") %></th>
                   <th><%= t("inland.serviceSencillo") %></th>
                   <th><%= t("inland.serviceFull") %></th>
+                  <th title="1.5 ton">1.5t</th>
+                  <th title="3.5 ton">3.5t</th>
+                  <th title="8 ton corto">8t</th>
+                  <th title="Lowboy / Cama baja">LB</th>
                   <th><%= t("inland.burreo") %> S</th>
                   <th><%= t("inland.burreo") %> F</th>
                   <th><%= t("inland.client") %></th>
@@ -152,6 +190,10 @@
                     <td><input type="hidden" name="re_present_<%= entry.id %>" value="1" /><input type="text" name="re_proveedor_<%= entry.id %>" value="<%= entry.proveedor || '' %>" /></td>
                     <td><input type="text" name="re_sencillo_<%= entry.id %>" value="<%= entry.sencillo == null ? '' : entry.sencillo %>" /></td>
                     <td><input type="text" name="re_full_<%= entry.id %>" value="<%= entry.full == null ? '' : entry.full %>" /></td>
+                    <td><input type="text" name="re_veh_light_1_5t_<%= entry.id %>" value="<%= entry.vehiclePrices && entry.vehiclePrices.light_1_5t != null ? entry.vehiclePrices.light_1_5t : '' %>" placeholder="—" /></td>
+                    <td><input type="text" name="re_veh_light_3_5t_<%= entry.id %>" value="<%= entry.vehiclePrices && entry.vehiclePrices.light_3_5t != null ? entry.vehiclePrices.light_3_5t : '' %>" placeholder="—" /></td>
+                    <td><input type="text" name="re_veh_short_8t_<%= entry.id %>" value="<%= entry.vehiclePrices && entry.vehiclePrices.short_8t != null ? entry.vehiclePrices.short_8t : '' %>" placeholder="—" /></td>
+                    <td><input type="text" name="re_veh_lowboy_<%= entry.id %>" value="<%= entry.vehiclePrices && entry.vehiclePrices.lowboy != null ? entry.vehiclePrices.lowboy : '' %>" placeholder="—" /></td>
                     <td><input type="text" name="re_burreoS_<%= entry.id %>" value="<%= entry.burreo && entry.burreo.sencillo != null ? entry.burreo.sencillo : '' %>" /></td>
                     <td><input type="text" name="re_burreoF_<%= entry.id %>" value="<%= entry.burreo && entry.burreo.full != null ? entry.burreo.full : '' %>" /></td>
                     <td><input type="text" name="re_cliente_<%= entry.id %>" value="<%= entry.cliente || '' %>" /></td>
@@ -161,7 +203,7 @@
                   </tr>
                 <% } %>
                 <% if (!rates.length) { %>
-                  <tr><td colspan="9" class="muted"><%= t("inland.noQuotesForDestination") %></td></tr>
+                  <tr><td colspan="13" class="muted"><%= t("inland.noQuotesForDestination") %></td></tr>
                 <% } %>
               </tbody>
             </table>

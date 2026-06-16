@@ -212,12 +212,110 @@ async function fetchOsrmRoute(origin, destination, options = {}) {
   throw lastError || new Error("OSRM route failed");
 }
 
+// --- Routing provider abstraction (S4) ---------------------------------------
+// A provider exposes fetchRoute(origin, destination, options) ->
+// { encodedPolyline, distanceKm, durationMin, hasFerry, engine }. via-city
+// snapping stays in the caller (refreshOneInlandRoute) so it is provider-agnostic.
+
+const OsrmProvider = {
+  name: "osrm",
+  isAvailable() {
+    return true;
+  },
+  // Free, no key, already battle-tested — the default. Pure delegation so OSRM
+  // behavior is byte-for-byte unchanged.
+  async fetchRoute(origin, destination, options = {}) {
+    return fetchOsrmRoute(origin, destination, options);
+  },
+};
+
+// Skeleton only. Paid API (billing-enabled key required). NOT active unless
+// ROUTING_PROVIDER=google AND GOOGLE_MAPS_API_KEY is set — otherwise falls back
+// to OSRM. Request/parse shape is implemented so enabling is just config, but
+// it is intentionally not exercised in this batch (verify billing first).
+const GoogleDirectionsProvider = {
+  name: "google",
+  isAvailable() {
+    return Boolean(process.env.GOOGLE_MAPS_API_KEY);
+  },
+  async fetchRoute(origin, destination, options = {}) {
+    const key = process.env.GOOGLE_MAPS_API_KEY;
+    if (!key) {
+      throw new Error("google-directions: GOOGLE_MAPS_API_KEY not set");
+    }
+    const url =
+      "https://maps.googleapis.com/maps/api/directions/json" +
+      `?origin=${origin.lat},${origin.lng}` +
+      `&destination=${destination.lat},${destination.lng}` +
+      `&key=${encodeURIComponent(key)}`;
+    const response = await fetchWithTimeout(url, options);
+    if (!response.ok) {
+      throw new Error(`google-directions HTTP ${response.status}`);
+    }
+    const data = await response.json();
+    if (data.status !== "OK" || !data.routes || !data.routes.length) {
+      throw new Error(`google-directions status ${data.status || "unknown"}`);
+    }
+    const route = data.routes[0];
+    const leg = (route.legs || [])[0] || {};
+    const hasFerry = (leg.steps || []).some(
+      (step) => step.travel_mode === "FERRY" || /ferry/i.test(step.html_instructions || "")
+    );
+    return {
+      encodedPolyline: (route.overview_polyline && route.overview_polyline.points) || "",
+      distanceKm: Math.round((leg.distance && leg.distance.value ? leg.distance.value : 0) / 1000),
+      durationMin: Math.round((leg.duration && leg.duration.value ? leg.duration.value : 0) / 60),
+      hasFerry,
+      engine: "google",
+    };
+  },
+};
+
+const ROUTING_PROVIDERS = { osrm: OsrmProvider, google: GoogleDirectionsProvider };
+
+// Pick the active provider. Default OSRM. ROUTING_PROVIDER=google only takes
+// effect when a key is present; otherwise OSRM (never silently break refresh).
+function getRoutingProvider(name) {
+  const requested = (name || process.env.ROUTING_PROVIDER || "osrm").toLowerCase();
+  const provider = ROUTING_PROVIDERS[requested];
+  if (provider && provider.isAvailable()) {
+    return provider;
+  }
+  return OsrmProvider;
+}
+
+// Effective route values for display/PDF: a manual override wins per-field (an
+// operator may correct only km, or only duration, etc.). source reflects which.
+function effectiveRoute(rc) {
+  if (!rc) {
+    return null;
+  }
+  const mo = rc.manualOverride || null;
+  const has = (v) => v !== null && v !== undefined && v !== "";
+  const kmManual = mo && has(mo.distanceKm);
+  const durManual = mo && has(mo.durationMin);
+  const viaManual = mo && Array.isArray(mo.viaCities) && mo.viaCities.length > 0;
+  const anyManual = Boolean(kmManual || durManual || viaManual);
+  return {
+    distanceKm: kmManual ? mo.distanceKm : rc.distanceKm,
+    durationMin: durManual ? mo.durationMin : rc.durationMin,
+    viaCities: viaManual ? mo.viaCities : rc.viaCities || [],
+    hasFerry: Boolean(rc.hasFerry),
+    stale: Boolean(rc.stale),
+    source: anyManual ? "manual" : rc.engine || "osrm",
+  };
+}
+
 module.exports = {
   decodePolyline,
   equirectKm,
   pointToSegmentKm,
   computeViaCities,
   fetchOsrmRoute,
+  OsrmProvider,
+  GoogleDirectionsProvider,
+  getRoutingProvider,
+  effectiveRoute,
   VIA_CITY_THRESHOLD_KM,
   VIA_CITY_MAX,
   OSRM_DEFAULT_BASE_URLS,

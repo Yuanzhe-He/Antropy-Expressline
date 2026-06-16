@@ -11,6 +11,7 @@ const {
   INLAND_DESTINATION_CATALOG,
   DEFAULT_INLAND_ORIGIN_ID,
 } = require("./inland-catalog");
+const { EXTRA_VEHICLE_KEYS } = require("./inland-vehicles");
 const {
   DEFAULT_DEMURRAGE_CUTOFF,
   DEFAULT_PRICE_MODE,
@@ -1881,12 +1882,44 @@ function normalizeInlandPrecisePoint(point = {}, fallbackId) {
   };
 }
 
+// S3 case photos: store ONLY http(s) URLs (never base64/binary). Accepts an
+// array (stored) or a newline-separated string (admin textarea). Trims, drops
+// non-http(s) (blocks javascript:/data:/file: -> XSS via stored URL), dedupes,
+// caps at 12.
+const MAX_IMAGE_URLS = 12;
+function normalizeImageUrls(value) {
+  let list = [];
+  if (Array.isArray(value)) {
+    list = value;
+  } else if (typeof value === "string") {
+    list = value.split(/[\r\n]+/);
+  }
+  const seen = new Set();
+  const out = [];
+  for (const raw of list) {
+    const url = String(raw || "").trim();
+    if (!/^https?:\/\/\S+$/i.test(url)) {
+      continue;
+    }
+    if (seen.has(url)) {
+      continue;
+    }
+    seen.add(url);
+    out.push(url);
+    if (out.length >= MAX_IMAGE_URLS) {
+      break;
+    }
+  }
+  return out;
+}
+
 function normalizeInlandDestination(dest = {}, fallbackId) {
   const id = slugifyId(dest.id, fallbackId);
   return {
     id,
     name: String(dest.name || id).trim(),
     state: String(dest.state || "").trim(),
+    imageUrls: normalizeImageUrls(dest.imageUrls),
     lat: parseNullableNumber(dest.lat),
     lng: parseNullableNumber(dest.lng),
     coordSource: ["seed-catalog", "seed-catalog-confirmed", "gmaps-link", "manual"].includes(
@@ -1917,6 +1950,17 @@ function normalizeInlandBurreo(burreo) {
   return { sencillo, full };
 }
 
+// S2 vehicle types: the 4 non-legacy tiers (sencillo/full stay top-level).
+// Always returns an object with all 4 keys (number or null) for a stable shape.
+function normalizeVehiclePrices(prices) {
+  const source = prices && typeof prices === "object" && !Array.isArray(prices) ? prices : {};
+  const out = {};
+  for (const key of EXTRA_VEHICLE_KEYS) {
+    out[key] = parseNullableNumber(source[key]);
+  }
+  return out;
+}
+
 function normalizeInlandRateEntry(entry = {}, fallbackId) {
   return {
     id: slugifyId(entry.id, fallbackId),
@@ -1930,6 +1974,7 @@ function normalizeInlandRateEntry(entry = {}, fallbackId) {
     sencillo: parseNullableNumber(entry.sencillo),
     full: parseNullableNumber(entry.full),
     burreo: normalizeInlandBurreo(entry.burreo),
+    vehiclePrices: normalizeVehiclePrices(entry.vehiclePrices),
     currency: "MXN",
     cliente: String(entry.cliente || "").trim(),
     codigoCw: String(entry.codigoCw || "").trim(),
@@ -1961,7 +2006,26 @@ function normalizeInlandRouteCacheEntry(rc = {}, fallbackId) {
     fetchedAt: rc.fetchedAt || null,
     stale: Boolean(rc.stale),
     hasFerry: Boolean(rc.hasFerry),
+    // S4 manual override: operator-entered values win per-field in effectiveRoute.
+    manualOverride: normalizeRouteOverride(rc.manualOverride),
   };
+}
+
+// { distanceKm, durationMin, viaCities } | null. Each field may be null (then the
+// fetched value is used). Whole field null when nothing was overridden.
+function normalizeRouteOverride(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const distanceKm = parseNullableNumber(value.distanceKm);
+  const durationMin = parseNullableNumber(value.durationMin);
+  const viaCities = Array.isArray(value.viaCities)
+    ? value.viaCities.map((c) => String(c).trim()).filter(Boolean)
+    : [];
+  if (distanceKm === null && durationMin === null && !viaCities.length) {
+    return null;
+  }
+  return { distanceKm, durationMin, viaCities };
 }
 
 function buildInlandDestinationSeed() {
@@ -1974,6 +2038,7 @@ function buildInlandDestinationSeed() {
     coordSource: dest.coordSource || "seed-catalog",
     needsReview: Boolean(dest.needsReview),
     precisePoints: [],
+    imageUrls: [],
     enabled: true,
     note: "",
   }));
