@@ -82,3 +82,15 @@ Only record lessons that may change future behavior.
 - scope: project
 - landed_in: src/lib/inland-catalog.js, src/lib/store.js (INLAND_SEED_VERSION 2 + coordSource whitelist), scripts/seed-inland-from-csv.js (--replace), data/shipping-lines.json (surgical inland patch)
 - next_action: reuse the fingerprint-the-live-value technique to confirm a `.env` points at prod before writing; keep `--replace` as the go-live seed mode; when editing one module in a store-managed JSON, patch in place to keep the diff scoped.
+
+## 2026-06-16 - Inland v2 batch2: 6-tier vehicle types — label-map + seed-shape parity
+
+- source_type: ai-self-correction (audit-found, pre-commit)
+- task_type: feature / data-model extension
+- domain: inland vehicle types (sencillo/full + 4 new tiers), routing-provider abstraction, case photos
+- trigger: extending serviceType from a 2-value (sencillo/full) to a 6-tier enum.
+- incident_or_feedback: a pre-commit audit caught two latent defects from the binary→enum widening. (1) `computeInlandCalculator`'s explanation text still used `serviceType === "full" ? serviceFull : serviceSencillo`, so ALL four new tiers (1.5t/3.5t/8t/lowboy) would render as "Sencillo" in the human-readable formula — the value math was correct, only the label was wrong. (2) `buildInlandDestinationSeed()` did not emit the new `imageUrls` field that `normalizeInlandDestination` adds, so seed-shape and normalized-shape diverged. Also confirmed by-design: burreo (short-haul) only has CSV data for sencillo/full, so new tiers compute burreo=0 until José provides per-tier data.
+- lesson: when widening a binary discriminator to an N-value enum, grep for EVERY `=== "<oldvalue>" ? ... : ...` ternary that branches on it (labels, formulas, sort keys, map-data), not just the price lookup — the math is the obvious site, the human-facing label is the easy miss. And when adding a normalized field, add it to the seed builder too so seed-shape == normalize-shape (otherwise the first re-seed silently changes the object shape). Verify replace_all actually hit all occurrences — identical strings at different indentation are distinct matches.
+- scope: project (label-map technique is a cross-project candidate)
+- landed_in: src/lib/calculate.js (VEHICLE_LABEL_KEYS + vehicleLabel), src/lib/store.js (buildInlandDestinationSeed imageUrls), src/lib/inland-vehicles.js (catalog)
+- next_action: on the next enum widening, sweep all branch sites; keep seed builders in lockstep with normalizers.

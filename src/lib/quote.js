@@ -1,5 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const { effectiveRoute } = require("./inland-routes");
 
 // Bump to (re)seed modules.quote.templateRows / notes from the constants below.
 const QUOTE_TEMPLATE_VERSION = 1;
@@ -568,14 +569,17 @@ function resolveQuoteRoute(inlandModule = {}, destinationId, originId) {
   if (!route) {
     return null;
   }
+  // S5: use EFFECTIVE values so an operator's manual override wins per-field.
+  const eff = effectiveRoute(route);
   return {
     originName: origin ? origin.name : "",
     destName: dest ? dest.name : destId,
-    distanceKm: route.distanceKm ?? null,
-    durationMin: route.durationMin ?? null,
-    viaCities: Array.isArray(route.viaCities) ? route.viaCities : [],
-    hasFerry: Boolean(route.hasFerry),
-    stale: Boolean(route.stale),
+    distanceKm: eff.distanceKm ?? null,
+    durationMin: eff.durationMin ?? null,
+    viaCities: Array.isArray(eff.viaCities) ? eff.viaCities : [],
+    hasFerry: Boolean(eff.hasFerry),
+    stale: Boolean(eff.stale),
+    source: eff.source,
   };
 }
 
