@@ -323,10 +323,13 @@
     precise: document.querySelector("[data-inland-precise]"),
     preciseLabel: document.querySelector("[data-inland-precise-label]"),
     preciseChips: document.querySelector("[data-inland-precise-chips]"),
+    photos: document.querySelector("[data-inland-photos]"),
+    photosLabel: document.querySelector("[data-inland-photos-label]"),
+    photoRow: document.querySelector("[data-inland-photo-row]"),
   };
 
   function currentService() {
-    return panel.serviceInput.value === "full" ? "full" : "sencillo";
+    return (panel.serviceInput && panel.serviceInput.value) || "sencillo";
   }
   function currentTaxRatio() {
     const v = panel.ivaInput.value;
@@ -347,14 +350,21 @@
     panel.result.hidden = false;
 
     const service = currentService();
-    const maxRate = service === "full" ? dest.maxFull : dest.maxSencillo;
-    const provider = service === "full" ? dest.maxFullProvider : dest.maxSencilloProvider;
+    // S2: price per selected vehicle tier (maxByVehicle covers all 6; sencillo/full
+    // also have legacy maxSencillo/maxFull). null tier -> "Pendiente / 待报价".
+    const vinfo = (dest.maxByVehicle && dest.maxByVehicle[service]) || null;
+    const maxRate = vinfo ? vinfo.rate : null;
+    const provider = vinfo ? vinfo.provider : null;
     const qty = currentQty();
     const tax = currentTaxRatio();
 
-    // R2 burreo (short-haul) add-on: show the toggle only when this destination /
-    // service has a drayage rate; include it in the total when checked.
-    const burreoRate = service === "full" ? dest.maxBurreoFull : dest.maxBurreoSencillo;
+    // R2 burreo (short-haul) add-on: only sencillo/full carry a drayage rate.
+    const burreoRate =
+      service === "sencillo"
+        ? dest.maxBurreoSencillo
+        : service === "full"
+          ? dest.maxBurreoFull
+          : null;
     const hasBurreo = burreoRate != null && Number(burreoRate) > 0;
     if (panel.burreoWrap) {
       panel.burreoWrap.hidden = !hasBurreo;
@@ -385,7 +395,8 @@
     panel.totalLabel.textContent = `${i18n.total} · ${tax === 0 ? i18n.pretax : i18n.aftertax}`;
 
     if (maxRate == null) {
-      panel.total.textContent = i18n.noRate.replace("{service}", service === "full" ? i18n.serviceFull : i18n.serviceSencillo);
+      // No rate for this vehicle tier yet -> Pendiente / 待报价 (not an error).
+      panel.total.textContent = i18n.pendiente || "—";
       panel.formula.textContent = "";
       panel.maxProviderLabel.textContent = "";
       panel.maxProvider.textContent = "";
@@ -414,6 +425,27 @@
 
     renderAllQuotes(dest);
     renderPrecise(dest);
+    renderPhotos(dest);
+  }
+
+  // S3 case photos: thumbnails (URL-only; escaped href/src; new tab on click).
+  function renderPhotos(dest) {
+    if (!panel.photos) {
+      return;
+    }
+    const urls = (dest.imageUrls || []).filter((u) => /^https?:\/\//i.test(u));
+    if (!urls.length) {
+      panel.photos.hidden = true;
+      return;
+    }
+    panel.photos.hidden = false;
+    if (panel.photosLabel) panel.photosLabel.textContent = i18n.casePhotos || "";
+    panel.photoRow.innerHTML = urls
+      .map((u) => {
+        const safe = escapeHtml(u);
+        return `<a href="${safe}" target="_blank" rel="noopener noreferrer"><img src="${safe}" alt="" loading="lazy" /></a>`;
+      })
+      .join("");
   }
 
   function renderAllQuotes(dest) {
@@ -423,8 +455,9 @@
       panel.allQuotes.innerHTML = `<p class="muted">${i18n.noQuotesForDestination}</p>`;
       return;
     }
-    const service = currentService();
-    entries.sort((a, b) => (Number(b[service] || 0) - Number(a[service] || 0)));
+    // Legacy table shows sencillo/full columns; sort by full when full is selected.
+    const sortKey = currentService() === "full" ? "full" : "sencillo";
+    entries.sort((a, b) => (Number(b[sortKey] || 0) - Number(a[sortKey] || 0)));
     const rows = entries
       .map((e) => {
         const tag = e.cliente ? `<span class="inland-client-tag">${escapeHtml(e.cliente)}</span>` : "";
@@ -483,14 +516,9 @@
   // --- wire interactions ---
   panel.destSelect.addEventListener("change", () => selectDestination(panel.destSelect.value));
 
-  document.querySelectorAll("[data-service-value]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll("[data-service-value]").forEach((b) => b.classList.remove("is-active"));
-      btn.classList.add("is-active");
-      panel.serviceInput.value = btn.dataset.serviceValue;
-      renderQuote();
-    });
-  });
+  if (panel.serviceInput) {
+    panel.serviceInput.addEventListener("change", renderQuote);
+  }
   document.querySelectorAll("[data-iva-value]").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll("[data-iva-value]").forEach((b) => b.classList.remove("is-active"));

@@ -7,6 +7,22 @@ const {
   normalizeTaxRate,
 } = require("./options");
 const { convertAmount } = require("./exchange-rates");
+const { normalizeVehicleType, getVehiclePrice } = require("./inland-vehicles");
+
+// 6-tier vehicle -> i18n label key (reuses the S2 vehicle i18n; sencillo/full
+// keep their existing service* keys). Without this, the explanation text would
+// show every non-full tier as "Sencillo".
+const VEHICLE_LABEL_KEYS = {
+  light_1_5t: "inland.vehicleLight15t",
+  light_3_5t: "inland.vehicleLight35t",
+  short_8t: "inland.vehicleShort8t",
+  sencillo: "inland.serviceSencillo",
+  full: "inland.serviceFull",
+  lowboy: "inland.vehicleLowboy",
+};
+function vehicleLabel(t, type) {
+  return t(VEHICLE_LABEL_KEYS[type] || "inland.serviceSencillo");
+}
 
 function roundMoney(value) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
@@ -1003,7 +1019,9 @@ function computeInlandCalculator(moduleData, formData, options = {}) {
   const t = options.t || ((key) => key);
   const priceMode = normalizePriceMode(formData.priceMode);
   const quoteCurrency = "MXN";
-  const serviceType = formData.serviceType === "full" ? "full" : "sencillo";
+  // S2: serviceType is now one of 6 vehicle tiers (sencillo/full map to the
+  // legacy fields; the other 4 read rateEntry.vehiclePrices). Unknown -> sencillo.
+  const serviceType = normalizeVehicleType(formData.serviceType);
   const quantity = Math.max(0, parseNumber(formData.quantity, 1));
   // R2 short-haul / drayage (burreo): optional add-on, OFF by default so existing
   // flows (incl. the quote pull) are unchanged.
@@ -1034,13 +1052,13 @@ function computeInlandCalculator(moduleData, formData, options = {}) {
       : normalizeTaxRate(overrideRaw, INLAND_DEFAULT_TAX_RATE);
   const taxRateLabel = getTaxRateLabel(taxRate);
 
-  const candidates = entries.filter(
-    (entry) => entry[serviceType] !== null && entry[serviceType] !== undefined
-  );
+  const candidates = entries.filter((entry) => getVehiclePrice(entry, serviceType) !== null);
 
   if (!destination || !candidates.length) {
     return {
       noRate: true,
+      // Destination exists but this vehicle tier has no rate yet -> "Pendiente".
+      pendiente: Boolean(destination) && !candidates.length,
       destination,
       serviceType,
       quantity,
@@ -1058,19 +1076,18 @@ function computeInlandCalculator(moduleData, formData, options = {}) {
       burreoRate: 0,
       burreoTotal: 0,
       totalExplanation: t("inland.noRateExplanation", {
-        service:
-          serviceType === "full" ? t("inland.serviceFull") : t("inland.serviceSencillo"),
+        service: vehicleLabel(t, serviceType),
       }),
     };
   }
 
   let best = candidates[0];
   for (const entry of candidates) {
-    if (Number(entry[serviceType]) > Number(best[serviceType])) {
+    if (Number(getVehiclePrice(entry, serviceType)) > Number(getVehiclePrice(best, serviceType))) {
       best = entry;
     }
   }
-  const maxRate = Number(best[serviceType]);
+  const maxRate = Number(getVehiclePrice(best, serviceType));
   const maxProvider = best.proveedor;
 
   // Highest burreo[serviceType] across candidates (same max-across-suppliers
@@ -1100,6 +1117,7 @@ function computeInlandCalculator(moduleData, formData, options = {}) {
 
   return {
     noRate: false,
+    pendiente: false,
     destination,
     serviceType,
     quantity,
@@ -1118,8 +1136,7 @@ function computeInlandCalculator(moduleData, formData, options = {}) {
     allEntries,
     totalFormula,
     totalExplanation: t("inland.totalExplanation", {
-      service:
-        serviceType === "full" ? t("inland.serviceFull") : t("inland.serviceSencillo"),
+      service: vehicleLabel(t, serviceType),
       provider: maxProvider,
       mode: priceMode === "aftertax" ? t("priceMode.aftertax") : t("priceMode.pretax"),
     }),

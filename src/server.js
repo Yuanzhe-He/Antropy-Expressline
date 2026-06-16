@@ -12,7 +12,15 @@ const {
   fetchOsrmRoute,
   decodePolyline,
   computeViaCities,
+  getRoutingProvider,
+  effectiveRoute,
 } = require("./lib/inland-routes");
+const {
+  VEHICLE_TYPE_KEYS,
+  EXTRA_VEHICLE_KEYS,
+  normalizeVehicleType,
+  getVehiclePrice,
+} = require("./lib/inland-vehicles");
 const { refreshExchangeRatesIfStale } = require("./lib/exchange-rates");
 const { startExchangeRateScheduler } = require("./lib/exchange-rate-scheduler");
 const {
@@ -1192,7 +1200,7 @@ function buildDefaultInlandFormData(moduleData, destQuery) {
 function buildInlandFormData(moduleData, body = {}) {
   return {
     destinationId: String(body.destinationId || "").trim(),
-    serviceType: body.serviceType === "full" ? "full" : "sencillo",
+    serviceType: normalizeVehicleType(body.serviceType),
     quantity: parseWholeNumber(body.quantity, 1),
     priceMode: body.priceMode || moduleData.settings?.defaultPriceMode || "pretax",
     taxRateOverride: body.taxRateOverride || "default",
@@ -1244,6 +1252,27 @@ function buildInlandMapData(moduleData) {
     return best;
   };
 
+  // S2: highest price per vehicle tier across a destination's entries
+  // ({ rate, provider } or null). sencillo/full read legacy fields; the rest read
+  // vehiclePrices — all via getVehiclePrice.
+  const pickMaxByVehicle = (entries) => {
+    const out = {};
+    for (const type of VEHICLE_TYPE_KEYS) {
+      let best = null;
+      for (const entry of entries) {
+        const value = getVehiclePrice(entry, type);
+        if (value === null || value === undefined) {
+          continue;
+        }
+        if (best === null || Number(value) > Number(best.rate)) {
+          best = { rate: Number(value), provider: entry.proveedor };
+        }
+      }
+      out[type] = best;
+    }
+    return out;
+  };
+
   const destinations = (moduleData.destinations || []).map((dest) => {
     const entries = entriesByDest.get(dest.id) || [];
     const maxSencillo = pickMax(entries, "sencillo");
@@ -1263,6 +1292,8 @@ function buildInlandMapData(moduleData) {
       maxFullProvider: maxFull ? maxFull.proveedor : null,
       maxBurreoSencillo: pickMaxBurreo(entries, "sencillo"),
       maxBurreoFull: pickMaxBurreo(entries, "full"),
+      maxByVehicle: pickMaxByVehicle(entries),
+      imageUrls: Array.isArray(dest.imageUrls) ? dest.imageUrls : [],
       precisePoints: (dest.precisePoints || []).map((point) => ({
         id: point.id,
         name: point.name,
@@ -1279,17 +1310,22 @@ function buildInlandMapData(moduleData) {
     };
   });
 
-  const routes = (moduleData.routeCache || []).map((rc) => ({
-    destinationId: rc.destinationId,
-    targetType: rc.targetType,
-    targetId: rc.targetId,
-    encodedPolyline: rc.encodedPolyline,
-    distanceKm: rc.distanceKm,
-    durationMin: rc.durationMin,
-    viaCities: rc.viaCities,
-    stale: rc.stale,
-    hasFerry: rc.hasFerry,
-  }));
+  // S4/S5: surface EFFECTIVE values (manual override wins per-field) + source.
+  const routes = (moduleData.routeCache || []).map((rc) => {
+    const eff = effectiveRoute(rc);
+    return {
+      destinationId: rc.destinationId,
+      targetType: rc.targetType,
+      targetId: rc.targetId,
+      encodedPolyline: rc.encodedPolyline,
+      distanceKm: eff.distanceKm,
+      durationMin: eff.durationMin,
+      viaCities: eff.viaCities,
+      stale: eff.stale,
+      hasFerry: eff.hasFerry,
+      source: eff.source,
+    };
+  });
 
   return { origin, destinations, routes };
 }
@@ -1307,6 +1343,7 @@ function renderInlandWorkbench(req, res, payload) {
       formData: payload.formData,
       result: payload.result || null,
       inlandMapData: buildInlandMapData(payload.moduleData),
+      vehicleTypeKeys: VEHICLE_TYPE_KEYS,
       priceModeOptions: getLocalizedOptions(PRICE_MODE_OPTIONS, req.t),
       taxRatePresets: payload.moduleData.taxRatePresets || [],
       languageReturnTo: `/workbench/${payload.moduleKey}?restoreLast=1`,
@@ -2001,7 +2038,10 @@ function createApp() {
   }
 
   async function refreshOneInlandRoute(inland, origin, target) {
-    const route = await fetchOsrmRoute(origin, { lat: target.lat, lng: target.lng });
+    // S4: route via the configured provider (OSRM default; Google when keyed).
+    // via-city snapping stays here so it is provider-agnostic.
+    const provider = getRoutingProvider();
+    const route = await provider.fetchRoute(origin, { lat: target.lat, lng: target.lng });
     const viaCities = computeViaCities(decodePolyline(route.encodedPolyline));
     const entry = {
       id: `rc-${target.destinationId}-${target.targetType}${target.targetId ? `-${target.targetId}` : ""}`,
@@ -2078,6 +2118,46 @@ function createApp() {
     );
   });
 
+  // S4 manual override: operator-entered km / minutes / via-cities for a route.
+  app.post("/admin/inland/routes/:destId/override", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    const destId = String(req.params.destId || "").trim();
+    const rc = (inland.routeCache || []).find(
+      (r) => r.destinationId === destId && r.targetType === "destination"
+    );
+    if (!rc) {
+      return redirectWithFlash(req, res, "error", req.t("inland.routeNone"), `${INLAND_ADMIN_TARGET}#dest-${destId}`);
+    }
+    const toNum = (v) => {
+      const s = String(v ?? "").trim();
+      if (!s) return null;
+      const n = Number(s.replace(/[^0-9.\-]/g, ""));
+      return Number.isFinite(n) ? n : null;
+    };
+    rc.manualOverride = {
+      distanceKm: toNum(req.body.ovr_km),
+      durationMin: toNum(req.body.ovr_min),
+      viaCities: String(req.body.ovr_via || "").split(",").map((s) => s.trim()).filter(Boolean),
+    };
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(req, res, "success", req.t("inland.routeOverrideSaved"), `${INLAND_ADMIN_TARGET}#dest-${destId}`);
+  });
+
+  app.post("/admin/inland/routes/:destId/clear-override", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    const destId = String(req.params.destId || "").trim();
+    const rc = (inland.routeCache || []).find(
+      (r) => r.destinationId === destId && r.targetType === "destination"
+    );
+    if (rc) rc.manualOverride = null;
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(req, res, "success", req.t("inland.routeOverrideCleared"), `${INLAND_ADMIN_TARGET}#dest-${destId}`);
+  });
+
   app.post("/admin/inland/destinations/add", requireAuth, async (req, res) => {
     const shippingData = await loadShippingData({ refreshRates: false });
     const inland = structuredClone(getModuleData(shippingData, "inland"));
@@ -2120,6 +2200,10 @@ function createApp() {
       if (state !== undefined) dest.state = String(state).trim();
       const note = req.body[`dest_note_${dest.id}`];
       if (note !== undefined) dest.note = String(note);
+      // S3 case photos: store the raw textarea (one URL/line); normalizeShippingData
+      // (normalizeImageUrls) on save keeps only http(s), dedupes, caps.
+      const images = req.body[`dest_images_${dest.id}`];
+      if (images !== undefined) dest.imageUrls = String(images);
       dest.enabled = req.body[`dest_enabled_${dest.id}`] !== undefined;
 
       const link = String(req.body[`dest_coordlink_${dest.id}`] || "").trim();
@@ -2272,6 +2356,14 @@ function createApp() {
         const bS = toAmount(req.body[`re_burreoS_${entry.id}`]);
         const bF = toAmount(req.body[`re_burreoF_${entry.id}`]);
         entry.burreo = bS === null && bF === null ? null : { sencillo: bS, full: bF };
+      }
+      // S2: the 4 extra vehicle tiers (sencillo/full handled above as legacy fields).
+      entry.vehiclePrices = entry.vehiclePrices || {};
+      for (const vType of EXTRA_VEHICLE_KEYS) {
+        const field = `re_veh_${vType}_${entry.id}`;
+        if (req.body[field] !== undefined) {
+          entry.vehiclePrices[vType] = toAmount(req.body[field]);
+        }
       }
       const cli = req.body[`re_cliente_${entry.id}`];
       if (cli !== undefined) entry.cliente = String(cli).trim();

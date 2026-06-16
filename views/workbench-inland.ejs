@@ -42,11 +42,24 @@
         </select>
       </label>
 
-      <div class="inland-service-toggle" data-inland-service role="group" aria-label="<%= t('inland.serviceLabel') %>">
-        <button type="button" class="inland-seg <%= formData.serviceType !== 'full' ? 'is-active' : '' %>" data-service-value="sencillo"><%= t("inland.serviceSencillo") %></button>
-        <button type="button" class="inland-seg <%= formData.serviceType === 'full' ? 'is-active' : '' %>" data-service-value="full"><%= t("inland.serviceFull") %></button>
-        <input type="hidden" name="serviceType" value="<%= formData.serviceType %>" data-inland-service-input />
-      </div>
+      <%
+        const vehicleLabels = {
+          light_1_5t: t("inland.vehicleLight15t"),
+          light_3_5t: t("inland.vehicleLight35t"),
+          short_8t: t("inland.vehicleShort8t"),
+          sencillo: t("inland.serviceSencillo"),
+          full: t("inland.serviceFull"),
+          lowboy: t("inland.vehicleLowboy"),
+        };
+      %>
+      <label class="inland-field">
+        <span><%= t("inland.vehicleLabel") %></span>
+        <select name="serviceType" data-inland-service-input>
+          <% for (const vt of (vehicleTypeKeys || [])) { %>
+            <option value="<%= vt %>" <%= formData.serviceType === vt ? "selected" : "" %>><%= vehicleLabels[vt] || vt %></option>
+          <% } %>
+        </select>
+      </label>
 
       <div class="inland-field-row">
         <label class="inland-field">
@@ -96,6 +109,11 @@
         <span class="eyebrow" data-inland-precise-label></span>
         <div class="inland-chip-row" data-inland-precise-chips></div>
       </div>
+
+      <div class="inland-photos" data-inland-photos hidden>
+        <span class="eyebrow" data-inland-photos-label></span>
+        <div class="inland-photo-row" data-inland-photo-row></div>
+      </div>
     </div>
 
     <div class="inland-empty empty-state" data-inland-empty>
@@ -114,6 +132,16 @@
   pretax: t("inland.pretax"),
   aftertax: t("inland.aftertax"),
   maxProvider: t("inland.maxProvider"),
+  vehicleLabels: {
+    light_1_5t: t("inland.vehicleLight15t"),
+    light_3_5t: t("inland.vehicleLight35t"),
+    short_8t: t("inland.vehicleShort8t"),
+    sencillo: t("inland.serviceSencillo"),
+    full: t("inland.serviceFull"),
+    lowboy: t("inland.vehicleLowboy"),
+  },
+  pendiente: t("inland.pendiente"),
+  casePhotos: t("inland.casePhotos"),
   burreoLabel: t("inland.burreoLabel"),
   burreo: t("inland.burreo"),
   allQuotes: t("inland.allQuotes"),
