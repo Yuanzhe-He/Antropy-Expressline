@@ -54,13 +54,26 @@
   .concept-zh { font-size: 8.5px; color: #41505f; }
   .atcost { color: #6b7785; }
 
+  .route-meta { margin-top: 6px; font-size: 8.5px; color: #41505f; border-left: 3px solid #3b4ab0; padding: 3px 8px; background: #f5f6fb; }
+  .route-meta b { color: #2f3b8c; }
+  .route-meta .ferry { color: #9a5b00; font-weight: 700; }
+
   .subtotals { display: flex; gap: 22px; margin-top: 8px; font-size: 10px; }
   .subtotals b { font-size: 12px; }
   .indicative { color: #6b7785; margin-top: 2px; font-size: 8px; }
 
-  .notes { margin-top: 12px; }
-  .notes ol { margin: 4px 0 0; padding-left: 16px; }
-  .notes li { margin-bottom: 3px; }
+  .dual-totals { display: flex; gap: 10px; align-items: stretch; margin-top: 10px; flex-wrap: wrap; }
+  .dual-box { border: 1px solid #2f3b8c; border-radius: 4px; min-width: 170px; overflow: hidden; }
+  .dual-box .dual-cur { background: #2f3b8c; color: #fff; font-weight: 700; font-size: 8px; letter-spacing: 0.05em; padding: 3px 8px; }
+  .dual-box .dual-amt { font-size: 14px; font-weight: 700; color: #15202b; padding: 4px 8px 1px; }
+  .dual-box .dual-iva { font-size: 7.5px; color: #41505f; padding: 0 8px 4px; }
+  .dual-fx { align-self: center; color: #6b7785; font-size: 8px; }
+  .dual-note { margin-top: 4px; font-size: 7.5px; color: #6b7785; line-height: 1.3; }
+  .dual-note .zh { color: #6b7785; }
+
+  .notes { margin-top: 12px; break-inside: avoid; page-break-inside: avoid; }
+  .notes ol { margin: 4px 0 0; padding-left: 16px; orphans: 3; widows: 3; }
+  .notes li { margin-bottom: 3px; break-inside: avoid; page-break-inside: avoid; }
   .notes .zh { color: #41505f; }
 
   .doc-footer {
@@ -129,6 +142,17 @@
     </tbody>
   </table>
 
+  <% if (typeof route !== "undefined" && route) { %>
+    <div class="route-meta">
+      <b>RUTA / ROUTE</b> <span class="zh">运输路线</span>:
+      <%= route.originName %> → <%= route.destName %>
+      <% if (route.distanceKm != null) { %> · ~<%= Number(route.distanceKm).toLocaleString("en-US") %> km<% } %>
+      <% if (route.durationMin != null) { %> · ≈<%= Math.round(route.durationMin / 60) %> h<% } %>
+      <% if (route.viaCities && route.viaCities.length) { %> · vía: <%= route.viaCities.join(", ") %><% } %>
+      <% if (route.hasFerry) { %> · <span class="ferry">con ferry / 含轮渡</span><% } %>
+    </div>
+  <% } %>
+
   <div class="subtotals">
     <% subtotals.forEach((s) => { %>
       <div><%= s.currency %> SUBTOTAL: <b><%= s.amountLabel %> <%= s.currency %></b></div>
@@ -137,6 +161,28 @@
   </div>
   <% if (indicative) { %>
     <div class="indicative">Indicative total ≈ <%= indicative.amountLabel %> <%= indicative.currency %><%= indicative.asOfDate ? ` (FX as of ${indicative.asOfDate})` : "" %> — reference only, settled at invoicing-date FX.</div>
+  <% } %>
+
+  <% if (typeof dualTotals !== "undefined" && dualTotals) { %>
+    <div class="dual-totals">
+      <div class="dual-box">
+        <div class="dual-cur">MXN <span class="zh">比索</span></div>
+        <div class="dual-amt"><%= dualTotals.mxn.shownLabel ? `$${dualTotals.mxn.shownLabel} MXN` : "—" %></div>
+        <div class="dual-iva"><%= dualTotals.mxn.iva ? `IVA ${Math.round(dualTotals.mxn.iva * 100)}% incluido / 含税` : "sin IVA / 不含税" %></div>
+      </div>
+      <div class="dual-box">
+        <div class="dual-cur">USD <span class="zh">美金</span></div>
+        <div class="dual-amt"><%= dualTotals.usd.shownLabel ? `$${dualTotals.usd.shownLabel} USD` : "—" %></div>
+        <div class="dual-iva"><%= dualTotals.usd.iva ? `IVA ${Math.round(dualTotals.usd.iva * 100)}% incluido / 含税` : "sin IVA / 不含税" %></div>
+      </div>
+      <% if (dualTotals.fxRate) { %>
+        <div class="dual-fx">FX: 1 USD = <%= dualTotals.fxRate %> MXN<%= dualTotals.fxAsOf ? ` · ${dualTotals.fxAsOf}` : "" %></div>
+      <% } %>
+    </div>
+    <div class="dual-note">
+      The two amounts above exclude items marked AT COST (delivery order fee, destination port charges, yard storage, duties, etc.), which are billed separately at actual cost — they are not a grand total.
+      <div class="zh">上方两个金额不含标注 AT COST 的项目（换单费、目的港码头操作费、堆存费、税金等，按实际发生另收），并非最终总价。</div>
+    </div>
   <% } %>
 
   <div class="notes">

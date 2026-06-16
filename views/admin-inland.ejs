@@ -138,6 +138,8 @@
                   <th><%= t("inland.supplier") %></th>
                   <th><%= t("inland.serviceSencillo") %></th>
                   <th><%= t("inland.serviceFull") %></th>
+                  <th><%= t("inland.burreo") %> S</th>
+                  <th><%= t("inland.burreo") %> F</th>
                   <th><%= t("inland.client") %></th>
                   <th><%= t("inland.commodity") %></th>
                   <th><%= t("inland.enabledLabel") %></th>
@@ -150,6 +152,8 @@
                     <td><input type="hidden" name="re_present_<%= entry.id %>" value="1" /><input type="text" name="re_proveedor_<%= entry.id %>" value="<%= entry.proveedor || '' %>" /></td>
                     <td><input type="text" name="re_sencillo_<%= entry.id %>" value="<%= entry.sencillo == null ? '' : entry.sencillo %>" /></td>
                     <td><input type="text" name="re_full_<%= entry.id %>" value="<%= entry.full == null ? '' : entry.full %>" /></td>
+                    <td><input type="text" name="re_burreoS_<%= entry.id %>" value="<%= entry.burreo && entry.burreo.sencillo != null ? entry.burreo.sencillo : '' %>" /></td>
+                    <td><input type="text" name="re_burreoF_<%= entry.id %>" value="<%= entry.burreo && entry.burreo.full != null ? entry.burreo.full : '' %>" /></td>
                     <td><input type="text" name="re_cliente_<%= entry.id %>" value="<%= entry.cliente || '' %>" /></td>
                     <td><input type="text" name="re_commodity_<%= entry.id %>" value="<%= entry.commodity || '' %>" /></td>
                     <td><input type="checkbox" name="re_enabled_<%= entry.id %>" <%= entry.enabled ? "checked" : "" %> /></td>
@@ -157,7 +161,7 @@
                   </tr>
                 <% } %>
                 <% if (!rates.length) { %>
-                  <tr><td colspan="7" class="muted"><%= t("inland.noQuotesForDestination") %></td></tr>
+                  <tr><td colspan="9" class="muted"><%= t("inland.noQuotesForDestination") %></td></tr>
                 <% } %>
               </tbody>
             </table>

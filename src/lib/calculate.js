@@ -1005,6 +1005,9 @@ function computeInlandCalculator(moduleData, formData, options = {}) {
   const quoteCurrency = "MXN";
   const serviceType = formData.serviceType === "full" ? "full" : "sencillo";
   const quantity = Math.max(0, parseNumber(formData.quantity, 1));
+  // R2 short-haul / drayage (burreo): optional add-on, OFF by default so existing
+  // flows (incl. the quote pull) are unchanged.
+  const includeBurreo = Boolean(formData.includeBurreo);
 
   const destination =
     (moduleData.destinations || []).find((dest) => dest.id === formData.destinationId) ||
@@ -1051,6 +1054,9 @@ function computeInlandCalculator(moduleData, formData, options = {}) {
       total: 0,
       maxRate: null,
       maxProvider: null,
+      includeBurreo,
+      burreoRate: 0,
+      burreoTotal: 0,
       totalExplanation: t("inland.noRateExplanation", {
         service:
           serviceType === "full" ? t("inland.serviceFull") : t("inland.serviceSencillo"),
@@ -1067,14 +1073,30 @@ function computeInlandCalculator(moduleData, formData, options = {}) {
   const maxRate = Number(best[serviceType]);
   const maxProvider = best.proveedor;
 
-  const pretaxTotal = roundMoney(maxRate * quantity);
+  // Highest burreo[serviceType] across candidates (same max-across-suppliers
+  // basis as the main rate; may originate from a different entry).
+  let burreoRate = 0;
+  for (const entry of candidates) {
+    const value = entry.burreo && entry.burreo[serviceType];
+    if (value !== null && value !== undefined && Number(value) > burreoRate) {
+      burreoRate = Number(value);
+    }
+  }
+  const burreoTotal = includeBurreo ? roundMoney(burreoRate * quantity) : 0;
+
+  const pretaxTotal = roundMoney(maxRate * quantity + burreoTotal);
   const afterTaxTotal = roundMoney(pretaxTotal * (1 + taxRate));
   const total = priceMode === "aftertax" ? afterTaxTotal : pretaxTotal;
 
+  const baseFormula = `${formatAmount(maxRate)} × ${quantity}`;
+  const burreoPart =
+    includeBurreo && burreoTotal > 0
+      ? ` + ${formatAmount(burreoRate)} × ${quantity} (burreo)`
+      : "";
   const totalFormula =
     priceMode === "aftertax"
-      ? `${formatAmount(maxRate)} × ${quantity} × (1 + ${taxRateLabel}) = ${formatAmount(total)} ${quoteCurrency}`
-      : `${formatAmount(maxRate)} × ${quantity} = ${formatAmount(total)} ${quoteCurrency}`;
+      ? `(${baseFormula}${burreoPart}) × (1 + ${taxRateLabel}) = ${formatAmount(total)} ${quoteCurrency}`
+      : `${baseFormula}${burreoPart} = ${formatAmount(total)} ${quoteCurrency}`;
 
   return {
     noRate: false,
@@ -1085,6 +1107,9 @@ function computeInlandCalculator(moduleData, formData, options = {}) {
     priceMode,
     maxRate,
     maxProvider,
+    includeBurreo,
+    burreoRate,
+    burreoTotal,
     taxRate,
     taxRateLabel,
     pretaxTotal,
