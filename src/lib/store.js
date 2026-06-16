@@ -1903,6 +1903,20 @@ function normalizeInlandDestination(dest = {}, fallbackId) {
   };
 }
 
+// R2 short-haul / drayage fee. { sencillo, full } in MXN; either side may be
+// null; the whole field is null when there is no burreo for the entry.
+function normalizeInlandBurreo(burreo) {
+  if (!burreo || typeof burreo !== "object" || Array.isArray(burreo)) {
+    return null;
+  }
+  const sencillo = parseNullableNumber(burreo.sencillo);
+  const full = parseNullableNumber(burreo.full);
+  if (sencillo === null && full === null) {
+    return null;
+  }
+  return { sencillo, full };
+}
+
 function normalizeInlandRateEntry(entry = {}, fallbackId) {
   return {
     id: slugifyId(entry.id, fallbackId),
@@ -1915,6 +1929,7 @@ function normalizeInlandRateEntry(entry = {}, fallbackId) {
       Number.isInteger(entry.dupIndex) && entry.dupIndex > 0 ? entry.dupIndex : 1,
     sencillo: parseNullableNumber(entry.sencillo),
     full: parseNullableNumber(entry.full),
+    burreo: normalizeInlandBurreo(entry.burreo),
     currency: "MXN",
     cliente: String(entry.cliente || "").trim(),
     codigoCw: String(entry.codigoCw || "").trim(),

@@ -302,6 +302,13 @@
     qtyInput: document.querySelector("[data-inland-quantity]"),
     ivaInput: document.querySelector("[data-inland-iva-input]"),
     preciseInput: document.querySelector("[data-inland-precise-input]"),
+    burreoWrap: document.querySelector("[data-inland-burreo-wrap]"),
+    burreoCheck: document.querySelector("[data-inland-burreo-check]"),
+    burreoInput: document.querySelector("[data-inland-burreo-input]"),
+    burreoHint: document.querySelector("[data-inland-burreo-hint]"),
+    burreoLine: document.querySelector("[data-inland-burreo-line]"),
+    burreoLineLabel: document.querySelector("[data-inland-burreo-line-label]"),
+    burreoAmount: document.querySelector("[data-inland-burreo-amount]"),
     result: document.querySelector("[data-inland-result]"),
     empty: document.querySelector("[data-inland-empty]"),
     routeMeta: document.querySelector("[data-inland-route-meta]"),
@@ -345,6 +352,18 @@
     const qty = currentQty();
     const tax = currentTaxRatio();
 
+    // R2 burreo (short-haul) add-on: show the toggle only when this destination /
+    // service has a drayage rate; include it in the total when checked.
+    const burreoRate = service === "full" ? dest.maxBurreoFull : dest.maxBurreoSencillo;
+    const hasBurreo = burreoRate != null && Number(burreoRate) > 0;
+    if (panel.burreoWrap) {
+      panel.burreoWrap.hidden = !hasBurreo;
+    }
+    if (panel.burreoHint) {
+      panel.burreoHint.textContent = hasBurreo ? `(+${fmtMoney(burreoRate)} ${i18n.mxn})` : "";
+    }
+    const includeBurreo = hasBurreo && panel.burreoCheck && panel.burreoCheck.checked;
+
     // route meta
     const route = routeForDestination(selectedId);
     let metaHtml = "";
@@ -370,16 +389,27 @@
       panel.formula.textContent = "";
       panel.maxProviderLabel.textContent = "";
       panel.maxProvider.textContent = "";
+      if (panel.burreoLine) panel.burreoLine.hidden = true;
     } else {
-      const pretax = maxRate * qty;
+      const burreoAdd = includeBurreo ? Number(burreoRate) * qty : 0;
+      const pretax = maxRate * qty + burreoAdd;
       const total = tax === 0 ? pretax : pretax * (1 + tax);
       panel.total.textContent = `${fmtMoney(total)} ${i18n.mxn}`;
+      const baseF = `${fmtMoney(maxRate)} × ${qty}`;
+      const burreoF = burreoAdd > 0 ? ` + ${fmtMoney(burreoRate)} × ${qty}` : "";
       panel.formula.textContent =
         tax === 0
-          ? `${fmtMoney(maxRate)} × ${qty} = ${fmtMoney(total)} ${i18n.mxn}`
-          : `${fmtMoney(maxRate)} × ${qty} × 1.16 = ${fmtMoney(total)} ${i18n.mxn}`;
+          ? `${baseF}${burreoF} = ${fmtMoney(total)} ${i18n.mxn}`
+          : `(${baseF}${burreoF}) × 1.16 = ${fmtMoney(total)} ${i18n.mxn}`;
       panel.maxProviderLabel.textContent = `${i18n.maxProvider}:`;
       panel.maxProvider.textContent = provider || "—";
+      if (panel.burreoLine) {
+        panel.burreoLine.hidden = burreoAdd <= 0;
+        if (burreoAdd > 0) {
+          panel.burreoLineLabel.textContent = `${i18n.burreo}:`;
+          panel.burreoAmount.textContent = `${fmtMoney(burreoAdd)} ${i18n.mxn}`;
+        }
+      }
     }
 
     renderAllQuotes(dest);
@@ -477,6 +507,14 @@
     });
   });
   panel.qtyInput.addEventListener("input", renderQuote);
+  if (panel.burreoCheck) {
+    panel.burreoCheck.addEventListener("change", () => {
+      if (panel.burreoInput) {
+        panel.burreoInput.value = panel.burreoCheck.checked ? "1" : "0";
+      }
+      renderQuote();
+    });
+  }
   panel.preciseChips.addEventListener("click", (event) => {
     const chip = event.target.closest("[data-precise-id]");
     if (!chip) return;

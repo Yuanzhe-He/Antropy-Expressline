@@ -63,6 +63,24 @@ function parseAmount(raw) {
   return Number.isFinite(value) ? value : null;
 }
 
+// Parse a "SENCILLO $4800 FULL $7800" style cell into { sencillo, full }. Either
+// side may be missing (that key becomes null). No SENCILLO/FULL amounts at all
+// -> null, so callers can treat "no burreo" and "0 burreo" distinctly.
+function parseSencilloFull(raw) {
+  const text = String(raw == null ? "" : raw);
+  if (!text.trim()) {
+    return null;
+  }
+  const sMatch = text.match(/SENCILLO\s*\$?\s*([\d.,]+)/i);
+  const fMatch = text.match(/FULL\s*\$?\s*([\d.,]+)/i);
+  const sencillo = sMatch ? parseAmount(sMatch[1]) : null;
+  const full = fMatch ? parseAmount(fMatch[1]) : null;
+  if (sencillo === null && full === null) {
+    return null;
+  }
+  return { sencillo, full };
+}
+
 // Spanish/Excel exports often use ';' because ',' is the thousands separator in
 // amounts like "$72,000.00". Detect the delimiter from the header line.
 function detectDelimiter(text) {
@@ -203,6 +221,9 @@ function cleanInlandCsv(text) {
 
     const sencillo = parseAmount(known.sencillo);
     const full = parseAmount(known.full);
+    // R2 short-haul / drayage ("BURREO / LOCAL"): structured from extras, raw
+    // extras value preserved. The header normalizes to "BURREO / LOCAL".
+    const burreo = parseSencilloFull(extras["BURREO / LOCAL"]);
 
     for (const destinationId of destinationIds) {
       report.touchedDestinations.add(destinationId);
@@ -216,6 +237,7 @@ function cleanInlandCsv(text) {
         proveedor: known.proveedor || "",
         sencillo,
         full,
+        burreo: burreo ? { ...burreo } : null,
         currency: "MXN",
         cliente: known.cliente || "",
         codigoCw: known.codigoCw || "",
@@ -303,6 +325,7 @@ function mergeRateEntries(existing, incoming) {
 
 module.exports = {
   parseAmount,
+  parseSencilloFull,
   parseCsvRows,
   detectDelimiter,
   decodeCsvBuffer,

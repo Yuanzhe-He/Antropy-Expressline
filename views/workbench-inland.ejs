@@ -67,6 +67,12 @@
         </div>
       </div>
 
+      <label class="inland-check" data-inland-burreo-wrap hidden>
+        <input type="checkbox" data-inland-burreo-check <%= formData.includeBurreo ? "checked" : "" %> />
+        <span><%= t("inland.burreoLabel") %> <small data-inland-burreo-hint></small></span>
+      </label>
+      <input type="hidden" name="includeBurreo" value="<%= formData.includeBurreo ? '1' : '0' %>" data-inland-burreo-input />
+
       <input type="hidden" name="priceMode" value="<%= formData.priceMode %>" data-inland-pricemode />
       <input type="hidden" name="precisePointId" value="<%= formData.precisePointId %>" data-inland-precise-input />
     </form>
@@ -79,6 +85,7 @@
         <small data-inland-formula></small>
       </article>
       <p class="inland-max-provider"><span data-inland-maxprovider-label></span> <strong data-inland-maxprovider></strong></p>
+      <p class="inland-burreo-line" data-inland-burreo-line hidden><span data-inland-burreo-line-label></span> <strong data-inland-burreo-amount></strong></p>
 
       <details class="table-card inland-all-quotes" data-inland-allquotes-card>
         <summary><span data-inland-allquotes-label></span></summary>
@@ -107,6 +114,8 @@
   pretax: t("inland.pretax"),
   aftertax: t("inland.aftertax"),
   maxProvider: t("inland.maxProvider"),
+  burreoLabel: t("inland.burreoLabel"),
+  burreo: t("inland.burreo"),
   allQuotes: t("inland.allQuotes"),
   via: t("inland.via"),
   distance: t("inland.distance"),

@@ -41,6 +41,26 @@ EN+中文** document, intentionally decoupled from the app's ZH/ES UI i18n.
   fonts. `public/fonts/NotoSansSC-Regular.woff2` is a CJK-range subset (~4.2MB).
 - **CONCEPT cells** are two lines: English (bold) over 中文.
 
+## 2026-06-14 - Quote Document dual-currency VAT clause (provisional)
+
+R4 introduces a **dual-currency price block** on the quote document: an **MXN
+price (sin IVA / 不含税)** and a **USD price (con 16% IVA / 含税)**, side by side,
+each with an independent IVA toggle (defaults: MXN off, USD on). FX uses the
+system `exchangeRates` (USD→MXN); the document prints the FX rate + as-of date.
+
+Because of this, legacy NOTE #1 ("all prices exclusive of VAT, 16% added at
+invoicing") is **replaced** by:
+
+> Prices are shown in two currencies: the MXN price is exclusive of VAT; the USD
+> price already includes 16% VAT. Any exchange-rate difference is settled at the
+> invoicing-date FX. / 本报价以两种币种显示：比索价为不含税价；美金价已含 16%
+> 增值税；汇率差异按开票当日汇率结算。
+
+⚠️ **Provisional**: customer-facing legal-ish wording — **pending Jose's final
+confirmation at the review meeting** (he sees it on the sample quote). If he
+adjusts the phrasing, update `QUOTE_NOTES[0]` in `src/lib/quote.js` and this note
+together.
+
 ## 2026-05-06 - Workbench Brand Treatment
 
 - Use the DEWELL logo as the primary customer-facing brand mark for the workbench surface.

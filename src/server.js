@@ -52,6 +52,7 @@ const {
   pullCalculatorValues,
   generateQuoteNumber,
   loadFeeCodes,
+  resolveQuoteRoute,
 } = require("./lib/quote");
 const { renderQuotePdf } = require("./lib/quote-pdf");
 const { shouldUseDatabase, insertQuoteSnapshot } = require("./lib/db");
@@ -1184,6 +1185,7 @@ function buildDefaultInlandFormData(moduleData, destQuery) {
     priceMode: moduleData.settings?.defaultPriceMode || "pretax",
     taxRateOverride: "default",
     precisePointId: "",
+    includeBurreo: false,
   };
 }
 
@@ -1195,6 +1197,7 @@ function buildInlandFormData(moduleData, body = {}) {
     priceMode: body.priceMode || moduleData.settings?.defaultPriceMode || "pretax",
     taxRateOverride: body.taxRateOverride || "default",
     precisePointId: String(body.precisePointId || "").trim(),
+    includeBurreo: body.includeBurreo === "1" || body.includeBurreo === "true" || body.includeBurreo === true,
   };
 }
 
@@ -1226,6 +1229,21 @@ function buildInlandMapData(moduleData) {
     return best;
   };
 
+  // Highest burreo[service] across a destination's entries (null when none).
+  const pickMaxBurreo = (entries, service) => {
+    let best = null;
+    for (const entry of entries) {
+      const value = entry.burreo && entry.burreo[service];
+      if (value === null || value === undefined) {
+        continue;
+      }
+      if (best === null || Number(value) > best) {
+        best = Number(value);
+      }
+    }
+    return best;
+  };
+
   const destinations = (moduleData.destinations || []).map((dest) => {
     const entries = entriesByDest.get(dest.id) || [];
     const maxSencillo = pickMax(entries, "sencillo");
@@ -1243,6 +1261,8 @@ function buildInlandMapData(moduleData) {
       maxSencilloProvider: maxSencillo ? maxSencillo.proveedor : null,
       maxFull: maxFull ? Number(maxFull.full) : null,
       maxFullProvider: maxFull ? maxFull.proveedor : null,
+      maxBurreoSencillo: pickMaxBurreo(entries, "sencillo"),
+      maxBurreoFull: pickMaxBurreo(entries, "full"),
       precisePoints: (dest.precisePoints || []).map((point) => ({
         id: point.id,
         name: point.name,
@@ -1448,11 +1468,20 @@ function buildQuoteSelectorData(shippingData) {
 }
 
 function assembleQuoteView(quoteModule, formData, shippingData) {
+  const quoteSettings = quoteModule.settings || {};
   const totals = computeQuoteTotals(formData.lineItems, {
     exchangeRates: shippingData.exchangeRates,
-    showIndicativeConversion: quoteModule.settings.showIndicativeConversion,
-    indicativeCurrency: quoteModule.settings.indicativeCurrency,
+    showIndicativeConversion: quoteSettings.showIndicativeConversion,
+    indicativeCurrency: quoteSettings.indicativeCurrency,
+    // R4 dual-currency display (default on; MXN sin IVA + USD con 16% IVA).
+    dualCurrency: quoteSettings.dualCurrency !== false,
+    ivaMxn: Number.isFinite(Number(quoteSettings.ivaMxn)) ? Number(quoteSettings.ivaMxn) : 0,
+    ivaUsd: Number.isFinite(Number(quoteSettings.ivaUsd)) ? Number(quoteSettings.ivaUsd) : 0.16,
   });
+  const route = resolveQuoteRoute(
+    getModuleData(shippingData, "inland"),
+    formData.pullInputs?.destinationId
+  );
   return {
     number: formData.number,
     date: formData.date,
@@ -1461,6 +1490,8 @@ function assembleQuoteView(quoteModule, formData, shippingData) {
     groups: groupRowsForRender(totals.rows),
     subtotals: totals.subtotals,
     indicative: totals.indicative,
+    dualTotals: totals.dualTotals,
+    route,
     notes: quoteModule.notes,
   };
 }
@@ -2234,6 +2265,14 @@ function createApp() {
       if (p !== undefined) entry.proveedor = String(p).trim();
       if (req.body[`re_sencillo_${entry.id}`] !== undefined) entry.sencillo = toAmount(req.body[`re_sencillo_${entry.id}`]);
       if (req.body[`re_full_${entry.id}`] !== undefined) entry.full = toAmount(req.body[`re_full_${entry.id}`]);
+      if (
+        req.body[`re_burreoS_${entry.id}`] !== undefined ||
+        req.body[`re_burreoF_${entry.id}`] !== undefined
+      ) {
+        const bS = toAmount(req.body[`re_burreoS_${entry.id}`]);
+        const bF = toAmount(req.body[`re_burreoF_${entry.id}`]);
+        entry.burreo = bS === null && bF === null ? null : { sencillo: bS, full: bF };
+      }
       const cli = req.body[`re_cliente_${entry.id}`];
       if (cli !== undefined) entry.cliente = String(cli).trim();
       const cw = req.body[`re_codigocw_${entry.id}`];

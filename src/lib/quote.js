@@ -166,8 +166,11 @@ const QUOTE_TEMPLATE_ROWS = Object.freeze([
 // the quote document is always EN + 中文.
 const QUOTE_NOTES = Object.freeze([
   {
-    en: "The above prices are exclusive of VAT. A 16% VAT will be added at the time of invoicing and settlement.",
-    zh: "上述价格均不含税；开票及结算时将另加 16% 增值税（VAT）。",
+    // K5 (20260614): provisional wording for the dual-currency display — PENDING
+    // Jose's final confirmation at the review meeting. Coordinated with the VAT
+    // clause in docs/BRAND_NOTES.md. Revert/adjust if Jose changes the wording.
+    en: "Prices are shown in two currencies: the MXN price is exclusive of VAT; the USD price already includes 16% VAT. Any exchange-rate difference is settled at the invoicing-date FX.",
+    zh: "本报价以两种币种显示：比索（MXN）价为不含税价；美金（USD）价已含 16% 增值税（VAT）。汇率差异按开票当日汇率结算。",
   },
   {
     en: "Any costs not caused by our company will be charged based on actual expenses.",
@@ -337,7 +340,51 @@ function computeQuoteTotals(lineItems = [], options = {}) {
     }
   }
 
-  return { rows, subtotals: subtotalList, indicative };
+  // R4 dual-currency display (report layer). Additive: existing rows / subtotals
+  // / indicative are unchanged. Convert every priced row to a single MXN base
+  // (pretax), then present two prices with independent IVA toggles:
+  //   MXN price = mxnBase x (1 + ivaMxn)        (default ivaMxn = 0,    sin IVA)
+  //   USD price = mxnBase / fx(USD->MXN) x (1 + ivaUsd)  (default ivaUsd = 0.16, con IVA)
+  // FX comes from the system rates (exchangeRates); when unavailable the USD
+  // side degrades to null (rendered as "—") without blocking the MXN side.
+  let dualTotals = null;
+  if (options.dualCurrency) {
+    const baseCurrency = options.baseCurrency || "MXN";
+    const ivaMxn = Number.isFinite(Number(options.ivaMxn)) ? Number(options.ivaMxn) : 0;
+    const ivaUsd = Number.isFinite(Number(options.ivaUsd)) ? Number(options.ivaUsd) : 0.16;
+
+    let mxnBase = 0;
+    let baseOk = true;
+    for (const entry of subtotalList) {
+      const converted = convertAmount(entry.amount, entry.currency, baseCurrency, pairs);
+      if (converted === null) {
+        baseOk = false;
+        break;
+      }
+      mxnBase += converted;
+    }
+    mxnBase = roundMoney(mxnBase);
+
+    const usdBase = baseOk ? convertAmount(mxnBase, baseCurrency, "USD", pairs) : null;
+    const usdToMxn = pairs.find((p) => p.base === "USD" && p.quote === "MXN");
+    dualTotals = {
+      mxn: {
+        base: mxnBase,
+        iva: ivaMxn,
+        shown: baseOk ? roundMoney(mxnBase * (1 + ivaMxn)) : null,
+        shownLabel: baseOk ? formatMoney(mxnBase * (1 + ivaMxn)) : null,
+      },
+      usd: {
+        iva: ivaUsd,
+        shown: usdBase === null ? null : roundMoney(usdBase * (1 + ivaUsd)),
+        shownLabel: usdBase === null ? null : formatMoney(usdBase * (1 + ivaUsd)),
+      },
+      fxRate: usdToMxn ? Number(usdToMxn.rate) : null,
+      fxAsOf: options.exchangeRates?.asOfDate || null,
+    };
+  }
+
+  return { rows, subtotals: subtotalList, indicative, dualTotals };
 }
 
 // --- Calculator pulls (D1) ---------------------------------------------------
@@ -500,6 +547,38 @@ function groupRowsForRender(rows = []) {
   })).filter((group) => group.items.length);
 }
 
+// Resolve the cached driving route (origin -> destination) for a quote so the
+// document can show distance / duration / via-cities. Pure data lookup over the
+// inland module — no network. Returns null when the destination or its cached
+// route is unknown (the document then renders a "—" placeholder, never crashes).
+function resolveQuoteRoute(inlandModule = {}, destinationId, originId) {
+  const destId = String(destinationId || "").trim();
+  if (!destId) {
+    return null;
+  }
+  const origins = inlandModule.origins || [];
+  const origin = (originId && origins.find((o) => o.id === originId)) || origins[0] || null;
+  const dest = (inlandModule.destinations || []).find((d) => d.id === destId) || null;
+  const route = (inlandModule.routeCache || []).find(
+    (rc) =>
+      rc.destinationId === destId &&
+      rc.targetType === "destination" &&
+      (!origin || rc.originId === origin.id)
+  );
+  if (!route) {
+    return null;
+  }
+  return {
+    originName: origin ? origin.name : "",
+    destName: dest ? dest.name : destId,
+    distanceKm: route.distanceKm ?? null,
+    durationMin: route.durationMin ?? null,
+    viaCities: Array.isArray(route.viaCities) ? route.viaCities : [],
+    hasFerry: Boolean(route.hasFerry),
+    stale: Boolean(route.stale),
+  };
+}
+
 module.exports = {
   QUOTE_TEMPLATE_VERSION,
   QUOTE_GROUP_ORDER,
@@ -516,4 +595,5 @@ module.exports = {
   computeQuoteTotals,
   pullCalculatorValues,
   groupRowsForRender,
+  resolveQuoteRoute,
 };
