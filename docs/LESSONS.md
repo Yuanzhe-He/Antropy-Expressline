@@ -19,6 +19,18 @@ Only record lessons that may change future behavior.
 - landed_in:
 - next_action:
 
+## 2026-06-17 - Two normalizers for the same shape must stay in lockstep (parse vs store)
+
+- source_type: ai-self-correction
+- task_type: code-review / implementation
+- domain: quote header + line-item normalization (server parse path vs store persist path)
+- trigger: a deep re-read of batch1/2 found server.js parseQuoteHeader was updated to the new option sets (INLAND, new cargo types, transportMode) but store.js normalizeQuoteHeader was NOT — so a quote saved as a draft and re-read silently reset INLAND→OCEAN, new cargo→FCL, and dropped transportMode. The same gap existed in normalizeQuoteLineItem (missing section/unitOfMeasure/conceptEs).
+- incident_or_feedback: when a value object flows through TWO normalizers — the request parser (server parseX, used for the live action) and the persistence normalizer (store normalizeX, used on load/save of drafts) — adding a field or widening an enum in one without the other creates a "works live, lost on round-trip" bug that no single-shot test catches. The PDF generated immediately looked correct; only save-draft→reload lost data.
+- lesson: when you add/normalize a field on a request-parse path, grep for the matching store normalizer (`normalize<Same>`) and update both in the same change; add a draft/persist round-trip test (normalizeShippingData on a built object) asserting the new field survives AND that old objects get a back-compat default. Treat parse-vs-store as a pair.
+- scope: project-type
+- landed_in: batch3 P0 (store normalizeQuoteHeader) + S3 (normalizeQuoteLineItem section/uom/conceptEs); scripts/r2-batch3-test.js round-trips.
+- next_action: for any quote/inland field change, update parseX + normalizeX together and add a normalize round-trip assertion.
+
 ## 2026-06-17 - Large autonomous multi-feature batch: commit-per-item + test-after-each + scope honestly
 
 - source_type: ai-self-correction
