@@ -730,6 +730,12 @@ function computeCustomsCalculator(moduleData, formData, referenceData, options =
 
   const terminalFixedItems = [];
   for (const charge of selectedTerminal?.fixedCharges || []) {
+    // O3: per_day charges multiply by storage days; per_occurrence are charged once.
+    const perDay = charge.basis === "per_day";
+    const required = Boolean(charge.required);
+    const dayMultiplier = perDay
+      ? [{ value: storageDays, label: t("calculator.partDays") }]
+      : [];
     const parts = [];
     for (const row of containerRows) {
       const rateConfig = charge.groupRates?.[row.containerGroupKey];
@@ -745,13 +751,32 @@ function computeCustomsCalculator(moduleData, formData, referenceData, options =
               value: row.quantity,
               label: t("calculator.partContainer", { label: row.label }),
             },
+            ...dayMultiplier,
           ],
           quoteCurrency,
           exchangeRates,
         })
       );
     }
-    if (!parts.length) {
+    // O3: optional flat (non-container) amount that coexists with groupRates.
+    if (charge.amount != null && Number(charge.amount) !== 0) {
+      parts.push(
+        buildRatePart({
+          description: charge.concept,
+          rateConfig: {
+            rate: Number(charge.amount),
+            currency: charge.amountCurrency || quoteCurrency,
+          },
+          multipliers: dayMultiplier.length
+            ? dayMultiplier
+            : [{ value: 1, label: t("calculator.partFlat") }],
+          quoteCurrency,
+          exchangeRates,
+        })
+      );
+    }
+    // O3: required charges always render (even at 0); others skip when empty.
+    if (!parts.length && !required) {
       continue;
     }
     const overrideKey = `customs:fixed:${charge.id}`;

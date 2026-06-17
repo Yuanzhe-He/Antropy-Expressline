@@ -995,6 +995,13 @@ function normalizeCustomsCharge(charge, fallbackId, containerTypes) {
       inferTaxRateFromMultiplier(charge.taxMultiplier)
     ),
     groupRates: ensureRatesForContainerTypes(charge.groupRates, containerTypes),
+    // O3 (20260617): per-charge config. basis = per_day (×storage days) | per_occurrence.
+    // required = always show (even at 0). amount = optional flat (non-container) fee that
+    // coexists with groupRates. Back-compat: old charges (no fields) get safe defaults.
+    basis: charge.basis === "per_day" ? "per_day" : "per_occurrence",
+    required: Boolean(charge.required),
+    amount: parseNullableNumber(charge.amount),
+    amountCurrency: normalizeCurrencyCode(charge.amountCurrency, "MXN"),
   };
 }
 
