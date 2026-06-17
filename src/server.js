@@ -2669,6 +2669,23 @@ function createApp() {
     });
   });
 
+  // O1 (20260617): defensive GET handlers for /admin/customs/ports/:id and
+  // /admin/customs/terminals/:id. All editing happens via POST sub-routes on the
+  // one shipping-lines page; these entity URLs have no GET, so a stray GET
+  // (shared/bookmarked anchor, browser prefetch, back-button to a redirect
+  // target, or a hand-typed URL) 404'd. Redirect to the page anchored on the
+  // entity instead of erroring (José: "加港口 404").
+  app.get("/admin/customs/ports/:portId", requireAuth, (req, res) => {
+    return res.redirect(
+      `/admin/customs/shipping-lines#customs-port-${req.params.portId}`
+    );
+  });
+  app.get("/admin/customs/terminals/:terminalId", requireAuth, (req, res) => {
+    return res.redirect(
+      `/admin/customs/shipping-lines#customs-terminal-${req.params.terminalId}`
+    );
+  });
+
   app.post("/admin/customs/ports/add", requireAuth, async (req, res) => {
     const shippingData = await loadShippingData({ refreshRates: false });
     const moduleData = structuredClone(getModuleData(shippingData, "customs"));
@@ -2683,6 +2700,28 @@ function createApp() {
       "success",
       req.t("customs.entityAdded", { name: port.name }),
       `/admin/customs/shipping-lines#customs-port-${port.id}`
+    );
+  });
+
+  // O3b (20260617): delete a port and cascade-delete its terminals (the terminals
+  // are nested under the port, so removing the port drops them too).
+  app.post("/admin/customs/ports/:portId/delete", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const moduleData = structuredClone(getModuleData(shippingData, "customs"));
+    const beforeCount = (moduleData.ports || []).length;
+    moduleData.ports = (moduleData.ports || []).filter(
+      (entry) => entry.id !== req.params.portId
+    );
+    const removed = beforeCount !== moduleData.ports.length;
+    shippingData.modules.customs = moduleData;
+    await saveShippingData(shippingData);
+
+    return redirectWithFlash(
+      req,
+      res,
+      removed ? "success" : "error",
+      removed ? req.t("customs.portDeleted") : req.t("system.notFoundTitle"),
+      "/admin/customs/shipping-lines#customs-terminal-rules"
     );
   });
 

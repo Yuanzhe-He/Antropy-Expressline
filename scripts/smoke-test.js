@@ -1617,6 +1617,52 @@ async function main() {
     assert.equal(response.status, 200, "quote pdf endpoint ok");
     assert.ok(response.text.startsWith("%PDF"), "quote pdf body starts with %PDF");
 
+    // O1: defensive GET on customs entity URLs redirects (no 404).
+    response = await request(baseUrl, "/admin/customs/terminals/any-terminal-id", {
+      jar: publicJar,
+    });
+    assert.equal(response.status, 302, "GET terminal redirects (no 404)");
+    assert.ok(
+      response.location.includes("#customs-terminal-any-terminal-id"),
+      "terminal GET redirects to anchor"
+    );
+    response = await request(baseUrl, "/admin/customs/ports/any-port-id", { jar: publicJar });
+    assert.equal(response.status, 302, "GET port redirects (no 404)");
+
+    // O1 happy path + O3b: add a port (auto-creates a terminal), then delete it (cascade).
+    let customsData = await getShippingData();
+    const beforePortCount = (customsData.modules.customs.ports || []).length;
+    response = await request(baseUrl, "/admin/customs/ports/add", {
+      method: "POST",
+      jar: publicJar,
+    });
+    assert.equal(response.status, 302);
+    assert.ok(response.location.includes("#customs-port-"), "add-port anchors new port");
+    customsData = await getShippingData();
+    assert.equal(
+      customsData.modules.customs.ports.length,
+      beforePortCount + 1,
+      "add-port creates a port"
+    );
+    const newPort = customsData.modules.customs.ports.at(-1);
+    assert.ok((newPort.terminals || []).length >= 1, "new port has a default terminal");
+
+    response = await request(baseUrl, `/admin/customs/ports/${newPort.id}/delete`, {
+      method: "POST",
+      jar: publicJar,
+    });
+    assert.equal(response.status, 302);
+    customsData = await getShippingData();
+    assert.equal(
+      customsData.modules.customs.ports.length,
+      beforePortCount,
+      "O3b: delete-port cascades (port + its terminals gone)"
+    );
+    assert.ok(
+      !customsData.modules.customs.ports.some((p) => p.id === newPort.id),
+      "deleted port is gone"
+    );
+
     console.log("smoke-test-ok");
   } finally {
     await closeQuoteBrowser();
