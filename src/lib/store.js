@@ -2176,8 +2176,18 @@ function normalizeQuoteHeader(header = {}) {
   };
 }
 
-function normalizeQuoteNote(note = {}) {
-  return { en: String(note.en || "").trim(), zh: String(note.zh || "").trim() };
+let quoteNoteSeq = 0;
+function normalizeQuoteNote(note = {}, fallbackId) {
+  const id =
+    slugifyId(note.id, "") ||
+    fallbackId ||
+    `note-${(quoteNoteSeq += 1)}`;
+  return {
+    id,
+    en: String(note.en || "").trim(),
+    es: String(note.es || "").trim(),
+    zh: String(note.zh || "").trim(),
+  };
 }
 
 function normalizeQuoteDraft(draft = {}, fallbackId) {
@@ -2231,7 +2241,9 @@ function normalizeQuoteModuleData(moduleData = {}) {
     templateRows: (seedTemplate ? QUOTE_TEMPLATE_ROWS : moduleData.templateRows).map(
       (row, index) => normalizeQuoteLineItem(row, `tpl-${index + 1}`)
     ),
-    notes: (seedNotes ? QUOTE_NOTES : moduleData.notes).map(normalizeQuoteNote),
+    notes: (seedNotes ? QUOTE_NOTES : moduleData.notes).map((note, index) =>
+      normalizeQuoteNote(note, `note-${index + 1}`)
+    ),
     drafts: (Array.isArray(moduleData.drafts) ? moduleData.drafts : []).map(
       (draft, index) => normalizeQuoteDraft(draft, `q-${index + 1}`)
     ),

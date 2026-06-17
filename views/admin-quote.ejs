@@ -1,0 +1,75 @@
+<%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
+
+<section class="page-heading page-heading-card">
+  <div class="page-heading-title"><h2><%= t("quote.adminTitle") %></h2></div>
+  <div class="module-intro-card"><p><%= t("quote.adminDescription") %></p></div>
+</section>
+
+<%- include("partials/admin-tabs", { modules, currentModuleKey, currentAdminSection, t }) %>
+
+<form method="post" action="/admin/quote/settings" class="stack-form">
+  <section class="panel" id="quote-number">
+    <div class="section-title"><div><p class="eyebrow"><%= t("quote.numberFormat") %></p></div></div>
+    <div class="grid-form">
+      <label><span><%= t("quote.numberPrefix") %></span><input type="text" name="quoteNumberPrefix" value="<%= quoteSettings.quoteNumberPrefix %>" /></label>
+      <label><span><%= t("quote.numberSuffix") %></span><input type="text" name="quoteNumberSuffix" value="<%= quoteSettings.quoteNumberSuffix %>" /></label>
+      <label><span><%= t("quote.numberPad") %></span><input type="number" min="1" max="8" name="quoteNumberPad" value="<%= quoteSettings.quoteNumberPad %>" /></label>
+      <label><span><%= t("quote.lastSeq") %></span><input type="number" min="0" name="lastQuoteSeq" value="<%= quoteSettings.lastQuoteSeq %>" /></label>
+    </div>
+  </section>
+
+  <section class="panel" id="quote-remarks">
+    <div class="section-title">
+      <div><p class="eyebrow"><%= t("quote.remarksLibrary") %></p><small><%= t("quote.remarksLibraryHint") %></small></div>
+      <button type="button" class="ghost-button compact-button" data-remark-add><%= t("quote.addRemark") %></button>
+    </div>
+    <div data-remark-rows class="stack-form">
+      <% (quoteNotes || []).forEach((note) => { %>
+        <div class="table-card nested-card" data-remark-row>
+          <input type="hidden" name="note_id[]" value="<%= note.id %>" />
+          <label><span>EN</span><input type="text" name="note_en[]" value="<%= note.en %>" /></label>
+          <label><span>中文</span><input type="text" name="note_zh[]" value="<%= note.zh %>" lang="zh" /></label>
+          <label><span>ES</span><input type="text" name="note_es[]" value="<%= note.es || '' %>" /></label>
+          <div class="actions"><button type="button" class="ghost-button compact-button danger-button" data-remark-remove><%= t("quote.removeRemark") %></button></div>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+
+  <div class="actions sticky-save-bar">
+    <button type="submit"><%= t("quote.adminSave") %></button>
+  </div>
+</form>
+
+<template id="remark-row-template">
+  <div class="table-card nested-card" data-remark-row>
+    <input type="hidden" name="note_id[]" value="" />
+    <label><span>EN</span><input type="text" name="note_en[]" value="" /></label>
+    <label><span>中文</span><input type="text" name="note_zh[]" value="" lang="zh" /></label>
+    <label><span>ES</span><input type="text" name="note_es[]" value="" /></label>
+    <div class="actions"><button type="button" class="ghost-button compact-button danger-button" data-remark-remove>✕</button></div>
+  </div>
+</template>
+
+<script>
+  (function () {
+    const rows = document.querySelector("[data-remark-rows]");
+    const addBtn = document.querySelector("[data-remark-add]");
+    const tpl = document.getElementById("remark-row-template");
+    if (addBtn && rows && tpl) {
+      addBtn.addEventListener("click", () => {
+        const node = tpl.content.cloneNode(true);
+        node.querySelector('input[name="note_id[]"]').value = "note-" + Date.now();
+        rows.appendChild(node);
+      });
+      rows.addEventListener("click", (event) => {
+        const btn = event.target.closest("[data-remark-remove]");
+        if (!btn) return;
+        const row = btn.closest("[data-remark-row]");
+        if (row) row.remove();
+      });
+    }
+  })();
+</script>
+
+<%- include("partials/footer") %>

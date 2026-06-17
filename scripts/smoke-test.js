@@ -1545,12 +1545,11 @@ async function main() {
     expectContains(response.text, "换单费", "quote concept zh present");
     expectContains(response.text, 'id="fee-codes"', "quote fee-code datalist");
 
+    // Q2: quote now has a real admin page (number format + remarks library).
     response = await request(baseUrl, "/admin/quote/settings", { jar: publicJar });
-    assert.equal(response.status, 302, "quote admin settings redirects");
-    assert.ok(
-      String(response.location || "").includes("/workbench/quote"),
-      "quote admin redirects to workbench"
-    );
+    assert.equal(response.status, 200, "quote admin settings page renders");
+    expectContains(response.text, 'name="quoteNumberPrefix"', "quote admin number prefix");
+    expectContains(response.text, 'name="note_en[]"', "quote admin remarks library");
 
     // Pull from calculators then recompute.
     response = await request(baseUrl, "/workbench/quote", {
