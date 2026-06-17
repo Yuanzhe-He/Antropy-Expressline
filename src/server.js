@@ -2562,8 +2562,45 @@ function createApp() {
     if (!dest || !point) {
       return res.status(404).render("not-found", baseView(req, { pageTitle: req.t("system.notFoundTitle"), languageReturnTo: req.originalUrl }));
     }
+    // B3 (QA): edit name / coords / flat price (was flatPrice-only). A pasted
+    // Maps link or new coords re-fetches the point's route.
+    if (req.body.name !== undefined && String(req.body.name).trim()) {
+      point.name = String(req.body.name).trim();
+    }
+    const prevLat = point.lat;
+    const prevLng = point.lng;
+    const link = String(req.body.link || "").trim();
+    if (link) {
+      const resolved = await resolveLink(link);
+      if (resolved.error) {
+        return redirectWithFlash(req, res, "error", req.t("inland.linkFailed", { error: resolved.error }), `${INLAND_ADMIN_TARGET}#dest-${dest.id}`);
+      }
+      point.lat = resolved.lat;
+      point.lng = resolved.lng;
+      point.source = /^https?:/i.test(link) ? "gmaps-link" : "manual";
+      point.link = /^https?:/i.test(link) ? link : point.link;
+    } else {
+      if (req.body.lat !== undefined && String(req.body.lat).trim() !== "") point.lat = Number(req.body.lat);
+      if (req.body.lng !== undefined && String(req.body.lng).trim() !== "") point.lng = Number(req.body.lng);
+    }
     const raw = req.body.flatPrice;
     point.flatPrice = raw !== undefined && String(raw).trim() !== "" ? Number(raw) : null;
+    // re-fetch this point's route when coordinates changed
+    const coordsChanged = point.lat !== prevLat || point.lng !== prevLng;
+    const origin = (inland.origins && inland.origins[0]) || null;
+    if (coordsChanged && origin && point.lat != null && point.lng != null) {
+      try {
+        await refreshOneInlandRoute(inland, origin, {
+          destinationId: dest.id,
+          targetType: "precisePoint",
+          targetId: point.id,
+          lat: point.lat,
+          lng: point.lng,
+        });
+      } catch (_error) {
+        // non-fatal; admin can refresh routes later
+      }
+    }
     shippingData.modules.inland = inland;
     await saveShippingData(shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.preciseSaved") || "OK", `${INLAND_ADMIN_TARGET}#dest-${dest.id}`);
@@ -4224,137 +4261,6 @@ function createApp() {
         res,
         "success",
         req.t("admin.ruleDeleted", { label: ruleSet.name }),
-        `/admin/${module.key}/shipping-lines/${updated.id}`
-      );
-    }
-  );
-
-  app.post(
-    "/admin/:moduleKey/shipping-lines/:id/demurrage/:groupKey/add",
-    requireAuth,
-    async (req, res) => {
-      const module = getBusinessModule(req.params.moduleKey);
-      if (!module || module.key === "customs") {
-        return res.status(404).render(
-          "not-found",
-          baseView(req, {
-            pageTitle: req.t("system.notFoundTitle"),
-            languageReturnTo: req.originalUrl,
-          })
-        );
-      }
-
-      const shippingData = await loadShippingData({ refreshRates: false });
-      const moduleData = getModuleData(shippingData, module.key);
-      const lineIndex = moduleData.shippingLines.findIndex(
-        (entry) => entry.id === req.params.id
-      );
-
-      if (lineIndex < 0) {
-        return res.status(404).render(
-          "not-found",
-          baseView(req, {
-            pageTitle: req.t("system.notFoundTitle"),
-            languageReturnTo: req.originalUrl,
-          })
-        );
-      }
-
-      const updated = structuredClone(moduleData.shippingLines[lineIndex]);
-      const group = (updated.containerGroups || []).find(
-        (entry) => entry.key === req.params.groupKey
-      );
-      if (!group) {
-        return res.status(404).render(
-          "not-found",
-          baseView(req, {
-            pageTitle: req.t("system.notFoundTitle"),
-            languageReturnTo: req.originalUrl,
-          })
-        );
-      }
-
-      const rules = updated.demurrage.rulesByGroup?.[group.key] || [];
-      appendProgressiveRule(rules, `${updated.id}-${group.key}`, group.label);
-      resequenceRules(rules);
-      updated.demurrage.rulesByGroup[group.key] = rules;
-      shippingData.modules[module.key].shippingLines[lineIndex] = updated;
-      await saveShippingData(shippingData);
-
-      return redirectWithFlash(
-        req,
-        res,
-        "success",
-        req.t("admin.ruleAdded", { label: group.label }),
-        `/admin/${module.key}/shipping-lines/${updated.id}`
-      );
-    }
-  );
-
-  app.post(
-    "/admin/:moduleKey/shipping-lines/:id/demurrage/:groupKey/:ruleId/delete",
-    requireAuth,
-    async (req, res) => {
-      const module = getBusinessModule(req.params.moduleKey);
-      if (!module || module.key === "customs") {
-        return res.status(404).render(
-          "not-found",
-          baseView(req, {
-            pageTitle: req.t("system.notFoundTitle"),
-            languageReturnTo: req.originalUrl,
-          })
-        );
-      }
-
-      const shippingData = await loadShippingData({ refreshRates: false });
-      const moduleData = getModuleData(shippingData, module.key);
-      const lineIndex = moduleData.shippingLines.findIndex(
-        (entry) => entry.id === req.params.id
-      );
-
-      if (lineIndex < 0) {
-        return res.status(404).render(
-          "not-found",
-          baseView(req, {
-            pageTitle: req.t("system.notFoundTitle"),
-            languageReturnTo: req.originalUrl,
-          })
-        );
-      }
-
-      const updated = structuredClone(moduleData.shippingLines[lineIndex]);
-      const group = (updated.containerGroups || []).find(
-        (entry) => entry.key === req.params.groupKey
-      );
-      if (!group) {
-        return res.status(404).render(
-          "not-found",
-          baseView(req, {
-            pageTitle: req.t("system.notFoundTitle"),
-            languageReturnTo: req.originalUrl,
-          })
-        );
-      }
-
-      const rules = updated.demurrage.rulesByGroup?.[group.key] || [];
-      if (!removeProgressiveRule(rules, req.params.ruleId)) {
-        return redirectWithFlash(
-          req,
-          res,
-          "error",
-          req.t("admin.cannotDeleteLastRule"),
-          `/admin/${module.key}/shipping-lines/${updated.id}`
-        );
-      }
-
-      resequenceRules(rules);
-      shippingData.modules[module.key].shippingLines[lineIndex] = updated;
-      await saveShippingData(shippingData);
-      return redirectWithFlash(
-        req,
-        res,
-        "success",
-        req.t("admin.ruleDeleted", { label: group.label }),
         `/admin/${module.key}/shipping-lines/${updated.id}`
       );
     }
