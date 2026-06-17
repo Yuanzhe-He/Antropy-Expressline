@@ -86,55 +86,8 @@
     </div>
   </section>
 
-  <!-- Pull from calculators -->
-  <section class="quote-card">
-    <h3><%= t("quote.pullSection") %></h3>
-    <p class="quote-hint"><%= t("quote.pullHint") %></p>
-    <div class="quote-grid">
-      <label class="quote-field"><span><%= t("quote.pullShippingLine") %></span>
-        <select name="pull_shippingLineId">
-          <option value="">—</option>
-          <% for (const line of selectorData.shippingLines) { %>
-            <option value="<%= line.id %>" <%= formData.pullInputs.shippingLineId === line.id ? "selected" : "" %>><%= line.name %></option>
-          <% } %>
-        </select></label>
-      <label class="quote-field"><span><%= t("quote.pullPortTerminal") %></span>
-        <select name="pull_portId" data-quote-port>
-          <option value="">—</option>
-          <% for (const port of selectorData.ports) { %>
-            <option value="<%= port.id %>" <%= formData.pullInputs.portId === port.id ? "selected" : "" %>><%= port.name %></option>
-          <% } %>
-        </select></label>
-      <label class="quote-field"><span>&nbsp;</span>
-        <select name="pull_terminalId" data-quote-terminal>
-          <option value="">—</option>
-        </select></label>
-      <label class="quote-field"><span><%= t("quote.pullDestination") %></span>
-        <select name="pull_destinationId">
-          <option value="">—</option>
-          <% for (const dest of selectorData.destinations) { %>
-            <option value="<%= dest.id %>" <%= formData.pullInputs.destinationId === dest.id ? "selected" : "" %>><%= dest.name %><%= dest.state ? ` · ${dest.state}` : "" %></option>
-          <% } %>
-        </select></label>
-      <label class="quote-field"><span><%= t("quote.pullContainerType") %></span>
-        <select name="pull_containerTypeKey">
-          <option value="">—</option>
-          <% for (const type of selectorData.containerTypes) { %>
-            <option value="<%= type.key %>" <%= formData.pullInputs.containerTypeKey === type.key ? "selected" : "" %>><%= type.label %></option>
-          <% } %>
-        </select></label>
-      <label class="quote-field"><span><%= t("quote.pullQuantity") %></span>
-        <input type="number" min="1" step="1" name="pull_quantity" value="<%= formData.pullInputs.quantity %>" /></label>
-      <label class="quote-field"><span><%= t("quote.pullDemurrageDays") %></span>
-        <input type="number" min="0" step="1" name="pull_demurrageDays" value="<%= formData.pullInputs.demurrageDays %>" /></label>
-      <label class="quote-field"><span><%= t("quote.pullStorageDays") %></span>
-        <input type="number" min="0" step="1" name="pull_storageDays" value="<%= formData.pullInputs.storageDays %>" /></label>
-    </div>
-    <div class="quote-actions" style="margin-top: 0.75rem;">
-      <button type="submit" name="action" value="pull" class="primary-button"><%= t("quote.pullAction") %></button>
-      <button type="submit" name="action" value="recompute" class="ghost-button"><%= t("quote.recompute") %></button>
-    </div>
-  </section>
+  <%# Q9 (20260617): "pull from calculators" removed — a quote is a price, not a
+      cost; it does not auto-pull from the handover/customs/inland calculators. %>
 
   <!-- Line items -->
   <section class="quote-card">

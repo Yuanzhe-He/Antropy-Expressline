@@ -17,7 +17,9 @@
   const selectorData = readJson("quote-selector-data", { ports: [], shippingLines: [], destinations: [], containerTypes: [] });
   const feeCodes = readJson("quote-fee-codes", []);
   const initial = readJson("quote-initial", {});
-  const feeByCode = new Map(feeCodes.map((fc) => [fc.code, fc.description]));
+  // Q8/Q10: fee codes carry en/zh/es names; keep the whole row so the concept can
+  // be filled per language when the code changes.
+  const feeByCode = new Map(feeCodes.map((fc) => [fc.code, fc]));
 
   const CATEGORIES = ["SHIPPING LINE", "PORT FEES", "CUSTOMS CLEARANCE", "TRANSPORTATION", "DUTY"];
 
@@ -107,15 +109,18 @@
     });
   }
 
+  // Q10: when the code changes, ALWAYS set the concept from the fee dictionary
+  // (EN + ZH), not only when empty. ZH falls back to EN when no translation yet.
   function wireCodeAutofill(row) {
     const els = rowEls(row);
     if (!els.code) return;
     els.code.addEventListener("change", () => {
-      const desc = feeByCode.get(els.code.value.trim());
-      if (desc) {
-        const en = row.querySelector('input[name="li_conceptEn[]"]');
-        if (en && !en.value.trim()) en.value = desc;
-      }
+      const fee = feeByCode.get(els.code.value.trim());
+      if (!fee) return;
+      const en = row.querySelector('input[name="li_conceptEn[]"]');
+      const zh = row.querySelector('input[name="li_conceptZh[]"]');
+      if (en) en.value = fee.en || fee.description || "";
+      if (zh) zh.value = fee.zh || fee.en || fee.description || "";
     });
   }
 
