@@ -1656,10 +1656,19 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
   const libraryIds = (quoteModule.notes || []).map((n) => n.id);
   const postedNoteIds = ensureArray(body.note_sel).map(String);
   const language = pickFromOptions(body.quoteLang, ["EN", "ZH", "ES"], "");
+  const header = parseQuoteHeader(body);
+  // S5: pre-fill a fresh quote's header from the admin default preset.
+  if (!hasPostedRows) {
+    const hd = quoteModule.settings?.headerDefaults || {};
+    if (hd.department) header.department = hd.department;
+    if (hd.transportMode) header.transportMode = hd.transportMode;
+    if (hd.incoterm) header.incoterm = hd.incoterm;
+    if (hd.cargoType) header.cargoType = hd.cargoType;
+  }
   return {
     number,
     date: (body.date || "").trim() || options.date || today,
-    header: parseQuoteHeader(body),
+    header,
     lineItems,
     noteIds: hasPostedRows ? postedNoteIds : libraryIds,
     language, // Q7: "" = bilingual EN+中 (legacy); EN/ZH/ES = single language
@@ -2672,6 +2681,12 @@ function createApp() {
           selectedModule: moduleMeta,
           quoteSettings: quote.settings,
           quoteNotes: quote.notes || [],
+          headerOptions: {
+            department: QUOTE_DEPARTMENT_OPTIONS,
+            transportMode: QUOTE_TRANSPORT_MODE_OPTIONS,
+            incoterm: QUOTE_INCOTERM_OPTIONS,
+            cargoType: QUOTE_CARGO_TYPE_OPTIONS,
+          },
           languageReturnTo: req.originalUrl,
         })
       );
@@ -2706,6 +2721,13 @@ function createApp() {
       if (typeof b.quoteNumberSuffix === "string") quote.settings.quoteNumberSuffix = b.quoteNumberSuffix.trim();
       if (b.quoteNumberPad !== undefined) quote.settings.quoteNumberPad = Math.max(1, Math.min(8, parseWholeNumber(b.quoteNumberPad, 3) || 3));
       if (b.lastQuoteSeq !== undefined) quote.settings.lastQuoteSeq = Math.max(0, parseWholeNumber(b.lastQuoteSeq, 0));
+      // S5: default header preset (validated against the option sets; empty clears).
+      quote.settings.headerDefaults = {
+        department: pickFromOptions(b.hd_department, QUOTE_DEPARTMENT_OPTIONS, ""),
+        transportMode: pickFromOptions(b.hd_transportMode, QUOTE_TRANSPORT_MODE_OPTIONS, ""),
+        incoterm: pickFromOptions(b.hd_incoterm, QUOTE_INCOTERM_OPTIONS, ""),
+        cargoType: pickFromOptions(b.hd_cargoType, QUOTE_CARGO_TYPE_OPTIONS, ""),
+      };
       const ids = ensureArray(b.note_id);
       const ens = ensureArray(b.note_en);
       const zhs = ensureArray(b.note_zh);
