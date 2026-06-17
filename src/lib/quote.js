@@ -240,6 +240,32 @@ function formatMoney(value) {
 
 // --- Fee-code controlled vocabulary (docs/reference/fee-codes.csv) -----------
 let feeCodesCache = null;
+// Q8 (20260617): fee codes carry en + optional zh/es names. The base file
+// (fee-codes.csv: code,en) stays the 345-row source of truth; ZH/ES translations
+// live in an optional merge file (fee-code-i18n.csv: code,zh,es) so they can be
+// filled/reviewed incrementally without rewriting the base. Missing zh/es fall
+// back to en. `description` is kept = en for back-compat.
+function loadFeeCodeI18n() {
+  const out = new Map();
+  const i18nPath = path.join(__dirname, "../../docs/reference/fee-code-i18n.csv");
+  try {
+    const raw = fs.readFileSync(i18nPath, "utf8");
+    const lines = raw.split(/\r?\n/).filter((line) => line.trim().length);
+    for (let i = 1; i < lines.length; i += 1) {
+      const parts = lines[i].split(",");
+      const code = (parts[0] || "").trim();
+      if (!code) continue;
+      out.set(code, {
+        zh: (parts[1] || "").trim(),
+        es: (parts[2] || "").trim(),
+      });
+    }
+  } catch (_error) {
+    // optional file
+  }
+  return out;
+}
+
 function loadFeeCodes() {
   if (feeCodesCache) {
     return feeCodesCache;
@@ -248,6 +274,7 @@ function loadFeeCodes() {
   try {
     const raw = fs.readFileSync(csvPath, "utf8");
     const lines = raw.split(/\r?\n/).filter((line) => line.trim().length);
+    const i18n = loadFeeCodeI18n();
     const rows = [];
     for (let i = 1; i < lines.length; i += 1) {
       const line = lines[i];
@@ -256,9 +283,16 @@ function loadFeeCodes() {
         continue;
       }
       const code = line.slice(0, comma).trim();
-      const description = line.slice(comma + 1).trim();
+      const en = line.slice(comma + 1).trim();
       if (code) {
-        rows.push({ code, description });
+        const tr = i18n.get(code) || {};
+        rows.push({
+          code,
+          en,
+          zh: tr.zh || "",
+          es: tr.es || "",
+          description: en, // back-compat
+        });
       }
     }
     feeCodesCache = rows;
@@ -266,6 +300,14 @@ function loadFeeCodes() {
     feeCodesCache = [];
   }
   return feeCodesCache;
+}
+
+// Resolve a fee code's concept name for a language (zh/es fall back to en).
+function feeConceptForLang(feeRow, lang) {
+  if (!feeRow) return "";
+  if (lang === "zh") return feeRow.zh || feeRow.en || "";
+  if (lang === "es") return feeRow.es || feeRow.en || "";
+  return feeRow.en || "";
 }
 
 // --- Quote number ------------------------------------------------------------
@@ -614,6 +656,7 @@ module.exports = {
   roundMoney,
   formatMoney,
   loadFeeCodes,
+  feeConceptForLang,
   generateQuoteNumber,
   buildInitialLineItems,
   computeQuoteTotals,

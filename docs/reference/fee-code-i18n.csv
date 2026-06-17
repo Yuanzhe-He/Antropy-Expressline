@@ -1,0 +1,52 @@
+code,zh,es
+ADD-ON,国际运费,Flete internacional
+FRT,国际运费,Flete internacional
+BAF,燃油附加费 (BAF),Recargo por combustible (BAF)
+FSC,燃油附加费,Recargo de combustible
+DFSC,提送燃油附加费,Recargo de combustible (entrega)
+LSS,低硫附加费,Recargo por bajo azufre (LSS)
+AGS,亚丁湾附加费,Recargo Golfo de Adén
+CCLR,进口清关,Despacho de importación
+CCLR-VAT,进口清关（含税）,Despacho de importación (IVA)
+MCCLR,进口清关,Despacho de importación
+ECCLR,出口清关,Despacho de exportación
+ECCLR-VAT,出口清关（含税）,Despacho de exportación (IVA)
+CCINS,清关预查验费,Pre-inspección de aduana
+D/O FEE,换单费,Cargo de orden de entrega
+MDJO FEE,换单费,Orden de entrega
+DCART,提送/短驳费,Acarreo / entrega
+DCART-VAT,提送/短驳费（含税）,Acarreo / entrega (IVA)
+MDCART,提送/短驳费,Acarreo / entrega
+DCDEM,目的港滞期费,Demoras en destino
+DCDET-I,集装箱滞箱费（进场）,Detención de contenedor (entrada)
+DCDET-O,集装箱滞箱费（出场）,Detención de contenedor (salida)
+DCFS,拼箱站费,Estación de carga de contenedores (CFS)
+DCTRF,目的港海关转运费,Transferencia aduanal en destino
+DDC,目的港交付费,Cargo de entrega en destino
+DDF,目的港文件费,Cargo de documentación en destino
+DDF-VAT,目的港文件费（含税）,Cargo de documentación (IVA)
+DTHC,目的港码头操作费,Cargo de manejo en terminal destino (THC)
+DTHC-VAT,目的港码头操作费（含税）,THC en destino (IVA)
+DHDL,目的港操作费,Cargo de manejo en destino
+DHDL-VAT,目的港操作费（含税）,Cargo de manejo en destino (IVA)
+DEXAM,目的港海关查验费,Cargos de inspección aduanal en destino
+DEXDR,查验短驳费,Acarreo por inspección
+DPHF,预查验操作费,Cargo de manejo de pre-inspección
+DPNLT,目的港海关罚款,Multa aduanal en destino
+DSTR,目的港堆场堆存费,Almacenaje en patio destino
+DSTOR,目的港铁路堆存费,Almacenaje ferroviario en destino
+DSTOR-VAT,目的港铁路堆存费（含税）,Almacenaje ferroviario (IVA)
+DRDET,目的港铁路滞期费,Detención ferroviaria en destino
+DFRT,亏舱费,Flete muerto
+DIVERSION,运费改港,Redireccionamiento de flete
+INSUR,货物保险,Seguro de carga
+ISF,ISF 申报,Presentación ISF
+AMS,AMS 申报,Presentación AMS
+ACI,提前商业信息申报,Información comercial anticipada (ACI)
+ENS,ENS 申报,Declaración ENS
+LBHDL,锂电池操作费,Cargo de manejo de baterías de litio
+BKF,银行手续费,Cargo bancario
+BKG,订舱费,Reserva (booking)
+ATLAS,ATLAS 系统费,Cargo ATLAS
+APSF,机场服务费,Cargo de servicio aeroportuario
+AIRTRF,机场转运费,Transferencia aeroportuaria
