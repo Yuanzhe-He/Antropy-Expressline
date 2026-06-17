@@ -60,7 +60,11 @@ const {
   QUOTE_TRANSPORT_MODE_OPTIONS,
   QUOTE_CARGO_TYPE_OPTIONS,
   QUOTE_UOM_OPTIONS,
+  QUOTE_GROUP_ORDER,
+  QUOTE_MODES,
+  normalizeQuoteMode,
   buildInitialLineItems,
+  reconcileLineItemsForMode,
   computeQuoteTotals,
   groupRowsForRender,
   groupRowsBySection,
@@ -1622,6 +1626,7 @@ function assembleQuoteView(quoteModule, formData, shippingData) {
     number: formData.number,
     date: formData.date,
     header: formData.header,
+    quoteMode: formData.quoteMode,
     rows: totals.rows,
     groups: groupRowsForRender(totals.rows),
     sections: groupRowsBySection(totals.rows),
@@ -1647,7 +1652,17 @@ function selectQuoteNotes(library = [], selectedIds) {
 
 function buildQuoteFormData(quoteModule, body = {}, options = {}) {
   const hasPostedRows = ensureArray(body.li_id).length > 0;
-  const lineItems = hasPostedRows ? parseQuoteLineItems(body) : buildInitialLineItems();
+  // Quote mode (round11): posted value wins; a fresh quote falls back to the
+  // admin default preset, then mexico_only (legacy behavior / back-compat).
+  const quoteMode = normalizeQuoteMode(
+    body.quoteMode || quoteModule.settings?.headerDefaults?.quoteMode || "mexico_only"
+  );
+  // Fresh quote -> seed rows for the mode. Posted quote -> keep the operator's
+  // rows but reconcile against the (possibly just-changed) mode: mexico_only
+  // drops foreign rows; ocean_mexico injects the foreign block when missing.
+  const lineItems = hasPostedRows
+    ? reconcileLineItemsForMode(parseQuoteLineItems(body), quoteMode)
+    : buildInitialLineItems(quoteMode);
   const number =
     (body.quotationNumber || "").trim() || generateQuoteNumber(quoteModule.settings).number;
   const today = new Date().toISOString().slice(0, 10);
@@ -1669,6 +1684,7 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
     number,
     date: (body.date || "").trim() || options.date || today,
     header,
+    quoteMode,
     lineItems,
     noteIds: hasPostedRows ? postedNoteIds : libraryIds,
     language, // Q7: "" = bilingual EN+中 (legacy); EN/ZH/ES = single language
@@ -1698,6 +1714,8 @@ function renderQuoteWorkbench(req, res, payload) {
         incoterm: QUOTE_INCOTERM_OPTIONS,
         cargoType: QUOTE_CARGO_TYPE_OPTIONS,
       },
+      categoryOptions: QUOTE_GROUP_ORDER,
+      quoteModes: QUOTE_MODES,
       uomOptions: QUOTE_UOM_OPTIONS,
       languageReturnTo: `/workbench/${payload.moduleKey}`,
     })
@@ -2084,6 +2102,7 @@ function createApp() {
           number: formData.number,
           date: formData.date,
           header: formData.header,
+          quoteMode: formData.quoteMode,
           lineItems: formData.lineItems,
           // S2/Q7: persist the ordered remark selection + output language.
           noteIds: formData.noteIds,
@@ -2778,6 +2797,8 @@ function createApp() {
         transportMode: pickFromOptions(b.hd_transportMode, QUOTE_TRANSPORT_MODE_OPTIONS, ""),
         incoterm: pickFromOptions(b.hd_incoterm, QUOTE_INCOTERM_OPTIONS, ""),
         cargoType: pickFromOptions(b.hd_cargoType, QUOTE_CARGO_TYPE_OPTIONS, ""),
+        // S5: default quote mode for fresh quotes (mexico_only | ocean_mexico).
+        quoteMode: normalizeQuoteMode(b.hd_quoteMode),
       };
       const ids = ensureArray(b.note_id);
       const ens = ensureArray(b.note_en);

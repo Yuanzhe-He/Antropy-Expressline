@@ -1576,6 +1576,78 @@ async function main() {
       "S5: fresh quote pre-fills default cargoType BBK"
     );
 
+    // round11 quote modes: default = mexico_only -> fresh quote shows the mode
+    // selector and has NO NO-MEXICO (foreign) rows.
+    expectContains(response.text, "data-quote-mode", "quote mode selector present");
+    assert.ok(
+      !response.text.includes("海运费"),
+      "mode mexico_only: fresh quote has no NO MEXICO ocean rows"
+    );
+
+    // Mode two (ocean_mexico): recompute injects the NO MEXICO block (ocean +
+    // origin) in front of the posted MEXICO row.
+    response = await request(baseUrl, "/workbench/quote", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: [
+        ["action", "recompute"],
+        ["quoteMode", "ocean_mexico"],
+        ["operation", "IMPORT"],
+        ["department", "OCEAN"],
+        ["li_id[]", "li-1"],
+        ["li_section[]", "mexico"],
+        ["li_category[]", "SHIPPING LINE"],
+        ["li_conceptEn[]", "DESTINATION HANDLING FEE"],
+        ["li_conceptZh[]", "换单服务费"],
+        ["li_unit[]", "1"],
+        ["li_unitPrice[]", "1000"],
+        ["li_currency[]", "MXN"],
+        ["li_atCost[]", "0"],
+        ["li_source[]", "manual"],
+      ],
+    });
+    assert.equal(response.status, 200, "quote ocean_mexico recompute ok");
+    expectContains(response.text, "海运费", "mode ocean_mexico: ocean freight row injected");
+    expectContains(response.text, "OCEAN FREIGHT", "mode ocean_mexico: OCEAN FREIGHT category present");
+    expectContains(response.text, "电放费", "mode ocean_mexico: origin telex-release row injected");
+
+    // Switching back to mexico_only drops foreign rows even when they are posted,
+    // and keeps the MEXICO rows.
+    response = await request(baseUrl, "/workbench/quote", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: [
+        ["action", "recompute"],
+        ["quoteMode", "mexico_only"],
+        ["li_id[]", "li-fgn-1"],
+        ["li_section[]", "foreign"],
+        ["li_category[]", "OCEAN FREIGHT"],
+        ["li_conceptEn[]", "OCEAN FREIGHT"],
+        ["li_conceptZh[]", "海运费"],
+        ["li_unit[]", "1"],
+        ["li_unitPrice[]", "2700"],
+        ["li_currency[]", "USD"],
+        ["li_atCost[]", "0"],
+        ["li_source[]", "manual"],
+        ["li_id[]", "li-1"],
+        ["li_section[]", "mexico"],
+        ["li_category[]", "SHIPPING LINE"],
+        ["li_conceptEn[]", "DESTINATION HANDLING FEE"],
+        ["li_conceptZh[]", "换单服务费"],
+        ["li_unit[]", "1"],
+        ["li_unitPrice[]", "1000"],
+        ["li_currency[]", "MXN"],
+        ["li_atCost[]", "0"],
+        ["li_source[]", "manual"],
+      ],
+    });
+    assert.equal(response.status, 200, "quote mexico_only recompute ok");
+    assert.ok(
+      !response.text.includes("海运费"),
+      "mode mexico_only: foreign rows dropped on switch-down"
+    );
+    expectContains(response.text, "换单服务费", "mode mexico_only: mexico rows kept on switch-down");
+
     // Pull from calculators then recompute.
     response = await request(baseUrl, "/workbench/quote", {
       method: "POST",
@@ -1640,6 +1712,45 @@ async function main() {
     });
     assert.equal(response.status, 200, "quote pdf endpoint ok");
     assert.ok(response.text.startsWith("%PDF"), "quote pdf body starts with %PDF");
+
+    // round11: mode-two (ocean_mexico) PDF — two posted rows (NO MEXICO ocean +
+    // MEXICO local) render to a valid PDF.
+    response = await request(baseUrl, "/workbench/quote/pdf", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: [
+        ["quotationNumber", "ELCMEX-SI-010E"],
+        ["quoteMode", "ocean_mexico"],
+        ["operation", "IMPORT"],
+        ["department", "OCEAN"],
+        ["incoterm", "CIF"],
+        ["pol", "CHINA"],
+        ["pod", "MANZANILLO"],
+        ["li_id[]", "li-fgn-1"],
+        ["li_section[]", "foreign"],
+        ["li_category[]", "OCEAN FREIGHT"],
+        ["li_conceptEn[]", "OCEAN FREIGHT"],
+        ["li_conceptZh[]", "海运费"],
+        ["li_conceptEs[]", "Flete marítimo"],
+        ["li_unit[]", "1"],
+        ["li_unitPrice[]", "2700"],
+        ["li_currency[]", "USD"],
+        ["li_atCost[]", "0"],
+        ["li_source[]", "manual"],
+        ["li_id[]", "li-1"],
+        ["li_section[]", "mexico"],
+        ["li_category[]", "SHIPPING LINE"],
+        ["li_conceptEn[]", "DESTINATION HANDLING FEE"],
+        ["li_conceptZh[]", "换单服务费"],
+        ["li_unit[]", "1"],
+        ["li_unitPrice[]", "1000"],
+        ["li_currency[]", "MXN"],
+        ["li_atCost[]", "0"],
+        ["li_source[]", "manual"],
+      ],
+    });
+    assert.equal(response.status, 200, "quote ocean_mexico pdf endpoint ok");
+    assert.ok(response.text.startsWith("%PDF"), "quote ocean_mexico pdf body starts with %PDF");
 
     // O1: defensive GET on customs entity URLs redirects (no 404).
     response = await request(baseUrl, "/admin/customs/terminals/any-terminal-id", {

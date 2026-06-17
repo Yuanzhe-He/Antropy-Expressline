@@ -3,10 +3,24 @@ const path = require("node:path");
 const { effectiveRoute } = require("./inland-routes");
 
 // Bump to (re)seed modules.quote.templateRows / notes from the constants below.
-const QUOTE_TEMPLATE_VERSION = 1;
+// v2 (20260617): added the NO MEXICO (foreign) preset rows + the two foreign
+// categories (OCEAN FREIGHT / PORT OF ORIGIN).
+const QUOTE_TEMPLATE_VERSION = 2;
 
-// Fixed group order for the MEXICO LOCAL CHARGES table (spec §3 / report §C).
+// Quote modes (round11 / README "3 种报价模式"): mexico_only = only the MEXICO
+// LOCAL section; ocean_mexico = the NO MEXICO (ocean + origin) section PLUS the
+// MEXICO LOCAL section. Back-compat default is mexico_only (= legacy behavior).
+const QUOTE_MODES = Object.freeze(["mexico_only", "ocean_mexico"]);
+function normalizeQuoteMode(value) {
+  return QUOTE_MODES.includes(value) ? value : "mexico_only";
+}
+
+// Fixed group order across BOTH sections (spec §3 / report §C). The two foreign
+// categories come first because the NO MEXICO leg (ocean + China origin) is the
+// head of the journey and reads before the MEXICO LOCAL charges.
 const QUOTE_GROUP_ORDER = Object.freeze([
+  "OCEAN FREIGHT",
+  "PORT OF ORIGIN",
   "SHIPPING LINE",
   "PORT FEES",
   "CUSTOMS CLEARANCE",
@@ -14,10 +28,214 @@ const QUOTE_GROUP_ORDER = Object.freeze([
   "DUTY",
 ]);
 
-// The 11 default rows mirror docs/reference/quote-template-spec.md §3.
+// Pending-FX remark for the China-origin port charges: Jose's template lists
+// them in CNY; round11 (Chandler) decided to preset them in USD but flag that the
+// final USD value / FX still needs Jose's confirmation. Kept bilingual EN + 中.
+const ORIGIN_PENDING_FX_REMARK =
+  "Origin charge; USD value pending Jose's FX/final-USD confirmation. 原起运港人民币价，USD 等价待 José 确认汇率。";
+
+// The MEXICO LOCAL rows mirror docs/reference/quote-template-spec.md §3; the NO
+// MEXICO (foreign) rows below them mirror Jose's ocean + China-origin template
+// (round11 / README "非墨西哥段预设内容"). Foreign rows come first so the head
+// leg renders before the local charges.
 // source: calc -> pulled from a calculator (calcRef points at it); manual ->
 // editable default; atcost -> shown as "AT COST", never priced.
 const QUOTE_TEMPLATE_ROWS = Object.freeze([
+  // --- NO MEXICO: OCEAN FREIGHT (Jose's USD prices) -------------------------
+  {
+    category: "OCEAN FREIGHT",
+    code: "FRT",
+    conceptEn: "OCEAN FREIGHT",
+    conceptZh: "海运费",
+    conceptEs: "Flete marítimo",
+    section: "foreign",
+    unitOfMeasure: "container",
+    unit: 1,
+    unitPrice: 2700,
+    currency: "USD",
+    remark: "Per container",
+    isAtCost: false,
+    source: "manual",
+    calcRef: null,
+  },
+  {
+    category: "OCEAN FREIGHT",
+    code: "AMS",
+    conceptEn: "AMS FILING",
+    conceptZh: "AMS 申报",
+    conceptEs: "Presentación AMS",
+    section: "foreign",
+    unitOfMeasure: "bl",
+    unit: 1,
+    unitPrice: 30,
+    currency: "USD",
+    remark: "Per BL",
+    isAtCost: false,
+    source: "manual",
+    calcRef: null,
+  },
+  // --- NO MEXICO: PORT OF ORIGIN (was CNY -> USD, FX pending Jose) -----------
+  {
+    category: "PORT OF ORIGIN",
+    code: "BKG",
+    conceptEn: "BOOKING FEE",
+    conceptZh: "订舱费",
+    conceptEs: "Cargo de reserva (booking)",
+    section: "foreign",
+    unitOfMeasure: "bl",
+    unit: 1,
+    unitPrice: 400,
+    currency: "USD",
+    remark: ORIGIN_PENDING_FX_REMARK,
+    isAtCost: false,
+    source: "manual",
+    calcRef: null,
+  },
+  {
+    category: "PORT OF ORIGIN",
+    code: "OTHC",
+    conceptEn: "ORIGIN TERMINAL HANDLING (THC)",
+    conceptZh: "起运港码头操作费 (THC)",
+    conceptEs: "Manejo en terminal de origen (THC)",
+    section: "foreign",
+    unitOfMeasure: "container",
+    unit: 1,
+    unitPrice: 1020,
+    currency: "USD",
+    remark: ORIGIN_PENDING_FX_REMARK,
+    isAtCost: false,
+    source: "manual",
+    calcRef: null,
+  },
+  {
+    category: "PORT OF ORIGIN",
+    code: "",
+    conceptEn: "EQUIPMENT INTERCHANGE RECEIPT (EIR)",
+    conceptZh: "设备交接单费 (EIR)",
+    conceptEs: "Recibo de intercambio de equipo (EIR)",
+    section: "foreign",
+    unitOfMeasure: "container",
+    unit: 1,
+    unitPrice: 30,
+    currency: "USD",
+    remark: `${ORIGIN_PENDING_FX_REMARK} (译名待审 / translation pending review)`,
+    isAtCost: false,
+    source: "manual",
+    calcRef: null,
+  },
+  {
+    category: "PORT OF ORIGIN",
+    code: "ODOC",
+    conceptEn: "ORIGIN DOCUMENTATION FEE",
+    conceptZh: "起运港文件费",
+    conceptEs: "Documentación en origen",
+    section: "foreign",
+    unitOfMeasure: "bl",
+    unit: 1,
+    unitPrice: 450,
+    currency: "USD",
+    remark: ORIGIN_PENDING_FX_REMARK,
+    isAtCost: false,
+    source: "manual",
+    calcRef: null,
+  },
+  {
+    category: "PORT OF ORIGIN",
+    code: "OSECU",
+    conceptEn: "ORIGIN SECURITY",
+    conceptZh: "起运港安保费",
+    conceptEs: "Seguridad en origen",
+    section: "foreign",
+    unitOfMeasure: "container",
+    unit: 1,
+    unitPrice: 30,
+    currency: "USD",
+    remark: ORIGIN_PENDING_FX_REMARK,
+    isAtCost: false,
+    source: "manual",
+    calcRef: null,
+  },
+  {
+    category: "PORT OF ORIGIN",
+    code: "SEAL",
+    conceptEn: "SEAL FEE",
+    conceptZh: "铅封费",
+    conceptEs: "Cargo de sello (precinto)",
+    section: "foreign",
+    unitOfMeasure: "container",
+    unit: 1,
+    unitPrice: 50,
+    currency: "USD",
+    remark: ORIGIN_PENDING_FX_REMARK,
+    isAtCost: false,
+    source: "manual",
+    calcRef: null,
+  },
+  {
+    category: "PORT OF ORIGIN",
+    code: "VGM",
+    conceptEn: "VGM FEE",
+    conceptZh: "VGM 称重申报费",
+    conceptEs: "Cargo VGM",
+    section: "foreign",
+    unitOfMeasure: "container",
+    unit: 1,
+    unitPrice: 50,
+    currency: "USD",
+    remark: ORIGIN_PENDING_FX_REMARK,
+    isAtCost: false,
+    source: "manual",
+    calcRef: null,
+  },
+  {
+    category: "PORT OF ORIGIN",
+    code: "MANI",
+    conceptEn: "MANIFEST FEE",
+    conceptZh: "舱单费",
+    conceptEs: "Cargo de manifiesto",
+    section: "foreign",
+    unitOfMeasure: "bl",
+    unit: 1,
+    unitPrice: 100,
+    currency: "USD",
+    remark: ORIGIN_PENDING_FX_REMARK,
+    isAtCost: false,
+    source: "manual",
+    calcRef: null,
+  },
+  {
+    category: "PORT OF ORIGIN",
+    code: "ECCLR",
+    conceptEn: "EXPORT CUSTOMS CLEARANCE",
+    conceptZh: "出口报关费",
+    conceptEs: "Despacho de exportación",
+    section: "foreign",
+    unitOfMeasure: "bl",
+    unit: 1,
+    unitPrice: 100,
+    currency: "USD",
+    remark: ORIGIN_PENDING_FX_REMARK,
+    isAtCost: false,
+    source: "manual",
+    calcRef: null,
+  },
+  {
+    category: "PORT OF ORIGIN",
+    code: "TLX",
+    conceptEn: "TELEX RELEASE",
+    conceptZh: "电放费",
+    conceptEs: "Liberación telex (BL)",
+    section: "foreign",
+    unitOfMeasure: "bl",
+    unit: 1,
+    unitPrice: 450,
+    currency: "USD",
+    remark: ORIGIN_PENDING_FX_REMARK,
+    isAtCost: false,
+    source: "manual",
+    calcRef: null,
+  },
+  // --- MEXICO LOCAL CHARGES (Jose's 11 rows, unchanged) ---------------------
   {
     category: "SHIPPING LINE",
     code: "D/O FEE",
@@ -329,12 +547,47 @@ function generateQuoteNumber(settings = {}) {
 }
 
 // Seed a fresh set of editable line items (new ids) from the template rows.
-function buildInitialLineItems() {
-  return QUOTE_TEMPLATE_ROWS.map((row, index) => ({
+// mexico_only drops the NO MEXICO (foreign) rows so a fresh quote = legacy 11
+// rows; ocean_mexico keeps both sections (foreign first).
+function buildInitialLineItems(quoteMode = "mexico_only") {
+  const mode = normalizeQuoteMode(quoteMode);
+  const rows =
+    mode === "ocean_mexico"
+      ? QUOTE_TEMPLATE_ROWS
+      : QUOTE_TEMPLATE_ROWS.filter((row) => row.section !== "foreign");
+  return rows.map((row, index) => ({
     ...row,
     calcRef: row.calcRef ? { ...row.calcRef } : null,
     id: `li-${index + 1}`,
   }));
+}
+
+// Fresh copies (new ids) of just the NO MEXICO (foreign) preset rows.
+function buildForeignLineItems() {
+  return QUOTE_TEMPLATE_ROWS.filter((row) => row.section === "foreign").map(
+    (row, index) => ({
+      ...row,
+      calcRef: row.calcRef ? { ...row.calcRef } : null,
+      id: `li-fgn-${index + 1}`,
+    })
+  );
+}
+
+// Make an existing set of line items consistent with the selected mode:
+// - mexico_only: drop every foreign row.
+// - ocean_mexico: ensure the foreign block exists; when it is entirely missing
+//   (e.g. switching up from mexico_only, or an old draft), prepend a fresh copy.
+//   Idempotent: a recompute that already has foreign rows is left untouched so
+//   operator edits to those rows survive.
+function reconcileLineItemsForMode(lineItems = [], quoteMode = "mexico_only") {
+  const mode = normalizeQuoteMode(quoteMode);
+  if (mode === "mexico_only") {
+    return lineItems.filter((row) => row.section !== "foreign");
+  }
+  if (lineItems.some((row) => row.section === "foreign")) {
+    return lineItems;
+  }
+  return [...buildForeignLineItems(), ...lineItems];
 }
 
 // --- Currency conversion (indicative only) -----------------------------------
@@ -663,6 +916,8 @@ module.exports = {
   QUOTE_TEMPLATE_VERSION,
   QUOTE_GROUP_ORDER,
   QUOTE_TEMPLATE_ROWS,
+  QUOTE_MODES,
+  normalizeQuoteMode,
   QUOTE_NOTES,
   DEFAULT_QUOTE_HEADER,
   QUOTE_DEPARTMENT_OPTIONS,
@@ -678,6 +933,8 @@ module.exports = {
   feeConceptForLang,
   generateQuoteNumber,
   buildInitialLineItems,
+  buildForeignLineItems,
+  reconcileLineItemsForMode,
   computeQuoteTotals,
   pullCalculatorValues,
   groupRowsForRender,

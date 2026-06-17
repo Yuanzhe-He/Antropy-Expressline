@@ -21,7 +21,17 @@
   // be filled per language when the code changes.
   const feeByCode = new Map(feeCodes.map((fc) => [fc.code, fc]));
 
-  const CATEGORIES = ["SHIPPING LINE", "PORT FEES", "CUSTOMS CLEARANCE", "TRANSPORTATION", "DUTY"];
+  const CATEGORIES = readJson("quote-category-options", [
+    "OCEAN FREIGHT", "PORT OF ORIGIN", "SHIPPING LINE", "PORT FEES", "CUSTOMS CLEARANCE", "TRANSPORTATION", "DUTY",
+  ]);
+
+  // round11: switching the quote mode re-submits the form so the server seeds /
+  // reconciles the NO MEXICO section rows (single source of truth = the server
+  // template). action defaults to "recompute" since no submit button is clicked.
+  const modeSelect = form.querySelector("[data-quote-mode]");
+  if (modeSelect) {
+    modeSelect.addEventListener("change", () => form.submit());
+  }
 
   function fmtMoney(value) {
     return Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -148,7 +158,11 @@
   function buildRow() {
     const tr = document.createElement("tr");
     tr.setAttribute("data-quote-row", "");
-    const catOptions = CATEGORIES.map((c) => `<option value="${c}">${c}</option>`).join("");
+    // New manual rows default to section=mexico, so default the category to a
+    // MEXICO one (SHIPPING LINE) rather than the first (foreign) category.
+    const catOptions = CATEGORIES.map(
+      (c) => `<option value="${c}"${c === "SHIPPING LINE" ? " selected" : ""}>${c}</option>`
+    ).join("");
     const uomOpts =
       '<option value=""></option>' +
       uomOptions.map((u) => `<option value="${u.value}">${u.label}</option>`).join("");

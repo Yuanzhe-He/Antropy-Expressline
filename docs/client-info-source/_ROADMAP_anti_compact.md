@@ -48,6 +48,12 @@
   - B2 customs码头fixedCharges加add/delete路由+按钮(实测1→2→1)。
   - B3 精确点save扩name/coords/link(改坐标重抓路线)。B4 删死路由demurrage/:groupKey。
   - 回归:smoke(+B1/B2新guard)+quote9/9+o3+batch3全绿。
+- 报价模式批（quote-modes）：✅ **代码完成,分支 feature/quote-modes,待PR/合并部署**（2026-06-17 第N+11轮）。
+  - 块1 非墨段(NO MEXICO)预设：QUOTE_TEMPLATE_ROWS 加 12 行 foreign(section="foreign")=海运段2项(海运费2700/AMS30 USD)+起运港10项(订舱400/THC1020/EIR30/文件450/安保30/封50/VGM50/舱单100/报关100/电放450,全USD,起运港行remarks标注"待José确认汇率/USD")；QUOTE_GROUP_ORDER 加 OCEAN FREIGHT/PORT OF ORIGIN(排墨西哥段前);三语 conceptEn/Zh/Es 全列;费用代码复用字典(FRT/AMS/BKG/OTHC/ODOC/OSECU/SEAL/VGM/MANI/ECCLR/TLX,EIR无码留空+译名待审)。
+  - 块2 报价模式开关：quoteMode 字段("mexico_only"|"ocean_mexico")=draft+normalizer+headerDefaults(S5默认);workbench顶部模式选择器(change自动submit重载);reconcileLineItemsForMode(模式一删foreign/模式二缺则前置foreign块,幂等);PDF按sections渲染(模式一无foreign行→自动不显示NO MEXICO段)。
+  - 数据兼容:老draft无quoteMode→mexico_only(=现有行为);老报价无foreign行→只渲染mexico段;墨西哥段11项数字未改。
+  - 回归:quote-test 9/9 + smoke(加mode×currency断言)+deep HTML render 30/30(4组合×三语,USD含16%VAT/MXN不含税沿用)全绿。
+  - 待José:起运港USD最终价/汇率;EIR译名审。
 - 全部 spec-first、PR-only、边修边合并、深度report
 
 ═══════════════════════════════════════════
