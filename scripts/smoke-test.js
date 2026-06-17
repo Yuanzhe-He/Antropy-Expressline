@@ -1695,6 +1695,30 @@ async function main() {
       "O5: delete empty origin"
     );
 
+    // O6.3: destination add + delete round-trip (verify the existing route works).
+    inlandData = await getShippingData();
+    const beforeDestCount = (inlandData.modules.inland.destinations || []).length;
+    response = await request(baseUrl, "/admin/inland/destinations/add", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: [["name", "Smoke Dest"], ["state", "NL"], ["lat", "25.7"], ["lng", "-100.3"]],
+    });
+    assert.equal(response.status, 302);
+    inlandData = await getShippingData();
+    const addedDest = inlandData.modules.inland.destinations.at(-1);
+    assert.equal(inlandData.modules.inland.destinations.length, beforeDestCount + 1, "add destination");
+    response = await request(baseUrl, `/admin/inland/destinations/${addedDest.id}/delete`, {
+      method: "POST",
+      jar: publicJar,
+    });
+    assert.equal(response.status, 302);
+    inlandData = await getShippingData();
+    assert.equal(
+      inlandData.modules.inland.destinations.length,
+      beforeDestCount,
+      "O6.3: delete destination works"
+    );
+
     console.log("smoke-test-ok");
   } finally {
     await closeQuoteBrowser();
