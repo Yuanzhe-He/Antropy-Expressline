@@ -2335,7 +2335,7 @@ function createApp() {
       return redirectWithFlash(req, res, "error", req.t("inland.nameRequired"), `${INLAND_ADMIN_TARGET}#dest-${dest.id}`);
     }
     dest.precisePoints = dest.precisePoints || [];
-    dest.precisePoints.push({
+    const newPoint = {
       id: `pp-${dest.id}-${Date.now().toString(36)}`,
       name,
       lat,
@@ -2343,7 +2343,26 @@ function createApp() {
       note: String(req.body.note || ""),
       source,
       link: /^https?:/i.test(link) ? link : "",
-    });
+    };
+    dest.precisePoints.push(newPoint);
+    // O6.1 (20260617): auto-fetch this precise point's route so the map can draw
+    // a line to the exact point immediately (was: only the destination-level route
+    // existed until a manual "refresh routes"). Non-fatal — provider failures just
+    // leave the route to be filled by a later refresh.
+    const origin = (inland.origins && inland.origins[0]) || null;
+    if (origin && newPoint.lat != null && newPoint.lng != null) {
+      try {
+        await refreshOneInlandRoute(inland, origin, {
+          destinationId: dest.id,
+          targetType: "precisePoint",
+          targetId: newPoint.id,
+          lat: newPoint.lat,
+          lng: newPoint.lng,
+        });
+      } catch (_error) {
+        // leave route uncached; admin can refresh later
+      }
+    }
     shippingData.modules.inland = inland;
     await saveShippingData(shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.preciseAdded", { name }), `${INLAND_ADMIN_TARGET}#dest-${dest.id}`);
