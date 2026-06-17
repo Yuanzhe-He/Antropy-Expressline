@@ -240,6 +240,6 @@
   </section>
 <% } %>
 
-<script id="container-group-data" type="application/json"><%- JSON.stringify(selectedLine?.containerGroups || []) %></script>
+<script id="container-group-data" type="application/json"><%- safeJson(selectedLine?.containerGroups || []) %></script>
 <script src="/calculator.js"></script>
 <%- include('partials/footer') %>
