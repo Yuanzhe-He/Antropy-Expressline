@@ -783,6 +783,32 @@ function applyRateCellUpdates(rateConfig, body, prefix) {
   rateConfig.currency = body[`${prefix}_currency`] || rateConfig.currency;
 }
 
+// H2/H3 (20260617): the admin rate cells now always render an editable input,
+// even when no rate object exists yet. This upsert creates the rate object when
+// a value is submitted into a previously-empty cell, updates it when present,
+// and clears it (null) when the cell is blanked. `container[key]` is the rate
+// slot (e.g. charge.blRate, charge.groupRates[groupKey], guarantee.ratesByGroup[groupKey]).
+function upsertRateCell(container, key, body, prefix) {
+  if (!container) {
+    return;
+  }
+  const rawRate = body[`${prefix}_rate`];
+  const hasValue = rawRate !== undefined && String(rawRate).trim() !== "";
+  if (!hasValue) {
+    if (container[key]) {
+      container[key] = null;
+    }
+    return;
+  }
+  const existing =
+    container[key] && typeof container[key] === "object" ? container[key] : {};
+  container[key] = {
+    ...existing,
+    rate: parseNumber(rawRate, 0),
+    currency: body[`${prefix}_currency`] || existing.currency || "MXN",
+  };
+}
+
 function buildModuleLinks(language) {
   return getModulePresentations(language).map((module) => ({
     ...module,
@@ -3579,6 +3605,59 @@ function createApp() {
     }
   );
 
+  // H1 (20260617): per-row delete for local charges (mirrors terminal-mix delete).
+  app.post(
+    "/admin/:moduleKey/shipping-lines/:id/local-charges/:chargeId/delete",
+    requireAuth,
+    async (req, res) => {
+      const module = getBusinessModule(req.params.moduleKey);
+      if (!module || module.key === "customs") {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = getModuleData(shippingData, module.key);
+      const lineIndex = moduleData.shippingLines.findIndex(
+        (entry) => entry.id === req.params.id
+      );
+
+      if (lineIndex < 0) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const updated = structuredClone(moduleData.shippingLines[lineIndex]);
+      const beforeCount = updated.localCharges?.length || 0;
+      updated.localCharges = (updated.localCharges || []).filter(
+        (entry) => entry.id !== req.params.chargeId
+      );
+      const removed = beforeCount !== updated.localCharges.length;
+      shippingData.modules[module.key].shippingLines[lineIndex] = updated;
+      await saveShippingData(shippingData);
+
+      return redirectWithFlash(
+        req,
+        res,
+        removed ? "success" : "error",
+        removed
+          ? req.t("admin.localChargeDeleted")
+          : req.t("system.notFoundTitle"),
+        `/admin/${module.key}/shipping-lines/${updated.id}`
+      );
+    }
+  );
+
   app.post(
     "/admin/:moduleKey/shipping-lines/:id/demurrage-rule-sets/add",
     requireAuth,
@@ -3957,21 +4036,25 @@ function createApp() {
         charge.concept = concept;
       }
       charge.taxRate = parseNumber(req.body[`charge_tax_${charge.id}`], charge.taxRate);
-      if (charge.blRate) {
-        applyRateCellUpdates(charge.blRate, req.body, `charge_bl_${charge.id}`);
-      }
+      // H2/H3: BL + per-group cells are always editable now; upsert creates the
+      // rate object when a value is entered into a previously-empty cell.
+      upsertRateCell(charge, "blRate", req.body, `charge_bl_${charge.id}`);
+      charge.groupRates = charge.groupRates || {};
       for (const group of updated.containerGroups || []) {
-        applyRateCellUpdates(
-          charge.groupRates?.[group.key],
+        upsertRateCell(
+          charge.groupRates,
+          group.key,
           req.body,
           `charge_${charge.id}_${group.key}`
         );
       }
     }
 
+    updated.guarantee.ratesByGroup = updated.guarantee.ratesByGroup || {};
     for (const group of updated.containerGroups || []) {
-      applyRateCellUpdates(
-        updated.guarantee.ratesByGroup?.[group.key],
+      upsertRateCell(
+        updated.guarantee.ratesByGroup,
+        group.key,
         req.body,
         `guarantee_${group.key}`
       );
