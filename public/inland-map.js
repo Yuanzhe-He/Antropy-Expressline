@@ -118,6 +118,26 @@
     };
   }
 
+  // O6.4: precise points of the currently-selected destination, as map markers.
+  function preciseGeoJson() {
+    const dest = destById.get(selectedId);
+    const points = (dest && dest.precisePoints) || [];
+    return {
+      type: "FeatureCollection",
+      features: points
+        .filter((p) => p.lat != null && p.lng != null)
+        .map((p) => ({
+          type: "Feature",
+          properties: { id: p.id, name: p.name },
+          geometry: { type: "Point", coordinates: [p.lng, p.lat] },
+        })),
+    };
+  }
+  function updatePreciseLayer() {
+    const src = map.getSource("inland-precise");
+    if (src) src.setData(preciseGeoJson());
+  }
+
   // --- map init ---
   const map = new maplibregl.Map({
     container: mapEl,
@@ -140,6 +160,10 @@
     }
     if (!map.getSource("inland-destinations")) {
       map.addSource("inland-destinations", { type: "geojson", data: destinationsGeoJson() });
+    }
+    // O6.4: precise points of the selected destination, as clickable markers.
+    if (!map.getSource("inland-precise")) {
+      map.addSource("inland-precise", { type: "geojson", data: preciseGeoJson() });
     }
 
     if (!map.getLayer("inland-route-casing")) {
@@ -191,6 +215,39 @@
           "circle-color": ["case", ["==", ["get", "id"], selectedId], ACCENT, "#cfd6e4"],
           "circle-stroke-color": currentTheme() === "light" ? "#1d2333" : "#0b0d12",
           "circle-stroke-width": 1.5,
+        },
+      });
+    }
+    // O6.4: precise-point markers (orange), clickable; selected one is larger.
+    if (!map.getLayer("inland-precise-dot")) {
+      map.addLayer({
+        id: "inland-precise-dot",
+        type: "circle",
+        source: "inland-precise",
+        paint: {
+          "circle-radius": ["case", ["==", ["get", "id"], ["literal", ""]], 5, 6],
+          "circle-color": "#f4a23b",
+          "circle-stroke-color": currentTheme() === "light" ? "#1d2333" : "#0b0d12",
+          "circle-stroke-width": 1.5,
+        },
+      });
+    }
+    if (!map.getLayer("inland-precise-label")) {
+      map.addLayer({
+        id: "inland-precise-label",
+        type: "symbol",
+        source: "inland-precise",
+        layout: {
+          "text-field": ["get", "name"],
+          "text-size": 10,
+          "text-offset": [0, 1.1],
+          "text-anchor": "top",
+          "text-allow-overlap": false,
+        },
+        paint: {
+          "text-color": "#f4a23b",
+          "text-halo-color": currentTheme() === "light" ? "#ffffff" : "#0b0d12",
+          "text-halo-width": 1.2,
         },
       });
     }
@@ -517,12 +574,32 @@
     if (selectedId && map.isStyleLoaded()) {
       applySelectionLayer();
     }
+    if (map.isStyleLoaded()) updatePreciseLayer(); // O6.4: refresh precise markers
     const url = new URL(window.location.href);
     if (selectedId) url.searchParams.set("dest", selectedId);
     else url.searchParams.delete("dest");
     window.history.replaceState({}, "", url);
     renderQuote();
     void fly;
+  }
+
+  // O6.4: select a precise point (shared by the chips and the map markers).
+  // Inherits the city/destination rate (renderQuote) + draws the point's own
+  // route/ETA (applySelectionLayer via O6.2).
+  function selectPrecisePoint(preciseId, { fly = true } = {}) {
+    panel.preciseInput.value = preciseId || "";
+    if (panel.preciseChips) {
+      panel.preciseChips.querySelectorAll(".inland-chip").forEach((c) =>
+        c.classList.toggle("is-active", (c.dataset.preciseId || "") === (preciseId || ""))
+      );
+    }
+    if (map.isStyleLoaded()) applySelectionLayer();
+    const dest = destById.get(selectedId);
+    const point = (dest?.precisePoints || []).find((p) => p.id === preciseId);
+    if (fly && point && point.lat != null) {
+      map.flyTo({ center: [point.lng, point.lat], zoom: 9 });
+    }
+    renderQuote();
   }
 
   // --- wire interactions ---
@@ -570,18 +647,7 @@
   panel.preciseChips.addEventListener("click", (event) => {
     const chip = event.target.closest("[data-precise-id]");
     if (!chip) return;
-    panel.preciseChips.querySelectorAll(".inland-chip").forEach((c) => c.classList.remove("is-active"));
-    chip.classList.add("is-active");
-    panel.preciseInput.value = chip.dataset.preciseId || "";
-    // O6.2: redraw the route to the selected precise point (or back to the
-    // destination route for the default chip), recenter, and refresh the quote.
-    if (map.isStyleLoaded()) applySelectionLayer();
-    const dest = destById.get(selectedId);
-    const point = (dest?.precisePoints || []).find((p) => p.id === chip.dataset.preciseId);
-    if (point && point.lat != null) {
-      map.flyTo({ center: [point.lng, point.lat], zoom: 9 });
-    }
-    renderQuote();
+    selectPrecisePoint(chip.dataset.preciseId || "");
   });
 
   map.on("load", () => {
@@ -619,6 +685,10 @@
   map.on("mouseleave", "inland-dest-dot", () => hoverPopup.remove());
   map.on("click", "inland-dest-dot", (e) => selectDestination(e.features[0].properties.id));
   map.on("click", "inland-route-line", (e) => selectDestination(e.features[0].properties.destinationId));
+  // O6.4: clicking a precise-point marker selects it (price + ETA for that point).
+  map.on("mouseenter", "inland-precise-dot", () => (map.getCanvas().style.cursor = "pointer"));
+  map.on("mouseleave", "inland-precise-dot", () => (map.getCanvas().style.cursor = ""));
+  map.on("click", "inland-precise-dot", (e) => selectPrecisePoint(e.features[0].properties.id));
 
   // follow app theme
   const themeObserver = new MutationObserver(() => {
