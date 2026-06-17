@@ -33,6 +33,7 @@ const {
   QUOTE_TRANSPORT_MODE_OPTIONS,
   QUOTE_INCOTERM_OPTIONS,
   QUOTE_CARGO_TYPE_OPTIONS,
+  normalizeQuoteMode,
 } = require("./quote");
 
 loadLocalEnv();
@@ -2234,6 +2235,9 @@ function normalizeQuoteDraft(draft = {}, fallbackId) {
     number: String(draft.number || "").trim(),
     date: String(draft.date || "").trim(),
     header: normalizeQuoteHeader(draft.header),
+    // round11: quote mode (back-compat: old drafts have none -> mexico_only,
+    // which == the legacy "MEXICO LOCAL only" behavior).
+    quoteMode: normalizeQuoteMode(draft.quoteMode),
     lineItems: (Array.isArray(draft.lineItems) ? draft.lineItems : []).map(
       (item, index) => normalizeQuoteLineItem(item, `${id}-li-${index + 1}`)
     ),
@@ -2257,6 +2261,8 @@ function normalizeQuoteHeaderDefaults(hd = {}) {
     transportMode: pick(src.transportMode, QUOTE_TRANSPORT_MODE_OPTIONS),
     incoterm: pick(src.incoterm, QUOTE_INCOTERM_OPTIONS),
     cargoType: pick(src.cargoType, QUOTE_CARGO_TYPE_OPTIONS),
+    // S5/round11: default quote mode for fresh quotes (mexico_only default).
+    quoteMode: normalizeQuoteMode(src.quoteMode),
   };
 }
 

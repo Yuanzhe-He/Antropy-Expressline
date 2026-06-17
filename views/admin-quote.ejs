@@ -38,6 +38,11 @@
         <select name="hd_cargoType"><option value="">—</option>
           <% headerOptions.cargoType.forEach((c) => { %><option value="<%= c %>" <%= hd.cargoType === c ? "selected" : "" %>><%= c %></option><% }) %>
         </select></label>
+      <label><span><%= t("quote.quoteMode") %></span>
+        <select name="hd_quoteMode">
+          <option value="mexico_only" <%= hd.quoteMode !== "ocean_mexico" ? "selected" : "" %>><%= t("quote.quoteModeMexicoOnly") %></option>
+          <option value="ocean_mexico" <%= hd.quoteMode === "ocean_mexico" ? "selected" : "" %>><%= t("quote.quoteModeOceanMexico") %></option>
+        </select></label>
     </div>
   </section>
 
