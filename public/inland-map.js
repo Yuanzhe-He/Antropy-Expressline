@@ -528,6 +528,18 @@
   // --- wire interactions ---
   panel.destSelect.addEventListener("change", () => selectDestination(panel.destSelect.value));
 
+  // O5: switching origin reloads the page scoped to that origin (?origin=), so the
+  // server re-filters rates/routes for it. Preserves the selected destination.
+  const originSelectEl = document.querySelector("[data-inland-origin-select]");
+  if (originSelectEl) {
+    originSelectEl.addEventListener("change", () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set("origin", originSelectEl.value);
+      if (selectedId) url.searchParams.set("dest", selectedId);
+      window.location.href = url.toString();
+    });
+  }
+
   if (panel.serviceInput) {
     panel.serviceInput.addEventListener("change", renderQuote);
   }

@@ -28,6 +28,17 @@
       class="inland-panel-form"
       data-inland-form
     >
+      <%# O5: origin selector (only when more than one origin). Reloads with ?origin=. %>
+      <% if ((inlandOrigins || []).length > 1) { %>
+        <label class="inland-field">
+          <span><%= t("inland.originLabel") %></span>
+          <select data-inland-origin-select>
+            <% for (const o of inlandOrigins) { %>
+              <option value="<%= o.id %>" <%= activeOriginId === o.id ? "selected" : "" %>><%= o.name %></option>
+            <% } %>
+          </select>
+        </label>
+      <% } %>
       <label class="inland-field">
         <span><%= t("inland.destinationLabel") %></span>
         <%# O6.5: bilingual display name — fill one shows it; fill both follow lang. %>

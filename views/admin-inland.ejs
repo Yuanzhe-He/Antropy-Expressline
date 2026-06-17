@@ -36,6 +36,50 @@
 
 <%- include("partials/admin-tabs", { modules, currentModuleKey, currentAdminSection, t }) %>
 
+<%# O5 (20260617): origins are admin-managed. New origins start with NO rate entries
+    (empty shell); the front-end can route from any origin. Manzanillo (seed) keeps its rates. %>
+<section class="panel" id="inland-origins">
+  <div class="section-title">
+    <div>
+      <p class="eyebrow"><%= t("inland.originsSection") %></p>
+      <h3><%= (inlandData.origins || []).length %> · <%= t("inland.originLabel") %></h3>
+    </div>
+  </div>
+  <form method="post" action="/admin/inland/origins/save" class="stack-form">
+    <table>
+      <thead>
+        <tr><th><%= t("inland.originLabel") %></th><th>Lat</th><th>Lng</th><th><%= t("inland.rateEntriesCount") %></th><th></th></tr>
+      </thead>
+      <tbody>
+        <% for (const origin of inlandData.origins || []) { %>
+          <% const originRateCount = inlandRates.filter((r) => r.originId === origin.id).length; %>
+          <tr>
+            <td><input type="text" name="origin_name_<%= origin.id %>" value="<%= origin.name %>" /></td>
+            <td><input type="text" name="origin_lat_<%= origin.id %>" value="<%= origin.lat == null ? '' : origin.lat %>" /></td>
+            <td><input type="text" name="origin_lng_<%= origin.id %>" value="<%= origin.lng == null ? '' : origin.lng %>" /></td>
+            <td><%= originRateCount %></td>
+            <td>
+              <button type="submit" class="ghost-button compact-button danger-button"
+                formaction="/admin/inland/origins/<%= origin.id %>/delete"
+                data-confirm-submit="<%= t("inland.confirmDeleteOrigin", { name: origin.name }) %>"
+                <%= (inlandData.origins || []).length <= 1 || originRateCount > 0 ? "disabled" : "" %>
+              ><%= t("inland.deleteOrigin") %></button>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+    <div class="actions"><button type="submit" class="ghost-button compact-button"><%= t("inland.saveOrigins") %></button></div>
+  </form>
+  <form method="post" action="/admin/inland/origins/add" class="grid-form inland-add-dest">
+    <label><span><%= t("inland.originLabel") %></span><input type="text" name="name" required /></label>
+    <label><span>Lat</span><input type="text" name="lat" /></label>
+    <label><span>Lng</span><input type="text" name="lng" /></label>
+    <label class="full-width"><span><%= t("inland.pasteLinkOrCoords") %></span><input type="text" name="link" placeholder="https://maps.app.goo.gl/... | 19.05,-104.31" /></label>
+    <button type="submit" class="ghost-button"><%= t("inland.addOrigin") %></button>
+  </form>
+</section>
+
 <section class="panel" id="inland-destinations">
   <div class="section-title">
     <div>

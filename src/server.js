@@ -1246,11 +1246,20 @@ function buildInlandFormData(moduleData, body = {}) {
 }
 
 // Compact map + quote payload for the front-end (client-side instant quoting).
-function buildInlandMapData(moduleData, lang = "zh") {
-  const origin = (moduleData.origins && moduleData.origins[0]) || null;
+// O5: data is scoped to the ACTIVE origin — rates/routes for other origins are
+// filtered out so "rate follows origin" holds. A new (empty-shell) origin yields
+// no rates yet. activeOriginId defaults to the first origin (Manzanillo seed).
+function buildInlandMapData(moduleData, lang = "zh", activeOriginId = null) {
+  const origins = moduleData.origins || [];
+  const origin =
+    origins.find((o) => o.id === activeOriginId) || origins[0] || null;
+  const originId = origin ? origin.id : null;
   const entriesByDest = new Map();
   for (const entry of moduleData.rateEntries || []) {
     if (!entry.enabled) {
+      continue;
+    }
+    if (originId && entry.originId && entry.originId !== originId) {
       continue;
     }
     if (!entriesByDest.has(entry.destinationId)) {
@@ -1347,27 +1356,40 @@ function buildInlandMapData(moduleData, lang = "zh") {
   });
 
   // S4/S5: surface EFFECTIVE values (manual override wins per-field) + source.
-  const routes = (moduleData.routeCache || []).map((rc) => {
-    const eff = effectiveRoute(rc);
-    return {
-      destinationId: rc.destinationId,
-      targetType: rc.targetType,
-      targetId: rc.targetId,
-      encodedPolyline: rc.encodedPolyline,
-      distanceKm: eff.distanceKm,
-      durationMin: eff.durationMin,
-      viaCities: eff.viaCities,
-      stale: eff.stale,
-      hasFerry: eff.hasFerry,
-      source: eff.source,
-    };
-  });
+  // O5: only routes from the active origin.
+  const routes = (moduleData.routeCache || [])
+    .filter((rc) => !originId || !rc.originId || rc.originId === originId)
+    .map((rc) => {
+      const eff = effectiveRoute(rc);
+      return {
+        destinationId: rc.destinationId,
+        targetType: rc.targetType,
+        targetId: rc.targetId,
+        encodedPolyline: rc.encodedPolyline,
+        distanceKm: eff.distanceKm,
+        durationMin: eff.durationMin,
+        viaCities: eff.viaCities,
+        stale: eff.stale,
+        hasFerry: eff.hasFerry,
+        source: eff.source,
+      };
+    });
 
-  return { origin, destinations, routes };
+  return {
+    origin,
+    origins: origins.map((o) => ({ id: o.id, name: o.name, lat: o.lat, lng: o.lng })),
+    activeOriginId: originId,
+    destinations,
+    routes,
+  };
 }
 
 function renderInlandWorkbench(req, res, payload) {
   const moduleMeta = getModulePresentation(payload.moduleKey, req.language);
+  // O5: front-end can route from a chosen origin (?origin=). Defaults to the first.
+  const origins = payload.moduleData.origins || [];
+  const activeOriginId =
+    (origins.find((o) => o.id === req.query.origin) || origins[0] || {}).id || null;
   res.render(
     "workbench-inland",
     baseView(req, {
@@ -1378,7 +1400,9 @@ function renderInlandWorkbench(req, res, payload) {
       moduleData: payload.moduleData,
       formData: payload.formData,
       result: payload.result || null,
-      inlandMapData: buildInlandMapData(payload.moduleData, req.language),
+      inlandMapData: buildInlandMapData(payload.moduleData, req.language, activeOriginId),
+      inlandOrigins: origins,
+      activeOriginId,
       vehicleTypeKeys: VEHICLE_TYPE_KEYS,
       priceModeOptions: getLocalizedOptions(PRICE_MODE_OPTIONS, req.t),
       taxRatePresets: payload.moduleData.taxRatePresets || [],
@@ -2215,6 +2239,72 @@ function createApp() {
     shippingData.modules.inland = inland;
     await saveShippingData(shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.routeOverrideCleared"), `${INLAND_ADMIN_TARGET}#dest-${destId}`);
+  });
+
+  // O5 (20260617): admin-managed origins. New origins start with NO rate entries
+  // (empty shell). The seed origin (Manzanillo) and its rates are untouched.
+  app.post("/admin/inland/origins/add", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    let name = String(req.body.name || "").trim();
+    const link = String(req.body.link || "").trim();
+    let lat = req.body.lat ? Number(req.body.lat) : null;
+    let lng = req.body.lng ? Number(req.body.lng) : null;
+    if (link) {
+      const resolved = await resolveLink(link);
+      if (resolved.error) {
+        return redirectWithFlash(req, res, "error", req.t("inland.linkFailed", { error: resolved.error }), `${INLAND_ADMIN_TARGET}#inland-origins`);
+      }
+      lat = resolved.lat;
+      lng = resolved.lng;
+      if (!name && resolved.name) name = resolved.name;
+    }
+    if (!name) {
+      return redirectWithFlash(req, res, "error", req.t("inland.nameRequired"), `${INLAND_ADMIN_TARGET}#inland-origins`);
+    }
+    const baseId = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || `origin-${Date.now()}`;
+    let oid = baseId;
+    let oi = 2;
+    inland.origins = inland.origins || [];
+    while (inland.origins.some((o) => o.id === oid)) {
+      oid = `${baseId}-${oi++}`;
+    }
+    inland.origins.push({ id: oid, name, lat, lng });
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(req, res, "success", req.t("inland.originAdded", { name }), `${INLAND_ADMIN_TARGET}#inland-origins`);
+  });
+
+  app.post("/admin/inland/origins/save", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    for (const origin of inland.origins || []) {
+      const name = req.body[`origin_name_${origin.id}`];
+      if (name !== undefined) origin.name = String(name).trim() || origin.name;
+      const lat = req.body[`origin_lat_${origin.id}`];
+      if (lat !== undefined) origin.lat = String(lat).trim() === "" ? null : Number(lat);
+      const lng = req.body[`origin_lng_${origin.id}`];
+      if (lng !== undefined) origin.lng = String(lng).trim() === "" ? null : Number(lng);
+    }
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(req, res, "success", req.t("inland.originsSaved"), `${INLAND_ADMIN_TARGET}#inland-origins`);
+  });
+
+  app.post("/admin/inland/origins/:id/delete", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    const origins = inland.origins || [];
+    const hasRates = (inland.rateEntries || []).some((r) => r.originId === req.params.id);
+    if (origins.length <= 1 || hasRates) {
+      // keep at least one origin; never orphan rate entries
+      return redirectWithFlash(req, res, "error", req.t("inland.originDeleteBlocked"), `${INLAND_ADMIN_TARGET}#inland-origins`);
+    }
+    inland.origins = origins.filter((o) => o.id !== req.params.id);
+    inland.routeCache = (inland.routeCache || []).filter((rc) => rc.originId !== req.params.id);
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(req, res, "success", req.t("inland.originDeleted"), `${INLAND_ADMIN_TARGET}#inland-origins`);
   });
 
   app.post("/admin/inland/destinations/add", requireAuth, async (req, res) => {
