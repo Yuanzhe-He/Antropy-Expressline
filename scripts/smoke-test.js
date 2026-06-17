@@ -1743,6 +1743,50 @@ async function main() {
       "O6.3: delete destination works"
     );
 
+    // B1 (QA): stored-XSS guard — a name containing </script> must NOT break out
+    // of the inline <script type="application/json"> blocks.
+    response = await request(baseUrl, "/admin/inland/destinations/add", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: [["name", "</script><script>alert(1)</script>"], ["lat", "25"], ["lng", "-100"]],
+    });
+    assert.equal(response.status, 302);
+    response = await request(baseUrl, "/workbench/inland", { jar: publicJar });
+    assert.equal(response.status, 200);
+    assert.ok(
+      !response.text.includes("</script><script>alert(1)"),
+      "B1: XSS payload does not break out of the script block"
+    );
+    assert.ok(
+      response.text.includes("\\u003c/script"),
+      "B1: < is escaped to \\u003c in inlined JSON"
+    );
+    // and the JSON still parses with the name decoded intact
+    const mapMatch = response.text.match(/<script id="inland-map-data"[^>]*>([\s\S]*?)<\/script>/);
+    const mapData = JSON.parse(mapMatch[1]);
+    assert.ok(
+      (mapData.destinations || []).some((d) => d.name === "</script><script>alert(1)</script>"),
+      "B1: malicious name round-trips byte-identical through safeJson"
+    );
+
+    // B2 (QA): customs terminal fixed-charge add + delete.
+    let cd = await getShippingData();
+    const cTerm = cd.modules.customs.ports?.[0]?.terminals?.[0];
+    if (cTerm) {
+      const beforeFx = (cTerm.fixedCharges || []).length;
+      response = await request(baseUrl, `/admin/customs/terminals/${cTerm.id}/fixed-charges/add`, { method: "POST", jar: publicJar });
+      assert.equal(response.status, 302);
+      cd = await getShippingData();
+      let t2 = cd.modules.customs.ports[0].terminals.find((t) => t.id === cTerm.id);
+      assert.equal(t2.fixedCharges.length, beforeFx + 1, "B2: add fixed charge");
+      const fxId = t2.fixedCharges.at(-1).id;
+      response = await request(baseUrl, `/admin/customs/terminals/${cTerm.id}/fixed-charges/${fxId}/delete`, { method: "POST", jar: publicJar });
+      assert.equal(response.status, 302);
+      cd = await getShippingData();
+      t2 = cd.modules.customs.ports[0].terminals.find((t) => t.id === cTerm.id);
+      assert.equal(t2.fixedCharges.length, beforeFx, "B2: delete fixed charge");
+    }
+
     console.log("smoke-test-ok");
   } finally {
     await closeQuoteBrowser();

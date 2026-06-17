@@ -19,6 +19,18 @@ Only record lessons that may change future behavior.
 - landed_in:
 - next_action:
 
+## 2026-06-17 - JSON.stringify into a <script> block is XSS unless you escape "<"
+
+- source_type: ai-self-correction / security
+- task_type: implementation / security-review
+- domain: server-rendered EJS views inlining data as <script type="application/json"><%- JSON.stringify(x) %></script>
+- trigger: QA fuzzing entered a destination name `</script><script>alert(1)</script>`; it executed on /workbench/inland.
+- incident_or_feedback: `JSON.stringify` does NOT escape `</script>`, `<script>`, `<!--`, or the JS line separators U+2028/U+2029. Any user-editable string inlined verbatim into a `<script>` block via `<%- %>` (unescaped EJS) can close the tag early and inject executable markup — a stored XSS. The repo had 15 such emissions across 5 workbench/calculator views (names, concepts, remarks, proveedor/cliente all flow in). The generated PDF was safe because it uses `<%= %>` (HTML-escaped).
+- lesson: never inline `<%- JSON.stringify(x) %>` directly into a `<script>` block. Use a shared `safeJson()` that does `JSON.stringify(x).replace(/[<  ]/g, c => "\\u"+c.charCodeAt(0).toString(16).padStart(4,"0"))` — escaping `<` (blocks `</script>`/`<script>`/`<!--`) and the line separators produces valid JSON that parses byte-identically but can never break out of the element. Expose it via `res.locals` so every template can use it. Add a stored-XSS smoke guard (enter `</script>` in a name, assert no raw breakout + JSON still parses).
+- scope: global-candidate (applies to any server-rendered app inlining JSON in <script>)
+- landed_in: QA batch B1 — res.locals.safeJson + all 15 emissions; smoke-test stored-XSS guard.
+- next_action: any new `<%- JSON.stringify` into a <script> must use safeJson; keep the smoke guard.
+
 ## 2026-06-17 - Two normalizers for the same shape must stay in lockstep (parse vs store)
 
 - source_type: ai-self-correction
