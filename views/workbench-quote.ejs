@@ -198,17 +198,31 @@
     </div>
   </section>
 
-  <!-- Notes -->
+  <!-- Notes (Q11: pick which remarks print; managed in /admin/quote/settings) -->
   <section class="quote-card">
-    <h3><%= t("quote.notesTitle") %></h3>
-    <ol class="quote-notes-list">
-      <% quoteView.notes.forEach((note) => { %>
-        <li><div><%= note.en %></div><div class="zh" lang="zh"><%= note.zh %></div></li>
+    <h3><%= t("quote.remarksSelectTitle") %></h3>
+    <div class="quote-notes-list">
+      <% (quoteNotes || []).forEach((note) => { %>
+        <label style="display:flex; gap:0.5rem; align-items:flex-start; margin-bottom:0.35rem;">
+          <input type="checkbox" name="note_sel[]" value="<%= note.id %>" <%= (formData.noteIds || []).includes(note.id) ? "checked" : "" %> />
+          <span><div><%= note.en %></div><% if (note.zh) { %><div class="zh" lang="zh"><%= note.zh %></div><% } %></span>
+        </label>
       <% }) %>
-    </ol>
+      <% if (!(quoteNotes || []).length) { %><p class="quote-hint"><%= t("quote.remarksLibraryHint") %></p><% } %>
+    </div>
   </section>
 
   <div class="quote-actions">
+    <%# Q7: output language — bilingual (legacy EN+中) or single EN/ZH/ES. %>
+    <label class="quote-field" style="max-width: 200px;">
+      <span><%= t("quote.outputLanguage") %></span>
+      <select name="quoteLang">
+        <option value="" <%= formData.language === "" ? "selected" : "" %>><%= t("quote.langBilingual") %></option>
+        <option value="EN" <%= formData.language === "EN" ? "selected" : "" %>>English</option>
+        <option value="ZH" <%= formData.language === "ZH" ? "selected" : "" %>>中文</option>
+        <option value="ES" <%= formData.language === "ES" ? "selected" : "" %>>Español</option>
+      </select>
+    </label>
     <button type="submit" name="action" value="saveDraft" class="ghost-button"><%= t("quote.saveDraft") %></button>
     <button type="submit" formaction="/workbench/quote/pdf" formtarget="_blank" class="primary-button"><%= t("quote.generatePdf") %></button>
   </div>

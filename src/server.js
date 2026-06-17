@@ -1627,8 +1627,20 @@ function assembleQuoteView(quoteModule, formData, shippingData) {
     indicative: totals.indicative,
     dualTotals: totals.dualTotals,
     route,
-    notes: quoteModule.notes,
+    notes: selectQuoteNotes(quoteModule.notes, formData.noteIds),
+    language: formData.language || "",
   };
+}
+
+// Q11: resolve the ordered subset of remarks to print. When no selection is
+// recorded, print the whole library (back-compat with quotes/drafts pre-Q11).
+function selectQuoteNotes(library = [], selectedIds) {
+  if (!Array.isArray(selectedIds)) {
+    return library;
+  }
+  const byId = new Map(library.map((n) => [n.id, n]));
+  const picked = selectedIds.map((id) => byId.get(id)).filter(Boolean);
+  return picked.length ? picked : (selectedIds.length ? [] : library);
 }
 
 function buildQuoteFormData(quoteModule, body = {}, options = {}) {
@@ -1637,11 +1649,18 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
   const number =
     (body.quotationNumber || "").trim() || generateQuoteNumber(quoteModule.settings).number;
   const today = new Date().toISOString().slice(0, 10);
+  // Q11: ordered subset of remark-library ids to print. A fresh quote (nothing
+  // posted) defaults to ALL remarks selected.
+  const libraryIds = (quoteModule.notes || []).map((n) => n.id);
+  const postedNoteIds = ensureArray(body.note_sel).map(String);
+  const language = pickFromOptions(body.quoteLang, ["EN", "ZH", "ES"], "");
   return {
     number,
     date: (body.date || "").trim() || options.date || today,
     header: parseQuoteHeader(body),
     lineItems,
+    noteIds: hasPostedRows ? postedNoteIds : libraryIds,
+    language, // Q7: "" = bilingual EN+中 (legacy); EN/ZH/ES = single language
     pullInputs: parseQuotePullInputs(body),
   };
 }
@@ -1658,6 +1677,7 @@ function renderQuoteWorkbench(req, res, payload) {
       quoteSettings: payload.quoteModule.settings,
       quoteView: payload.quoteView,
       formData: payload.formData,
+      quoteNotes: payload.quoteModule.notes || [],
       selectorData: payload.selectorData,
       feeCodes: payload.feeCodes,
       currencyOptions: CURRENCY_OPTIONS,
@@ -2613,10 +2633,24 @@ function createApp() {
       return res.redirect("/admin/inland/shipping-lines");
     }
 
-    // Quote has no separate admin surface in v1; defaults live in modules.quote
-    // and are edited from the workbench.
+    // Q2 (20260617): quote has a real admin page — number format + remarks library.
     if (module.key === "quote") {
-      return res.redirect("/workbench/quote");
+      const shippingData = await loadShippingData();
+      const quote = getModuleData(shippingData, "quote");
+      const moduleMeta = getModulePresentation("quote", req.language);
+      return res.render(
+        "admin-quote",
+        baseView(req, {
+          pageTitle: `${moduleMeta.title} | ${req.t("app.name")}`,
+          currentArea: "admin",
+          currentModuleKey: "quote",
+          currentAdminSection: "settings",
+          selectedModule: moduleMeta,
+          quoteSettings: quote.settings,
+          quoteNotes: quote.notes || [],
+          languageReturnTo: req.originalUrl,
+        })
+      );
     }
 
     const shippingData = await loadShippingData();
@@ -2639,8 +2673,30 @@ function createApp() {
       );
     }
 
+    // Q2/Q11: save quote number format + remarks library.
     if (module.key === "quote") {
-      return res.redirect("/workbench/quote");
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const quote = structuredClone(getModuleData(shippingData, "quote"));
+      const b = req.body;
+      if (typeof b.quoteNumberPrefix === "string") quote.settings.quoteNumberPrefix = b.quoteNumberPrefix.trim();
+      if (typeof b.quoteNumberSuffix === "string") quote.settings.quoteNumberSuffix = b.quoteNumberSuffix.trim();
+      if (b.quoteNumberPad !== undefined) quote.settings.quoteNumberPad = Math.max(1, Math.min(8, parseWholeNumber(b.quoteNumberPad, 3) || 3));
+      if (b.lastQuoteSeq !== undefined) quote.settings.lastQuoteSeq = Math.max(0, parseWholeNumber(b.lastQuoteSeq, 0));
+      const ids = ensureArray(b.note_id);
+      const ens = ensureArray(b.note_en);
+      const zhs = ensureArray(b.note_zh);
+      const ess = ensureArray(b.note_es);
+      quote.notes = ids
+        .map((id, i) => ({
+          id: String(id || `note-${i + 1}`),
+          en: String(ens[i] || "").trim(),
+          es: String(ess[i] || "").trim(),
+          zh: String(zhs[i] || "").trim(),
+        }))
+        .filter((n) => n.en || n.zh || n.es);
+      shippingData.modules.quote = quote;
+      await saveShippingData(shippingData);
+      return redirectWithFlash(req, res, "success", req.t("quote.adminSaved"), "/admin/quote/settings");
     }
 
     const shippingData = await loadShippingData({ refreshRates: false });
