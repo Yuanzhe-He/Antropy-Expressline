@@ -32,7 +32,11 @@
 **2大批次计划状态**：
 - 前置0：✅ 完成 — 部署确认(A自动跟main)✅、fee对比(同CSV)✅、logo移入public/✅、**合并 batch1/2→main 完成**（Chandler选1；PR#3 rebase-merge，PR#4因stacked-rebase冲突→cherry-pick到PR#5合并；main=9a16771=01c988e内容byte-identical）✅、**生产部署 success**（GitHub deployments 9a16771a state=success；生产页抽查 inland/quote/handover/customs 全200，inland出burreo+车型，无崩）✅。
 - 大批次1（Bug修复全集）：📋 **SPEC 已写完 `docs/specs/20260616_batch1_fixes_SPEC.md`，分支 feature/jose-r2-batch1-fixes（从9a16771切），停下等 Chandler 复核**。调查发现4处stale-premise修正(C1-C4)：O6.7已被batch2修；admin-module换单专用不与customs共享；H4 add-set已种首tramo;customs格已可编辑。唯一数据模型改动=O3 fixedCharges basis/required(+amount待定)。
-- 大批次2（功能重构全集：2a陆运7档/精确点/双语/出发地/多客户 + 2b报价大重构）：⏳
+- 大批次1：✅ **PR#6 已合并部署生产**（main 1f827dd）。
+- 大批次2（功能重构全集）：✅ **代码完成，分支 feature/jose-r2-batch2-features，待开 PR**。
+  - 2a 陆运：O6.1/6.2 精确点路线(前端根因修)✅ / O6.5 双语名[模型]✅ / O5 出发地admin CRUD+费率随origin+前台选择器[模型]✅ / O6.4 精确点可点marker✅(per-point价格override=记为follow-on) / O6.3 目的地删除验证✅
+  - 2b 报价：Q9去计算器取数✅ / Q8 fee en/zh/es(curated~50译+结构,其余en兜底待审)✅ / Q10代码联动总是设concept✅ / Q7.3 UNIT列+NO MEXICO/MEXICO分段[模型]✅ / Q7.2 general data增删✅ / Q2报价后台(编号+备注库)✅ / Q11备注库admin CRUD+前台勾选✅(拖动排序=库序简化) / Q7单语EN/ZH/ES PDF✅(ES concept回退EN)
+  - 回归：smoke + r2-o3-test + quote 9/9 全绿；4语言PDF渲染验证。
 - 全部 spec-first、PR-only、边修边合并、深度report
 
 ═══════════════════════════════════════════
