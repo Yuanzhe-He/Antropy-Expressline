@@ -371,9 +371,9 @@
   <% } %>
 </div>
 
-<script id="container-group-data" type="application/json"><%- JSON.stringify(moduleData.containerTypes || []) %></script>
-<script id="customs-dependency-data" type="application/json"><%- JSON.stringify(dependencyData || {}) %></script>
-<script id="calculator-i18n" type="application/json"><%- JSON.stringify({
+<script id="container-group-data" type="application/json"><%- safeJson(moduleData.containerTypes || []) %></script>
+<script id="customs-dependency-data" type="application/json"><%- safeJson(dependencyData || {}) %></script>
+<script id="calculator-i18n" type="application/json"><%- safeJson({
   containerType: t("calculator.containerType"),
   quantity: t("calculator.quantity"),
   removeRow: t("calculator.removeRow"),

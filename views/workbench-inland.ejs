@@ -137,9 +137,9 @@
   </aside>
 </section>
 
-<script id="inland-map-data" type="application/json"><%- JSON.stringify(inlandMapData || {}) %></script>
-<script id="inland-initial" type="application/json"><%- JSON.stringify({ formData, hasResult: Boolean(result) }) %></script>
-<script id="inland-i18n" type="application/json"><%- JSON.stringify({
+<script id="inland-map-data" type="application/json"><%- safeJson(inlandMapData || {}) %></script>
+<script id="inland-initial" type="application/json"><%- safeJson({ formData, hasResult: Boolean(result) }) %></script>
+<script id="inland-i18n" type="application/json"><%- safeJson({
   serviceSencillo: t("inland.serviceSencillo"),
   serviceFull: t("inland.serviceFull"),
   total: t("inland.total"),

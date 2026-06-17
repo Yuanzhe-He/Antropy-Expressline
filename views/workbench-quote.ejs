@@ -245,11 +245,11 @@
   <% feeCodes.forEach((fc) => { %><option value="<%= fc.code %>" data-desc="<%= fc.description.replace(/\"/g, '&quot;') %>"><%= fc.code %> — <%= fc.description %></option><% }) %>
 </datalist>
 
-<script id="quote-selector-data" type="application/json"><%- JSON.stringify(selectorData) %></script>
-<script id="quote-fee-codes" type="application/json"><%- JSON.stringify(feeCodes) %></script>
-<script id="quote-initial" type="application/json"><%- JSON.stringify({ selectedPortId: formData.pullInputs.portId, selectedTerminalId: formData.pullInputs.terminalId }) %></script>
-<script id="quote-uom-options" type="application/json"><%- JSON.stringify(uomOptions.map((u) => ({ value: u, label: t("quote.uom_" + u) }))) %></script>
-<script id="quote-section-labels" type="application/json"><%- JSON.stringify({ foreign: t("quote.sectionForeign"), mexico: t("quote.sectionMexico") }) %></script>
+<script id="quote-selector-data" type="application/json"><%- safeJson(selectorData) %></script>
+<script id="quote-fee-codes" type="application/json"><%- safeJson(feeCodes) %></script>
+<script id="quote-initial" type="application/json"><%- safeJson({ selectedPortId: formData.pullInputs.portId, selectedTerminalId: formData.pullInputs.terminalId }) %></script>
+<script id="quote-uom-options" type="application/json"><%- safeJson(uomOptions.map((u) => ({ value: u, label: t("quote.uom_" + u) }))) %></script>
+<script id="quote-section-labels" type="application/json"><%- safeJson({ foreign: t("quote.sectionForeign"), mexico: t("quote.sectionMexico") }) %></script>
 <script src="/quote.js"></script>
 
 <%- include("partials/footer") %>
