@@ -84,6 +84,21 @@
       <label class="quote-field" style="grid-column: 1 / -1;"><span><%= t("quote.delivery") %></span>
         <textarea name="delivery" rows="2"><%= formData.header.delivery %></textarea></label>
     </div>
+
+    <%# Q7.2: ordered custom general-data rows (label/value) — add/remove. %>
+    <h4 style="margin: 0.9rem 0 0.4rem; font-size: 0.85rem;"><%= t("quote.extraFieldsTitle") %></h4>
+    <div data-gd-rows class="quote-grid">
+      <% (formData.header.extraFields || []).forEach((f) => { %>
+        <div class="quote-field" data-gd-row style="display:flex; gap:0.4rem; align-items:flex-end;">
+          <input type="text" name="gd_label[]" value="<%= f.label %>" placeholder="<%= t('quote.extraFieldLabel') %>" />
+          <input type="text" name="gd_value[]" value="<%= f.value %>" placeholder="<%= t('quote.extraFieldValue') %>" />
+          <button type="button" class="ghost-button compact-button" data-gd-remove aria-label="<%= t('quote.removeRow') %>">✕</button>
+        </div>
+      <% }) %>
+    </div>
+    <div class="quote-actions" style="margin-top: 0.4rem;">
+      <button type="button" class="ghost-button compact-button" data-gd-add><%= t("quote.addExtraField") %></button>
+    </div>
   </section>
 
   <%# Q9 (20260617): "pull from calculators" removed — a quote is a price, not a

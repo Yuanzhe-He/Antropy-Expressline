@@ -106,6 +106,9 @@
     <tr><td class="k">CARGO TYPE</td><td><%= header.cargoType %></td><td class="k">POL</td><td><%= header.pol %></td></tr>
     <tr><td class="k">COMMODITY</td><td><%= header.commodity %></td><td class="k">POD</td><td><%= header.pod %></td></tr>
     <tr><td class="k">DELIVERY</td><td colspan="3"><%= header.delivery %></td></tr>
+    <% (header.extraFields || []).forEach((f) => { %>
+      <tr><td class="k"><%= f.label %></td><td colspan="3"><%= f.value %></td></tr>
+    <% }); %>
   </table>
 
   <div class="band">MEXICO LOCAL CHARGES</div>
