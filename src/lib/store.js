@@ -1950,8 +1950,9 @@ function normalizeInlandBurreo(burreo) {
   return { sencillo, full };
 }
 
-// S2 vehicle types: the 4 non-legacy tiers (sencillo/full stay top-level).
-// Always returns an object with all 4 keys (number or null) for a stable shape.
+// S2 vehicle types: the non-legacy tiers (sencillo/full stay top-level).
+// Always returns an object with every EXTRA_VEHICLE_KEYS key (number or null)
+// for a stable shape — back-compat: entries missing a tier (e.g. box_53) get null.
 function normalizeVehiclePrices(prices) {
   const source = prices && typeof prices === "object" && !Array.isArray(prices) ? prices : {};
   const out = {};

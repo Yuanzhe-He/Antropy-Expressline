@@ -395,8 +395,8 @@
     panel.totalLabel.textContent = `${i18n.total} · ${tax === 0 ? i18n.pretax : i18n.aftertax}`;
 
     if (maxRate == null) {
-      // No rate for this vehicle tier yet -> Pendiente / 待报价 (not an error).
-      panel.total.textContent = i18n.pendiente || "—";
+      // No rate for this vehicle tier yet -> leave BLANK (José: "没有价格就先空着").
+      panel.total.textContent = "—";
       panel.formula.textContent = "";
       panel.maxProviderLabel.textContent = "";
       panel.maxProvider.textContent = "";
