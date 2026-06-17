@@ -185,4 +185,27 @@
 
   form.querySelectorAll("[data-quote-row]").forEach(wireRow);
   recomputeAll();
+
+  // Q7.2: add/remove custom general-data rows.
+  const gdRows = form.querySelector("[data-gd-rows]");
+  const gdAdd = form.querySelector("[data-gd-add]");
+  if (gdAdd && gdRows) {
+    gdAdd.addEventListener("click", () => {
+      const div = document.createElement("div");
+      div.className = "quote-field";
+      div.setAttribute("data-gd-row", "");
+      div.style.cssText = "display:flex; gap:0.4rem; align-items:flex-end;";
+      div.innerHTML =
+        '<input type="text" name="gd_label[]" placeholder="Label" />' +
+        '<input type="text" name="gd_value[]" placeholder="Value" />' +
+        '<button type="button" class="ghost-button compact-button" data-gd-remove aria-label="remove">✕</button>';
+      gdRows.appendChild(div);
+    });
+    gdRows.addEventListener("click", (event) => {
+      const btn = event.target.closest("[data-gd-remove]");
+      if (!btn) return;
+      const row = btn.closest("[data-gd-row]");
+      if (row) row.remove();
+    });
+  }
 })();

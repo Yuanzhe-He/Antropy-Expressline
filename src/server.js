@@ -1517,7 +1517,21 @@ function parseQuoteHeader(body = {}) {
     commodity: body.commodity || "",
     cargoType: pickFromOptions(body.cargoType, QUOTE_CARGO_TYPE_OPTIONS, ""),
     delivery: body.delivery || "",
+    // Q7.2: ordered, addable/removable custom general-data rows (label/value).
+    extraFields: parseQuoteExtraFields(body),
   };
+}
+
+// Q7.2: parse the dynamic general-data rows; drop blank-labelled rows.
+function parseQuoteExtraFields(body = {}) {
+  const labels = ensureArray(body.gd_label);
+  const values = ensureArray(body.gd_value);
+  return labels
+    .map((label, index) => ({
+      label: String(label || "").trim(),
+      value: String(values[index] ?? "").trim(),
+    }))
+    .filter((row) => row.label);
 }
 
 function parseQuoteLineItems(body = {}) {
