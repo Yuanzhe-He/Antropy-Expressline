@@ -3690,6 +3690,9 @@ function createApp() {
       }
 
       const updated = structuredClone(moduleData.shippingLines[lineIndex]);
+      // H4: harden against a missing demurrage block so "Agregar set" always works
+      // (incl. a line that somehow has 0 rule sets — this bootstraps the first set).
+      updated.demurrage = updated.demurrage || {};
       const ruleSets = updated.demurrage.ruleSets || [];
       const ruleSet = {
         id: buildRuleId(`demurrage-set-${updated.id}`),
@@ -3766,6 +3769,9 @@ function createApp() {
       );
       resequenceRules(ruleSet.rules);
       if (ruleSet.sourceGroupKey) {
+        // H4: guard rulesByGroup — a legacy set with sourceGroupKey but no
+        // rulesByGroup map would otherwise throw on add-rule (a "加不了 demoras" path).
+        updated.demurrage.rulesByGroup = updated.demurrage.rulesByGroup || {};
         updated.demurrage.rulesByGroup[ruleSet.sourceGroupKey] = ruleSet.rules;
       }
       shippingData.modules[module.key].shippingLines[lineIndex] = updated;
