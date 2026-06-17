@@ -49,6 +49,7 @@ const {
   formatDemurrageRuleLabel,
   getShippingData,
   getUsers,
+  localizedInlandName,
   saveShippingData,
   RATE_GROUP_NAMES,
 } = require("./lib/store");
@@ -1245,7 +1246,7 @@ function buildInlandFormData(moduleData, body = {}) {
 }
 
 // Compact map + quote payload for the front-end (client-side instant quoting).
-function buildInlandMapData(moduleData) {
+function buildInlandMapData(moduleData, lang = "zh") {
   const origin = (moduleData.origins && moduleData.origins[0]) || null;
   const entriesByDest = new Map();
   for (const entry of moduleData.rateEntries || []) {
@@ -1314,7 +1315,7 @@ function buildInlandMapData(moduleData) {
     const maxFull = pickMax(entries, "full");
     return {
       id: dest.id,
-      name: dest.name,
+      name: localizedInlandName(dest, lang),
       state: dest.state,
       lat: dest.lat,
       lng: dest.lng,
@@ -1331,7 +1332,7 @@ function buildInlandMapData(moduleData) {
       imageUrls: Array.isArray(dest.imageUrls) ? dest.imageUrls : [],
       precisePoints: (dest.precisePoints || []).map((point) => ({
         id: point.id,
-        name: point.name,
+        name: localizedInlandName(point, lang),
         lat: point.lat,
         lng: point.lng,
       })),
@@ -1377,7 +1378,7 @@ function renderInlandWorkbench(req, res, payload) {
       moduleData: payload.moduleData,
       formData: payload.formData,
       result: payload.result || null,
-      inlandMapData: buildInlandMapData(payload.moduleData),
+      inlandMapData: buildInlandMapData(payload.moduleData, req.language),
       vehicleTypeKeys: VEHICLE_TYPE_KEYS,
       priceModeOptions: getLocalizedOptions(PRICE_MODE_OPTIONS, req.t),
       taxRatePresets: payload.moduleData.taxRatePresets || [],
@@ -2254,6 +2255,11 @@ function createApp() {
       if (req.body[`dest_present_${dest.id}`] === undefined) continue;
       const name = req.body[`dest_name_${dest.id}`];
       if (name !== undefined) dest.name = String(name).trim() || dest.name;
+      // O6.5: optional bilingual display names.
+      const nameZh = req.body[`dest_nameZh_${dest.id}`];
+      if (nameZh !== undefined) dest.nameZh = String(nameZh).trim();
+      const nameEs = req.body[`dest_nameEs_${dest.id}`];
+      if (nameEs !== undefined) dest.nameEs = String(nameEs).trim();
       const state = req.body[`dest_state_${dest.id}`];
       if (state !== undefined) dest.state = String(state).trim();
       const note = req.body[`dest_note_${dest.id}`];

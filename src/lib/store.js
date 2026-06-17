@@ -1925,6 +1925,11 @@ function normalizeInlandDestination(dest = {}, fallbackId) {
   return {
     id,
     name: String(dest.name || id).trim(),
+    // O6.5 (20260617): optional bilingual display names. `name` stays the
+    // fallback/base. Fill one → shown regardless of language; fill both → follow
+    // language. Back-compat: old destinations (no nameZh/nameEs) just use name.
+    nameZh: String(dest.nameZh || "").trim(),
+    nameEs: String(dest.nameEs || "").trim(),
     state: String(dest.state || "").trim(),
     imageUrls: normalizeImageUrls(dest.imageUrls),
     lat: parseNullableNumber(dest.lat),
@@ -2337,10 +2342,26 @@ async function saveUsers(data) {
   return writeJson(usersFile, data);
 }
 
+// O6.5: resolve a destination/precise-point's display name for a language.
+// Fill one of nameZh/nameEs → shown regardless of language; fill both → follow
+// language; fill neither → fall back to the base `name`.
+function localizedInlandName(entity, lang) {
+  if (!entity) {
+    return "";
+  }
+  const zh = String(entity.nameZh || "").trim();
+  const es = String(entity.nameEs || "").trim();
+  if (zh && es) {
+    return lang === "es" ? es : zh;
+  }
+  return zh || es || entity.name || "";
+}
+
 module.exports = {
   formatDemurrageRuleLabel,
   getShippingData,
   getUsers,
+  localizedInlandName,
   normalizeShippingData,
   parseDemurrageRange,
   saveShippingData,

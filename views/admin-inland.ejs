@@ -76,6 +76,8 @@
             <input type="hidden" name="dest_present_<%= dest.id %>" value="1" />
             <input type="hidden" name="destinationId" value="<%= dest.id %>" />
             <label><span><%= t("inland.destinationLabel") %></span><input type="text" name="dest_name_<%= dest.id %>" value="<%= dest.name %>" /></label>
+            <label><span><%= t("inland.nameZh") %></span><input type="text" name="dest_nameZh_<%= dest.id %>" value="<%= dest.nameZh || '' %>" placeholder="<%= dest.name %>" /></label>
+            <label><span><%= t("inland.nameEs") %></span><input type="text" name="dest_nameEs_<%= dest.id %>" value="<%= dest.nameEs || '' %>" placeholder="<%= dest.name %>" /></label>
             <label><span>Estado</span><input type="text" name="dest_state_<%= dest.id %>" value="<%= dest.state || '' %>" /></label>
             <label><span>Lat</span><input type="text" name="dest_lat_<%= dest.id %>" value="<%= dest.lat == null ? '' : dest.lat %>" /></label>
             <label><span>Lng</span><input type="text" name="dest_lng_<%= dest.id %>" value="<%= dest.lng == null ? '' : dest.lng %>" /></label>

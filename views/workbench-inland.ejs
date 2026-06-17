@@ -30,12 +30,14 @@
     >
       <label class="inland-field">
         <span><%= t("inland.destinationLabel") %></span>
+        <%# O6.5: bilingual display name — fill one shows it; fill both follow lang. %>
+        <% const destName = (d) => { const zh = (d.nameZh || "").trim(); const es = (d.nameEs || "").trim(); if (zh && es) return lang === "es" ? es : zh; return zh || es || d.name; }; %>
         <select name="destinationId" data-inland-destination>
           <option value=""><%= t("inland.pickDestination") %></option>
           <% for (const dest of moduleData.destinations || []) { %>
             <% if (dest.enabled) { %>
               <option value="<%= dest.id %>" <%= formData.destinationId === dest.id ? "selected" : "" %>>
-                <%= dest.name %><%= dest.state ? ` · ${dest.state}` : "" %>
+                <%= destName(dest) %><%= dest.state ? ` · ${dest.state}` : "" %>
               </option>
             <% } %>
           <% } %>
