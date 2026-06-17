@@ -37,6 +37,11 @@
   - 2a 陆运：O6.1/6.2 精确点路线(前端根因修)✅ / O6.5 双语名[模型]✅ / O5 出发地admin CRUD+费率随origin+前台选择器[模型]✅ / O6.4 精确点可点marker✅(per-point价格override=记为follow-on) / O6.3 目的地删除验证✅
   - 2b 报价：Q9去计算器取数✅ / Q8 fee en/zh/es(curated~50译+结构,其余en兜底待审)✅ / Q10代码联动总是设concept✅ / Q7.3 UNIT列+NO MEXICO/MEXICO分段[模型]✅ / Q7.2 general data增删✅ / Q2报价后台(编号+备注库)✅ / Q11备注库admin CRUD+前台勾选✅(拖动排序=库序简化) / Q7单语EN/ZH/ES PDF✅(ES concept回退EN)
   - 回归：smoke + r2-o3-test + quote 9/9 全绿；4语言PDF渲染验证。
+- 大批次3（收尾+真bug）：✅ **代码完成，分支 feature/jose-r2-batch3-polish，待 PR**。
+  - P0 真bug：store.js normalizeQuoteHeader 与 parseQuoteHeader 对齐（INLAND/新装箱/transportMode/extraFields 存draft读回不丢；附带修 normalizeQuoteLineItem 漏 section/uom/conceptEs）
+  - S1 精确点 flatPrice 一口价(覆盖车型档)[模型] / S2 备注前台拖动排序+draft存有序选择/语言 / S3 行项 conceptEs 真ES concept[模型] / S4 fee译名扩到~98码(长尾en兜底待审) / S5 报价后台默认表头预填
+  - 回归：smoke + r2-batch3-test + r2-o3-test + quote 9/9 全绿；ES+conceptEs PDF 渲染验证。
+  - 待确认：S5 fee默认单价(低价值,deferred)；S4 长尾~247码译名(en兜底,待Jose审)。
 - 全部 spec-first、PR-only、边修边合并、深度report
 
 ═══════════════════════════════════════════
