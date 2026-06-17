@@ -160,6 +160,15 @@
                 <div class="collapsible-summary-actions">
                   <span class="selected-state-indicator"><%= t("admin.currentSelection") %></span>
                   <span class="collapsible-summary-meta"><%= t("customs.portTerminalCount", { count: (port.terminals || []).length }) %></span>
+                  <button
+                    type="submit"
+                    class="ghost-button compact-button danger-button"
+                    formaction="/admin/customs/ports/<%= port.id %>/delete"
+                    formmethod="post"
+                    data-summary-action
+                    data-preserve-scroll
+                    data-confirm-submit="<%= t('customs.confirmDeletePort') %>"
+                  ><%= t("customs.deletePort") %></button>
                 </div>
               </summary>
 

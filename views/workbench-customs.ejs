@@ -52,16 +52,9 @@
 
     <form method="post" action="/workbench/customs" class="stack-form" data-calculator-form>
       <div class="grid-form">
-        <label>
-          <span><%= t("calculator.businessNature") %> <span class="field-help" title="<%= t("calculator.businessNatureHelp") %>">?</span></span>
-          <select name="businessNature">
-            <% for (const option of businessNatureOptions) { %>
-              <option value="<%= option.value %>" <%= formData.businessNature === option.value ? "selected" : "" %>>
-                <%= option.label %>
-              </option>
-            <% } %>
-          </select>
-        </label>
+        <%# O2 (20260617): business-nature selector hidden for customs — always
+            customs_only. Enum kept in options.js (handover/quote still use it). %>
+        <input type="hidden" name="businessNature" value="customs_only" />
 
         <label>
           <span><%= t("customs.shippingLineLabel") %></span>
@@ -266,10 +259,6 @@
         <article class="summary-card">
           <p><%= t("calculator.aftertaxTotal") %></p>
           <strong><%= result.afterTaxTotal.toFixed(2) %> <%= result.quoteCurrency %></strong>
-        </article>
-        <article class="summary-card">
-          <p><%= t("calculator.businessNature") %></p>
-          <strong><%= t(`businessNature.${result.businessNature === "handover_customs" ? "handoverCustoms" : "customsOnly"}`) %></strong>
         </article>
       </section>
 
