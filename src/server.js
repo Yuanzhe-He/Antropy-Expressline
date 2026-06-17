@@ -3059,6 +3059,66 @@ function createApp() {
     }
   );
 
+  // B2 (QA): add/delete terminal fixed charges (was edit-only — couldn't add a
+  // 2nd fee or remove one). Mirrors the handover local-charges CRUD.
+  app.post(
+    "/admin/customs/terminals/:terminalId/fixed-charges/add",
+    requireAuth,
+    async (req, res) => {
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = structuredClone(getModuleData(shippingData, "customs"));
+      const { portEntry, terminal } = findCustomsTerminal(
+        moduleData,
+        req.params.terminalId
+      );
+      if (!portEntry || !terminal) {
+        return res.status(404).render("not-found", baseView(req, { pageTitle: req.t("system.notFoundTitle"), languageReturnTo: req.originalUrl }));
+      }
+      const currency = moduleData.settings?.defaultQuoteCurrency || "MXN";
+      terminal.fixedCharges = [
+        ...(terminal.fixedCharges || []),
+        {
+          id: buildRuleId(`${terminal.id}-fixed`),
+          concept: req.t("customs.defaultTerminalFixedCharge"),
+          note: null,
+          taxRate: 0,
+          groupRates: buildZeroRatesByContainer(moduleData.containerTypes, currency),
+          basis: "per_occurrence",
+          required: false,
+          amount: null,
+          amountCurrency: "MXN",
+        },
+      ];
+      shippingData.modules.customs = moduleData;
+      await saveShippingData(shippingData);
+      return redirectWithFlash(req, res, "success", req.t("customs.fixedChargeAdded"), `/admin/customs/shipping-lines#customs-terminal-${terminal.id}`);
+    }
+  );
+
+  app.post(
+    "/admin/customs/terminals/:terminalId/fixed-charges/:chargeId/delete",
+    requireAuth,
+    async (req, res) => {
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = structuredClone(getModuleData(shippingData, "customs"));
+      const { portEntry, terminal } = findCustomsTerminal(
+        moduleData,
+        req.params.terminalId
+      );
+      if (!portEntry || !terminal) {
+        return res.status(404).render("not-found", baseView(req, { pageTitle: req.t("system.notFoundTitle"), languageReturnTo: req.originalUrl }));
+      }
+      const before = (terminal.fixedCharges || []).length;
+      terminal.fixedCharges = (terminal.fixedCharges || []).filter(
+        (c) => c.id !== req.params.chargeId
+      );
+      const removed = before !== terminal.fixedCharges.length;
+      shippingData.modules.customs = moduleData;
+      await saveShippingData(shippingData);
+      return redirectWithFlash(req, res, removed ? "success" : "error", removed ? req.t("customs.fixedChargeDeleted") : req.t("system.notFoundTitle"), `/admin/customs/shipping-lines#customs-terminal-${terminal.id}`);
+    }
+  );
+
   app.post("/admin/customs/yards/add", requireAuth, async (req, res) => {
     const shippingData = await loadShippingData({ refreshRates: false });
     const moduleData = structuredClone(getModuleData(shippingData, "customs"));

@@ -233,6 +233,11 @@
                       <p class="eyebrow"><%= t("customs.categories.terminalFixed") %></p>
                       <h4><%= t("customs.fixedFeeTable") %></h4>
                     </div>
+                    <%# B2 (QA): add a fixed charge row. %>
+                    <button type="submit" class="ghost-button compact-button"
+                      formaction="/admin/customs/terminals/<%= terminal.id %>/fixed-charges/add"
+                      formmethod="post" data-preserve-scroll
+                    ><%= t("customs.addFixedCharge") %></button>
                   </div>
                   <table>
                     <thead>
@@ -246,6 +251,7 @@
                         <% for (const type of businessModuleRules.containerTypes || []) { %>
                           <th><%= type.label %></th>
                         <% } %>
+                        <th><%= t("admin.actions") %></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -296,6 +302,13 @@
                               </div>
                             </td>
                           <% } %>
+                          <td>
+                            <button type="submit" class="ghost-button compact-button danger-button"
+                              formaction="/admin/customs/terminals/<%= terminal.id %>/fixed-charges/<%= charge.id %>/delete"
+                              formmethod="post" data-preserve-scroll
+                              data-confirm-submit="<%= t('customs.confirmDeleteFixedCharge') %>"
+                            ><%= t("customs.deleteFixedCharge") %></button>
+                          </td>
                         </tr>
                       <% } %>
                     </tbody>
