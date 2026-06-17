@@ -144,6 +144,7 @@
               <td class="concept-cell">
                 <input type="text" name="li_conceptEn[]" value="<%= row.conceptEn %>" placeholder="<%= t('quote.conceptEnPlaceholder') %>" />
                 <input type="text" name="li_conceptZh[]" value="<%= row.conceptZh %>" placeholder="<%= t('quote.conceptZhPlaceholder') %>" lang="zh" />
+                <input type="text" name="li_conceptEs[]" value="<%= row.conceptEs || '' %>" placeholder="ES" />
               </td>
               <td>
                 <input type="text" name="li_code[]" value="<%= row.code %>" list="fee-codes" data-quote-code title="<%= t('quote.pickCode') %>" />

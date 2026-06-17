@@ -106,5 +106,5 @@ function s1FlatPriceRoundTrip() {
 
 p0HeaderParity();
 s1FlatPriceRoundTrip();
-if (process.env.BATCH3_S3) s3ConceptEsRoundTrip(); // enabled once S3 lands
+s3ConceptEsRoundTrip();
 console.log("r2-batch3-test-ok");

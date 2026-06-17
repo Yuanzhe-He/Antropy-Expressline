@@ -1549,6 +1549,7 @@ function parseQuoteLineItems(body = {}) {
       code: cell("li_code", index),
       conceptEn: cell("li_conceptEn", index),
       conceptZh: cell("li_conceptZh", index),
+      conceptEs: cell("li_conceptEs", index),
       unit: cell("li_unit", index),
       // Q7.3: unit of measure (柜/提单/次/个/车型/天); `unit` stays the numeric qty.
       unitOfMeasure: cell("li_uom", index),

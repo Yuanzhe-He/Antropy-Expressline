@@ -2155,6 +2155,12 @@ function normalizeQuoteLineItem(item = {}, fallbackId) {
       : QUOTE_GROUP_ORDER[0],
     conceptEn: String(item.conceptEn || "").trim(),
     conceptZh: String(item.conceptZh || "").trim(),
+    // S3 (batch3): ES concept for single-language ES output. Also persist the
+    // Q7.3 section / unitOfMeasure here so drafts don't lose them (same class of
+    // gap as the P0 header fix). Back-compat: missing -> "" / "mexico".
+    conceptEs: String(item.conceptEs || "").trim(),
+    section: item.section === "foreign" ? "foreign" : "mexico",
+    unitOfMeasure: String(item.unitOfMeasure || "").trim(),
     unit:
       item.unit === null || item.unit === "" || item.unit === undefined
         ? null
