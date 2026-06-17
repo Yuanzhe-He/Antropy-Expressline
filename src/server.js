@@ -2062,6 +2062,9 @@ function createApp() {
           date: formData.date,
           header: formData.header,
           lineItems: formData.lineItems,
+          // S2/Q7: persist the ordered remark selection + output language.
+          noteIds: formData.noteIds,
+          language: formData.language,
           createdAt: now,
           updatedAt: now,
         },

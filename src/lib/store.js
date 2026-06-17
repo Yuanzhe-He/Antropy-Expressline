@@ -2237,6 +2237,9 @@ function normalizeQuoteDraft(draft = {}, fallbackId) {
     lineItems: (Array.isArray(draft.lineItems) ? draft.lineItems : []).map(
       (item, index) => normalizeQuoteLineItem(item, `${id}-li-${index + 1}`)
     ),
+    // S2/Q7: ordered remark selection + output language (back-compat: [] / "").
+    noteIds: Array.isArray(draft.noteIds) ? draft.noteIds.map(String) : [],
+    language: ["EN", "ZH", "ES"].includes(draft.language) ? draft.language : "",
     createdAt: draft.createdAt || null,
     updatedAt: draft.updatedAt || null,
   };
