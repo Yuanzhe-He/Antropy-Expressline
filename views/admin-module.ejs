@@ -211,18 +211,16 @@
                 <% for (const group of selectedLine.containerGroups || []) { %>
                   <% const rate = selectedLine.guarantee.ratesByGroup?.[group.key]; %>
                   <td>
-                    <% if (rate) { %>
-                      <div class="rate-cell">
-                        <input type="number" min="0" step="0.01" name="guarantee_<%= group.key %>_rate" value="<%= rate.rate %>" />
-                        <select name="guarantee_<%= group.key %>_currency">
-                          <% for (const option of currencyOptions) { %>
-                            <option value="<%= option.code %>" <%= rate.currency === option.code ? "selected" : "" %>>
-                              <%= option.label %>
-                            </option>
-                          <% } %>
-                        </select>
-                      </div>
-                    <% } %>
+                    <div class="rate-cell">
+                      <input type="number" min="0" step="0.01" name="guarantee_<%= group.key %>_rate" value="<%= rate ? rate.rate : '' %>" placeholder="—" />
+                      <select name="guarantee_<%= group.key %>_currency">
+                        <% for (const option of currencyOptions) { %>
+                          <option value="<%= option.code %>" <%= (rate ? rate.currency : 'MXN') === option.code ? "selected" : "" %>>
+                            <%= option.label %>
+                          </option>
+                        <% } %>
+                      </select>
+                    </div>
                   </td>
                 <% } %>
               </tr>
@@ -252,6 +250,7 @@
                 <% for (const group of selectedLine.containerGroups || []) { %>
                   <th><%= group.label %></th>
                 <% } %>
+                <th><%= t("admin.actions") %></th>
               </tr>
             </thead>
             <tbody>
@@ -270,36 +269,41 @@
                     </select>
                   </td>
                   <td>
-                    <% if (charge.blRate) { %>
+                    <div class="rate-cell">
+                      <input type="number" min="0" step="0.01" name="charge_bl_<%= charge.id %>_rate" value="<%= charge.blRate ? charge.blRate.rate : '' %>" placeholder="—" />
+                      <select name="charge_bl_<%= charge.id %>_currency">
+                        <% for (const option of currencyOptions) { %>
+                          <option value="<%= option.code %>" <%= (charge.blRate ? charge.blRate.currency : 'MXN') === option.code ? "selected" : "" %>>
+                            <%= option.label %>
+                          </option>
+                        <% } %>
+                      </select>
+                    </div>
+                  </td>
+                  <% for (const group of selectedLine.containerGroups || []) { %>
+                    <% const rate = charge.groupRates?.[group.key]; %>
+                    <td>
                       <div class="rate-cell">
-                        <input type="number" min="0" step="0.01" name="charge_bl_<%= charge.id %>_rate" value="<%= charge.blRate.rate %>" />
-                        <select name="charge_bl_<%= charge.id %>_currency">
+                        <input type="number" min="0" step="0.01" name="charge_<%= charge.id %>_<%= group.key %>_rate" value="<%= rate ? rate.rate : '' %>" placeholder="—" />
+                        <select name="charge_<%= charge.id %>_<%= group.key %>_currency">
                           <% for (const option of currencyOptions) { %>
-                            <option value="<%= option.code %>" <%= charge.blRate.currency === option.code ? "selected" : "" %>>
+                            <option value="<%= option.code %>" <%= (rate ? rate.currency : 'MXN') === option.code ? "selected" : "" %>>
                               <%= option.label %>
                             </option>
                           <% } %>
                         </select>
                       </div>
-                    <% } %>
-                  </td>
-                  <% for (const group of selectedLine.containerGroups || []) { %>
-                    <% const rate = charge.groupRates?.[group.key]; %>
-                    <td>
-                      <% if (rate) { %>
-                        <div class="rate-cell">
-                          <input type="number" min="0" step="0.01" name="charge_<%= charge.id %>_<%= group.key %>_rate" value="<%= rate.rate %>" />
-                          <select name="charge_<%= charge.id %>_<%= group.key %>_currency">
-                            <% for (const option of currencyOptions) { %>
-                              <option value="<%= option.code %>" <%= rate.currency === option.code ? "selected" : "" %>>
-                                <%= option.label %>
-                              </option>
-                            <% } %>
-                          </select>
-                        </div>
-                      <% } %>
                     </td>
                   <% } %>
+                  <td>
+                    <button
+                      type="submit"
+                      class="ghost-button compact-button danger-button"
+                      formaction="/admin/<%= currentModuleKey %>/shipping-lines/<%= selectedLine.id %>/local-charges/<%= charge.id %>/delete"
+                      formmethod="post"
+                      data-confirm-submit="<%= t("admin.confirmDeleteRule") %>"
+                    ><%= t("admin.deleteLocalCharge") %></button>
+                  </td>
                 </tr>
               <% } %>
             </tbody>

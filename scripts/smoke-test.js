@@ -143,30 +143,24 @@ function buildHandoverAdminForm(moduleData, line) {
     entries.push(["benefitEnabled", "on"]);
   }
 
+  // H2/H3: the admin form now always renders BL + every (charge×group) cell,
+  // so the submitted body always includes them ("" when no rate). Mirror that.
   for (const charge of line.localCharges || []) {
     entries.push([`charge_concept_${charge.id}`, charge.concept]);
     entries.push([`charge_tax_${charge.id}`, charge.taxRate]);
-    if (charge.blRate) {
-      entries.push([`charge_bl_${charge.id}_rate`, charge.blRate.rate]);
-      entries.push([`charge_bl_${charge.id}_currency`, charge.blRate.currency]);
-    }
+    entries.push([`charge_bl_${charge.id}_rate`, charge.blRate ? charge.blRate.rate : ""]);
+    entries.push([`charge_bl_${charge.id}_currency`, charge.blRate ? charge.blRate.currency : "MXN"]);
     for (const group of line.containerGroups || []) {
       const rate = charge.groupRates?.[group.key];
-      if (!rate) {
-        continue;
-      }
-      entries.push([`charge_${charge.id}_${group.key}_rate`, rate.rate]);
-      entries.push([`charge_${charge.id}_${group.key}_currency`, rate.currency]);
+      entries.push([`charge_${charge.id}_${group.key}_rate`, rate ? rate.rate : ""]);
+      entries.push([`charge_${charge.id}_${group.key}_currency`, rate ? rate.currency : "MXN"]);
     }
   }
 
   for (const group of line.containerGroups || []) {
     const rate = line.guarantee.ratesByGroup?.[group.key];
-    if (!rate) {
-      continue;
-    }
-    entries.push([`guarantee_${group.key}_rate`, rate.rate]);
-    entries.push([`guarantee_${group.key}_currency`, rate.currency]);
+    entries.push([`guarantee_${group.key}_rate`, rate ? rate.rate : ""]);
+    entries.push([`guarantee_${group.key}_currency`, rate ? rate.currency : "MXN"]);
   }
 
   for (const mix of line.terminalMix || []) {
@@ -746,6 +740,72 @@ async function main() {
       { t }
     ).localCharges.pretaxTotal;
     assert.equal(afterLocalChargeTotal, beforeLocalChargeTotal + 25);
+
+    // H2/H3: blanking a (charge×group) cell removes the rate; entering a value
+    // into a previously-empty cell CREATES the rate object (Jose: COSCO/OOCL/WANHAI).
+    const blankForm = buildHandoverAdminForm(
+      shippingData.modules.handover,
+      updatedHandoverLine
+    ).map((entry) =>
+      entry[0] === `charge_${addedLocalCharge.id}_${firstChargeGroupKey}_rate`
+        ? [entry[0], ""]
+        : entry
+    );
+    response = await request(baseUrl, `/admin/handover/shipping-lines/${handoverLine.id}`, {
+      method: "POST",
+      jar: publicJar,
+      formEntries: blankForm,
+    });
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    updatedHandoverLine = shippingData.modules.handover.shippingLines.find(
+      (line) => line.id === handoverLine.id
+    );
+    let cleared = updatedHandoverLine.localCharges.find((c) => c.id === addedLocalCharge.id);
+    assert.ok(!cleared.groupRates[firstChargeGroupKey], "blanked group cell is cleared");
+
+    const recreateForm = buildHandoverAdminForm(
+      shippingData.modules.handover,
+      updatedHandoverLine
+    ).map((entry) =>
+      entry[0] === `charge_${addedLocalCharge.id}_${firstChargeGroupKey}_rate`
+        ? [entry[0], "42"]
+        : entry[0] === `charge_${addedLocalCharge.id}_${firstChargeGroupKey}_currency`
+          ? [entry[0], "USD"]
+          : entry
+    );
+    response = await request(baseUrl, `/admin/handover/shipping-lines/${handoverLine.id}`, {
+      method: "POST",
+      jar: publicJar,
+      formEntries: recreateForm,
+    });
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    updatedHandoverLine = shippingData.modules.handover.shippingLines.find(
+      (line) => line.id === handoverLine.id
+    );
+    const recreated = updatedHandoverLine.localCharges.find((c) => c.id === addedLocalCharge.id);
+    assert.ok(recreated.groupRates[firstChargeGroupKey], "value into empty cell creates rate");
+    assert.equal(recreated.groupRates[firstChargeGroupKey].rate, 42);
+    assert.equal(recreated.groupRates[firstChargeGroupKey].currency, "USD");
+
+    // H1: per-row delete removes the local charge (Jose: ZIM "Borrar 85").
+    const beforeDeleteCount = updatedHandoverLine.localCharges.length;
+    response = await request(
+      baseUrl,
+      `/admin/handover/shipping-lines/${handoverLine.id}/local-charges/${addedLocalCharge.id}/delete`,
+      { method: "POST", jar: publicJar }
+    );
+    assert.equal(response.status, 302);
+    shippingData = await getShippingData();
+    updatedHandoverLine = shippingData.modules.handover.shippingLines.find(
+      (line) => line.id === handoverLine.id
+    );
+    assert.equal(updatedHandoverLine.localCharges.length, beforeDeleteCount - 1);
+    assert.ok(
+      !updatedHandoverLine.localCharges.some((c) => c.id === addedLocalCharge.id),
+      "deleted local charge is gone"
+    );
 
     const beforeTerminalMixCount = handoverLine.terminalMix.length;
     response = await request(
