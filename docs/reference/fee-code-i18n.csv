@@ -50,3 +50,51 @@ BKG,订舱费,Reserva (booking)
 ATLAS,ATLAS 系统费,Cargo ATLAS
 APSF,机场服务费,Cargo de servicio aeroportuario
 AIRTRF,机场转运费,Transferencia aeroportuaria
+CAF,货币贬值附加费 (CAF),Factor de ajuste de divisa (CAF)
+CFC,集装箱场站设施费,Cargo por instalación de contenedores
+CFS,拼箱站费,Estación de carga de contenedores (CFS)
+CGS,美加港口拥堵附加费,Recargo por congestión (EE.UU./Canadá)
+DPCS,目的港拥堵附加费,Recargo por congestión en destino
+CLS,中国低硫附加费,Recargo por bajo azufre (China)
+ECA,排放控制区附加费,Recargo zona de control de emisiones (ECA)
+CHSG,码头闸口费,Cargo de puerta de terminal
+COC,产地证费,Cargo de certificado de origen
+CRF,放箱费,Cargo de liberación de contenedor
+CNCL,订舱取消费,Cargo por cancelación de reserva
+COMB,提单合并费,Cargo de combinación de BL
+COV,改船费,Cambio de buque
+CLM,索赔,Reclamación
+CCFEE,信用卡手续费,Cargo por tarjeta de crédito
+DSB FEE,垫付手续费,Cargo de desembolso
+DPCH,目的港码头费,Cargos portuarios en destino
+DEHC,目的港设备交接费,Cargo de entrega de equipo en destino (LoLo)
+DCHS,目的港底盘租赁,Renta de chasis en destino
+DCRC,目的港还箱费,Cargo de devolución de contenedor en destino
+DCLN,目的港洗箱费,Limpieza de contenedor en destino
+DLIFT,目的港吊箱费,Maniobra de contenedor en destino
+DLUL,目的港装卸费,Carga y descarga en destino
+DPRD,目的港滞箱费 (Per Diem),Per diem en destino
+DPREP,目的港预提费,Prepull en destino
+DPIER,目的港码头通行费 (Pier Pass),Pier Pass en destino
+DCTF,目的港清洁卡车费,Cargo de camión limpio en destino
+DWHARF,目的港码头费 (Wharfage),Cargo de muelle en destino
+DFUMI,目的港熏蒸费,Fumigación en destino
+DQUAR,目的港检疫查验费,Inspección de cuarentena en destino
+DLAB,目的港人工费,Cargos de mano de obra en destino
+DOT,目的港加班费,Tiempo extra en destino
+DWAIT,目的港等待费,Cargo por espera en destino
+DOVWE,目的港超重费,Cargo por sobrepeso en destino
+DPLT,目的港托盘费,Cargo de tarima en destino
+DPACK,目的港重新包装费,Reempaque en destino
+DSEG,目的港分拣/贴标费,Segregación / etiquetado en destino
+DIO,目的港进出仓费,Entrada y salida de almacén en destino
+DTOFE,目的港路桥费,Peaje en destino
+DTTRP,目的港中转运输费,Transporte de tránsito en destino
+DDGF,目的港危险品费,Cargo por mercancía peligrosa en destino
+DSEC,目的港安全附加费,Recargo de seguridad en destino
+DADMN,目的港管理费,Cargo administrativo en destino
+DAGNT,目的港代理费,Cargo de agente en destino
+DAMED,目的港改单费,Cargo por enmienda en destino
+DUTYDP,关税押金,Depósito de impuestos
+DOFI,垫付关税费(内部),Cargo de desembolso de impuestos (interno)
+DOFE,垫付关税费(外部),Cargo de desembolso de impuestos (externo)
