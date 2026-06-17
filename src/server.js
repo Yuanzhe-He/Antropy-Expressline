@@ -1346,6 +1346,7 @@ function buildInlandMapData(moduleData, lang = "zh", activeOriginId = null) {
         name: localizedInlandName(point, lang),
         lat: point.lat,
         lng: point.lng,
+        flatPrice: point.flatPrice == null ? null : Number(point.flatPrice),
       })),
       entries: entries.map((entry) => ({
         proveedor: entry.proveedor,
@@ -2473,11 +2474,14 @@ function createApp() {
       return redirectWithFlash(req, res, "error", req.t("inland.nameRequired"), `${INLAND_ADMIN_TARGET}#dest-${dest.id}`);
     }
     dest.precisePoints = dest.precisePoints || [];
+    const flatRaw = req.body.flatPrice;
     const newPoint = {
       id: `pp-${dest.id}-${Date.now().toString(36)}`,
       name,
       lat,
       lng,
+      // S1: optional flat all-in price (一口价). Empty -> null -> inherit city rate.
+      flatPrice: flatRaw !== undefined && String(flatRaw).trim() !== "" ? Number(flatRaw) : null,
       note: String(req.body.note || ""),
       source,
       link: /^https?:/i.test(link) ? link : "",
@@ -2520,6 +2524,22 @@ function createApp() {
     shippingData.modules.inland = inland;
     await saveShippingData(shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.preciseDeleted"), `${INLAND_ADMIN_TARGET}#dest-${dest.id}`);
+  });
+
+  // S1: edit a precise point's flat price (一口价). Empty clears it (inherit city rate).
+  app.post("/admin/inland/destinations/:id/precise-points/:pointId/save", requireAuth, async (req, res) => {
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const inland = structuredClone(getModuleData(shippingData, "inland"));
+    const dest = (inland.destinations || []).find((d) => d.id === req.params.id);
+    const point = dest && (dest.precisePoints || []).find((p) => p.id === req.params.pointId);
+    if (!dest || !point) {
+      return res.status(404).render("not-found", baseView(req, { pageTitle: req.t("system.notFoundTitle"), languageReturnTo: req.originalUrl }));
+    }
+    const raw = req.body.flatPrice;
+    point.flatPrice = raw !== undefined && String(raw).trim() !== "" ? Number(raw) : null;
+    shippingData.modules.inland = inland;
+    await saveShippingData(shippingData);
+    return redirectWithFlash(req, res, "success", req.t("inland.preciseSaved") || "OK", `${INLAND_ADMIN_TARGET}#dest-${dest.id}`);
   });
 
   app.post("/admin/inland/rate-entries/add", requireAuth, async (req, res) => {

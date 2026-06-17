@@ -1885,6 +1885,10 @@ function normalizeInlandPrecisePoint(point = {}, fallbackId) {
     name: String(point.name || "").trim() || fallbackId,
     lat: parseNullableNumber(point.lat),
     lng: parseNullableNumber(point.lng),
+    // S1 (batch3): optional flat all-in price (MXN) for this exact point. null =
+    // inherit the city/destination per-vehicle rate. Set = a single price that
+    // overrides every vehicle tier (José: "区域内多客户各自一口价").
+    flatPrice: parseNullableNumber(point.flatPrice),
     note: String(point.note || ""),
     source: ["gmaps-link", "manual", "seed-catalog"].includes(point.source)
       ? point.source

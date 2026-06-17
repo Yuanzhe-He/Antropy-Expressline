@@ -419,22 +419,32 @@
     panel.result.hidden = false;
 
     const service = currentService();
-    // S2: price per selected vehicle tier (maxByVehicle covers all 6; sencillo/full
-    // also have legacy maxSencillo/maxFull). null tier -> "Pendiente / 待报价".
+    // S1 (batch3): a selected precise point with a flatPrice overrides the
+    // per-vehicle city rate with a single all-in price (覆盖车型档).
+    const preciseId = panel.preciseInput ? panel.preciseInput.value : "";
+    const precisePoint = preciseId
+      ? (dest.precisePoints || []).find((p) => p.id === preciseId)
+      : null;
+    const flat =
+      precisePoint && precisePoint.flatPrice != null && precisePoint.flatPrice !== ""
+        ? Number(precisePoint.flatPrice)
+        : null;
+    // S2: price per selected vehicle tier (maxByVehicle covers all tiers).
     const vinfo = (dest.maxByVehicle && dest.maxByVehicle[service]) || null;
-    const maxRate = vinfo ? vinfo.rate : null;
-    const provider = vinfo ? vinfo.provider : null;
+    const maxRate = flat != null ? flat : vinfo ? vinfo.rate : null;
+    const provider = flat != null ? i18n.flatPriceProvider || "Flat" : vinfo ? vinfo.provider : null;
     const qty = currentQty();
     const tax = currentTaxRatio();
 
     // R2 burreo (short-haul) add-on: only sencillo/full carry a drayage rate.
+    // A flat one-price point is all-in, so no burreo add-on applies.
     const burreoRate =
       service === "sencillo"
         ? dest.maxBurreoSencillo
         : service === "full"
           ? dest.maxBurreoFull
           : null;
-    const hasBurreo = burreoRate != null && Number(burreoRate) > 0;
+    const hasBurreo = flat == null && burreoRate != null && Number(burreoRate) > 0;
     if (panel.burreoWrap) {
       panel.burreoWrap.hidden = !hasBurreo;
     }
