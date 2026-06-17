@@ -141,16 +141,23 @@
   }
 
   // --- Add row ---
+  const uomOptions = readJson("quote-uom-options", []); // [{value,label}]
+  const sectionLabels = readJson("quote-section-labels", { foreign: "NO MEXICO", mexico: "MEXICO" });
   function buildRow() {
     const tr = document.createElement("tr");
     tr.setAttribute("data-quote-row", "");
     const catOptions = CATEGORIES.map((c) => `<option value="${c}">${c}</option>`).join("");
+    const uomOpts =
+      '<option value=""></option>' +
+      uomOptions.map((u) => `<option value="${u.value}">${u.label}</option>`).join("");
     const id = "li-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6);
     tr.innerHTML =
+      '<td><select name="li_section[]"><option value="foreign">' + sectionLabels.foreign + '</option><option value="mexico" selected>' + sectionLabels.mexico + "</option></select></td>" +
       '<td><select name="li_category[]">' + catOptions + "</select></td>" +
       '<td class="concept-cell"><input type="text" name="li_conceptEn[]" placeholder="EN" /><input type="text" name="li_conceptZh[]" placeholder="中" lang="zh" /></td>' +
       '<td><input type="text" name="li_code[]" list="fee-codes" data-quote-code /></td>' +
       '<td><input type="number" min="0" step="1" name="li_unit[]" value="1" data-quote-unit /></td>' +
+      '<td><select name="li_uom[]">' + uomOpts + "</select></td>" +
       '<td><input type="number" min="0" step="0.01" name="li_unitPrice[]" value="0" data-quote-price /></td>' +
       '<td><select name="li_currency[]" data-quote-currency><option value="">—</option><option value="MXN" selected>MXN</option><option value="USD">USD</option></select></td>' +
       '<td class="quote-total-cell" data-quote-rowtotal>0.00</td>' +

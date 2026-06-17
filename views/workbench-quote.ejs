@@ -96,10 +96,12 @@
       <table class="quote-table" data-quote-table>
         <thead>
           <tr>
+            <th><%= t("quote.colSection") %></th>
             <th><%= t("quote.colCategory") %></th>
             <th style="min-width: 220px;"><%= t("quote.colConcept") %></th>
             <th><%= t("quote.colCode") %></th>
-            <th><%= t("quote.colUnit") %></th>
+            <th><%= t("quote.colQty") %></th>
+            <th><%= t("quote.colUom") %></th>
             <th><%= t("quote.colUnitPrice") %></th>
             <th><%= t("quote.colCurrency") %></th>
             <th><%= t("quote.colTotal") %></th>
@@ -111,6 +113,12 @@
         <tbody data-quote-rows>
           <% quoteView.rows.forEach((row) => { %>
             <tr data-quote-row data-currency="<%= row.currency %>">
+              <td>
+                <select name="li_section[]">
+                  <option value="foreign" <%= row.section === "foreign" ? "selected" : "" %>><%= t("quote.sectionForeign") %></option>
+                  <option value="mexico" <%= row.section !== "foreign" ? "selected" : "" %>><%= t("quote.sectionMexico") %></option>
+                </select>
+              </td>
               <td>
                 <select name="li_category[]">
                   <% ["SHIPPING LINE","PORT FEES","CUSTOMS CLEARANCE","TRANSPORTATION","DUTY"].forEach((cat) => { %>
@@ -126,6 +134,14 @@
                 <input type="text" name="li_code[]" value="<%= row.code %>" list="fee-codes" data-quote-code title="<%= t('quote.pickCode') %>" />
               </td>
               <td><input type="number" min="0" step="1" name="li_unit[]" value="<%= row.unit === null ? '' : row.unit %>" data-quote-unit /></td>
+              <td>
+                <select name="li_uom[]">
+                  <option value=""></option>
+                  <% uomOptions.forEach((u) => { %>
+                    <option value="<%= u %>" <%= row.unitOfMeasure === u ? "selected" : "" %>><%= t("quote.uom_" + u) %></option>
+                  <% }) %>
+                </select>
+              </td>
               <td><input type="number" min="0" step="0.01" name="li_unitPrice[]" value="<%= row.isAtCost ? '' : row.unitPrice %>" data-quote-price <%= row.isAtCost ? "disabled" : "" %> /></td>
               <td>
                 <select name="li_currency[]" data-quote-currency>
@@ -190,6 +206,8 @@
 <script id="quote-selector-data" type="application/json"><%- JSON.stringify(selectorData) %></script>
 <script id="quote-fee-codes" type="application/json"><%- JSON.stringify(feeCodes) %></script>
 <script id="quote-initial" type="application/json"><%- JSON.stringify({ selectedPortId: formData.pullInputs.portId, selectedTerminalId: formData.pullInputs.terminalId }) %></script>
+<script id="quote-uom-options" type="application/json"><%- JSON.stringify(uomOptions.map((u) => ({ value: u, label: t("quote.uom_" + u) }))) %></script>
+<script id="quote-section-labels" type="application/json"><%- JSON.stringify({ foreign: t("quote.sectionForeign"), mexico: t("quote.sectionMexico") }) %></script>
 <script src="/quote.js"></script>
 
 <%- include("partials/footer") %>

@@ -206,6 +206,12 @@ const QUOTE_CARGO_TYPE_OPTIONS = Object.freeze([
   "FCL", "LCL", "BLK", "LQD", "BBK", "BCN", "SCN", "ROR",
 ]);
 
+// Q7.3: unit of measure (separate from the numeric qty). Stored as a code;
+// labels are resolved per language in the view via i18n (quote.uom_*).
+const QUOTE_UOM_OPTIONS = Object.freeze([
+  "container", "bl", "occurrence", "piece", "vehicle", "day",
+]);
+
 const DEFAULT_QUOTE_HEADER = Object.freeze({
   operation: "IMPORT",
   department: "OCEAN",
@@ -606,6 +612,18 @@ function groupRowsForRender(rows = []) {
   })).filter((group) => group.items.length);
 }
 
+// Q7.3: split rows into the NO MEXICO (origin/China side) and MEXICO LOCAL
+// sections, each grouped by category. Sections with no rows are dropped.
+const QUOTE_SECTION_ORDER = Object.freeze(["foreign", "mexico"]);
+function groupRowsBySection(rows = []) {
+  return QUOTE_SECTION_ORDER.map((section) => ({
+    section,
+    groups: groupRowsForRender(
+      rows.filter((row) => (row.section === "foreign" ? "foreign" : "mexico") === section)
+    ),
+  })).filter((entry) => entry.groups.length);
+}
+
 // Resolve the cached driving route (origin -> destination) for a quote so the
 // document can show distance / duration / via-cities. Pure data lookup over the
 // inland module — no network. Returns null when the destination or its cached
@@ -651,6 +669,7 @@ module.exports = {
   QUOTE_INCOTERM_OPTIONS,
   QUOTE_TRANSPORT_MODE_OPTIONS,
   QUOTE_CARGO_TYPE_OPTIONS,
+  QUOTE_UOM_OPTIONS,
   isAtCostValue,
   toNumber,
   roundMoney,
@@ -662,5 +681,6 @@ module.exports = {
   computeQuoteTotals,
   pullCalculatorValues,
   groupRowsForRender,
+  groupRowsBySection,
   resolveQuoteRoute,
 };
