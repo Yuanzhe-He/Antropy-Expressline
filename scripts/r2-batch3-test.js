@@ -81,6 +81,7 @@ function s1FlatPriceRoundTrip() {
   const out = normalizeShippingData({
     modules: {
       inland: {
+        settings: { inlandSeedVersion: 9999 }, // keep our test destinations (skip reseed)
         origins: [{ id: "manzanillo", name: "Manzanillo", lat: 19, lng: -104 }],
         destinations: [
           {
@@ -104,6 +105,6 @@ function s1FlatPriceRoundTrip() {
 }
 
 p0HeaderParity();
+s1FlatPriceRoundTrip();
 if (process.env.BATCH3_S3) s3ConceptEsRoundTrip(); // enabled once S3 lands
-if (process.env.BATCH3_S1) s1FlatPriceRoundTrip(); // enabled once S1 lands
 console.log("r2-batch3-test-ok");
