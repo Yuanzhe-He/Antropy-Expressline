@@ -41,7 +41,6 @@ function loadAssets() {
     fontSansBold: fileToDataUri("fonts/NotoSans-Bold.woff2"),
     fontCjk: fileToDataUri("fonts/NotoSansSC-Regular.woff2"),
     logoExpressLine: fileToDataUri("express-line-logo.png"),
-    logoDewell: fileToDataUri("dewell-logo.svg"),
     logoIata: fileToDataUri("iata-logo.png"),
     logoCtpat: fileToDataUri("ctpat-logo.png"),
   };
