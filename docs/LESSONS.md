@@ -19,6 +19,18 @@ Only record lessons that may change future behavior.
 - landed_in:
 - next_action:
 
+## 2026-06-17 - Stacked-PR rebase-merge conflict recovery + re-verify stale plan premises against merged HEAD
+
+- source_type: ai-self-correction
+- task_type: deployment / planning
+- domain: git PR merge workflow; spec-first investigation
+- trigger: merging a clean linear stacked pair (PR#3 batch1→main, PR#4 batch2→batch1) then writing the next batch's spec.
+- incident_or_feedback: (1) Rebase-merging the lower PR (#3) gave batch1 a NEW sha on main (fa6a7e0 ≠ 8088125); retargeting the upper PR (#4) to main then went CONFLICTING because files touched by BOTH batches 3-way-conflicted against the rebased base. (2) The execution plan's file:line refs and bug premises were written pre-batch2-merge and were partly stale: O6.7 VEHICLE_LABEL_KEYS was already fixed by batch2; "admin-module.ejs shared by handover+customs" was false (renderAdminRules sends customs→admin-customs.ejs, handover→admin-module.ejs); H4 add-set already seeds a first tramo; customs fixedCharges cells were already always-editable.
+- lesson: (a) For a stacked pair, either merge-commit both (preserves SHAs, deterministic) or merge the lower PR then recover the upper WITHOUT force-push by cherry-picking only its incremental commits onto a fresh branch off the new main (verify `git diff --stat <orig-tip> HEAD` is EMPTY = byte-identical), close the conflicted PR, open a replacement. Don't rebase-merge a stacked lower PR if you then need the upper PR to retarget cleanly. (b) When the plan was authored before recent merges landed, re-verify every file:line and every "X is broken" premise against the actual merged HEAD before specifying changes — several "bugs" may already be fixed and several "shared" files may not be shared; report the corrections instead of coding to the stale premise.
+- scope: project-type
+- landed_in: docs/specs/20260616_batch1_fixes_SPEC.md (C1-C4 corrections); merge recovery via PR#5.
+- next_action: prefer merge-commit for stacked pairs, or cherry-pick-onto-fresh-branch recovery; always diff the recovered branch against the original tip to prove content equality; open each batch spec by re-confirming line refs against HEAD.
+
 ## 2026-05-05 - Avoid Per-Option Admin Release Buttons
 
 - source_type: ai-self-correction
