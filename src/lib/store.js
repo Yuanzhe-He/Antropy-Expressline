@@ -29,6 +29,10 @@ const {
   QUOTE_GROUP_ORDER,
   QUOTE_TEMPLATE_VERSION,
   DEFAULT_QUOTE_HEADER,
+  QUOTE_DEPARTMENT_OPTIONS,
+  QUOTE_TRANSPORT_MODE_OPTIONS,
+  QUOTE_INCOTERM_OPTIONS,
+  QUOTE_CARGO_TYPE_OPTIONS,
 } = require("./quote");
 
 loadLocalEnv();
@@ -2160,19 +2164,42 @@ function normalizeQuoteLineItem(item = {}, fallbackId) {
   };
 }
 
+// P0 (20260617 batch3): kept in lockstep with server.js parseQuoteHeader so a
+// quote round-tripped through a saved draft does NOT lose INLAND department, the
+// new cargo types, transportMode, or extraFields. Values outside the option sets
+// are dropped (same as parseQuoteHeader) — Jose supplied the standard sets.
+function pickQuoteHeaderOption(value, options, fallback = "") {
+  const normalized = String(value ?? "").trim().toUpperCase();
+  return options.includes(normalized) ? normalized : fallback;
+}
 function normalizeQuoteHeader(header = {}) {
   const operation = String(header.operation || "").toUpperCase();
-  const department = String(header.department || "").toUpperCase();
-  const cargoType = String(header.cargoType || "").toUpperCase();
   return {
-    operation: ["IMPORT", "EXPORT"].includes(operation) ? operation : "IMPORT",
-    department: ["OCEAN", "AIR"].includes(department) ? department : "OCEAN",
-    incoterm: String(header.incoterm ?? DEFAULT_QUOTE_HEADER.incoterm).trim(),
+    operation: operation === "EXPORT" ? "EXPORT" : "IMPORT",
+    department: pickQuoteHeaderOption(
+      header.department,
+      QUOTE_DEPARTMENT_OPTIONS,
+      DEFAULT_QUOTE_HEADER.department
+    ),
+    transportMode: pickQuoteHeaderOption(
+      header.transportMode,
+      QUOTE_TRANSPORT_MODE_OPTIONS,
+      ""
+    ),
+    incoterm: pickQuoteHeaderOption(header.incoterm, QUOTE_INCOTERM_OPTIONS, ""),
     pol: String(header.pol ?? DEFAULT_QUOTE_HEADER.pol).trim(),
     pod: String(header.pod ?? DEFAULT_QUOTE_HEADER.pod).trim(),
     commodity: String(header.commodity || "").trim(),
-    cargoType: ["FCL", "LCL"].includes(cargoType) ? cargoType : "FCL",
+    cargoType: pickQuoteHeaderOption(header.cargoType, QUOTE_CARGO_TYPE_OPTIONS, ""),
     delivery: String(header.delivery || "").trim(),
+    extraFields: Array.isArray(header.extraFields)
+      ? header.extraFields
+          .map((f) => ({
+            label: String(f.label || "").trim(),
+            value: String(f.value || "").trim(),
+          }))
+          .filter((f) => f.label)
+      : [],
   };
 }
 
