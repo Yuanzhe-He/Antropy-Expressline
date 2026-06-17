@@ -244,16 +244,28 @@
 
   function applySelectionLayer() {
     const dest = destById.get(selectedId);
+    // O6.2: when a precise point is selected, draw ITS route (and fall back to its
+    // exact coords), not the city-level destination route.
+    const preciseId = (panel.preciseInput && panel.preciseInput.value) || "";
+    const precisePoint = preciseId
+      ? (dest?.precisePoints || []).find((p) => p.id === preciseId)
+      : null;
     let feature = null;
-    const cached = routeForDestination(selectedId);
+    const cached = preciseId
+      ? routeByKey.get(`${selectedId}|precisePoint|${preciseId}`)
+      : routeForDestination(selectedId);
     if (cached && cached.encodedPolyline) {
       const coords = decodePolyline(cached.encodedPolyline);
       if (coords.length >= 2) {
         feature = { type: "Feature", properties: { destinationId: selectedId }, geometry: { type: "LineString", coordinates: coords } };
       }
     }
-    if (!feature && dest) {
-      feature = fallbackArc(dest);
+    if (!feature) {
+      const arcTarget =
+        precisePoint && precisePoint.lat != null ? precisePoint : dest;
+      if (arcTarget) {
+        feature = fallbackArc(arcTarget);
+      }
     }
     const src = map.getSource("inland-selected");
     if (src) src.setData({ type: "FeatureCollection", features: feature ? [feature] : [] });
@@ -549,14 +561,15 @@
     panel.preciseChips.querySelectorAll(".inland-chip").forEach((c) => c.classList.remove("is-active"));
     chip.classList.add("is-active");
     panel.preciseInput.value = chip.dataset.preciseId || "";
+    // O6.2: redraw the route to the selected precise point (or back to the
+    // destination route for the default chip), recenter, and refresh the quote.
+    if (map.isStyleLoaded()) applySelectionLayer();
     const dest = destById.get(selectedId);
     const point = (dest?.precisePoints || []).find((p) => p.id === chip.dataset.preciseId);
-    const route = routeByKey.get(`${selectedId}|precisePoint|${chip.dataset.preciseId}`);
-    if (route && route.encodedPolyline) {
-      applySelectionLayer();
-    } else if (point && point.lat != null) {
+    if (point && point.lat != null) {
       map.flyTo({ center: [point.lng, point.lat], zoom: 9 });
     }
+    renderQuote();
   });
 
   map.on("load", () => {
