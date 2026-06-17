@@ -199,15 +199,27 @@
     </div>
   </section>
 
-  <!-- Notes (Q11: pick which remarks print; managed in /admin/quote/settings) -->
+  <!-- Notes (Q11: pick which remarks print; drag to reorder; managed in /admin/quote/settings) -->
   <section class="quote-card">
     <h3><%= t("quote.remarksSelectTitle") %></h3>
-    <div class="quote-notes-list">
-      <% (quoteNotes || []).forEach((note) => { %>
-        <label style="display:flex; gap:0.5rem; align-items:flex-start; margin-bottom:0.35rem;">
-          <input type="checkbox" name="note_sel[]" value="<%= note.id %>" <%= (formData.noteIds || []).includes(note.id) ? "checked" : "" %> />
-          <span><div><%= note.en %></div><% if (note.zh) { %><div class="zh" lang="zh"><%= note.zh %></div><% } %></span>
-        </label>
+    <p class="quote-hint"><%= t("quote.remarksReorderHint") %></p>
+    <%# S2: render selected remarks first (in their saved per-quote order), then the
+        rest. note_sel[] submits in DOM order, so the printed order = this order. %>
+    <%
+      const selIds = formData.noteIds || [];
+      const noteById = {}; (quoteNotes || []).forEach((n) => { noteById[n.id] = n; });
+      const orderedNotes = selIds.map((id) => noteById[id]).filter(Boolean)
+        .concat((quoteNotes || []).filter((n) => !selIds.includes(n.id)));
+    %>
+    <div class="quote-notes-list" data-remark-list>
+      <% orderedNotes.forEach((note) => { %>
+        <div class="quote-remark-item" data-remark-item draggable="true" style="display:flex; gap:0.5rem; align-items:flex-start; margin-bottom:0.35rem;">
+          <span class="quote-remark-handle" data-remark-handle title="<%= t('quote.dragToReorder') %>" style="cursor:grab; user-select:none;">⋮⋮</span>
+          <label style="display:flex; gap:0.5rem; align-items:flex-start; flex:1;">
+            <input type="checkbox" name="note_sel[]" value="<%= note.id %>" <%= selIds.includes(note.id) ? "checked" : "" %> />
+            <span><div><%= note.en %></div><% if (note.zh) { %><div class="zh" lang="zh"><%= note.zh %></div><% } %></span>
+          </label>
+        </div>
       <% }) %>
       <% if (!(quoteNotes || []).length) { %><p class="quote-hint"><%= t("quote.remarksLibraryHint") %></p><% } %>
     </div>

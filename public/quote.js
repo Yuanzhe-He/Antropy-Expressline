@@ -210,4 +210,27 @@
       if (row) row.remove();
     });
   }
+
+  // S2: drag-reorder the remark rows. note_sel[] submits in DOM order, so the
+  // printed remark order follows whatever the user arranges here (per quote).
+  const remarkList = form.querySelector("[data-remark-list]");
+  if (remarkList) {
+    let dragging = null;
+    remarkList.addEventListener("dragstart", (event) => {
+      dragging = event.target.closest("[data-remark-item]");
+      if (dragging) event.dataTransfer.effectAllowed = "move";
+    });
+    remarkList.addEventListener("dragend", () => {
+      dragging = null;
+    });
+    remarkList.addEventListener("dragover", (event) => {
+      if (!dragging) return;
+      event.preventDefault();
+      const over = event.target.closest("[data-remark-item]");
+      if (!over || over === dragging) return;
+      const rect = over.getBoundingClientRect();
+      const after = event.clientY > rect.top + rect.height / 2;
+      remarkList.insertBefore(dragging, after ? over.nextSibling : over);
+    });
+  }
 })();
