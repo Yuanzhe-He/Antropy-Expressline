@@ -174,8 +174,9 @@
                   <th><%= t("inland.serviceFull") %></th>
                   <th title="1.5 ton">1.5t</th>
                   <th title="3.5 ton">3.5t</th>
-                  <th title="8 ton corto">8t</th>
+                  <th title="8 ton">8t</th>
                   <th title="Lowboy / Cama baja">LB</th>
+                  <th title="Caja seca 53 ft / 53尺厢式">53</th>
                   <th><%= t("inland.burreo") %> S</th>
                   <th><%= t("inland.burreo") %> F</th>
                   <th><%= t("inland.client") %></th>
@@ -194,6 +195,7 @@
                     <td><input type="text" name="re_veh_light_3_5t_<%= entry.id %>" value="<%= entry.vehiclePrices && entry.vehiclePrices.light_3_5t != null ? entry.vehiclePrices.light_3_5t : '' %>" placeholder="—" /></td>
                     <td><input type="text" name="re_veh_short_8t_<%= entry.id %>" value="<%= entry.vehiclePrices && entry.vehiclePrices.short_8t != null ? entry.vehiclePrices.short_8t : '' %>" placeholder="—" /></td>
                     <td><input type="text" name="re_veh_lowboy_<%= entry.id %>" value="<%= entry.vehiclePrices && entry.vehiclePrices.lowboy != null ? entry.vehiclePrices.lowboy : '' %>" placeholder="—" /></td>
+                    <td><input type="text" name="re_veh_box_53_<%= entry.id %>" value="<%= entry.vehiclePrices && entry.vehiclePrices.box_53 != null ? entry.vehiclePrices.box_53 : '' %>" placeholder="—" /></td>
                     <td><input type="text" name="re_burreoS_<%= entry.id %>" value="<%= entry.burreo && entry.burreo.sencillo != null ? entry.burreo.sencillo : '' %>" /></td>
                     <td><input type="text" name="re_burreoF_<%= entry.id %>" value="<%= entry.burreo && entry.burreo.full != null ? entry.burreo.full : '' %>" /></td>
                     <td><input type="text" name="re_cliente_<%= entry.id %>" value="<%= entry.cliente || '' %>" /></td>

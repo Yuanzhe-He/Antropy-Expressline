@@ -1,9 +1,9 @@
 // Inland vehicle (truck) types — shared catalog + price accessor.
 //
-// 6 tiers requested by José (2026-06-15). single/double trailer reuse the
-// existing rateEntry.sencillo / .full fields (CSV-sourced, back-compat); the
-// other 4 tiers live in rateEntry.vehiclePrices and start null (no rate yet —
-// José to provide). UI shows "Pendiente / 待报价" for tiers without a price.
+// 7 tiers (2026-06-17 update). single/double trailer reuse the existing
+// rateEntry.sencillo / .full fields (CSV-sourced, back-compat); the other 5
+// tiers live in rateEntry.vehiclePrices and start null (no rate yet). Tiers
+// without a price render BLANK (no "Pendiente" placeholder).
 
 const VEHICLE_TYPES = Object.freeze([
   { key: "light_1_5t", legacyField: null },
@@ -12,6 +12,7 @@ const VEHICLE_TYPES = Object.freeze([
   { key: "sencillo", legacyField: "sencillo" },
   { key: "full", legacyField: "full" },
   { key: "lowboy", legacyField: null },
+  { key: "box_53", legacyField: null },
 ]);
 
 const VEHICLE_TYPE_KEYS = Object.freeze(VEHICLE_TYPES.map((v) => v.key));

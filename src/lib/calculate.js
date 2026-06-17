@@ -9,7 +9,7 @@ const {
 const { convertAmount } = require("./exchange-rates");
 const { normalizeVehicleType, getVehiclePrice } = require("./inland-vehicles");
 
-// 6-tier vehicle -> i18n label key (reuses the S2 vehicle i18n; sencillo/full
+// 7-tier vehicle -> i18n label key (reuses the S2 vehicle i18n; sencillo/full
 // keep their existing service* keys). Without this, the explanation text would
 // show every non-full tier as "Sencillo".
 const VEHICLE_LABEL_KEYS = {
@@ -19,6 +19,7 @@ const VEHICLE_LABEL_KEYS = {
   sencillo: "inland.serviceSencillo",
   full: "inland.serviceFull",
   lowboy: "inland.vehicleLowboy",
+  box_53: "inland.vehicleBox53",
 };
 function vehicleLabel(t, type) {
   return t(VEHICLE_LABEL_KEYS[type] || "inland.serviceSencillo");
