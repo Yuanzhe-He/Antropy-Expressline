@@ -1550,6 +1550,31 @@ async function main() {
     assert.equal(response.status, 200, "quote admin settings page renders");
     expectContains(response.text, 'name="quoteNumberPrefix"', "quote admin number prefix");
     expectContains(response.text, 'name="note_en[]"', "quote admin remarks library");
+    expectContains(response.text, 'name="hd_department"', "quote admin header defaults");
+
+    // S5: set a default header preset, then a fresh quote pre-fills it.
+    response = await request(baseUrl, "/admin/quote/settings", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: [
+        ["quoteNumberPrefix", "ELCMEX-SI-"],
+        ["quoteNumberSuffix", "E"],
+        ["quoteNumberPad", "3"],
+        ["lastQuoteSeq", "4"],
+        ["hd_department", "INLAND"],
+        ["hd_cargoType", "BBK"],
+      ],
+    });
+    assert.equal(response.status, 302, "quote admin POST saves");
+    response = await request(baseUrl, "/workbench/quote", { jar: publicJar });
+    assert.ok(
+      /<option value="INLAND"[^>]*selected/.test(response.text),
+      "S5: fresh quote pre-fills default department INLAND"
+    );
+    assert.ok(
+      /<option value="BBK"[^>]*selected/.test(response.text),
+      "S5: fresh quote pre-fills default cargoType BBK"
+    );
 
     // Pull from calculators then recompute.
     response = await request(baseUrl, "/workbench/quote", {

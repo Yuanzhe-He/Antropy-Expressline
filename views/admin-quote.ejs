@@ -18,6 +18,29 @@
     </div>
   </section>
 
+  <section class="panel" id="quote-header-defaults">
+    <div class="section-title"><div><p class="eyebrow"><%= t("quote.headerDefaultsTitle") %></p><small><%= t("quote.headerDefaultsHint") %></small></div></div>
+    <% const hd = quoteSettings.headerDefaults || {}; %>
+    <div class="grid-form">
+      <label><span><%= t("quote.department") %></span>
+        <select name="hd_department"><option value="">—</option>
+          <% headerOptions.department.forEach((c) => { %><option value="<%= c %>" <%= hd.department === c ? "selected" : "" %>><%= c %></option><% }) %>
+        </select></label>
+      <label><span><%= t("quote.transportMode") %></span>
+        <select name="hd_transportMode"><option value="">—</option>
+          <% headerOptions.transportMode.forEach((c) => { %><option value="<%= c %>" <%= hd.transportMode === c ? "selected" : "" %>><%= c %></option><% }) %>
+        </select></label>
+      <label><span><%= t("quote.incoterm") %></span>
+        <select name="hd_incoterm"><option value="">—</option>
+          <% headerOptions.incoterm.forEach((c) => { %><option value="<%= c %>" <%= hd.incoterm === c ? "selected" : "" %>><%= c %></option><% }) %>
+        </select></label>
+      <label><span><%= t("quote.cargoType") %></span>
+        <select name="hd_cargoType"><option value="">—</option>
+          <% headerOptions.cargoType.forEach((c) => { %><option value="<%= c %>" <%= hd.cargoType === c ? "selected" : "" %>><%= c %></option><% }) %>
+        </select></label>
+    </div>
+  </section>
+
   <section class="panel" id="quote-remarks">
     <div class="section-title">
       <div><p class="eyebrow"><%= t("quote.remarksLibrary") %></p><small><%= t("quote.remarksLibraryHint") %></small></div>

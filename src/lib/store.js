@@ -2245,6 +2245,21 @@ function normalizeQuoteDraft(draft = {}, fallbackId) {
   };
 }
 
+// S5: default header preset (each value validated against its option set; "" = none).
+function normalizeQuoteHeaderDefaults(hd = {}) {
+  const pick = (value, options) => {
+    const v = String(value ?? "").trim().toUpperCase();
+    return options.includes(v) ? v : "";
+  };
+  const src = hd && typeof hd === "object" ? hd : {};
+  return {
+    department: pick(src.department, QUOTE_DEPARTMENT_OPTIONS),
+    transportMode: pick(src.transportMode, QUOTE_TRANSPORT_MODE_OPTIONS),
+    incoterm: pick(src.incoterm, QUOTE_INCOTERM_OPTIONS),
+    cargoType: pick(src.cargoType, QUOTE_CARGO_TYPE_OPTIONS),
+  };
+}
+
 function normalizeQuoteModuleData(moduleData = {}) {
   const settingsIn = moduleData.settings || {};
   const templateVersion = parseNumber(settingsIn.templateVersion, 0);
@@ -2276,6 +2291,9 @@ function normalizeQuoteModuleData(moduleData = {}) {
       lastQuoteSeq: Math.max(0, Math.trunc(parseNumber(settingsIn.lastQuoteSeq, 4))),
       showIndicativeConversion: Boolean(settingsIn.showIndicativeConversion),
       indicativeCurrency: normalizeCurrencyCode(settingsIn.indicativeCurrency, "MXN"),
+      // S5 (batch3): default header values pre-filled on a new quote. Validated
+      // against the same option sets; empty = no preset.
+      headerDefaults: normalizeQuoteHeaderDefaults(settingsIn.headerDefaults),
       templateVersion: QUOTE_TEMPLATE_VERSION,
     },
     templateRows: (seedTemplate ? QUOTE_TEMPLATE_ROWS : moduleData.templateRows).map(
