@@ -240,6 +240,9 @@
                         <th><%= t("admin.item") %></th>
                         <th><%= t("common.note") %></th>
                         <th><%= t("admin.taxRate") %></th>
+                        <th><%= t("customs.chargeRequired") %></th>
+                        <th><%= t("customs.chargeBasis") %></th>
+                        <th><%= t("customs.chargeAmount") %></th>
                         <% for (const type of businessModuleRules.containerTypes || []) { %>
                           <th><%= type.label %></th>
                         <% } %>
@@ -258,6 +261,25 @@
                                 </option>
                               <% } %>
                             </select>
+                          </td>
+                          <td style="text-align:center;">
+                            <input type="checkbox" name="terminal_charge_<%= terminal.id %>_<%= charge.id %>_required" <%= charge.required ? "checked" : "" %> title="<%= t('customs.chargeRequiredHelp') %>" />
+                          </td>
+                          <td>
+                            <select name="terminal_charge_<%= terminal.id %>_<%= charge.id %>_basis">
+                              <option value="per_occurrence" <%= charge.basis !== "per_day" ? "selected" : "" %>><%= t("customs.basisPerOccurrence") %></option>
+                              <option value="per_day" <%= charge.basis === "per_day" ? "selected" : "" %>><%= t("customs.basisPerDay") %></option>
+                            </select>
+                          </td>
+                          <td>
+                            <div class="rate-cell">
+                              <input type="number" min="0" step="0.01" name="terminal_charge_<%= terminal.id %>_<%= charge.id %>_amount" value="<%= charge.amount == null ? '' : charge.amount %>" placeholder="—" />
+                              <select name="terminal_charge_<%= terminal.id %>_<%= charge.id %>_amountCurrency">
+                                <% for (const option of currencyOptions) { %>
+                                  <option value="<%= option.code %>" <%= (charge.amountCurrency || 'MXN') === option.code ? "selected" : "" %>><%= option.label %></option>
+                                <% } %>
+                              </select>
+                            </div>
                           </td>
                           <% for (const type of businessModuleRules.containerTypes || []) { %>
                             <% const rate = charge.groupRates?.[type.key]; %>

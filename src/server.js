@@ -545,6 +545,11 @@ function buildCustomsTerminalDraft(moduleData, portEntry, t) {
         note: null,
         taxRate: 0,
         groupRates: buildZeroRatesByContainer(moduleData.containerTypes, currency),
+        // O3: per-charge config defaults (kept in lockstep with normalizeCustomsCharge).
+        basis: "per_occurrence",
+        required: false,
+        amount: null,
+        amountCurrency: "MXN",
       },
     ],
     storageRulesByContainer: buildDefaultCustomsStorageRules(
@@ -3266,6 +3271,7 @@ function createApp() {
         terminal.note = req.body[`terminal_note_${terminal.id}`] || null;
 
         for (const charge of terminal.fixedCharges || []) {
+          const chargePrefix = `terminal_charge_${terminal.id}_${charge.id}`;
           charge.concept =
             req.body[`terminal_charge_concept_${terminal.id}_${charge.id}`] || charge.concept;
           charge.note =
@@ -3274,6 +3280,19 @@ function createApp() {
             req.body[`terminal_charge_tax_${terminal.id}_${charge.id}`],
             charge.taxRate
           );
+          // O3: per-charge config (basis / required / flat amount).
+          charge.basis =
+            req.body[`${chargePrefix}_basis`] === "per_day"
+              ? "per_day"
+              : "per_occurrence";
+          charge.required = req.body[`${chargePrefix}_required`] === "on";
+          const amountRaw = req.body[`${chargePrefix}_amount`];
+          charge.amount =
+            amountRaw !== undefined && String(amountRaw).trim() !== ""
+              ? parseNumber(amountRaw, 0)
+              : null;
+          charge.amountCurrency =
+            req.body[`${chargePrefix}_amountCurrency`] || charge.amountCurrency || "MXN";
 
           for (const type of moduleData.containerTypes || []) {
             applyRateCellUpdates(
