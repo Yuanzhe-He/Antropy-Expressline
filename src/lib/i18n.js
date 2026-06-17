@@ -52,10 +52,10 @@ const MESSAGES = {
       inland: {
         title: "陆运",
         subtitle: "Transporte Terrestre",
-        description: "预留模块：后续接拖车、提送、返箱、里程和附加费规则。",
-        state: "预留",
-        placeholderTitle: "陆运模块预留中",
-        placeholderDescription: "已经拆出独立界面和独立配置入口，后续可直接接新的报价逻辑。",
+        description: "拖车、提送、精确点路线、即时里程报价和多车型费率已接入同一套报价流程。",
+        state: "已启用",
+        placeholderTitle: "陆运模块已上线",
+        placeholderDescription: "真实路线地图、精确目的地和多车型费率可直接本地演示和维护规则。",
       },
       quote: {
         title: "报价",
@@ -84,6 +84,8 @@ const MESSAGES = {
       operationExport: "出口 EXPORT",
       departmentOcean: "海运 OCEAN",
       departmentAir: "空运 AIR",
+      departmentInland: "陆运 INLAND",
+      transportMode: "运输方式",
       cargoFcl: "整箱 FCL",
       cargoLcl: "拼箱 LCL",
       pullSection: "从计算器取数（可选）",
@@ -680,11 +682,11 @@ const MESSAGES = {
         title: "Transporte",
         subtitle: "Transporte Terrestre",
         description:
-          "Modulo reservado: despues se conectan maniobras, transporte local, retorno de vacio, kilometraje y recargos.",
-        state: "Reservado",
-        placeholderTitle: "Modulo de transporte reservado",
+          "Maniobras, transporte local, rutas a punto exacto, cotizacion por kilometraje y tarifas por tipo de vehiculo ya estan integrados en el flujo de cotizacion.",
+        state: "Activo",
+        placeholderTitle: "Modulo de transporte activo",
         placeholderDescription:
-          "La interfaz y la configuracion independiente ya existen; luego se puede conectar otra logica de cotizacion.",
+          "El mapa de rutas reales, los destinos exactos y las tarifas por vehiculo se pueden usar y mantener directamente.",
       },
       quote: {
         title: "Cotización",
@@ -715,6 +717,8 @@ const MESSAGES = {
       operationExport: "Exportación EXPORT",
       departmentOcean: "Marítimo OCEAN",
       departmentAir: "Aéreo AIR",
+      departmentInland: "Terrestre INLAND",
+      transportMode: "Modo de transporte",
       cargoFcl: "Contenedor completo FCL",
       cargoLcl: "Carga suelta LCL",
       pullSection: "Tomar de calculadoras (opcional)",

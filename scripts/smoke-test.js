@@ -367,14 +367,13 @@ async function main() {
 
     response = await request(baseUrl, "/workbench/handover", { jar: publicJar });
     assert.equal(response.status, 200);
-    expectContains(response.text, "/dewell-logo.svg", "Dewell logo asset");
+    expectContains(response.text, "/dewell-logo.png", "Dewell logo asset");
     expectContains(response.text, "DEWELL GROUP", "Dewell logo alt text");
     expectContains(response.text, "data-theme-toggle", "theme toggle");
     expectContains(response.text, "compact-language-switcher", "compact language switcher");
 
-    response = await request(baseUrl, "/dewell-logo.svg", { jar: publicJar });
+    response = await request(baseUrl, "/dewell-logo.png", { jar: publicJar });
     assert.equal(response.status, 200);
-    expectContains(response.text, "DEWELL GROUP", "Dewell SVG logo content");
 
     response = await request(baseUrl, "/workbench/handover", { jar: publicJar });
     assert.equal(response.status, 200);

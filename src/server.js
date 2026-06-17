@@ -54,6 +54,10 @@ const {
 } = require("./lib/store");
 const {
   DEFAULT_QUOTE_HEADER,
+  QUOTE_DEPARTMENT_OPTIONS,
+  QUOTE_INCOTERM_OPTIONS,
+  QUOTE_TRANSPORT_MODE_OPTIONS,
+  QUOTE_CARGO_TYPE_OPTIONS,
   buildInitialLineItems,
   computeQuoteTotals,
   groupRowsForRender,
@@ -1428,15 +1432,32 @@ function renderAdminRules(req, res, payload) {
   );
 }
 
+// Q4/Q5/Q6 (20260617): header fields are now dropdowns over fixed option sets.
+// A submitted value outside its set is dropped to "" (no legacy free-text kept)
+// — Jose supplied the standard sets, so stray values get normalized away.
+function pickFromOptions(value, options, fallback = "") {
+  const normalized = String(value ?? "").trim().toUpperCase();
+  return options.includes(normalized) ? normalized : fallback;
+}
+
 function parseQuoteHeader(body = {}) {
   return {
-    operation: body.operation || DEFAULT_QUOTE_HEADER.operation,
-    department: body.department || DEFAULT_QUOTE_HEADER.department,
-    incoterm: body.incoterm ?? DEFAULT_QUOTE_HEADER.incoterm,
+    operation: body.operation === "EXPORT" ? "EXPORT" : "IMPORT",
+    department: pickFromOptions(
+      body.department,
+      QUOTE_DEPARTMENT_OPTIONS,
+      DEFAULT_QUOTE_HEADER.department
+    ),
+    transportMode: pickFromOptions(
+      body.transportMode,
+      QUOTE_TRANSPORT_MODE_OPTIONS,
+      ""
+    ),
+    incoterm: pickFromOptions(body.incoterm, QUOTE_INCOTERM_OPTIONS, ""),
     pol: body.pol ?? DEFAULT_QUOTE_HEADER.pol,
     pod: body.pod ?? DEFAULT_QUOTE_HEADER.pod,
     commodity: body.commodity || "",
-    cargoType: body.cargoType || DEFAULT_QUOTE_HEADER.cargoType,
+    cargoType: pickFromOptions(body.cargoType, QUOTE_CARGO_TYPE_OPTIONS, ""),
     delivery: body.delivery || "",
   };
 }
@@ -1563,6 +1584,12 @@ function renderQuoteWorkbench(req, res, payload) {
       selectorData: payload.selectorData,
       feeCodes: payload.feeCodes,
       currencyOptions: CURRENCY_OPTIONS,
+      headerOptions: {
+        department: QUOTE_DEPARTMENT_OPTIONS,
+        transportMode: QUOTE_TRANSPORT_MODE_OPTIONS,
+        incoterm: QUOTE_INCOTERM_OPTIONS,
+        cargoType: QUOTE_CARGO_TYPE_OPTIONS,
+      },
       languageReturnTo: `/workbench/${payload.moduleKey}`,
     })
   );

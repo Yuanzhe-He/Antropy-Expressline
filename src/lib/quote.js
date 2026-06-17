@@ -191,9 +191,25 @@ const QUOTE_NOTES = Object.freeze([
   },
 ]);
 
+// Q3-Q6 (20260617): header dropdown option sets. Standard trade codes — rendered
+// as code = value = label (no translation needed) except department, which keeps
+// its i18n labels. parseQuoteHeader normalizes against these; values not in the
+// list are cleared (Jose supplied the standard sets — old free-text is dropped).
+const QUOTE_DEPARTMENT_OPTIONS = Object.freeze(["OCEAN", "AIR", "INLAND"]);
+const QUOTE_INCOTERM_OPTIONS = Object.freeze([
+  "EXW", "FCA", "FAS", "FOB", "CFR", "CIF", "CPT", "CIP", "DAP", "DPU", "DDP", "DAT",
+]);
+const QUOTE_TRANSPORT_MODE_OPTIONS = Object.freeze([
+  "AIR", "SEA", "FSA", "FAS", "ROA", "RAI", "COU",
+]);
+const QUOTE_CARGO_TYPE_OPTIONS = Object.freeze([
+  "FCL", "LCL", "BLK", "LQD", "BBK", "BCN", "SCN", "ROR",
+]);
+
 const DEFAULT_QUOTE_HEADER = Object.freeze({
   operation: "IMPORT",
   department: "OCEAN",
+  transportMode: "SEA",
   incoterm: "CIF",
   pol: "CHINA",
   pod: "MANZANILLO",
@@ -589,6 +605,10 @@ module.exports = {
   QUOTE_TEMPLATE_ROWS,
   QUOTE_NOTES,
   DEFAULT_QUOTE_HEADER,
+  QUOTE_DEPARTMENT_OPTIONS,
+  QUOTE_INCOTERM_OPTIONS,
+  QUOTE_TRANSPORT_MODE_OPTIONS,
+  QUOTE_CARGO_TYPE_OPTIONS,
   isAtCostValue,
   toNumber,
   roundMoney,
