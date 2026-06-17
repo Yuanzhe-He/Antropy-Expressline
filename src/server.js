@@ -59,9 +59,11 @@ const {
   QUOTE_INCOTERM_OPTIONS,
   QUOTE_TRANSPORT_MODE_OPTIONS,
   QUOTE_CARGO_TYPE_OPTIONS,
+  QUOTE_UOM_OPTIONS,
   buildInitialLineItems,
   computeQuoteTotals,
   groupRowsForRender,
+  groupRowsBySection,
   pullCalculatorValues,
   generateQuoteNumber,
   loadFeeCodes,
@@ -1526,11 +1528,15 @@ function parseQuoteLineItems(body = {}) {
     const calcField = cell("li_calcField", index);
     return {
       id: id || `li-${index + 1}`,
+      // Q7.3: section splits MEXICO LOCAL vs NO MEXICO (origin/China side) charges.
+      section: cell("li_section", index) === "foreign" ? "foreign" : "mexico",
       category: cell("li_category", index),
       code: cell("li_code", index),
       conceptEn: cell("li_conceptEn", index),
       conceptZh: cell("li_conceptZh", index),
       unit: cell("li_unit", index),
+      // Q7.3: unit of measure (柜/提单/次/个/车型/天); `unit` stays the numeric qty.
+      unitOfMeasure: cell("li_uom", index),
       unitPrice: cell("li_unitPrice", index),
       currency: cell("li_currency", index),
       remark: cell("li_remark", index),
@@ -1602,6 +1608,7 @@ function assembleQuoteView(quoteModule, formData, shippingData) {
     header: formData.header,
     rows: totals.rows,
     groups: groupRowsForRender(totals.rows),
+    sections: groupRowsBySection(totals.rows),
     subtotals: totals.subtotals,
     indicative: totals.indicative,
     dualTotals: totals.dualTotals,
@@ -1646,6 +1653,7 @@ function renderQuoteWorkbench(req, res, payload) {
         incoterm: QUOTE_INCOTERM_OPTIONS,
         cargoType: QUOTE_CARGO_TYPE_OPTIONS,
       },
+      uomOptions: QUOTE_UOM_OPTIONS,
       languageReturnTo: `/workbench/${payload.moduleKey}`,
     })
   );
