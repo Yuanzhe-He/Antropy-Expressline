@@ -1663,6 +1663,38 @@ async function main() {
       "deleted port is gone"
     );
 
+    // O5: admin-managed inland origins — add (empty shell, no rates), then delete.
+    let inlandData = await getShippingData();
+    const beforeOriginCount = (inlandData.modules.inland.origins || []).length;
+    response = await request(baseUrl, "/admin/inland/origins/add", {
+      method: "POST",
+      jar: publicJar,
+      formEntries: [["name", "Lazaro Cardenas"], ["lat", "17.95"], ["lng", "-102.2"]],
+    });
+    assert.equal(response.status, 302);
+    inlandData = await getShippingData();
+    assert.equal(
+      inlandData.modules.inland.origins.length,
+      beforeOriginCount + 1,
+      "O5: add origin"
+    );
+    const newOrigin = inlandData.modules.inland.origins.at(-1);
+    const newOriginRates = (inlandData.modules.inland.rateEntries || []).filter(
+      (r) => r.originId === newOrigin.id
+    );
+    assert.equal(newOriginRates.length, 0, "O5: new origin is an empty shell (no rates)");
+    response = await request(baseUrl, `/admin/inland/origins/${newOrigin.id}/delete`, {
+      method: "POST",
+      jar: publicJar,
+    });
+    assert.equal(response.status, 302);
+    inlandData = await getShippingData();
+    assert.equal(
+      inlandData.modules.inland.origins.length,
+      beforeOriginCount,
+      "O5: delete empty origin"
+    );
+
     console.log("smoke-test-ok");
   } finally {
     await closeQuoteBrowser();
