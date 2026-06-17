@@ -19,6 +19,18 @@ Only record lessons that may change future behavior.
 - landed_in:
 - next_action:
 
+## 2026-06-17 - Large autonomous multi-feature batch: commit-per-item + test-after-each + scope honestly
+
+- source_type: ai-self-correction
+- task_type: implementation / planning
+- domain: Jose R2 batch1+batch2 (23 H/O/Q items across handover, customs, inland, quote)
+- trigger: a single "do it all autonomously, questions at the end" mandate spanning two large batches.
+- incident_or_feedback: the safe way to run a very large autonomous batch is one focused commit per H/O/Q item, each with a smoke/quote/targeted test run BEFORE committing, so a failure is localized and nothing is lost if context summarizes mid-run. Data-model changes (box_53, fixedCharges basis/required/amount, nameZh/nameEs, origins, unitOfMeasure/section, remark library) each went through the store normalizer with back-compat defaults + a focused round-trip test. A few items had genuine modeling ambiguity (per-point price override; remark drag-reorder; ES line-item concept) — these were implemented to a solid functional first pass and the scoped-down part was named explicitly rather than faked.
+- lesson: for a big autonomous run — (a) keep a TodoWrite list and commit per item so progress survives a compact; (b) run the existing test (smoke/quote) after every item and extend it with a round-trip assertion for each user-facing fix (empty-cell-creates-rate, RCL add-tramo, add-port/delete-port, origin empty-shell, 4-language PDF); (c) when a sub-feature needs a product decision you can't make, ship the unambiguous 90% and state the deferred 10% in the commit + final report — don't block the whole run or guess silently; (d) when a smoke assertion encodes OLD behavior you intentionally changed (e.g. quote-settings bounce → real admin page; svg→png logo), update the test in the same commit.
+- scope: project-type
+- landed_in: PRs #6 (batch1) and the batch2 PR; commits r2-1a..r2-2b.
+- next_action: reuse the commit-per-item + test-after-each rhythm for large batches; always name scoped-down sub-pieces explicitly.
+
 ## 2026-06-17 - Stacked-PR rebase-merge conflict recovery + re-verify stale plan premises against merged HEAD
 
 - source_type: ai-self-correction
