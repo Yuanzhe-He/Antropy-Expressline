@@ -119,8 +119,10 @@
       if (!fee) return;
       const en = row.querySelector('input[name="li_conceptEn[]"]');
       const zh = row.querySelector('input[name="li_conceptZh[]"]');
+      const es = row.querySelector('input[name="li_conceptEs[]"]');
       if (en) en.value = fee.en || fee.description || "";
       if (zh) zh.value = fee.zh || fee.en || fee.description || "";
+      if (es) es.value = fee.es || fee.en || fee.description || "";
     });
   }
 
@@ -154,7 +156,7 @@
     tr.innerHTML =
       '<td><select name="li_section[]"><option value="foreign">' + sectionLabels.foreign + '</option><option value="mexico" selected>' + sectionLabels.mexico + "</option></select></td>" +
       '<td><select name="li_category[]">' + catOptions + "</select></td>" +
-      '<td class="concept-cell"><input type="text" name="li_conceptEn[]" placeholder="EN" /><input type="text" name="li_conceptZh[]" placeholder="中" lang="zh" /></td>' +
+      '<td class="concept-cell"><input type="text" name="li_conceptEn[]" placeholder="EN" /><input type="text" name="li_conceptZh[]" placeholder="中" lang="zh" /><input type="text" name="li_conceptEs[]" placeholder="ES" /></td>' +
       '<td><input type="text" name="li_code[]" list="fee-codes" data-quote-code /></td>' +
       '<td><input type="number" min="0" step="1" name="li_unit[]" value="1" data-quote-unit /></td>' +
       '<td><select name="li_uom[]">' + uomOpts + "</select></td>" +

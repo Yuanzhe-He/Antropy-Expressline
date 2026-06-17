@@ -181,7 +181,7 @@
             <% if (idx === 0) { %><td class="cat" rowspan="<%= group.items.length %>"><%= group.category %></td><% } %>
             <td>
               <% if (single) { %>
-                <div class="concept-en"><%= qlang === "ZH" ? (row.conceptZh || row.conceptEn) : row.conceptEn %></div>
+                <div class="concept-en"><%= qlang === "ZH" ? (row.conceptZh || row.conceptEn) : (qlang === "ES" ? (row.conceptEs || row.conceptEn) : row.conceptEn) %></div>
               <% } else { %>
                 <div class="concept-en"><%= row.conceptEn %></div>
                 <% if (row.conceptZh) { %><div class="concept-zh zh"><%= row.conceptZh %></div><% } %>
