@@ -42,6 +42,12 @@
   - S1 精确点 flatPrice 一口价(覆盖车型档)[模型] / S2 备注前台拖动排序+draft存有序选择/语言 / S3 行项 conceptEs 真ES concept[模型] / S4 fee译名扩到~98码(长尾en兜底待审) / S5 报价后台默认表头预填
   - 回归：smoke + r2-batch3-test + r2-o3-test + quote 9/9 全绿；ES+conceptEs PDF 渲染验证。
   - 待确认：S5 fee默认单价(低价值,deferred)；S4 长尾~247码译名(en兜底,待Jose审)。
+- QA轮：✅ 全量只读QA出bug报告(B1 XSS/B2 fixedCharges/B3精确点编辑/B4死路由)。
+- QA修复批：✅ **代码完成,分支 feature/qa-fixes,待PR**。
+  - B1[P1安全] 存储型XSS：safeJson(res.locals)转义`<`→`<`,全15处`<%- JSON.stringify`入`<script>`改用safeJson;实测payload不逃逸+JSON原样解析。
+  - B2 customs码头fixedCharges加add/delete路由+按钮(实测1→2→1)。
+  - B3 精确点save扩name/coords/link(改坐标重抓路线)。B4 删死路由demurrage/:groupKey。
+  - 回归:smoke(+B1/B2新guard)+quote9/9+o3+batch3全绿。
 - 全部 spec-first、PR-only、边修边合并、深度report
 
 ═══════════════════════════════════════════
