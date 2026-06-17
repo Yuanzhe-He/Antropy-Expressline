@@ -88,6 +88,55 @@
 </style>
 </head>
 <body>
+<%
+  // Q7: single-language (EN/ZH/ES) or bilingual ("" = EN + 中, legacy default).
+  var qlang = (typeof language !== "undefined" && language) ? language : "";
+  var single = qlang === "EN" || qlang === "ZH" || qlang === "ES";
+  var labelLang = single ? qlang : "EN";
+  var LBL = {
+    date: { EN: "DATE", ZH: "日期", ES: "FECHA" },
+    number: { EN: "QUOTATION NUMBER", ZH: "报价编号", ES: "NÚMERO" },
+    general: { EN: "GENERAL DATA", ZH: "基本信息", ES: "DATOS GENERALES" },
+    operation: { EN: "OPERATION", ZH: "业务", ES: "OPERACIÓN" },
+    incoterm: { EN: "INCOTERM", ZH: "贸易术语", ES: "INCOTERM" },
+    department: { EN: "DEPARTMENT", ZH: "部门", ES: "DEPARTAMENTO" },
+    transport: { EN: "TRANSPORT MODE", ZH: "运输方式", ES: "MODO DE TRANSPORTE" },
+    cargo: { EN: "CARGO TYPE", ZH: "装载方式", ES: "TIPO DE CARGA" },
+    pol: { EN: "POL", ZH: "起运港", ES: "POL" },
+    pod: { EN: "POD", ZH: "目的港", ES: "POD" },
+    commodity: { EN: "COMMODITY", ZH: "品名", ES: "MERCANCÍA" },
+    delivery: { EN: "DELIVERY", ZH: "目的地", ES: "ENTREGA" },
+    secForeign: { EN: "NO MEXICO CHARGES", ZH: "境外 / 起运费用", ES: "CARGOS FUERA DE MÉXICO" },
+    secMexico: { EN: "MEXICO LOCAL CHARGES", ZH: "墨西哥本地费用", ES: "CARGOS LOCALES MÉXICO" },
+    colCat: { EN: "CHARGE CATEGORY", ZH: "费用类别", ES: "CATEGORÍA" },
+    colConcept: { EN: "CONCEPT", ZH: "费用", ES: "CONCEPTO" },
+    colQty: { EN: "QTY", ZH: "数量", ES: "CANT." },
+    colUom: { EN: "UNIT", ZH: "单位", ES: "UNIDAD" },
+    colUnitPrice: { EN: "UNIT PRICE", ZH: "单价", ES: "PRECIO UNIT." },
+    colTotal: { EN: "TOTAL PRICE", ZH: "金额", ES: "TOTAL" },
+    colCur: { EN: "CURRENCY", ZH: "币种", ES: "MONEDA" },
+    colRemark: { EN: "REMARKS", ZH: "备注", ES: "OBSERVACIONES" },
+    notes: { EN: "NOTES", ZH: "备注", ES: "NOTAS" },
+  };
+  function L(key) { var m = LBL[key] || {}; return m[labelLang] || m.EN || key; }
+  var UOM = {
+    container: { EN: "container", ZH: "柜", ES: "contenedor" },
+    bl: { EN: "BL", ZH: "提单", ES: "BL" },
+    occurrence: { EN: "occurrence", ZH: "次", ES: "vez" },
+    piece: { EN: "piece", ZH: "个", ES: "pieza" },
+    vehicle: { EN: "vehicle", ZH: "车型", ES: "vehículo" },
+    day: { EN: "day", ZH: "天", ES: "día" },
+  };
+  function uomLabel(code) { var m = UOM[code]; return m ? (m[labelLang] || m.EN) : (code || ""); }
+  function noteText(note) {
+    if (qlang === "ZH") return note.zh || note.en || "";
+    if (qlang === "ES") return note.es || note.en || "";
+    return note.en || "";
+  }
+  var sectionList = (typeof sections !== "undefined" && sections && sections.length)
+    ? sections
+    : [{ section: "mexico", groups: (typeof groups !== "undefined" ? groups : []) }];
+%>
   <header class="doc-header">
     <div class="logo-box">
       <% if (assets.logoExpressLine) { %><img src="<%= assets.logoExpressLine %>" alt="Express Line Corporation" /><% } else { %><div class="logo-ph">Express Line Corporation<br/>(logo pending)</div><% } %>
@@ -95,52 +144,61 @@
   </header>
 
   <div class="quote-meta">
-    <div><div class="lbl">DATE</div><div><%= date %></div></div>
-    <div><div class="lbl">QUOTATION NUMBER</div><div><%= number %></div></div>
+    <div><div class="lbl"><%= L("date") %></div><div><%= date %></div></div>
+    <div><div class="lbl"><%= L("number") %></div><div><%= number %></div></div>
   </div>
 
-  <div class="band">GENERAL DATA</div>
+  <div class="band"><%= L("general") %></div>
   <table class="general">
-    <tr><td class="k">OPERATION</td><td><%= header.operation %></td><td class="k">INCOTERM</td><td><%= header.incoterm %></td></tr>
-    <tr><td class="k">DEPARTMENT</td><td><%= header.department %></td><td class="k">TRANSPORT MODE</td><td><%= header.transportMode || "" %></td></tr>
-    <tr><td class="k">CARGO TYPE</td><td><%= header.cargoType %></td><td class="k">POL</td><td><%= header.pol %></td></tr>
-    <tr><td class="k">COMMODITY</td><td><%= header.commodity %></td><td class="k">POD</td><td><%= header.pod %></td></tr>
-    <tr><td class="k">DELIVERY</td><td colspan="3"><%= header.delivery %></td></tr>
+    <tr><td class="k"><%= L("operation") %></td><td><%= header.operation %></td><td class="k"><%= L("incoterm") %></td><td><%= header.incoterm %></td></tr>
+    <tr><td class="k"><%= L("department") %></td><td><%= header.department %></td><td class="k"><%= L("transport") %></td><td><%= header.transportMode || "" %></td></tr>
+    <tr><td class="k"><%= L("cargo") %></td><td><%= header.cargoType %></td><td class="k"><%= L("pol") %></td><td><%= header.pol %></td></tr>
+    <tr><td class="k"><%= L("commodity") %></td><td><%= header.commodity %></td><td class="k"><%= L("pod") %></td><td><%= header.pod %></td></tr>
+    <tr><td class="k"><%= L("delivery") %></td><td colspan="3"><%= header.delivery %></td></tr>
     <% (header.extraFields || []).forEach((f) => { %>
       <tr><td class="k"><%= f.label %></td><td colspan="3"><%= f.value %></td></tr>
     <% }); %>
   </table>
 
-  <div class="band">MEXICO LOCAL CHARGES</div>
-  <table class="charges">
-    <thead>
-      <tr>
-        <th style="width:92px;">CHARGE CATEGORY</th>
-        <th>CONCEPT</th>
-        <th style="width:34px;">UNIT</th>
-        <th style="width:78px;">UNIT PRICE</th>
-        <th style="width:78px;">TOTAL PRICE</th>
-        <th style="width:46px;">CURRENCY</th>
-        <th style="width:150px;">REMARKS</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% groups.forEach((group) => { group.items.forEach((row, idx) => { %>
+  <% sectionList.forEach((sec) => { %>
+    <div class="band"><%= sec.section === "foreign" ? L("secForeign") : L("secMexico") %></div>
+    <table class="charges">
+      <thead>
         <tr>
-          <% if (idx === 0) { %><td class="cat" rowspan="<%= group.items.length %>"><%= group.category %></td><% } %>
-          <td>
-            <div class="concept-en"><%= row.conceptEn %></div>
-            <% if (row.conceptZh) { %><div class="concept-zh zh"><%= row.conceptZh %></div><% } %>
-          </td>
-          <td class="num"><%= row.unit === null ? "" : row.unit %></td>
-          <td class="num <%= row.isAtCost ? 'atcost' : '' %>"><%= row.unitPriceLabel %></td>
-          <td class="num <%= row.total === null ? 'atcost' : '' %>"><%= row.totalLabel %></td>
-          <td class="cur"><%= row.currency %></td>
-          <td><%= row.remark %></td>
+          <th style="width:92px;"><%= L("colCat") %></th>
+          <th><%= L("colConcept") %></th>
+          <th style="width:30px;"><%= L("colQty") %></th>
+          <th style="width:44px;"><%= L("colUom") %></th>
+          <th style="width:78px;"><%= L("colUnitPrice") %></th>
+          <th style="width:78px;"><%= L("colTotal") %></th>
+          <th style="width:46px;"><%= L("colCur") %></th>
+          <th style="width:140px;"><%= L("colRemark") %></th>
         </tr>
-      <% }); }); %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% sec.groups.forEach((group) => { group.items.forEach((row, idx) => { %>
+          <tr>
+            <% if (idx === 0) { %><td class="cat" rowspan="<%= group.items.length %>"><%= group.category %></td><% } %>
+            <td>
+              <% if (single) { %>
+                <div class="concept-en"><%= qlang === "ZH" ? (row.conceptZh || row.conceptEn) : row.conceptEn %></div>
+              <% } else { %>
+                <div class="concept-en"><%= row.conceptEn %></div>
+                <% if (row.conceptZh) { %><div class="concept-zh zh"><%= row.conceptZh %></div><% } %>
+              <% } %>
+            </td>
+            <td class="num"><%= row.unit === null ? "" : row.unit %></td>
+            <td><%= uomLabel(row.unitOfMeasure) %></td>
+            <td class="num <%= row.isAtCost ? 'atcost' : '' %>"><%= row.unitPriceLabel %></td>
+            <td class="num <%= row.total === null ? 'atcost' : '' %>"><%= row.totalLabel %></td>
+            <td class="cur"><%= row.currency %></td>
+            <td><%= row.remark %></td>
+          </tr>
+        <% }); }); %>
+        <% if (!sec.groups.length) { %><tr><td colspan="8" class="atcost">—</td></tr><% } %>
+      </tbody>
+    </table>
+  <% }); %>
 
   <% if (typeof route !== "undefined" && route) { %>
     <div class="route-meta">
@@ -186,10 +244,14 @@
   <% } %>
 
   <div class="notes">
-    <div class="band">NOTES</div>
+    <div class="band"><%= L("notes") %></div>
     <ol>
       <% notes.forEach((note) => { %>
-        <li><div><%= note.en %></div><% if (note.zh) { %><div class="zh"><%= note.zh %></div><% } %></li>
+        <% if (single) { %>
+          <li><div<%= qlang === "ZH" ? ' class="zh"' : "" %>><%= noteText(note) %></div></li>
+        <% } else { %>
+          <li><div><%= note.en %></div><% if (note.zh) { %><div class="zh"><%= note.zh %></div><% } %></li>
+        <% } %>
       <% }); %>
     </ol>
   </div>
