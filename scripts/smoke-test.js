@@ -807,6 +807,39 @@ async function main() {
       "deleted local charge is gone"
     );
 
+    // H4: RCL demoras — add a rule set (must seed a first tramo) and add a tramo
+    // to an existing set (Jose: "RCL 加不了 demoras").
+    let rcl = shippingData.modules.handover.shippingLines.find((l) => l.id === "rcl");
+    if (rcl) {
+      const beforeSetCount = rcl.demurrage.ruleSets.length;
+      response = await request(
+        baseUrl,
+        `/admin/handover/shipping-lines/rcl/demurrage-rule-sets/add`,
+        { method: "POST", jar: publicJar }
+      );
+      assert.equal(response.status, 302);
+      shippingData = await getShippingData();
+      rcl = shippingData.modules.handover.shippingLines.find((l) => l.id === "rcl");
+      assert.equal(rcl.demurrage.ruleSets.length, beforeSetCount + 1, "RCL add rule set");
+      assert.ok(
+        rcl.demurrage.ruleSets.at(-1).rules.length >= 1,
+        "new rule set seeds a first tramo"
+      );
+
+      const targetSet = rcl.demurrage.ruleSets[0];
+      const beforeRuleCount = targetSet.rules.length;
+      response = await request(
+        baseUrl,
+        `/admin/handover/shipping-lines/rcl/demurrage-rule-sets/${targetSet.id}/add`,
+        { method: "POST", jar: publicJar }
+      );
+      assert.equal(response.status, 302);
+      shippingData = await getShippingData();
+      rcl = shippingData.modules.handover.shippingLines.find((l) => l.id === "rcl");
+      const reSet = rcl.demurrage.ruleSets.find((s) => s.id === targetSet.id);
+      assert.equal(reSet.rules.length, beforeRuleCount + 1, "RCL add tramo to existing set");
+    }
+
     const beforeTerminalMixCount = handoverLine.terminalMix.length;
     response = await request(
       baseUrl,
