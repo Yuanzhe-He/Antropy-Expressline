@@ -30,8 +30,7 @@
    Ya hay botón "**+ Nueva naviera**" en el backend (nombre/código/RFC → completar cargos/garantía/demoras/terminal).
    Cuando nos des sus tarifas/depósito/demoras/terminal, las damos de alta (o las capturas tú).
 
-8. **[NUEVO] Falta el PDF de CONTENTO en el repositorio.**
-   El prompt indicaba `docs/client-info-source/Presentacion_de_Servicios_para_Yisel_Guzman.pdf`, pero **no estaba**.
-   Solo teníamos 2 precios de maniobra confirmados (Servimaniobras 3800, Contecon R.F. 4100) y la limpieza estándar (550 MXN).
-   Se cargaron los 26 patios nombrados con esos datos; **el resto de las maniobras quedó en 0 con nota "pendiente PDF"** y
-   la lista completa (~35) requiere el PDF. **Necesitamos el PDF de CONTENTO** para completar precios y patios.
+8. **[RESUELTO] PDF de CONTENTO — precios completos ya cargados.**
+   El PDF (ANEXO A, 2026-06-01) ya se transcribió y los **26 patios tienen su maniobra real** (3800–5850 MXN,
+   limpieza 550 / reefer 750 / open top 1150). Ya no hay precios pendientes ni inventados. Solo falta la
+   relación naviera↔patio (pregunta 5).
