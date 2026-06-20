@@ -362,6 +362,64 @@ function buildLocalChargeDraft(shippingLine, moduleData, t) {
   };
 }
 
+// D (round-r3): new-carrier onboarding. A new line is created minimal; the store
+// normalizer fills guarantee/demurrage/quoteDefaults/notes. We seed the two
+// standard container groups so the edit UI (charges/garantía/demoras) has
+// anchors — container-group editing is out of scope for this round.
+const DEFAULT_NEW_LINE_CONTAINER_GROUPS = [
+  { key: "gp-hc-sd", label: "GP HC SD" },
+  { key: "ot-fr-rf", label: "OT FR RF" },
+];
+
+function slugifyLineId(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function buildShippingLineDraft(moduleData, { name, code, rfc } = {}) {
+  const trimmedName = String(name || "").trim();
+  const existingIds = new Set((moduleData.shippingLines || []).map((line) => line.id));
+  const base = slugifyLineId(trimmedName) || "naviera";
+  let id = base;
+  let suffix = 2;
+  while (existingIds.has(id)) {
+    id = `${base}-${suffix}`;
+    suffix += 1;
+  }
+  return {
+    id,
+    name: trimmedName,
+    active: true,
+    containerGroups: DEFAULT_NEW_LINE_CONTAINER_GROUPS.map((group) => ({ ...group })),
+    invoiceToConsigneeOnly: false,
+    invoiceNote: null,
+    terminalMix: [],
+    localCharges: [],
+    notes: {
+      sourceSheet: null,
+      code: String(code || "").trim() || null,
+      rfc: String(rfc || "").trim() || null,
+    },
+  };
+}
+
+// Lightweight customs-side mirror so a new carrier is selectable in the
+// yard↔line mapping (customs.shippingLines is a separate list, not auto-synced).
+function buildSimpleShippingLineMirror(line) {
+  return {
+    id: line.id,
+    name: line.name,
+    active: true,
+    notes: line.notes ? { ...line.notes } : null,
+    yardIds: [],
+  };
+}
+
 function buildDefaultCustomsStorageRules(
   containerTypes = [],
   prefix,
@@ -4287,6 +4345,120 @@ function createApp() {
     }
   );
 
+  // D (round-r3): create a new carrier (handover only). MUST be registered
+  // before POST .../:id so "add" is not captured as :id. Mirrors the ports/yards
+  // "/add" pattern: build a minimal line (the store normalizer completes it) plus
+  // a customs-side mirror, then jump to the edit page to fill the rest.
+  app.post("/admin/:moduleKey/shipping-lines/add", requireAuth, async (req, res) => {
+    const module = getBusinessModule(req.params.moduleKey);
+    if (!module || module.key !== "handover") {
+      return res.status(404).render(
+        "not-found",
+        baseView(req, {
+          pageTitle: req.t("system.notFoundTitle"),
+          languageReturnTo: req.originalUrl,
+        })
+      );
+    }
+
+    const name = String(req.body.line_name || "").trim();
+    if (!name) {
+      return redirectWithFlash(
+        req,
+        res,
+        "error",
+        req.t("admin.lineNameRequired"),
+        `/admin/${module.key}/shipping-lines`
+      );
+    }
+
+    const shippingData = await loadShippingData({ refreshRates: false });
+    const handover = getModuleData(shippingData, "handover");
+    const line = buildShippingLineDraft(handover, {
+      name,
+      code: req.body.line_code,
+      rfc: req.body.line_rfc,
+    });
+    handover.shippingLines = [...(handover.shippingLines || []), line];
+
+    // Mirror into customs so the carrier is selectable in the yard↔line mapping
+    // (customs.shippingLines is a separate list, not auto-synced from handover).
+    const customs = getModuleData(shippingData, "customs");
+    customs.shippingLines = [
+      ...(customs.shippingLines || []),
+      buildSimpleShippingLineMirror(line),
+    ];
+
+    await saveShippingData(shippingData);
+
+    return redirectWithFlash(
+      req,
+      res,
+      "success",
+      req.t("admin.shippingLineAdded", { name: line.name }),
+      `/admin/${module.key}/shipping-lines/${line.id}`
+    );
+  });
+
+  // D (round-r3): delete a carrier (handover only) + cascade the customs mirror
+  // and any yard↔line references.
+  app.post(
+    "/admin/:moduleKey/shipping-lines/:id/delete",
+    requireAuth,
+    async (req, res) => {
+      const module = getBusinessModule(req.params.moduleKey);
+      if (!module || module.key !== "handover") {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const handover = getModuleData(shippingData, "handover");
+      const line = (handover.shippingLines || []).find(
+        (entry) => entry.id === req.params.id
+      );
+      if (!line) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const removedName = line.name;
+      handover.shippingLines = handover.shippingLines.filter(
+        (entry) => entry.id !== req.params.id
+      );
+
+      const customs = getModuleData(shippingData, "customs");
+      customs.shippingLines = (customs.shippingLines || []).filter(
+        (entry) => entry.id !== req.params.id
+      );
+      for (const yard of customs.yards || []) {
+        yard.shippingLineIds = (yard.shippingLineIds || []).filter(
+          (id) => id !== req.params.id
+        );
+      }
+
+      await saveShippingData(shippingData);
+
+      return redirectWithFlash(
+        req,
+        res,
+        "success",
+        req.t("admin.shippingLineDeleted", { name: removedName }),
+        `/admin/${module.key}/shipping-lines`
+      );
+    }
+  );
+
   app.post("/admin/:moduleKey/shipping-lines/:id", requireAuth, async (req, res) => {
     const module = getBusinessModule(req.params.moduleKey);
     if (!module) {
@@ -4320,6 +4492,17 @@ function createApp() {
     }
 
     const updated = structuredClone(moduleData.shippingLines[lineIndex]);
+    // D (round-r3): name + carrier metadata (code = CODIGO DE NAVIERA, rfc = tax
+    // id) are now editable. Empty name is ignored (keep the existing one).
+    const editedName = String(req.body.line_name ?? "").trim();
+    if (editedName) {
+      updated.name = editedName;
+    }
+    updated.notes = {
+      ...(updated.notes || {}),
+      code: String(req.body.line_code ?? updated.notes?.code ?? "").trim() || null,
+      rfc: String(req.body.line_rfc ?? updated.notes?.rfc ?? "").trim() || null,
+    };
     updated.invoiceToConsigneeOnly = req.body.invoiceToConsigneeOnly === "on";
     updated.invoiceNote = req.body.invoiceNote || null;
     updated.demurrageCutoffHandledBy =
@@ -4436,6 +4619,20 @@ function createApp() {
       Object.values(updated.demurrage.freeDays.daysByGroup)[0] || 0;
 
     shippingData.modules[module.key].shippingLines[lineIndex] = updated;
+
+    // Keep the customs-side mirror's name/notes in sync (so the carrier label
+    // matches in the yard↔line mapping). Only for handover carriers.
+    if (module.key === "handover") {
+      const customs = getModuleData(shippingData, "customs");
+      const mirror = (customs.shippingLines || []).find(
+        (entry) => entry.id === updated.id
+      );
+      if (mirror) {
+        mirror.name = updated.name;
+        mirror.notes = updated.notes ? { ...updated.notes } : null;
+      }
+    }
+
     await saveShippingData(shippingData);
     return redirectWithFlash(
       req,

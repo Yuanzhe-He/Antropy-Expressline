@@ -28,6 +28,29 @@
         <h3><%= selectedModule.title %></h3>
       </div>
     </div>
+    <%# D (round-r3): self-serve "create carrier". Handover only (the add route
+        404s elsewhere). Collapsed by default to keep the list tidy. %>
+    <% if (currentModuleKey === "handover") { %>
+      <details class="admin-create-line" style="margin-bottom: 0.75rem;">
+        <summary class="ghost-button compact-button" style="cursor:pointer; display:inline-block;"><%= t("admin.addShippingLine") %></summary>
+        <form method="post" action="/admin/<%= currentModuleKey %>/shipping-lines/add" class="stack-form" style="margin-top: 0.6rem; display:grid; gap:0.5rem;">
+          <label>
+            <span><%= t("admin.lineName") %> *</span>
+            <input type="text" name="line_name" required placeholder="<%= t('admin.newShippingLineName') %>" />
+          </label>
+          <label>
+            <span><%= t("admin.lineCode") %></span>
+            <input type="text" name="line_code" placeholder="CODIGO DE NAVIERA" />
+          </label>
+          <label>
+            <span><%= t("admin.lineRfc") %></span>
+            <input type="text" name="line_rfc" placeholder="RFC / Tax ID" />
+          </label>
+          <p class="hint" style="font-size:0.78rem; opacity:0.75; margin:0;"><%= t("admin.createShippingLineHint") %></p>
+          <button type="submit" class="primary-button compact-button"><%= t("admin.createShippingLine") %></button>
+        </form>
+      </details>
+    <% } %>
     <label class="admin-search">
       <span><%= t("common.search") %></span>
       <input type="search" data-admin-filter placeholder="<%= t("admin.searchPlaceholder") %>" />
@@ -85,6 +108,19 @@
         data-confirm-leave="<%= t("admin.confirmLeave") %>"
       >
         <div class="grid-form">
+          <%# D (round-r3): carrier identity is now editable (was display-only). %>
+          <label>
+            <span><%= t("admin.lineName") %></span>
+            <input type="text" name="line_name" value="<%= selectedLine.name %>" />
+          </label>
+          <label>
+            <span><%= t("admin.lineCode") %></span>
+            <input type="text" name="line_code" value="<%= selectedLine.notes?.code || '' %>" />
+          </label>
+          <label>
+            <span><%= t("admin.lineRfc") %></span>
+            <input type="text" name="line_rfc" value="<%= selectedLine.notes?.rfc || '' %>" />
+          </label>
           <label class="checkbox-field">
             <span><%= t("admin.invoiceOnly") %></span>
             <input type="checkbox" name="invoiceToConsigneeOnly" <%= selectedLine.invoiceToConsigneeOnly ? "checked" : "" %> />
@@ -444,6 +480,18 @@
         <div class="actions sticky-save-bar">
           <span class="save-state" data-save-state><%= t("admin.savedState") %></span>
           <button type="button" class="ghost-button compact-button" data-discard-changes disabled><%= t("admin.discardChanges") %></button>
+          <%# D (round-r3): delete this carrier (handover only) — cascades the
+              customs mirror + yard↔line references server-side. %>
+          <% if (currentModuleKey === "handover") { %>
+            <button
+              type="submit"
+              class="ghost-button compact-button danger-button"
+              formaction="/admin/<%= currentModuleKey %>/shipping-lines/<%= selectedLine.id %>/delete"
+              formmethod="post"
+              formnovalidate
+              data-confirm-submit="<%= t("admin.confirmDeleteShippingLine", { name: selectedLine.name }) %>"
+            ><%= t("admin.deleteShippingLine") %></button>
+          <% } %>
           <button type="submit"><%= t("admin.saveShippingLine") %></button>
         </div>
       </form>
