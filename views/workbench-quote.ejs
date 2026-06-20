@@ -12,11 +12,16 @@
   .quote-card > h3 { margin: 0 0 0.75rem; font-size: 1rem; }
   .quote-hint { font-size: 0.8rem; opacity: 0.7; margin: 0.25rem 0 0.75rem; }
   .quote-table-wrap { overflow-x: auto; }
-  table.quote-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-  table.quote-table th, table.quote-table td { border: 1px solid var(--border, #3334); padding: 0.4rem 0.45rem; vertical-align: top; text-align: left; }
+  /* A (round-r3, José feedback "字体小一些 + 排版更紧凑"): compact density for the
+     line-item editor only. Visual density only — no logic/field changes. */
+  table.quote-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+  table.quote-table th, table.quote-table td { border: 1px solid var(--border, #3334); padding: 0.2rem 0.3rem; vertical-align: top; text-align: left; }
   table.quote-table th { font-weight: 600; opacity: 0.85; white-space: nowrap; }
-  table.quote-table input, table.quote-table select { width: 100%; box-sizing: border-box; padding: 0.35rem; border-radius: 6px; border: 1px solid var(--border, #4444); background: transparent; color: inherit; font: inherit; }
-  table.quote-table .concept-cell input { margin-bottom: 0.25rem; }
+  table.quote-table input, table.quote-table select { width: 100%; box-sizing: border-box; padding: 0.2rem 0.3rem; border-radius: 5px; border: 1px solid var(--border, #4444); background: transparent; color: inherit; font: inherit; line-height: 1.2; }
+  /* Tri-lingual concept stack (EN/中/ES): smaller font + minimal gap so the three
+     rows occupy far less vertical space without losing per-language editability. */
+  table.quote-table .concept-cell input { margin-bottom: 0.1rem; font-size: 0.68rem; }
+  table.quote-table .concept-cell input:last-child { margin-bottom: 0; }
   .cat-head td { background: rgba(127,127,127,0.12); font-weight: 700; letter-spacing: 0.04em; }
   .quote-total-cell { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; font-weight: 600; }
   .quote-atcost { opacity: 0.6; }
