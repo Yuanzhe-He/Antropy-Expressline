@@ -12,6 +12,7 @@ const {
   DEFAULT_INLAND_ORIGIN_ID,
 } = require("./inland-catalog");
 const { EXTRA_VEHICLE_KEYS } = require("./inland-vehicles");
+const { buildContentoManzanilloYards } = require("./contento-yards");
 const {
   DEFAULT_DEMURRAGE_CUTOFF,
   DEFAULT_PRICE_MODE,
@@ -777,6 +778,20 @@ function normalizeTerminalMix(entries = []) {
     .filter(Boolean);
 }
 
+// Shape a shipping line's `notes` so `code` (CODIGO DE NAVIERA) and `rfc`
+// (Mexican tax id) always exist. Extra keys (e.g. sourceSheet) are preserved.
+function normalizeShippingLineNotes(notes) {
+  if (notes && typeof notes === "object") {
+    return {
+      ...notes,
+      sourceSheet: notes.sourceSheet ?? null,
+      code: notes.code ?? null,
+      rfc: notes.rfc ?? null,
+    };
+  }
+  return { sourceSheet: null, code: null, rfc: null };
+}
+
 function normalizeShippingLine(shippingLine) {
   const cutoffValid = DEMURRAGE_CUTOFF_OPTIONS.some(
     (option) => option.value === shippingLine.demurrageCutoffHandledBy
@@ -801,6 +816,10 @@ function normalizeShippingLine(shippingLine) {
 
   return {
     ...shippingLine,
+    // E (round-r3): carrier metadata for invoicing. `code` = CODIGO DE NAVIERA,
+    // `rfc` = Mexican tax id (RFC / TAX ID). Back-compat: old data without rfc
+    // defaults to null; missing notes becomes a shaped object.
+    notes: normalizeShippingLineNotes(shippingLine.notes),
     invoiceToConsigneeOnly: Boolean(shippingLine.invoiceToConsigneeOnly),
     demurrageCutoffHandledBy: cutoffValid
       ? shippingLine.demurrageCutoffHandledBy
@@ -1515,8 +1534,6 @@ function createDefaultCustomsSeedData(handoverModule) {
           { id: "maersk", name: "Maersk", active: true },
         ];
 
-  const sampleLineIds = fallbackShippingLines.slice(0, 4).map((line) => line.id);
-
   return {
     settings: {
       defaultQuoteCurrency: DEFAULT_QUOTE_CURRENCY,
@@ -1675,77 +1692,11 @@ function createDefaultCustomsSeedData(handoverModule) {
         ],
       },
     ],
-    yards: [
-      {
-        id: "yard-mzo-norte",
-        name: "Patio Aduanal Norte",
-        note: "落柜与清关同页计算，可按港口和船公司自动筛出。",
-        portIds: ["manzanillo"],
-        shippingLineIds: sampleLineIds.slice(0, 2),
-        dropoffCharges: [
-          {
-            id: "yard-mzo-norte-dropoff",
-            concept: "落柜",
-            taxRate: 0.16,
-            groupRates: buildSampleRatesByType(fallbackContainerTypes, 580, 160, "MXN"),
-          },
-        ],
-        customsCharges: [
-          {
-            id: "yard-mzo-norte-customs",
-            concept: "清关堆场服务",
-            taxRate: 0.16,
-            groupRates: buildSampleRatesByType(fallbackContainerTypes, 340, 90, "MXN"),
-          },
-        ],
-      },
-      {
-        id: "yard-mzo-sur",
-        name: "Patio Fiscal Sur",
-        note: null,
-        portIds: ["manzanillo"],
-        shippingLineIds: sampleLineIds.slice(1, 4),
-        dropoffCharges: [
-          {
-            id: "yard-mzo-sur-dropoff",
-            concept: "落柜",
-            taxRate: 0.16,
-            groupRates: buildSampleRatesByType(fallbackContainerTypes, 610, 170, "MXN"),
-          },
-        ],
-        customsCharges: [
-          {
-            id: "yard-mzo-sur-customs",
-            concept: "清关堆场服务",
-            taxRate: 0.16,
-            groupRates: buildSampleRatesByType(fallbackContainerTypes, 320, 80, "MXN"),
-          },
-        ],
-      },
-      {
-        id: "yard-lc-central",
-        name: "Patio Central Lazaro",
-        note: null,
-        portIds: ["lazaro-cardenas"],
-        shippingLineIds: sampleLineIds.slice(0, 3),
-        dropoffCharges: [
-          {
-            id: "yard-lc-central-dropoff",
-            concept: "落柜",
-            taxRate: 0.16,
-            groupRates: buildSampleRatesByType(fallbackContainerTypes, 560, 150, "MXN"),
-          },
-        ],
-        customsCharges: [
-          {
-            id: "yard-lc-central-customs",
-            concept: "清关堆场服务",
-            taxRate: 0.16,
-            groupRates: buildSampleRatesByType(fallbackContainerTypes, 300, 85, "MXN"),
-          },
-        ],
-      },
-    ],
+    // C (round-r3): the three former demo yards (Patio Norte/Sur/Central) were
+    // placeholder sample data. They are replaced by the real CONTENTO Manzanillo
+    // empty-return patios (método B: prices in, naviera↔patio mapping left to
+    // José). Single source of truth lives in ./contento-yards.
+    yards: buildContentoManzanilloYards(fallbackContainerTypes, "MXN"),
   };
 }
 

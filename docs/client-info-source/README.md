@@ -4,6 +4,7 @@
 
 ## 资料清单
 - `FCL_quotation_format_6_14.xlsx` — José 2026-06-14 微信发来的真实 FCL 报价模板（5 sheet，3 种模式）。**需手动从微信下载放入本目录**（截图与原文件 Chandler 持有）。
+- `TARIFARIO 15.06.26.xlsx` — José 2026-06-18 邮件发来的船公司费率表（15 sheet，每船司一页 + `ALL NAV` 汇总）。分析见 `20260619_jose_shipping_line_rate_update.md`。
 - 微信截图 3 张（2026-06-13~14 对话）— **需手动放入本目录**，文件名建议 wechat-2026-06-14-{1,2,3}.png。
 - 本 README 已转录全部 José 原话 + 模板结构，供 agent 直接读取，无需依赖图片。
 
