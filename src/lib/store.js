@@ -778,6 +778,20 @@ function normalizeTerminalMix(entries = []) {
     .filter(Boolean);
 }
 
+// Shape a shipping line's `notes` so `code` (CODIGO DE NAVIERA) and `rfc`
+// (Mexican tax id) always exist. Extra keys (e.g. sourceSheet) are preserved.
+function normalizeShippingLineNotes(notes) {
+  if (notes && typeof notes === "object") {
+    return {
+      ...notes,
+      sourceSheet: notes.sourceSheet ?? null,
+      code: notes.code ?? null,
+      rfc: notes.rfc ?? null,
+    };
+  }
+  return { sourceSheet: null, code: null, rfc: null };
+}
+
 function normalizeShippingLine(shippingLine) {
   const cutoffValid = DEMURRAGE_CUTOFF_OPTIONS.some(
     (option) => option.value === shippingLine.demurrageCutoffHandledBy
@@ -802,6 +816,10 @@ function normalizeShippingLine(shippingLine) {
 
   return {
     ...shippingLine,
+    // E (round-r3): carrier metadata for invoicing. `code` = CODIGO DE NAVIERA,
+    // `rfc` = Mexican tax id (RFC / TAX ID). Back-compat: old data without rfc
+    // defaults to null; missing notes becomes a shaped object.
+    notes: normalizeShippingLineNotes(shippingLine.notes),
     invoiceToConsigneeOnly: Boolean(shippingLine.invoiceToConsigneeOnly),
     demurrageCutoffHandledBy: cutoffValid
       ? shippingLine.demurrageCutoffHandledBy

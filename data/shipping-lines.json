@@ -479,7 +479,8 @@
           },
           "notes": {
             "sourceSheet": "CMA CGM",
-            "code": "VD-CMACGMMRS"
+            "code": "VD-CMACGMMRS",
+            "rfc": "FR72562024422"
           },
           "quoteDefaults": {
             "priceMode": "aftertax",
@@ -883,7 +884,8 @@
           },
           "notes": {
             "sourceSheet": "MAERSK",
-            "code": "VD-MAEU_MX"
+            "code": "VD-MAEU_MX",
+            "rfc": "DK53139655"
           },
           "quoteDefaults": {
             "priceMode": "aftertax",
@@ -1297,7 +1299,8 @@
           },
           "notes": {
             "sourceSheet": "ZIM",
-            "code": "ZIM_MEX"
+            "code": "ZIM_MEX",
+            "rfc": "520015041"
           },
           "quoteDefaults": {
             "priceMode": "aftertax",
@@ -2677,7 +2680,8 @@
           },
           "notes": {
             "sourceSheet": "MSC",
-            "code": "MEDSHIACA"
+            "code": "MEDSHIACA",
+            "rfc": "MSM980902IM6"
           },
           "quoteDefaults": {
             "priceMode": "aftertax",
@@ -3707,7 +3711,8 @@
           },
           "notes": {
             "sourceSheet": "ONE",
-            "code": null
+            "code": "ONE_MEX",
+            "rfc": "201708450C"
           },
           "quoteDefaults": {
             "priceMode": "aftertax",
@@ -4020,7 +4025,8 @@
           },
           "notes": {
             "sourceSheet": "PIL",
-            "code": "VD-PILSHI_MX"
+            "code": "VD-PILSHI_MX",
+            "rfc": "PSM231215QG9"
           },
           "quoteDefaults": {
             "priceMode": "aftertax",
@@ -4397,7 +4403,8 @@
           },
           "notes": {
             "sourceSheet": "WHAN HAI",
-            "code": "WANHAI_MX"
+            "code": "WANHAI_MX",
+            "rfc": "WHL2209281Q2"
           },
           "quoteDefaults": {
             "priceMode": "aftertax",
@@ -4795,7 +4802,8 @@
           },
           "notes": {
             "sourceSheet": "HAPAG",
-            "code": "NO ASIGNADO"
+            "code": "HAPLLOMEX",
+            "rfc": "HME980911KW7"
           },
           "quoteDefaults": {
             "priceMode": "aftertax",
@@ -5096,7 +5104,8 @@
           },
           "notes": {
             "sourceSheet": "EVERGREEN",
-            "code": "EVER_MEX"
+            "code": "EVER_MEX",
+            "rfc": "ESA1805216L9"
           },
           "quoteDefaults": {
             "priceMode": "aftertax",
@@ -5575,7 +5584,8 @@
           },
           "notes": {
             "sourceSheet": "COSCO",
-            "code": "COSCO_MEX"
+            "code": "COSCO_MEX",
+            "rfc": "CSM150218UV0"
           },
           "quoteDefaults": {
             "priceMode": "aftertax",
@@ -6005,7 +6015,8 @@
           },
           "notes": {
             "sourceSheet": "OOCL",
-            "code": "OOLU_US"
+            "code": "OOLU_US",
+            "rfc": "8502583000"
           },
           "quoteDefaults": {
             "priceMode": "aftertax",
@@ -6297,7 +6308,8 @@
           },
           "notes": {
             "sourceSheet": "YANG MING",
-            "code": "VD-REPMARATA"
+            "code": "VD-REPMARATA",
+            "rfc": "RMA500422PT2"
           },
           "quoteDefaults": {
             "priceMode": "aftertax",
@@ -6578,7 +6590,8 @@
           },
           "notes": {
             "sourceSheet": "KMTC",
-            "code": "KORMARACA"
+            "code": "KORMARACA",
+            "rfc": "KMA250220IJ8"
           },
           "quoteDefaults": {
             "priceMode": "aftertax",
@@ -6859,7 +6872,8 @@
           },
           "notes": {
             "sourceSheet": "RCL",
-            "code": "AGENAVMEX"
+            "code": "AGENAVMEX",
+            "rfc": "ANT250220BU2"
           },
           "quoteDefaults": {
             "priceMode": "aftertax",
