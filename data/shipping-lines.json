@@ -6338,7 +6338,7 @@
           "localCharges": [
             {
               "id": "kmtc-3",
-              "concept": "Release Fee",
+              "concept": "Doc Fee at Destination",
               "note": "Referencia para transferencia es el que de la pagina de la naviera Sin Comision bancaria",
               "taxRate": 0.16,
               "groupRates": {},
@@ -6350,7 +6350,7 @@
             },
             {
               "id": "kmtc-4",
-              "concept": "Container Handling",
+              "concept": "Container Release Fee",
               "note": null,
               "taxRate": 0.16,
               "groupRates": {
@@ -6379,13 +6379,13 @@
                   "label": "GP HC SD",
                   "qtyHint": 1,
                   "currency": "USD",
-                  "rate": 45
+                  "rate": 15
                 },
                 "ot-fr-rf": {
                   "label": "OT FR RF",
                   "qtyHint": 1,
                   "currency": "USD",
-                  "rate": 45
+                  "rate": 15
                 }
               },
               "blRate": null
