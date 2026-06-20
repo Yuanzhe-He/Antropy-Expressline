@@ -8,6 +8,19 @@
 ## 定位区（compact 后先读这块）
 ═══════════════════════════════════════════
 
+**【最新 r3，2026-06-20】混合批 A/B/C/D/E 全部代码完成 + 本地验证全绿，分支 `feature/jose-r3-mixed`（从 main=30be381 切）。5 个独立 commit：**
+- A 字体：`9474b8c` workbench-quote 行项编辑区紧凑（0.82→0.72rem，padding/三语行收紧，仅 CSS）。
+- B 费率：`3ff1536` KMTC ISD 45→15 两组 + 两标签改名（Release Fee→Doc Fee at Destination / Container Handling→Container Release Fee）。MSC 未改（Excel 内部矛盾→问题清单）。
+- C 场站：`670166c` 删 3 假 yard，录 26 个真实 CONTENTO Manzanillo patio（`src/lib/contento-yards.js` 单一来源 + `scripts/seed-contento-yards.js` + store.js seed）。还箱 maniobra + 洗箱 550/750/1150，MXN+IVA，portIds=manzanillo，**shippingLineIds 空（método B）**，成本侧 inert。
+- E 元数据：`c361490` HAPAG code=HAPLLOMEX、ONE code=ONE_MEX[INCIDENTAL]、14 家 rfc 税号、`normalizeShippingLineNotes` back-compat。
+- D 新增船司：`a8c0306` POST `/admin/handover/shipping-lines/add`+`/:id/delete`（handover only），customs 镜像同步+级联，编辑页 name/code/rfc 可改+删除按钮，i18n zh/es，spec `docs/specs/20260620_add_shipping_line_SPEC.md`，D2 测试 `scripts/d-add-shipping-line-test.js` 12/12。
+- 回归：smoke + quote 9/9 + r2-o3 + r2-batch3 + d-test 全绿。
+- **⚠️ 数据落地真相（关键）**：生产=Supabase（DATABASE_URL）。merge 部署只上 **代码**（A 字体/D 功能/normalizer）；**B/C/E 的 JSON 数据不会自动进 Supabase**，需 `npm run db:seed`（会覆盖 José 后台手改，须先备份）。安全路径：José 用已上线的后台 UI 改那 3 处 KMTC，或备份后 db:seed。
+- **CONTENTO PDF 缺失**：prompt 指的 `Presentacion_de_Servicios_para_Yisel_Guzman.pdf` 不在仓库。只确认 2 个 maniobra 价（Servimaniobras 3800/Contecon 4100）+ 洗箱 550；其余 24 个 maniobra=0+「pendiente PDF」标注，完整 ~35 列表待 PDF。已入问题清单第 8 条。
+- 给 José 问题清单：`docs/client-info-source/20260620_jose_question_list.md`（8 条）。
+- **待办**：push 分支 → 开 PR → merge 部署代码 → deployments API 盯成功 → 抽查生产；数据落地按上面安全路径与 Chandler/José 确认。
+
+
 **当前状态（2026-06-16，第N+2轮 / 前置0 执行中）**：
 - 陆运 go-live 已部署生产（main 6d107b9，2026-06-13）。
 - batch1（短驳/双价/路线PDF/样张）= commit 8088125，PR#3(→main) OPEN+MERGEABLE，**已 push 未合并 未部署**。
