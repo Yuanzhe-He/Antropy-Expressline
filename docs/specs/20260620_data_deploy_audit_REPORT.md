@@ -100,5 +100,17 @@ smoke + quote 9/9 + r2-o3 + r2-batch3 + d-add(12/12) + audit-contento(3/3) + aud
 smoke ✅ · quote 9/9 ✅ · r2-o3 ✅ · r2-batch3 ✅ · d-add 12/12 ✅ · audit-contento 3/3 ✅ · audit-new-carrier 6/6 ✅。
 
 ## 5. 爆炸半径
-- 代码：仅 contento-yards.js（值）+ 2 个新脚本（patch/shells，不在请求路径）+ 2 个审计脚本。**无 server/store/view 逻辑改动**（除 Part 1 的数据值）。
-- 数据：本地 JSON 仅 yards 值区块。**生产写入待批准**（patch 外科式，保 José 手改）。
+- 代码：contento-yards.js（值）+ patch/shells/审计脚本 + **FX 持久化修复**（db.patchAppStateField / store.saveExchangeRates / server + scheduler 调用点）。
+- 数据：生产 app_state 外科 patch（保 José 手改）。
+
+---
+
+## 6. 执行结果（2026-06-21，Chandler 三拍板后）
+
+Chandler 批：方式A patch / 要 7 空壳 / 先 patch 后合并。执行中**撞上并修掉一个生产数据完整性 bug**：
+
+- **FX 写风暴 + 全量覆盖 bug**：首次 `--apply` 写进去秒被回滚。诊断发现生产每~3s 写一次 app_state（只改 exchangeRates），FX 刷新走 `saveShippingData` **全量覆盖整个 blob**，FX fetch 慢→基于旧读的全量写**回滚任何并发数据改动**（patch 落不住，**José 后台手改也可能被悄悄冲掉**）。
+- **修复**：`db.patchAppStateField`(jsonb_set 单字段) + `store.saveExchangeRates`，FX 只 jsonb_set 写 exchangeRates，永不碰模块数据（no-op 对生产验证 handover/customs/inland/quote 字节级不变）。patch 升级 CAS+verify-persist。
+- **顺序被迫先合并后 patch**（patch 须等 FX 修复部署）：PR#12 合并→main=c0ddf19→部署 success→重跑 patch [stable] 落住。
+- **生产抽查 19/19**：B/C/E 全生效（KMTC 新名+ISD15、HAPAG/ONE code、14 rfc、26 CONTENTO 真价、7 空壳）+ **José 手改零损失**（CMA 50/ZIM 改名/COSCO 20/自建 2 场站；customs yards=28=26+2）；live HTTP 同确认。
+- **未决**：3s FX 强制刷来源（已 jsonb_set 无害化，但写仍频繁；建议查掐来源）。

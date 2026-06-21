@@ -1,28 +1,59 @@
-# 00q — 第N+18轮（补CONTENTO真价 + 数据上生产诊断 + 5项审计）
+# 00q — 第N+18轮（核实patch脚本安全+诊断救事故 + Chandler三拍板）
 
-> 00p 续篇。最新轮次。分支 feature/jose-r3-data-deploy（从 main=4846b8f 切）。
+> 00p 续篇。最新轮次。
 
-## 2026-06-20 第N+18轮 — CC执行
+## 2026-06-20 第N+18轮 — CC诊断发现José手改+patch脚本 / Claude核实 / 三拍板
 
-**Part 1 CONTENTO真价 ✅**：读 CONTENTO_yards_full_pricing.md，contento-yards.js 的 26 场站 maniobra 从占位填真价(3800~5850)，去 pendiente note。验证 26/26 真价、0 占位、0 编造。commit 62bcda3。
+**CC数据上生产结果（PR#12，停在写生产前）**：
+- Part1 CONTENTO真价✅：26场站maniobra从占位填真价(3800-5850来自PDF)，26/26真价0占位0编造。
+- Part2 数据上生产⏸等拍板：
+  - **备份已做**：backups/prod-shipping-data-2026-06-20T21-26-51.json(2.18MB,sha256 773788)，gitignore本地回滚锚点。
+  - **⭐诊断关键发现：生产不是纯seed，José后台手改过**：CMA doc fee 45→50、ZIM改名、COSCO改价、**KMTC ISD José自己已改15**、**José自建2个场站"新场站4/5"**。→ db:seed全量覆盖会清掉这些，必须外科patch。
+  - patch脚本scripts/patch-prod-data.js：dry-run默认/--apply才写/写前再备份/saveAppState原样写。dry-run验证19处改动全保José手改。
+- Part3 5审计全过：①代码vs数据落地(报价模板11+12/车型7档/柜型/nameZh-Es/normalizer字段=代码常量已生效，唯一未生效=本批B/C/E，无历史功能缺口)②CONTENTO回归3/3③新增船司深测6/6④CRUD全绿⑤XSS干净。
 
-**Part 2 数据上生产 ⏸ 停在写入前等 Chandler**：
-- 备份生产 Supabase app_state ✅：backups/prod-shipping-data-2026-06-20T21-26-51-678Z.json(2.18MB, sha256 773788975641e865)。backups/ 已 gitignore。
-- **诊断关键发现：生产有 José 手改**！CMA doc fee 45→50、ZIM 改名(Import Container/Borrar)、COSCO 改价、**KMTC ISD 已是 15**(José后台自己改的)、**José 自建 2 个场站**(customs-yard-…"新场站 4/5")。
-- **结论：db:seed 全量覆盖会清掉这些 → 必须外科式 patch**。
-- patch 脚本 scripts/patch-prod-data.js(dry-run 默认，--apply 才写，写前再备份，saveAppState 原样写保 José 形状) + scripts/seed-new-carriers.js(7家空壳)。commit 54de2b2。
-- **dry-run 验证 19 处改动**：E 14 rfc+HAPAG/ONE code；B KMTC 2 改名(ISD 幂等已15)；C 删 3 假场站+加 26 CONTENTO+**保留 José 2 自建场站**。
-- **唯一停下点：等 Chandler 批 patch(方式A，推荐) vs db:seed(方式B，不可用)，批准后跑 `node scripts/patch-prod-data.js --apply`。**
+**⭐⭐这个诊断救了事故**：若前面真按db:seed推数据，会清掉José的CMA50/ZIM/COSCO手改+自建2场站。CC上轮没自动seed、这轮诊断出手改改用patch=避免真实损失。**且证明José一直在用系统、后台真实操作。**
 
-**Part 3 审计 1–5 全过**(commit fb410fe + 报告 docs/specs/20260620_data_deploy_audit_REPORT.md)：
-- 审计1 代码vs数据：报价模板(11+12)、车型7档、柜型master、nameZh/Es、normalizer字段 = 代码→部署已生效(逐一生产核实)。唯一未生效=本批 B/C/E，patch 补。**无历史功能缺口**。
-- 审计2 CONTENTO 3/3、审计3 新增船司深测 6/6(重名去重/空名拒/删除级联/7空壳幂等)、审计4 全回归 7 套件绿、审计5 XSS 干净。
-- 低危项 F1(允许重名船司，去重id安全) F2(数据机制易忽略，已写LESSONS)。
+**Claude核实patch脚本（read全文，安全）**：
+- dry-run默认必须--apply才写✓
+- 写前再备份pre-patch snapshot✓
+- C的yard外科式：keptNonContento明确保留所有非假非CONTENTO的yard=**José自建2场站保留**✓(核了filter逻辑)
+- B的KMTC ISD改15幂等(if rate!==15，José已15脚本不重复动)✓
+- saveAppState原样写不full re-normalize保José形状✓
+- 不打印secrets✓
+- **结论：脚本只改B/C/E 19处，不动José手改，可信。**
 
-**José 问题清单**：第8条 PDF 缺失已 RESUELTO(26 真价已补)。其余 1-7 待 José。
+**Chandler三拍板（Claude建议）**：
+1. 落地方式→**方式A外科patch**(强烈推荐，唯一安全。生产有José手改，db:seed会清掉)。Claude核实脚本安全，建议批准--apply。
+2. 7家空壳→**建议要(--with-shells)**。José一给费率就能填，且空壳inert无害(只name/code费率空)。比让José自己点省事。
+3. PR合并时机→**建议先patch后合并**(或顺序无所谓，两者独立：patch改Supabase数据，PR合并只上代码，CONTENTO价只影响seed对已有生产数据无影响)。稳妥：patch写完抽查通过→合并。
 
-**机制锚点(记牢)**：生产=Supabase，改代码部署即生效，改数据需 patch/seed/后台手改。生产有 José 手改→只能 patch 不能 seed。
+**待Chandler最终确认**：方式A / 要空壳 / 先patch后合并（Claude三个都给了建议，等Chandler点头CC执行）。
 
-**下一步**：Chandler 批 patch → 跑 --apply → 生产抽查(KMTC新名+ISD15+rfc、26场站+José场站还在、José手改未丢) → 合并 PR。
+**部署机制锚点（再次确认并加强）**：
+- 生产=Supabase app_state(key=shipping-data)，有José后台手改
+- 改代码→部署自动生效；改数据→必须patch(不能db:seed，会清手改)
+- 安全改数据生产流程：备份→诊断canonical diff→dry-run patch→--apply(再备份)→抽查
+- **以后任何改生产数据都走patch脚本模式，永不db:seed(除非确认无手改)**
 
-**本轮防compact写入**：00q_chandler_log_round18.md(本文件) + _ROADMAP_anti_compact.md
+---
+
+## 2026-06-21 第N+18轮 续 — 执行patch（Chandler三拍板后）+ 撞上FX写风暴 + 修复 + 数据已上生产
+
+**Chandler三拍板已下**：①方式A外科patch ②要7空壳(--with-shells) ③先patch后合并。CC执行：
+
+1. **首次--apply 写进去又被覆盖**：patch写成功但秒回旧值。诊断：生产 app_state revision=21万+，每~3s一次写，只改 exchangeRates（FX汇率），保留其余模块。
+2. **根因（CC查实，第二个救事故级发现）**：FX刷新（每请求+定时器+某外部每3s强制刷）走 `saveShippingData` 全量覆盖整个 shipping-data blob；FX fetch 慢→每次保存基于几秒前的旧读→**全量覆盖回滚任何并发数据改动**。这不只挡了patch，**José自己后台改的也可能被这个FX写悄悄冲掉**=真实数据完整性bug。
+3. **修复（已合并部署 c0ddf19）**：新增 `db.patchAppStateField`(jsonb_set 单字段) + `store.saveExchangeRates`，两处FX保存点改为**只 jsonb_set 写 exchangeRates**，永不碰模块数据。验证：jsonb_set 对生产 no-op→handover/customs/inland/quote 字节级不变；回归全绿。
+4. **patch脚本升级**：--apply 改 CAS(compare-and-swap)+verify-persist(写后盯住，被冲就重写)。
+5. **先合并(含FX修复)后patch**（顺序被迫调整：patch必须等FX修复部署后才能落住）：PR#12 合并→main=c0ddf19→部署success→重跑patch→**[stable] 落住了**。
+6. **生产抽查 19/19 全过**：
+   - B/C/E生效：KMTC新名(Doc Fee at Destination/Container Release Fee)+ISD 15、HAPAG=HAPLLOMEX、ONE=ONE_MEX、14家rfc、26 CONTENTO真价(3800-5850)、7空壳(SINOKOR等)。
+   - **José手改全保住**：CMA doc fee 50、ZIM改名(Import Container/Borrar)、COSCO ot-fl-pl=20、José自建2场站(新场站4/5)都在；customs yards=28(26+2)。
+   - live HTTP抽查同样确认（KMTC页新名+rfc、列表7空壳、customs页 CONTENTO 场站）。
+
+**结果**：数据已安全上生产，José手改零损失，FX数据完整性bug一并修掉。备份 backups/prod-shipping-data-2026-06-20T21-26-51 + pre-patch snapshot 在手。
+
+**新锚点（重要）**：生产有个**FX写风暴**（每~3s写 exchangeRates，来源疑似某外部每3s强制刷 /exchange-rates/refresh 或挂着的admin页）。已用 jsonb_set 让它无害化（不再碰数据），但**写仍频繁**（浪费DB写）。建议后续查这个3s强制刷的来源并掐掉。
+
+**本轮防compact写入**：00q_chandler_log_round18.md（本文件）
