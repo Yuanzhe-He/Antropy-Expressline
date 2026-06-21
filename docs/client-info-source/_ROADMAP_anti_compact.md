@@ -11,9 +11,9 @@
 **【最新 r27，2026-06-21】合并 PR#17 部署验证 + 从源头定位外部 poller(F1)。分支 `feature/stop-external-poller`（从 main=da81714 切）。待开 PR。**
 - **PR#17 已合并部署 main=da81714，生产实测**：`/healthz`→200、`shippingCacheTtlMs:3600000`(1h TTL ✓)、`usageGuard{reads:1,writes:0,triggeredToday:false}`(缓存吸收一切)；egress 探针读~1/min；**数据完好 yards=28 / shippingLines=21**。egress 已 ~1.8GB/天，Supabase 不再被烧。
 - **F1 定位外部 poller**：①**前端确认无轮询**（grep public/+views/ 唯一 POST refresh 是 admin-settings.ejs:295 手动按钮；app.js AJAX 只管计算器；无 setInterval）→ 源在仓库外。②Railway log 取不到（CLI OAuth 失效，login=user-only）→ 改 **in-app 抓取**：新增 `src/lib/refresh-monitor.js`（纯内存）记录 refresh 路由来源指纹(IP/UA/Referer/时间，**绝不记 cookie/secret**)，经 `GET /healthz.refreshRoute` 暴露(CC 可 curl 读)。③**路由 min-interval 短路闸**(默认 5s，env `REFRESH_ROUTE_MIN_INTERVAL_MS`)：hammered 时跳过 loadShippingData 只 redirect(手动按钮/scheduler 不受影响)。
-- **来源指纹**：部署后 curl `/healthz.refreshRoute.sources` 回填（<待部署后填>）。
-- 测试 12/12 绿（新增 refresh-monitor 5/5）。汇率功能不受影响。
-- **状态**：代码+测试+文档完成，待开 PR 合并部署后定位来源。详见 `00z3_chandler_log_round27.md`。
+- **来源结果（PR#18 已合并部署 main=455c83c，实测 ~07:15-07:25Z）**：**poller 已自行停止，当前不活跃**。连续观测 ~5 分钟 `/healthz.refreshRoute.totalHitsToday=0`（每 2s 应有 ~150 次→实测 0）、usageGuard reads:1 writes:0、pg_stat 读 ~1/min(基线)。推理：PR#16 缓存只让 refresh hit 变便宜、不阻止 HTTP 到达，故 0 hit = poller 本身今天某时自行停了。抓不到指纹(不活跃)；refresh-monitor 已**永久部署为陷阱**——poller 回来即在 `/healthz.refreshRoute.sources` 抓到 IP/UA/Referer + 路由闸封顶。
+- 测试 12/12 绿（新增 refresh-monitor 5/5）。汇率功能不受影响。生产数据完好(yards=28/carriers=21)。
+- **状态**：PR#18 已合并部署(main=455c83c)。egress 危机闭环：读缓存(PR#16)+1h TTL+护栏(PR#17)+源头 poller 已停+陷阱已布(PR#18)。详见 `00z3_chandler_log_round27.md`。
 
 **【r25，2026-06-21】TTL 拉长 env 化 + 应用层用量护栏告警 + 读侧沉淀。分支 `feature/usage-guard-and-ttl`（从 main=67ae1df 切，PR#16 killshot 已合并）。已合并 PR#17→main=da81714。**
 - **前置**：PR#16(killshot) 已 merge→main=67ae1df，读缓存上生产。本轮在其上加 TTL 调优 + 护栏。
