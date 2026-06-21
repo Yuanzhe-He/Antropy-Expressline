@@ -17,6 +17,13 @@
 - Part 3 审计 1–5 全过(commit fb410fe，报告 `docs/specs/20260620_data_deploy_audit_REPORT.md`)：①代码vs数据(模板/车型/master/normalizer=已生效，仅 B/C/E 数据未生效，无历史功能缺口) ②CONTENTO 3/3 ③新增船司深测 6/6 ④全回归 7 套件绿 ⑤XSS 干净。低危 F1(允许重名船司) F2(数据机制易忽略)。
 - **部署机制锚点(记牢)**：生产=Supabase；改代码部署即生效；改数据需 patch/seed/后台手改；**生产有 José 手改→只能 patch 不能 db:seed**。
 
+**【r3-data 执行完成，2026-06-21】数据已安全上生产（PR#12 合并，main=c0ddf19，部署 success）：**
+- **撞上并修掉一个生产数据完整性 bug**：FX 汇率刷新走 `saveShippingData` 全量覆盖整个 blob，FX fetch 慢→基于旧读的全量写**回滚任何并发数据改动**（patch 落不住，且 **José 后台手改也可能被 FX 写悄悄冲掉**）。修复：`db.patchAppStateField`(jsonb_set 单字段)+`store.saveExchangeRates`，FX 只 jsonb_set 写 exchangeRates，永不碰模块数据。patch 脚本升级 CAS+verify-persist。
+- 顺序被迫 **先合并(含FX修复)后patch**（patch 必须等 FX 修复部署后才落得住）。重跑 patch [stable] 落住。
+- **生产抽查 19/19**：B/C/E 全生效(KMTC 新名+ISD15、HAPAG/ONE code、14 rfc、26 CONTENTO 真价、7 空壳) + **José 手改零损失**(CMA 50/ZIM 改名/COSCO 20/自建 2 场站；customs yards=28=26+2)。
+- **未决锚点**：生产有个 **FX 写风暴**(每~3s 写 exchangeRates，疑似外部每 3s 强制刷)。已 jsonb_set 无害化(不碰数据)，但写仍频繁——建议后续查来源掐掉(省 DB 写)。
+- 备份：`backups/prod-shipping-data-2026-06-20T21-26-51-678Z.json`(sha 773788…) + pre-patch snapshot。
+
 
 **【最新 r3，2026-06-20】混合批 A/B/C/D/E 全部代码完成 + 本地验证全绿，分支 `feature/jose-r3-mixed`（从 main=30be381 切）。5 个独立 commit：**
 - A 字体：`9474b8c` workbench-quote 行项编辑区紧凑（0.82→0.72rem，padding/三语行收紧，仅 CSS）。
