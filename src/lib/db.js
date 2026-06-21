@@ -1,5 +1,6 @@
 const { Pool } = require("pg");
 const { loadLocalEnv } = require("./env");
+const usageGuard = require("./usage-guard");
 
 loadLocalEnv();
 
@@ -119,6 +120,9 @@ async function ensureDatabase() {
 
 async function getAppState(key) {
   await ensureDatabase();
+  // Every getAppState is a DB-penetration read (the read cache lives a layer up
+  // in store.js, so cache hits never reach here). Count it for the usage guard.
+  usageGuard.recordRead();
   const schema = quoteIdentifier(getDatabaseSchema());
   const result = await getPool().query(
     `select payload from ${schema}.app_state where key = $1`,
@@ -129,6 +133,7 @@ async function getAppState(key) {
 
 async function saveAppState(key, payload) {
   await ensureDatabase();
+  usageGuard.recordWrite();
   const schema = quoteIdentifier(getDatabaseSchema());
   await getPool().query(
     `
@@ -163,6 +168,7 @@ function buildJsonPathLiteral(field) {
 // the whole multi-MB blob. Returns rowCount (0 when no row exists yet).
 async function patchAppStateField(key, field, value) {
   await ensureDatabase();
+  usageGuard.recordWrite();
   const schema = quoteIdentifier(getDatabaseSchema());
   const result = await getPool().query(
     `

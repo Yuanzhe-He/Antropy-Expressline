@@ -23,6 +23,7 @@ const {
 } = require("./lib/inland-vehicles");
 const { refreshExchangeRatesIfStale } = require("./lib/exchange-rates");
 const { startExchangeRateScheduler } = require("./lib/exchange-rate-scheduler");
+const usageGuard = require("./lib/usage-guard");
 const {
   buildTranslator,
   getLanguageOptions,
@@ -1846,6 +1847,18 @@ function createApp() {
 
   app.get("/", (req, res) => {
     return res.redirect(`/workbench/${DEFAULT_MODULE_KEY}`);
+  });
+
+  // Lightweight, unauthenticated health/usage endpoint. Exposes the in-memory
+  // usage-guard counters (today's app_state DB reads/writes vs thresholds, and
+  // whether an alert fired today) so the storm can be seen live without trawling
+  // logs. No secrets, no DB hit.
+  app.get("/healthz", (_req, res) => {
+    return res.json({
+      status: "ok",
+      shippingCacheTtlMs: Number(process.env.SHIPPING_CACHE_TTL_MS) || 60 * 60 * 1000,
+      usageGuard: usageGuard.getStatus(),
+    });
   });
 
   app.post("/preferences/language", (req, res) => {
@@ -4665,6 +4678,11 @@ if (require.main === module) {
   const app = createApp();
   app.listen(port, () => {
     console.log(`Server listening on http://localhost:${port}`);
+    // Make the guardrails visible at startup (Railway logs).
+    const ttlMs = Number(process.env.SHIPPING_CACHE_TTL_MS) || 60 * 60 * 1000;
+    console.log(
+      `shipping-data read cache TTL: ${Math.round(ttlMs / 1000)}s | ${usageGuard.describeConfig()}`
+    );
   });
   startExchangeRateScheduler();
 }

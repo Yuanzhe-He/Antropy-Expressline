@@ -7,6 +7,7 @@ const {
   patchAppStateField,
   shouldUseDatabase,
 } = require("./db");
+const usageGuard = require("./usage-guard");
 const {
   INLAND_ORIGINS,
   INLAND_DESTINATION_CATALOG,
@@ -2331,17 +2332,33 @@ function normalizeShippingData(data) {
 //
 // TTL also sets the egress floor: under a relentless caller the cache misses
 // exactly once per window, so egress ≈ (1 read / TTL) × blob (~1.6MB). The
-// default 15min keeps that under Supabase's free egress tier even if the
-// external /exchange-rates/refresh poller is never stopped (~96 pulls/day vs the
-// pre-fix ~54,000). TTL is read at call time (env SHIPPING_CACHE_TTL_MS, ms;
-// set 0 to disable) so it can be tuned without a code change. JSON mode
-// (local/tests) reads a small file with no concurrency and needs no cache.
+// default 1h keeps that ~24 pulls/day (~38MB/day ≈ ~1.1GB/month — well under
+// Supabase's 5GB free egress tier) even if the external /exchange-rates/refresh
+// poller is never stopped (pre-fix was ~54,000 reads/day). FX itself only needs
+// to be fetched ~once/day (the scheduler), which is a SEPARATE concern from this
+// cache TTL. TTL is read at call time (env SHIPPING_CACHE_TTL_MS, ms; set 0 to
+// disable) so it can be tuned without a code change. JSON mode (local/tests)
+// reads a small file with no concurrency and needs no cache.
+//
+// DEPLOYMENT DISCIPLINE (because the TTL is now long): scripts/patch-prod-data.js
+// and db:seed write the DB from a SEPARATE process, so the live server keeps
+// serving its in-process cache for up to one TTL after such an out-of-band write.
+// After running a prod data patch, redeploy (restart clears the cache) or wait
+// one TTL before spot-checking prod — otherwise you'll see the stale cached blob.
 let shippingDataCache = null; // canonical normalized blob; never handed out directly
 let shippingDataCacheStoredAt = 0; // epoch ms of the read/write that set it
 
 function getShippingCacheTtlMs() {
   const parsed = Number(process.env.SHIPPING_CACHE_TTL_MS);
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 15 * 60 * 1000;
+  const configured =
+    Number.isFinite(parsed) && parsed >= 0 ? parsed : 60 * 60 * 1000;
+  // Safety net: if DB-penetration reads go severely abnormal (the cache is being
+  // defeated somehow), the usage guard tells us to clamp egress by forcing a
+  // longer floor regardless of the configured value.
+  if (usageGuard.shouldExtendReadCache()) {
+    return Math.max(configured, usageGuard.getReadCacheTtlFloorMs());
+  }
+  return configured;
 }
 
 function shippingCacheIsFresh() {
@@ -2507,9 +2524,22 @@ async function saveShippingData(data) {
 // {exchangeRates}, so FX writes never touch module data, and we refresh just
 // that slice of the read cache. JSON mode (local/tests) has no concurrency, so
 // the full write is fine.
+//
+// This is an AUTO (machine-driven) write. If the usage guard sees the daily
+// write count go abnormal, we DROP the FX write and keep serving the cached
+// rate — degrade the runaway behavior, not the service. The throttle already
+// caps FX to ~96/day, so this only fires if something else is also writing a
+// lot; user-driven writes (saveShippingData) are never degraded.
 async function saveExchangeRates(data) {
   const exchangeRates = normalizeExchangeRates(data.exchangeRates);
   if (shouldUseDatabase()) {
+    if (usageGuard.shouldDegradeAutoWrite()) {
+      usageGuard.noteAutoWriteDegraded();
+      // Keep the in-memory cache current so reads still see fresh rates even
+      // though we are not touching the DB.
+      updateShippingCacheSection(["exchangeRates"], exchangeRates);
+      return undefined;
+    }
     const rows = await patchAppStateField(shippingDataStateKey, "exchangeRates", exchangeRates);
     if (rows === 0) {
       // No row yet (fresh store) — fall back to a full seed write.
