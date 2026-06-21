@@ -8,7 +8,14 @@
 ## 定位区（compact 后先读这块）
 ═══════════════════════════════════════════
 
-**【最新 r25，2026-06-21】TTL 拉长 env 化 + 应用层用量护栏告警 + 读侧沉淀。分支 `feature/usage-guard-and-ttl`（从 main=67ae1df 切，PR#16 killshot 已合并）。待开 PR。**
+**【最新 r27，2026-06-21】合并 PR#17 部署验证 + 从源头定位外部 poller(F1)。分支 `feature/stop-external-poller`（从 main=da81714 切）。待开 PR。**
+- **PR#17 已合并部署 main=da81714，生产实测**：`/healthz`→200、`shippingCacheTtlMs:3600000`(1h TTL ✓)、`usageGuard{reads:1,writes:0,triggeredToday:false}`(缓存吸收一切)；egress 探针读~1/min；**数据完好 yards=28 / shippingLines=21**。egress 已 ~1.8GB/天，Supabase 不再被烧。
+- **F1 定位外部 poller**：①**前端确认无轮询**（grep public/+views/ 唯一 POST refresh 是 admin-settings.ejs:295 手动按钮；app.js AJAX 只管计算器；无 setInterval）→ 源在仓库外。②Railway log 取不到（CLI OAuth 失效，login=user-only）→ 改 **in-app 抓取**：新增 `src/lib/refresh-monitor.js`（纯内存）记录 refresh 路由来源指纹(IP/UA/Referer/时间，**绝不记 cookie/secret**)，经 `GET /healthz.refreshRoute` 暴露(CC 可 curl 读)。③**路由 min-interval 短路闸**(默认 5s，env `REFRESH_ROUTE_MIN_INTERVAL_MS`)：hammered 时跳过 loadShippingData 只 redirect(手动按钮/scheduler 不受影响)。
+- **来源指纹**：部署后 curl `/healthz.refreshRoute.sources` 回填（<待部署后填>）。
+- 测试 12/12 绿（新增 refresh-monitor 5/5）。汇率功能不受影响。
+- **状态**：代码+测试+文档完成，待开 PR 合并部署后定位来源。详见 `00z3_chandler_log_round27.md`。
+
+**【r25，2026-06-21】TTL 拉长 env 化 + 应用层用量护栏告警 + 读侧沉淀。分支 `feature/usage-guard-and-ttl`（从 main=67ae1df 切，PR#16 killshot 已合并）。已合并 PR#17→main=da81714。**
 - **前置**：PR#16(killshot) 已 merge→main=67ae1df，读缓存上生产。本轮在其上加 TTL 调优 + 护栏。
 - **A TTL 默认 15min→1h**（`store.getShippingCacheTtlMs`，env `SHIPPING_CACHE_TTL_MS` call-time 可调/0=禁用）。地板 ≈24 真读/天 ≈38MB/天 ≈~1.1GB/月（修前 ~70GB/天）。澄清两频率：查汇率一天一次(scheduler) ≠ 读缓存 TTL(blob 缓存多久重读)。**部署纪律：长 TTL 下 patch-prod-data/db:seed(独立进程)写后线上缓存陈旧≤TTL→prod patch 后 redeploy 或等 TTL 再抽查。**
 - **B 应用层用量护栏 `src/lib/usage-guard.js`（纯内存，零 DB 写）**：db 层 `getAppState`→recordRead(**只数 DB 穿透读，缓存命中不计**)、`saveAppState`+`patchAppStateField`→recordWrite。超阈值(读 200/写 500/天，env 可调)→醒目 `[USAGE-GUARD-ALERT]` console.error(去重：首次+每 5min 至多一次，不变日志风暴)。**自动降级(降失控不停服务)**：写超阈值→FX(auto write)跳过 DB 写保留缓存、admin(user write)永不阻断；读 severe(≥5×)→强制 TTL 地板 1h 钳 egress。可见性：`triggeredToday` flag + `GET /healthz`(无 auth/无 secret) + 启动日志。跨天重置。**不接邮件**(项目无邮件设施；日志+降级已"当场刹车+留证据"；邮件=step-2 需 Chandler 给服务+邮箱)。
