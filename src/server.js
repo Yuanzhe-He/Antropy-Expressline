@@ -2925,6 +2925,13 @@ function createApp() {
     "/admin/:moduleKey/exchange-rates/refresh",
     requireAuth,
     async (req, res) => {
+      // Capture the request source FIRST (before any validation), so the external
+      // client that hammers this route ~every 2s is fingerprinted at /healthz even
+      // if it uses an unknown :moduleKey — then it can be stopped at its origin.
+      // No secrets are recorded (IP/UA/Referer only). Our own frontend never polls
+      // this route, so any hit here is the "ghost".
+      refreshMonitor.record(refreshMonitor.describeRequest(req));
+
       const module = getBusinessModule(req.params.moduleKey);
       if (!module) {
         return res.status(404).render(
@@ -2935,11 +2942,6 @@ function createApp() {
           })
         );
       }
-
-      // Capture the request source (no secrets) so the external client that
-      // hammers this route ~every 2s can be identified at /healthz, then stopped
-      // at its origin. Our own frontend does not poll this route.
-      refreshMonitor.record(refreshMonitor.describeRequest(req));
 
       // Defense-in-depth: when this route is hammered, short-circuit the refresh
       // (the FX throttle + read cache already make it cheap, but this caps the
