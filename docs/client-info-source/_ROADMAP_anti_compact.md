@@ -8,7 +8,13 @@
 ## 定位区（compact 后先读这块）
 ═══════════════════════════════════════════
 
-**【最新 r3-data，2026-06-20，第N+18轮】补 CONTENTO 真价 + 数据上生产 + 5 审计。分支 `feature/jose-r3-data-deploy`（从 main=4846b8f 切）。⏸ 停在生产写入前等 Chandler。**
+**【最新 r21，2026-06-21】掐FX写风暴 + 全面检测上线，PR#14 合并部署 main=ffa0429。**
+- **A FX写风暴掐掉 ✅**：真凶=某已登录外部源每~2秒打 `POST /admin/:moduleKey/exchange-rates/refresh`(force:true)→成功强制刷→每次只改 lastCheckedAt→**~47520/天写**。修：`exchange-rates.js` 加节流(即使force，15分内已刷过就跳过不写)+删 /refresh route 冗余 saveShippingData(clobber隐患)。**实测部署后生产60秒0写**(从11写/20秒)→~96/天封顶。FX仍正常。测试 audit-fx-throttle 5/5。
+- **B 全面检测上线 ✅**：B1 生产数据 13/13(B/C/E+7空壳+José手改CMA50/ZIM/COSCO/2场站全在,yards=28) · B2 报价模式 4/4(段/三语/双价IVA/6 PDF) · B3 新增船司(6/6+12/12) · B4 CRUD(8套件绿) · B5 XSS净 · B6 双价math+CONTENTO成本(9/9+3/3)。
+- **留尾 F1**：FX风暴**源头**(外部每2秒打/refresh的已登录源)已节流无害化(写≈0)，但HTTP请求仍在打→建议查 Railway access log/José挂着的后台页，从源头掐。
+- 锚点不变：生产=Supabase；改数据走patch(jsonb_set)永不db:seed；FX只jsonb_set+节流。详见 `00t_chandler_log_round21.md`。
+
+**【r3-data，2026-06-20，第N+18轮】补 CONTENTO 真价 + 数据上生产 + 5 审计。分支 `feature/jose-r3-data-deploy`（从 main=4846b8f 切）。⏸ 停在生产写入前等 Chandler。**
 - Part 1 ✅ CONTENTO 26 场站全真价(3800–5850，commit 62bcda3)，无占位无编造。
 - Part 2 ⏸ **诊断发现生产有 José 手改**(CMA doc fee 50/ZIM 改名/COSCO 改价/KMTC ISD 已15/José 自建"新场站4·5")→ **db:seed 会清掉，必须外科 patch**。
   - 备份 ✅ `backups/prod-shipping-data-2026-06-20T21-26-51-678Z.json`(sha256 773788975641e865，backups/ 已 gitignore)。
