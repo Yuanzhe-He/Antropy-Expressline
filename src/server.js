@@ -24,6 +24,7 @@ const {
 const { refreshExchangeRatesIfStale } = require("./lib/exchange-rates");
 const { startExchangeRateScheduler } = require("./lib/exchange-rate-scheduler");
 const usageGuard = require("./lib/usage-guard");
+const refreshMonitor = require("./lib/refresh-monitor");
 const {
   buildTranslator,
   getLanguageOptions,
@@ -1858,6 +1859,7 @@ function createApp() {
       status: "ok",
       shippingCacheTtlMs: Number(process.env.SHIPPING_CACHE_TTL_MS) || 60 * 60 * 1000,
       usageGuard: usageGuard.getStatus(),
+      refreshRoute: refreshMonitor.getStatus(),
     });
   });
 
@@ -2934,13 +2936,28 @@ function createApp() {
         );
       }
 
-      // loadShippingData already persists refreshed rates via the targeted
-      // jsonb_set (saveExchangeRates); no extra full-blob saveShippingData here
-      // (that was redundant AND a data-clobber risk when this route is hammered).
-      await loadShippingData({
-        refreshRates: true,
-        forceRefreshRates: true,
-      });
+      // Capture the request source (no secrets) so the external client that
+      // hammers this route ~every 2s can be identified at /healthz, then stopped
+      // at its origin. Our own frontend does not poll this route.
+      refreshMonitor.record(refreshMonitor.describeRequest(req));
+
+      // Defense-in-depth: when this route is hammered, short-circuit the refresh
+      // (the FX throttle + read cache already make it cheap, but this caps the
+      // work at the trigger regardless). The manual button is unaffected — a human
+      // clicks far slower than the min-interval, and the settings page it
+      // redirects to renders the current rates anyway.
+      if (refreshMonitor.shouldThrottleRoute()) {
+        refreshMonitor.noteSkipped();
+      } else {
+        refreshMonitor.markRefreshDone();
+        // loadShippingData already persists refreshed rates via the targeted
+        // jsonb_set (saveExchangeRates); no extra full-blob saveShippingData here
+        // (that was redundant AND a data-clobber risk when this route is hammered).
+        await loadShippingData({
+          refreshRates: true,
+          forceRefreshRates: true,
+        });
+      }
       req.session.flash = {
         type: "success",
         message: req.t("admin.exchangeRatesSaved"),
