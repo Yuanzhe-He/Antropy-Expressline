@@ -29,7 +29,11 @@
 - **来源真正掐法取决于 2A 抓到的指纹**（部署后 curl `/healthz.refreshRoute.sources` 才有数据）：
   - 若指纹的 Referer/UA 指向某个仓库内页面 → 回去改那个页面（去轮询）。
   - 若是外部脚本/监控（仓库外，UA/IP 不属我方页面）→ 已无害化（节流+缓存+路由闸 DB写0+egress≈0）；指纹交 José/Chandler 从源头停（关那个标签/脚本/监控）。可选再加按来源限流/403（need 决策，别误伤手动刷新）。
-- **【部署后填写】F1 来源指纹**：<见 PR 合并部署后 curl /healthz.refreshRoute 结果，回填本节 + roadmap>。
+- **【部署后实测，2026-06-21 ~07:15-07:25Z】F1 来源结果：poller 已自行停止，当前不活跃。**
+  - PR#18 部署后连续观测 ~5 分钟（多窗口，每 30s 抽一次）：`/healthz.refreshRoute` 始终 `totalHitsToday=0, lastHitAt=null`，`usageGuard{reads:1, writes:0}` 不变，pg_stat_statements 读 ~1/min（=1h TTL 缓存刷新/scheduler 基线，非每 2s poller）。若 poller 仍每 2s 打，5 分钟应有 ~150 次——实测 0。
+  - **关键推理**：PR#16 读缓存只让 refresh hit 变"便宜"(缓存命中)，**并不会阻止 HTTP 请求到达**。所以 refresh-monitor(PR#18) 显示 0 hit = poller 本身已不再打这个路由。它是在今天某时(早于 PR#18 部署)自行停掉的(有人关了挂着的标签/停了脚本/监控)。DB+egress 上轮已无害化(PR#16/17)，现 HTTP poller 也停了。
+  - **无法回填指纹**：poller 当前不活跃，抓不到 IP/UA/Referer。refresh-monitor 已**永久部署为陷阱**——poller(或任何未来高频调用方)一旦回来，`/healthz.refreshRoute.sources` 立刻抓到指纹，路由 min-interval 闸同时封顶其工作量。
+  - **已知小限制(refinement，未重部署)**：`record()` 在路由的 module-404 检查之后，故只抓"合法 moduleKey"的 hit(历史 poller 正是合法 key，会被抓到)。若想抓任意 key 的 hit，可把 record() 移到 404 检查前(2 行改动，留作后续，因当前 poller 已停、价值边际)。
 
 ### 2C 验证
 - 汇率功能不受影响：手动刷按钮仍 redirect 到 settings（渲染当前汇率）；scheduler 每天刷（不走此路由）；报价双价用 exchangeRates 不变。
