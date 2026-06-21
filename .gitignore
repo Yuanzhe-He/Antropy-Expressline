@@ -20,3 +20,5 @@ Thumbs.db
 
 # generated quote preview (re-creatable from the quote section; source 报价.pdf is tracked)
 docs/reference/quote-preview.pdf
+# r3 prod backups (full live-data snapshots; rollback anchors, kept local)
+backups/

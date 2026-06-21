@@ -51,6 +51,7 @@ const {
   getUsers,
   localizedInlandName,
   saveShippingData,
+  saveExchangeRates,
   RATE_GROUP_NAMES,
 } = require("./lib/store");
 const {
@@ -838,7 +839,9 @@ async function loadShippingData(options = {}) {
       force: options.forceRefreshRates,
     });
     if (refreshed.changed) {
-      await saveShippingData(refreshed.data);
+      // Persist ONLY exchangeRates (targeted), so this frequent write cannot
+      // clobber concurrent carrier/customs/inland edits. See saveExchangeRates.
+      await saveExchangeRates(refreshed.data);
       shippingData = refreshed.data;
     }
   }

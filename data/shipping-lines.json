@@ -13164,7 +13164,7 @@
         {
           "id": "yard-mzo-contento-fali",
           "name": "Fali",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -13173,128 +13173,128 @@
             {
               "id": "yard-mzo-contento-fali-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4300
                 }
               }
             },
@@ -13432,7 +13432,7 @@
         {
           "id": "yard-mzo-contento-sice",
           "name": "SICE",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -13441,128 +13441,128 @@
             {
               "id": "yard-mzo-contento-sice-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 }
               }
             },
@@ -13700,7 +13700,7 @@
         {
           "id": "yard-mzo-contento-hadron-logistics",
           "name": "Hadron Logistics",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -13709,128 +13709,128 @@
             {
               "id": "yard-mzo-contento-hadron-logistics-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4500
                 }
               }
             },
@@ -13968,7 +13968,7 @@
         {
           "id": "yard-mzo-contento-emilu",
           "name": "Emilu",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -13977,128 +13977,128 @@
             {
               "id": "yard-mzo-contento-emilu-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 }
               }
             },
@@ -14236,7 +14236,7 @@
         {
           "id": "yard-mzo-contento-hazesa",
           "name": "Hazesa",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -14245,128 +14245,128 @@
             {
               "id": "yard-mzo-contento-hazesa-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 }
               }
             },
@@ -14504,7 +14504,7 @@
         {
           "id": "yard-mzo-contento-aflex",
           "name": "Aflex",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -14513,128 +14513,128 @@
             {
               "id": "yard-mzo-contento-aflex-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 4800
                 }
               }
             },
@@ -14772,7 +14772,7 @@
         {
           "id": "yard-mzo-contento-container-care-timsa",
           "name": "Container Care (TIMSA)",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO. Pista de naviera en el nombre: TIMSA.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Pista de naviera en el nombre: TIMSA.",
           "portIds": [
             "manzanillo"
           ],
@@ -14781,128 +14781,128 @@
             {
               "id": "yard-mzo-contento-container-care-timsa-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 }
               }
             },
@@ -15040,7 +15040,7 @@
         {
           "id": "yard-mzo-contento-sltc",
           "name": "SLTC",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -15049,128 +15049,128 @@
             {
               "id": "yard-mzo-contento-sltc-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 }
               }
             },
@@ -15308,7 +15308,7 @@
         {
           "id": "yard-mzo-contento-mepacsa",
           "name": "Mepacsa",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -15317,128 +15317,128 @@
             {
               "id": "yard-mzo-contento-mepacsa-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 }
               }
             },
@@ -15576,7 +15576,7 @@
         {
           "id": "yard-mzo-contento-express-port-manzanillo",
           "name": "Express Port Manzanillo",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -15585,128 +15585,128 @@
             {
               "id": "yard-mzo-contento-express-port-manzanillo-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 }
               }
             },
@@ -15844,7 +15844,7 @@
         {
           "id": "yard-mzo-contento-hazesa-kmct",
           "name": "Hazesa (KMCT)",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO. Pista de naviera en el nombre: KMCT.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Pista de naviera en el nombre: KMCT.",
           "portIds": [
             "manzanillo"
           ],
@@ -15853,128 +15853,128 @@
             {
               "id": "yard-mzo-contento-hazesa-kmct-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 }
               }
             },
@@ -16111,8 +16111,8 @@
         },
         {
           "id": "yard-mzo-contento-ssa",
-          "name": "SSA",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "name": "SSA (Patio Externo y Recinto Fiscal)",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -16121,128 +16121,128 @@
             {
               "id": "yard-mzo-contento-ssa-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 }
               }
             },
@@ -16380,7 +16380,7 @@
         {
           "id": "yard-mzo-contento-ocupa",
           "name": "Ocupa",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -16389,128 +16389,128 @@
             {
               "id": "yard-mzo-contento-ocupa-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5300
                 }
               }
             },
@@ -16648,7 +16648,7 @@
         {
           "id": "yard-mzo-contento-impala-terminals-mexico",
           "name": "Impala Terminals México",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -16657,128 +16657,128 @@
             {
               "id": "yard-mzo-contento-impala-terminals-mexico-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5350
                 }
               }
             },
@@ -16916,7 +16916,7 @@
         {
           "id": "yard-mzo-contento-isl-transportes",
           "name": "ISL Transportes",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -16925,128 +16925,128 @@
             {
               "id": "yard-mzo-contento-isl-transportes-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 }
               }
             },
@@ -17184,7 +17184,7 @@
         {
           "id": "yard-mzo-contento-consignataria-oceanica-sinotrans",
           "name": "Consignataria Oceánica (Sinotrans)",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO. Pista de naviera en el nombre: Sinotrans.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Pista de naviera en el nombre: Sinotrans.",
           "portIds": [
             "manzanillo"
           ],
@@ -17193,128 +17193,128 @@
             {
               "id": "yard-mzo-contento-consignataria-oceanica-sinotrans-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 }
               }
             },
@@ -17452,7 +17452,7 @@
         {
           "id": "yard-mzo-contento-damco-maersk",
           "name": "Damco (Maersk)",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO. Pista de naviera en el nombre: Maersk.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Pista de naviera en el nombre: Maersk.",
           "portIds": [
             "manzanillo"
           ],
@@ -17461,128 +17461,128 @@
             {
               "id": "yard-mzo-contento-damco-maersk-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5400
                 }
               }
             },
@@ -17720,7 +17720,7 @@
         {
           "id": "yard-mzo-contento-alman",
           "name": "Alman",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -17729,128 +17729,128 @@
             {
               "id": "yard-mzo-contento-alman-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 }
               }
             },
@@ -17988,7 +17988,7 @@
         {
           "id": "yard-mzo-contento-shanghai-agunza-tc-lines",
           "name": "Shanghai (Agunza TC-Lines)",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO. Pista de naviera en el nombre: Agunza / TC-Lines.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Pista de naviera en el nombre: Agunza / TC-Lines.",
           "portIds": [
             "manzanillo"
           ],
@@ -17997,128 +17997,128 @@
             {
               "id": "yard-mzo-contento-shanghai-agunza-tc-lines-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5500
                 }
               }
             },
@@ -18256,7 +18256,7 @@
         {
           "id": "yard-mzo-contento-impala-containers-yard",
           "name": "Impala Containers Yard",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -18265,128 +18265,128 @@
             {
               "id": "yard-mzo-contento-impala-containers-yard-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5600
                 }
               }
             },
@@ -18524,7 +18524,7 @@
         {
           "id": "yard-mzo-contento-alsecont",
           "name": "Alsecont",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -18533,128 +18533,128 @@
             {
               "id": "yard-mzo-contento-alsecont-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 }
               }
             },
@@ -18792,7 +18792,7 @@
         {
           "id": "yard-mzo-contento-cima",
           "name": "CIMA",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -18801,128 +18801,128 @@
             {
               "id": "yard-mzo-contento-cima-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5800
                 }
               }
             },
@@ -19059,8 +19059,8 @@
         },
         {
           "id": "yard-mzo-contento-ptd",
-          "name": "PTD",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "name": "PTD (Patio externo de CONTECON)",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -19069,128 +19069,128 @@
             {
               "id": "yard-mzo-contento-ptd-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 }
               }
             },
@@ -19328,7 +19328,7 @@
         {
           "id": "yard-mzo-contento-tep",
           "name": "TEP",
-          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B). Maniobra pendiente de confirmar contra PDF CONTENTO.",
+          "note": "Fuente: CONTENTO (cotización a Yisel Guzmán, 2026-06-01). Naviera↔patio pendiente: José confirmará la relación (método B).",
           "portIds": [
             "manzanillo"
           ],
@@ -19337,128 +19337,128 @@
             {
               "id": "yard-mzo-contento-tep-maniobra",
               "concept": "Maniobra de vacío (devolución)",
-              "note": "Precio pendiente: confirmar maniobra contra el PDF de CONTENTO.",
+              "note": null,
               "taxRate": 0.16,
               "groupRates": {
                 "40GP": {
                   "label": "40GP - Forty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20FR": {
                   "label": "20FR - Twenty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20GP": {
                   "label": "20GP - Twenty foot general purpose",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20NOR": {
                   "label": "20NOR - Twenty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20OT": {
                   "label": "20OT - Twenty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20PL": {
                   "label": "20PL - Twenty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40FR": {
                   "label": "40FR - Forty foot flatrack",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40NOR": {
                   "label": "40NOR - Forty foot non-operating reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40OT": {
                   "label": "40OT - Forty foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40PL": {
                   "label": "40PL - Forty foot platform",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20HC": {
                   "label": "20HC - Twenty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20RHC": {
                   "label": "20RHC - Twenty Foot high cube Reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20RF": {
                   "label": "20RF - Twenty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "20TK": {
                   "label": "20TK - Twenty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40HC": {
                   "label": "40HC - Forty foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40RHC": {
                   "label": "40RHC - Forty foot high cube reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40RF": {
                   "label": "40RF - Forty foot reefer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "40TK": {
                   "label": "40TK - Forty foot Tank trailer",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "45HC": {
                   "label": "45HC - Forty Five foot high cube",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 },
                 "45OT": {
                   "label": "45OT - Forty five foot open top",
                   "qtyHint": 1,
                   "currency": "MXN",
-                  "rate": 0
+                  "rate": 5850
                 }
               }
             },

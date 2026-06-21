@@ -4,6 +4,7 @@ const { loadLocalEnv } = require("./env");
 const {
   getAppState,
   saveAppState,
+  patchAppStateField,
   shouldUseDatabase,
 } = require("./db");
 const {
@@ -2344,6 +2345,26 @@ async function saveShippingData(data) {
   return writeJson(shippingLinesFile, normalizeShippingData(data));
 }
 
+// Persist ONLY the exchangeRates field. The FX refresh runs very frequently
+// (per-request + a daily scheduler); writing the whole shipping-data blob made
+// every FX save a full-payload overwrite that clobbered concurrent edits to the
+// carrier/customs/inland data (a data-integrity bug — admin saves could be lost,
+// and external data patches could not land). In DB mode we now jsonb_set only
+// {exchangeRates}, so FX writes never touch module data. JSON mode (local/tests)
+// has no concurrency, so the full write is fine.
+async function saveExchangeRates(data) {
+  const exchangeRates = normalizeExchangeRates(data.exchangeRates);
+  if (shouldUseDatabase()) {
+    const rows = await patchAppStateField(shippingDataStateKey, "exchangeRates", exchangeRates);
+    if (rows === 0) {
+      // No row yet (fresh store) — fall back to a full seed write.
+      return saveShippingData({ ...data, exchangeRates });
+    }
+    return undefined;
+  }
+  return writeJson(shippingLinesFile, normalizeShippingData({ ...data, exchangeRates }));
+}
+
 async function getUsers() {
   if (shouldUseDatabase()) {
     const storedUsers = await getAppState(usersStateKey);
@@ -2392,6 +2413,7 @@ module.exports = {
   normalizeShippingData,
   parseDemurrageRange,
   saveShippingData,
+  saveExchangeRates,
   saveUsers,
   RATE_GROUP_NAMES,
 };

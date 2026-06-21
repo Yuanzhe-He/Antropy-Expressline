@@ -8,6 +8,16 @@
 ## 定位区（compact 后先读这块）
 ═══════════════════════════════════════════
 
+**【最新 r3-data，2026-06-20，第N+18轮】补 CONTENTO 真价 + 数据上生产 + 5 审计。分支 `feature/jose-r3-data-deploy`（从 main=4846b8f 切）。⏸ 停在生产写入前等 Chandler。**
+- Part 1 ✅ CONTENTO 26 场站全真价(3800–5850，commit 62bcda3)，无占位无编造。
+- Part 2 ⏸ **诊断发现生产有 José 手改**(CMA doc fee 50/ZIM 改名/COSCO 改价/KMTC ISD 已15/José 自建"新场站4·5")→ **db:seed 会清掉，必须外科 patch**。
+  - 备份 ✅ `backups/prod-shipping-data-2026-06-20T21-26-51-678Z.json`(sha256 773788975641e865，backups/ 已 gitignore)。
+  - patch 脚本 `scripts/patch-prod-data.js`(dry-run 默认/--apply 才写/写前再备份/saveAppState 原样保 José 形状) + `scripts/seed-new-carriers.js`(7 空壳)。commit 54de2b2。
+  - **dry-run 19 处改动**(E 14rfc+HAPAG/ONE code、B KMTC 2 改名、C 删 3 假场站+加 26 CONTENTO+保留 José 2 场站)。**待 Chandler 批 → `node scripts/patch-prod-data.js --apply` → 生产抽查。**
+- Part 3 审计 1–5 全过(commit fb410fe，报告 `docs/specs/20260620_data_deploy_audit_REPORT.md`)：①代码vs数据(模板/车型/master/normalizer=已生效，仅 B/C/E 数据未生效，无历史功能缺口) ②CONTENTO 3/3 ③新增船司深测 6/6 ④全回归 7 套件绿 ⑤XSS 干净。低危 F1(允许重名船司) F2(数据机制易忽略)。
+- **部署机制锚点(记牢)**：生产=Supabase；改代码部署即生效；改数据需 patch/seed/后台手改；**生产有 José 手改→只能 patch 不能 db:seed**。
+
+
 **【最新 r3，2026-06-20】混合批 A/B/C/D/E 全部代码完成 + 本地验证全绿，分支 `feature/jose-r3-mixed`（从 main=30be381 切）。5 个独立 commit：**
 - A 字体：`9474b8c` workbench-quote 行项编辑区紧凑（0.82→0.72rem，padding/三语行收紧，仅 CSS）。
 - B 费率：`3ff1536` KMTC ISD 45→15 两组 + 两标签改名（Release Fee→Doc Fee at Destination / Container Handling→Container Release Fee）。MSC 未改（Excel 内部矛盾→问题清单）。

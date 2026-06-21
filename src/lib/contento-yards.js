@@ -12,13 +12,12 @@
  * Método B (Chandler, round15): seed the stations + prices now, leave
  * `shippingLineIds` EMPTY. José will later provide the naviera↔patio mapping.
  *
- * IMPORTANT (data provenance): the original CONTENTO PDF was NOT present in the
- * repo when this seed was authored, so only two maniobra prices are confirmed
- * (Servimaniobras 3800, Contecon R.F. 4100) and the standard wash fee (550 MXN).
- * Every other station's maniobra price is a PLACEHOLDER (0) flagged in its note
- * and must be reconciled against the real PDF before the yards are wired to a
- * shipping line. Until `shippingLineIds` is filled, these yards are inert (no
- * line selects them, so 0-priced maniobra cannot mis-cost anything).
+ * DATA PROVENANCE: all 26 maniobra prices are the real CONTENTO ANEXO A figures
+ * (PDF "Presentación de Servicios para Yisel Guzmán", effective 2026-06-01),
+ * transcribed in docs/client-info-source/CONTENTO_yards_full_pricing.md (range
+ * 3800–5850 MXN). No fabricated/placeholder prices. shippingLineIds stays EMPTY
+ * (método B) until José gives the naviera↔patio mapping, so the yards are inert
+ * until then (no line selects them).
  *
  * All amounts are MXN +IVA (taxRate 0.16). Maniobra is a flat per-container fee;
  * we store it uniformly across every container type (the admin yard editor and
@@ -30,36 +29,36 @@ const STANDARD_WASH_MXN = 550;
 
 // name      : display name (as it appears on the CONTENTO sheet)
 // slug       : id suffix
-// maniobra   : confirmed maniobra de vacío price in MXN, or null if pending PDF
+// maniobra   : maniobra de vacío price in MXN (CONTENTO ANEXO A; all confirmed)
 // lineHint   : shipping-line clue embedded in the patio name (kept as a NOTE only;
 //              shippingLineIds stays empty until José confirms — método B)
 const CONTENTO_MANZANILLO_STATIONS = [
   { name: "Servimaniobras", slug: "servimaniobras", maniobra: 3800, lineHint: null },
   { name: "Contecon (R.F.)", slug: "contecon-rf", maniobra: 4100, lineHint: null },
-  { name: "Fali", slug: "fali", maniobra: null, lineHint: null },
-  { name: "SICE", slug: "sice", maniobra: null, lineHint: null },
-  { name: "Hadron Logistics", slug: "hadron-logistics", maniobra: null, lineHint: null },
-  { name: "Emilu", slug: "emilu", maniobra: null, lineHint: null },
-  { name: "Hazesa", slug: "hazesa", maniobra: null, lineHint: null },
-  { name: "Aflex", slug: "aflex", maniobra: null, lineHint: null },
-  { name: "Container Care (TIMSA)", slug: "container-care-timsa", maniobra: null, lineHint: "TIMSA" },
-  { name: "SLTC", slug: "sltc", maniobra: null, lineHint: null },
-  { name: "Mepacsa", slug: "mepacsa", maniobra: null, lineHint: null },
-  { name: "Express Port Manzanillo", slug: "express-port-manzanillo", maniobra: null, lineHint: null },
-  { name: "Hazesa (KMCT)", slug: "hazesa-kmct", maniobra: null, lineHint: "KMCT" },
-  { name: "SSA", slug: "ssa", maniobra: null, lineHint: null },
-  { name: "Ocupa", slug: "ocupa", maniobra: null, lineHint: null },
-  { name: "Impala Terminals México", slug: "impala-terminals-mexico", maniobra: null, lineHint: null },
-  { name: "ISL Transportes", slug: "isl-transportes", maniobra: null, lineHint: null },
-  { name: "Consignataria Oceánica (Sinotrans)", slug: "consignataria-oceanica-sinotrans", maniobra: null, lineHint: "Sinotrans" },
-  { name: "Damco (Maersk)", slug: "damco-maersk", maniobra: null, lineHint: "Maersk" },
-  { name: "Alman", slug: "alman", maniobra: null, lineHint: null },
-  { name: "Shanghai (Agunza TC-Lines)", slug: "shanghai-agunza-tc-lines", maniobra: null, lineHint: "Agunza / TC-Lines" },
-  { name: "Impala Containers Yard", slug: "impala-containers-yard", maniobra: null, lineHint: null },
-  { name: "Alsecont", slug: "alsecont", maniobra: null, lineHint: null },
-  { name: "CIMA", slug: "cima", maniobra: null, lineHint: null },
-  { name: "PTD", slug: "ptd", maniobra: null, lineHint: null },
-  { name: "TEP", slug: "tep", maniobra: null, lineHint: null },
+  { name: "Fali", slug: "fali", maniobra: 4300, lineHint: null },
+  { name: "SICE", slug: "sice", maniobra: 4500, lineHint: null },
+  { name: "Hadron Logistics", slug: "hadron-logistics", maniobra: 4500, lineHint: null },
+  { name: "Emilu", slug: "emilu", maniobra: 4800, lineHint: null },
+  { name: "Hazesa", slug: "hazesa", maniobra: 4800, lineHint: null },
+  { name: "Aflex", slug: "aflex", maniobra: 4800, lineHint: null },
+  { name: "Container Care (TIMSA)", slug: "container-care-timsa", maniobra: 5300, lineHint: "TIMSA" },
+  { name: "SLTC", slug: "sltc", maniobra: 5300, lineHint: null },
+  { name: "Mepacsa", slug: "mepacsa", maniobra: 5300, lineHint: null },
+  { name: "Express Port Manzanillo", slug: "express-port-manzanillo", maniobra: 5300, lineHint: null },
+  { name: "Hazesa (KMCT)", slug: "hazesa-kmct", maniobra: 5300, lineHint: "KMCT" },
+  { name: "SSA (Patio Externo y Recinto Fiscal)", slug: "ssa", maniobra: 5300, lineHint: null },
+  { name: "Ocupa", slug: "ocupa", maniobra: 5300, lineHint: null },
+  { name: "Impala Terminals México", slug: "impala-terminals-mexico", maniobra: 5350, lineHint: null },
+  { name: "ISL Transportes", slug: "isl-transportes", maniobra: 5400, lineHint: null },
+  { name: "Consignataria Oceánica (Sinotrans)", slug: "consignataria-oceanica-sinotrans", maniobra: 5400, lineHint: "Sinotrans" },
+  { name: "Damco (Maersk)", slug: "damco-maersk", maniobra: 5400, lineHint: "Maersk" },
+  { name: "Alman", slug: "alman", maniobra: 5500, lineHint: null },
+  { name: "Shanghai (Agunza TC-Lines)", slug: "shanghai-agunza-tc-lines", maniobra: 5500, lineHint: "Agunza / TC-Lines" },
+  { name: "Impala Containers Yard", slug: "impala-containers-yard", maniobra: 5600, lineHint: null },
+  { name: "Alsecont", slug: "alsecont", maniobra: 5800, lineHint: null },
+  { name: "CIMA", slug: "cima", maniobra: 5800, lineHint: null },
+  { name: "PTD (Patio externo de CONTECON)", slug: "ptd", maniobra: 5850, lineHint: null },
+  { name: "TEP", slug: "tep", maniobra: 5850, lineHint: null },
 ];
 
 function buildUniformGroupRates(containerTypes, rate, currency) {
