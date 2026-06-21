@@ -143,12 +143,24 @@ async function saveAppState(key, payload) {
   );
 }
 
-// Insert an immutable audit snapshot of a generated quote. DB-only: callers
-// must guard with shouldUseDatabase() and skip in JSON-fallback mode. The
-// quote_snapshots table is created in migrateDatabase() (zero extra migration).
-// Targeted update of a single top-level app_state key (e.g. exchangeRates) via
-// jsonb_set, so a frequent writer (the FX refresh) cannot clobber concurrent
-// edits to OTHER parts of the same payload. Returns rowCount.
+// Build a Postgres text[] literal from a jsonb path. Accepts a single field
+// name ("exchangeRates") or a nested path array (["modules", "handover"]). Each
+// segment is double-quoted and escaped so keys containing commas/braces/quotes
+// cannot break out of the array literal.
+function buildJsonPathLiteral(field) {
+  const segments = Array.isArray(field) ? field : [field];
+  const quoted = segments.map(
+    (segment) =>
+      `"${String(segment).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`
+  );
+  return `{${quoted.join(",")}}`;
+}
+
+// Targeted update of a single app_state path (e.g. "exchangeRates" or the
+// nested ["modules", "handover"]) via jsonb_set, so a frequent writer cannot
+// clobber concurrent edits to OTHER parts of the same payload — and so a
+// single-field/single-module change does not have to re-serialize and re-ship
+// the whole multi-MB blob. Returns rowCount (0 when no row exists yet).
 async function patchAppStateField(key, field, value) {
   await ensureDatabase();
   const schema = quoteIdentifier(getDatabaseSchema());
@@ -160,11 +172,14 @@ async function patchAppStateField(key, field, value) {
             updated_at = now()
       where key = $1
     `,
-    [key, `{${field}}`, JSON.stringify(value)]
+    [key, buildJsonPathLiteral(field), JSON.stringify(value)]
   );
   return result.rowCount;
 }
 
+// Insert an immutable audit snapshot of a generated quote. DB-only: callers
+// must guard with shouldUseDatabase() and skip in JSON-fallback mode. The
+// quote_snapshots table is created in migrateDatabase() (zero extra migration).
 async function insertQuoteSnapshot({ moduleKey = "quote", businessNature = null, input, result }) {
   await ensureDatabase();
   const schema = quoteIdentifier(getDatabaseSchema());

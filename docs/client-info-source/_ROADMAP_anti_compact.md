@@ -8,7 +8,22 @@
 ## 定位区（compact 后先读这块）
 ═══════════════════════════════════════════
 
-**【最新 r21，2026-06-21】掐FX写风暴 + 全面检测上线，PR#14 合并部署 main=ffa0429。**
+**【最新 r24，2026-06-20】RMW 循环 killshot — egress 根因=读路径无缓存（比 FX 写风暴更广）。分支 `feature/rmw-loop-killshot`（从 main=b9b443c 切）。**
+- **Step 1 定位完成（铁证）**：egress 罪魁=**读路径**，不是写。`pg_stat_statements` 218k 次 `select payload where key=$1`（每次整块拉 1.6MB blob ≈350GB egress）≈ 211k 次全量写（`insert…on conflict set payload=excluded.payload`）。
+  - **唯一读入口** `store.getShippingData()`（store.js:2315）→ DB 模式每次 `getAppState` 整块拉，**无任何缓存**。被 `server.loadShippingData()`（server.js:832）包一层，**59 个路由调它**（每个页面加载/每次 admin 操作/每次 FX refresh 都整块读）。
+  - **触发器=外部客户端**（不在仓库代码里）：r21 已确认"某已登录外部源每~2秒打 `POST /admin/:moduleKey/exchange-rates/refresh`"。该 route（server.js:2910）调 `loadShippingData({forceRefreshRates:true})` → **line 833 每次都整块读 1.6MB**，然后才进 FX 节流闸。**r21 掐了写没掐读** → 读 egress 仍全天泄（前端无 setInterval 轮询，已核实 app.js 只是 UI 动画+AJAX 表单提交）。
+  - 211k 全量写 = r21 之前的 FX 写风暴历史量（修复后 FX 走 jsonb_set，实测 60s 0 写）。`getUsers` 只在 /login 调一次（非元凶）；requireAuth 不读库（登录禁用）。
+- **Step 2 结构性修复（不管触发器，根治读写路径）**：
+  - **A 读缓存（killshot）**：`getShippingData` 加进程内内存缓存（call-time TTL，默认 60s，env `SHIPPING_CACHE_TTL_MS`），命中不拉库、返回 structuredClone（caller 隔离）。→ 218k 整块读塌成缓存命中，egress 骤降。
+  - **B 主写定向 + 无变更不落库**：`saveShippingData` 自动 diff 缓存，单 section 改→`patchAppStateField` 定向 jsonb_set（含嵌套路径 `{modules,<key>}`）；无变更→跳过写；跨多 section→保留全量写兜底。`patchAppStateField` 泛化支持数组路径。
+  - **C 缓存写后失效/更新**：所有写路径（saveShippingData/saveExchangeRates/seed）写后更新缓存，操作者立刻看到自己改动；多实例靠 TTL 兜底（FX/费率不需秒级强一致）。
+- **生产探针实测铁证**（`scripts/rmw-egress-probe.js`，只读，2026-06-21 05:43Z）：写 **0/min**（round21 已根治）、读 **38.6/min ≈ 55,598/天** × 1.6MB ≈ **~70GB/天**（读风暴仍全天在线）、blob 1235kB 列压缩、revision 214,825。**确认 egress 罪魁=读，写已死。**
+- **测试全绿 10/10**：新增 `audit-rmw-cache-test`（mock db，DB 模式）9/9（100 读=0 pull / 读隔离 / 定向写 / 写后立即可见 / 无变更不落库 / 跨模块全量兜底 / FX slice / FX pin / TTL）+ smoke + quote9/9 + o3 + batch3 + d-add12/12 + audit(contento3/fx5/new-carrier6/quote-modes4)。
+- **部署后验证法**：re-run `node scripts/rmw-egress-probe.js` → 读率应 ~0/min（缓存吸收），egress 骤降。**out-of-band 注意**：patch-prod-data/db:seed 是独立进程，写后线上 server 缓存陈旧 ≤TTL → prod patch 后 redeploy 或等一个 TTL。
+- **状态**：分支 `feature/rmw-loop-killshot` 代码+测试+文档完成，待开 PR 合并部署。详见 `00w_chandler_log_round24.md`。
+- 锚点不变：生产=Supabase key=shipping-data（含 José 手改 yards=28）；改数据走 patch 不 db:seed；FX 只 jsonb_set+节流。**新增：读路径走进程内缓存（默认15min TTL，env SHIPPING_CACHE_TTL_MS）；主写路径 diff 后定向 jsonb_set。**
+
+**【r21，2026-06-21】掐FX写风暴 + 全面检测上线，PR#14 合并部署 main=ffa0429。**
 - **A FX写风暴掐掉 ✅**：真凶=某已登录外部源每~2秒打 `POST /admin/:moduleKey/exchange-rates/refresh`(force:true)→成功强制刷→每次只改 lastCheckedAt→**~47520/天写**。修：`exchange-rates.js` 加节流(即使force，15分内已刷过就跳过不写)+删 /refresh route 冗余 saveShippingData(clobber隐患)。**实测部署后生产60秒0写**(从11写/20秒)→~96/天封顶。FX仍正常。测试 audit-fx-throttle 5/5。
 - **B 全面检测上线 ✅**：B1 生产数据 13/13(B/C/E+7空壳+José手改CMA50/ZIM/COSCO/2场站全在,yards=28) · B2 报价模式 4/4(段/三语/双价IVA/6 PDF) · B3 新增船司(6/6+12/12) · B4 CRUD(8套件绿) · B5 XSS净 · B6 双价math+CONTENTO成本(9/9+3/3)。
 - **留尾 F1**：FX风暴**源头**(外部每2秒打/refresh的已登录源)已节流无害化(写≈0)，但HTTP请求仍在打→建议查 Railway access log/José挂着的后台页，从源头掐。
