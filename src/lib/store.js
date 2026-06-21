@@ -2312,11 +2312,120 @@ function normalizeShippingData(data) {
   };
 }
 
+// --- shipping-data read cache (DB mode only) -------------------------------
+// getShippingData() is the single read entry point behind 59 routes (every page
+// load + every admin op + every FX-refresh hit go through it via
+// server.loadShippingData). The shipping-data blob is ~1.6-2.2MB, so without a
+// cache an external client hammering ANY route turns each hit into a full blob
+// pull — the prod egress storm (218k reads × ~1.6MB ≈ 350GB) that blew through
+// Supabase's free tier ~70x. We cache the normalized blob in-process and serve
+// deep clones from it, so reads collapse to cache hits with zero DB egress.
+//
+// Consistency: every write path (saveShippingData / saveExchangeRates / seed)
+// refreshes the cache so the operator immediately sees their own change on this
+// instance (write-through). The deployment is single-instance, so write-through
+// makes the cache authoritative with no staleness in normal operation; the TTL
+// is a safety net that (a) bounds cross-instance staleness if the app is ever
+// scaled out and (b) lets the live server pick up rare out-of-band writes
+// (scripts/patch-prod-data.js, db:seed) without a restart.
+//
+// TTL also sets the egress floor: under a relentless caller the cache misses
+// exactly once per window, so egress ≈ (1 read / TTL) × blob (~1.6MB). The
+// default 15min keeps that under Supabase's free egress tier even if the
+// external /exchange-rates/refresh poller is never stopped (~96 pulls/day vs the
+// pre-fix ~54,000). TTL is read at call time (env SHIPPING_CACHE_TTL_MS, ms;
+// set 0 to disable) so it can be tuned without a code change. JSON mode
+// (local/tests) reads a small file with no concurrency and needs no cache.
+let shippingDataCache = null; // canonical normalized blob; never handed out directly
+let shippingDataCacheStoredAt = 0; // epoch ms of the read/write that set it
+
+function getShippingCacheTtlMs() {
+  const parsed = Number(process.env.SHIPPING_CACHE_TTL_MS);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 15 * 60 * 1000;
+}
+
+function shippingCacheIsFresh() {
+  return (
+    shippingDataCache !== null &&
+    Date.now() - shippingDataCacheStoredAt < getShippingCacheTtlMs()
+  );
+}
+
+function setShippingDataCache(normalized) {
+  shippingDataCache = normalized;
+  shippingDataCacheStoredAt = Date.now();
+}
+
+function invalidateShippingDataCache() {
+  shippingDataCache = null;
+  shippingDataCacheStoredAt = 0;
+}
+
+// Update one section of the canonical cache in place without resetting the
+// overall TTL clock (only this section just changed). No-ops if the cache was
+// cleared (next read will pull fresh). The value is cloned so the cache never
+// shares structure with a caller's object.
+function updateShippingCacheSection(path, value) {
+  if (shippingDataCache === null) {
+    return;
+  }
+  let node = shippingDataCache;
+  for (let i = 0; i < path.length - 1; i += 1) {
+    if (node[path[i]] === null || typeof node[path[i]] !== "object") {
+      node[path[i]] = {};
+    }
+    node = node[path[i]];
+  }
+  node[path[path.length - 1]] = structuredClone(value);
+}
+
+function getAtPath(obj, path) {
+  return path.reduce(
+    (node, segment) => (node === null || node === undefined ? undefined : node[segment]),
+    obj
+  );
+}
+
+// The diffable sections of a normalized blob. exchangeRates is intentionally
+// excluded from the saveShippingData diff (it is owned by saveExchangeRates);
+// see the pin in saveShippingData.
+function listShippingSections(normalized) {
+  const sections = [["generatedFrom"]];
+  const moduleKeys = normalized.modules ? Object.keys(normalized.modules) : [];
+  for (const key of moduleKeys) {
+    sections.push(["modules", key]);
+  }
+  return sections;
+}
+
+// Section paths whose JSON differs between prev and next (union of both shapes).
+function diffShippingSections(prev, next) {
+  const paths = new Map();
+  for (const path of [...listShippingSections(prev), ...listShippingSections(next)]) {
+    paths.set(path.join(" "), path);
+  }
+  const changed = [];
+  for (const path of paths.values()) {
+    if (
+      JSON.stringify(getAtPath(prev, path)) !== JSON.stringify(getAtPath(next, path))
+    ) {
+      changed.push(path);
+    }
+  }
+  return changed;
+}
+
 async function getShippingData() {
   if (shouldUseDatabase()) {
+    if (shippingCacheIsFresh()) {
+      return structuredClone(shippingDataCache);
+    }
+
     const storedData = await getAppState(shippingDataStateKey);
     if (storedData) {
-      return normalizeShippingData(storedData);
+      const normalizedData = normalizeShippingData(storedData);
+      setShippingDataCache(normalizedData);
+      return structuredClone(normalizedData);
     }
 
     const seedData = await readSeededJson(
@@ -2326,7 +2435,8 @@ async function getShippingData() {
     );
     const normalizedData = normalizeShippingData(seedData);
     await saveAppState(shippingDataStateKey, normalizedData);
-    return normalizedData;
+    setShippingDataCache(normalizedData);
+    return structuredClone(normalizedData);
   }
 
   const rawData = await readSeededJson(
@@ -2337,12 +2447,56 @@ async function getShippingData() {
   return normalizeShippingData(rawData);
 }
 
+// Main write path. In DB mode this used to overwrite the whole ~2MB blob on
+// every admin save (the same shape as the pre-throttle FX write storm). Now:
+//   1. exchangeRates is pinned to the freshest known value so an admin save that
+//      loaded a stale FX snapshot can never roll back a concurrent FX update —
+//      the symmetric counterpart to the FX-only jsonb_set in saveExchangeRates;
+//   2. no-op writes are skipped entirely (the FX lastCheckedAt-spin bug class);
+//   3. when exactly one section (a single module or generatedFrom) changed vs
+//      the cached state, only that path is written via jsonb_set — a far smaller
+//      write that also cannot clobber concurrent edits to other modules.
+// Cross-section changes (e.g. a delete-cascade touching handover + customs) and
+// the cold-cache path fall back to a full overwrite. The cache is always
+// refreshed so the next read on this instance reflects the write immediately.
 async function saveShippingData(data) {
-  if (shouldUseDatabase()) {
-    return saveAppState(shippingDataStateKey, normalizeShippingData(data));
+  const normalized = normalizeShippingData(data);
+
+  if (!shouldUseDatabase()) {
+    invalidateShippingDataCache();
+    return writeJson(shippingLinesFile, normalized);
   }
 
-  return writeJson(shippingLinesFile, normalizeShippingData(data));
+  // (1) Never let a module save own exchangeRates: keep the freshest known FX.
+  if (shippingDataCache && shippingDataCache.exchangeRates) {
+    normalized.exchangeRates = structuredClone(shippingDataCache.exchangeRates);
+  }
+
+  if (shippingCacheIsFresh()) {
+    const changed = diffShippingSections(shippingDataCache, normalized);
+    // (2) Nothing changed — persist nothing, keep the cache as-is.
+    if (changed.length === 0) {
+      return undefined;
+    }
+    // (3) Single section changed — targeted jsonb_set, no full-blob overwrite.
+    if (changed.length === 1) {
+      const path = changed[0];
+      const rows = await patchAppStateField(
+        shippingDataStateKey,
+        path,
+        getAtPath(normalized, path)
+      );
+      if (rows > 0) {
+        updateShippingCacheSection(path, getAtPath(normalized, path));
+        return undefined;
+      }
+      // rows === 0: no row yet — fall through to a full insert.
+    }
+  }
+
+  await saveAppState(shippingDataStateKey, normalized);
+  setShippingDataCache(normalized);
+  return undefined;
 }
 
 // Persist ONLY the exchangeRates field. The FX refresh runs very frequently
@@ -2350,8 +2504,9 @@ async function saveShippingData(data) {
 // every FX save a full-payload overwrite that clobbered concurrent edits to the
 // carrier/customs/inland data (a data-integrity bug — admin saves could be lost,
 // and external data patches could not land). In DB mode we now jsonb_set only
-// {exchangeRates}, so FX writes never touch module data. JSON mode (local/tests)
-// has no concurrency, so the full write is fine.
+// {exchangeRates}, so FX writes never touch module data, and we refresh just
+// that slice of the read cache. JSON mode (local/tests) has no concurrency, so
+// the full write is fine.
 async function saveExchangeRates(data) {
   const exchangeRates = normalizeExchangeRates(data.exchangeRates);
   if (shouldUseDatabase()) {
@@ -2360,6 +2515,7 @@ async function saveExchangeRates(data) {
       // No row yet (fresh store) — fall back to a full seed write.
       return saveShippingData({ ...data, exchangeRates });
     }
+    updateShippingCacheSection(["exchangeRates"], exchangeRates);
     return undefined;
   }
   return writeJson(shippingLinesFile, normalizeShippingData({ ...data, exchangeRates }));
@@ -2409,6 +2565,7 @@ module.exports = {
   formatDemurrageRuleLabel,
   getShippingData,
   getUsers,
+  invalidateShippingDataCache,
   localizedInlandName,
   normalizeShippingData,
   parseDemurrageRange,
