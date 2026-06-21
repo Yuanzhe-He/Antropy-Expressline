@@ -41,7 +41,9 @@
 - **新测 `scripts/audit-usage-guard-test.js` 8/8**：正常量级静默无误报 / 读告警(穿越1次+去重不风暴+过 interval 再告警) / severe→extend cache / 写告警+auto degrade / 跨天重置 / **缓存命中不计读** / **护栏纯内存零 DB 写** / **降级不对称(FX auto 丢弃、admin user 照写、缓存仍刷新)**。
 - **全回归 11/11 绿**：smoke + quote9/9 + o3 + batch3 + d-add12/12 + audit(contento3/fx5/new-carrier6/quote-modes4/rmw-cache9/usage-guard8)。
 - **/healthz 实测**：JSON 模式起服务 curl `/healthz` 返回 `{status:ok, shippingCacheTtlMs:3600000, usageGuard:{...}}`；启动日志打 `read cache TTL: 3600s | usage-guard: read-warn=200/day write-warn=500/day ...`。
-- **生产验证**（部署后）：re-run `scripts/rmw-egress-probe.js` 应见读穿透≈24次/天（1h TTL）；护栏正常量级不告警；生产数据完好(B/C/E+José手改yards=28)。
+- **生产验证**：
+  - **⭐PR#16 killshot 已部署，实测生效**（06:43Z）：读 **38.6/min→1.0/min**（~55,598/天→~1,426/天）、est. egress **~70GB/天→~1.8GB/天**（降 ~97%）、写仍 0/min。缓存在吸收 poller。`/healthz` 现 404（属 PR#17 未部署，正常）。
+  - **PR#17（本轮）部署后**：re-run `scripts/rmw-egress-probe.js` 应见读穿透再降到 ≈24次/天（1h TTL）；`curl /healthz` 应见 `usageGuard.reads≈24/天`、`triggeredToday:false`、`shippingCacheTtlMs:3600000`；护栏正常量级不告警；生产数据完好(B/C/E+José手改yards=28)。
 
 ## 爆炸半径
 - 改文件：新增 `src/lib/usage-guard.js`、`scripts/audit-usage-guard-test.js`；改 `src/lib/db.js`(计数 hook)、`src/lib/store.js`(TTL 1h+guard-aware+FX degrade)、`src/server.js`(启动日志+/healthz)、`docs/LESSONS.md`。
