@@ -2921,11 +2921,13 @@ function createApp() {
         );
       }
 
-      const shippingData = await loadShippingData({
+      // loadShippingData already persists refreshed rates via the targeted
+      // jsonb_set (saveExchangeRates); no extra full-blob saveShippingData here
+      // (that was redundant AND a data-clobber risk when this route is hammered).
+      await loadShippingData({
         refreshRates: true,
         forceRefreshRates: true,
       });
-      await saveShippingData(shippingData);
       req.session.flash = {
         type: "success",
         message: req.t("admin.exchangeRatesSaved"),

@@ -26,6 +26,25 @@ function needsExchangeRateRefresh(exchangeRates) {
   return exchangeRates.lastCheckedAt.slice(0, 10) !== todayIsoDate();
 }
 
+// Throttle: minimum spacing between actual FX fetches+writes, even when forced.
+// Frankfurter publishes daily reference rates, so re-fetching within minutes is
+// pointless — but a high-frequency caller hitting the forced-refresh path (the
+// prod "write storm": ~1 write/2s, ~28k/day) would otherwise re-fetch+write on
+// every request. With this gate a spammed forced refresh writes at most once per
+// interval; the daily scheduler and a genuine manual refresh still work.
+const MIN_REFRESH_INTERVAL_MS = (() => {
+  const parsed = Number(process.env.FX_MIN_REFRESH_INTERVAL_MS);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 15 * 60 * 1000;
+})();
+
+function checkedWithinThrottle(exchangeRates) {
+  if (!exchangeRates?.lastCheckedAt) {
+    return false;
+  }
+  const age = Date.now() - new Date(exchangeRates.lastCheckedAt).getTime();
+  return Number.isFinite(age) && age >= 0 && age < MIN_REFRESH_INTERVAL_MS;
+}
+
 function buildExchangeRatePayload({ provider, docsUrl, asOfDate, usdToMxn }) {
   return {
     provider,
@@ -112,6 +131,14 @@ async function refreshExchangeRatesIfStale(shippingData, options = {}) {
     return { changed: false, data: shippingData };
   }
 
+  // Even a forced refresh is throttled: if we already checked within the window
+  // (success OR failure both stamp lastCheckedAt), skip the fetch+write. This is
+  // what caps the prod write storm — a forced-refresh caller hammering every 2s
+  // now writes at most once per MIN_REFRESH_INTERVAL_MS instead of every request.
+  if (checkedWithinThrottle(shippingData.exchangeRates)) {
+    return { changed: false, data: shippingData };
+  }
+
   try {
     const latest = await fetchLatestUsdMxnRates();
     return {
@@ -172,5 +199,6 @@ module.exports = {
   convertAmount,
   fetchLatestUsdMxnRates,
   findExchangeRate,
+  needsExchangeRateRefresh,
   refreshExchangeRatesIfStale,
 };
