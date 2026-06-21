@@ -8,7 +8,16 @@
 ## 定位区（compact 后先读这块）
 ═══════════════════════════════════════════
 
-**【最新 r24，2026-06-20】RMW 循环 killshot — egress 根因=读路径无缓存（比 FX 写风暴更广）。分支 `feature/rmw-loop-killshot`（从 main=b9b443c 切）。**
+**【最新 r25，2026-06-21】TTL 拉长 env 化 + 应用层用量护栏告警 + 读侧沉淀。分支 `feature/usage-guard-and-ttl`（从 main=67ae1df 切，PR#16 killshot 已合并）。待开 PR。**
+- **前置**：PR#16(killshot) 已 merge→main=67ae1df，读缓存上生产。本轮在其上加 TTL 调优 + 护栏。
+- **A TTL 默认 15min→1h**（`store.getShippingCacheTtlMs`，env `SHIPPING_CACHE_TTL_MS` call-time 可调/0=禁用）。地板 ≈24 真读/天 ≈38MB/天 ≈~1.1GB/月（修前 ~70GB/天）。澄清两频率：查汇率一天一次(scheduler) ≠ 读缓存 TTL(blob 缓存多久重读)。**部署纪律：长 TTL 下 patch-prod-data/db:seed(独立进程)写后线上缓存陈旧≤TTL→prod patch 后 redeploy 或等 TTL 再抽查。**
+- **B 应用层用量护栏 `src/lib/usage-guard.js`（纯内存，零 DB 写）**：db 层 `getAppState`→recordRead(**只数 DB 穿透读，缓存命中不计**)、`saveAppState`+`patchAppStateField`→recordWrite。超阈值(读 200/写 500/天，env 可调)→醒目 `[USAGE-GUARD-ALERT]` console.error(去重：首次+每 5min 至多一次，不变日志风暴)。**自动降级(降失控不停服务)**：写超阈值→FX(auto write)跳过 DB 写保留缓存、admin(user write)永不阻断；读 severe(≥5×)→强制 TTL 地板 1h 钳 egress。可见性：`triggeredToday` flag + `GET /healthz`(无 auth/无 secret) + 启动日志。跨天重置。**不接邮件**(项目无邮件设施；日志+降级已"当场刹车+留证据"；邮件=step-2 需 Chandler 给服务+邮箱)。
+- **C 读侧 LESSONS**：TTL=egress 旋钮(缓存 cadence≠fetch cadence)；单实例+write-through 长 TTL 零陈旧仅 out-of-band 需重启；别等月底账单自加护栏(数真贵操作/异常倍数告警/降失控不降用户不降服务/只数穿透读/护栏免 DB 写/分自动 vs 用户写)。
+- **测试 11/11 绿**：新增 `audit-usage-guard-test` 8/8(正常静默无误报/读告警去重+过 interval 再告警/severe extend/写告警+auto degrade/跨天重置/缓存命中不计读/纯内存零 DB 写/降级不对称 FX 丢 admin 照写)+ rmw-cache9 + smoke/quote9/o3/batch3/d-add12/contento3/fx5/new-carrier6/quote-modes4。/healthz 实测 OK。
+- **状态**：PR#17(feature/usage-guard-and-ttl) 已开，待合并部署。详见 `00z_chandler_log_round25.md`。
+- **⭐生产实测确认 PR#16 killshot 生效**（2026-06-21 06:43Z，PR#16 已部署）：读 **38.6/min→1.0/min**(~55,598/天→~1,426/天)、est. egress **~70GB/天→~1.8GB/天**(降 ~97%)、写仍 0/min。缓存在吸收 poller。`/healthz` 现 404(属 PR#17 未部署，正常)。PR#17 的 1h TTL 会把读穿透再降到 ~24/天 + 上线护栏告警。
+
+**【r24，2026-06-20】RMW 循环 killshot — egress 根因=读路径无缓存（比 FX 写风暴更广）。分支 `feature/rmw-loop-killshot`（从 main=b9b443c 切）。已合并 PR#16→main=67ae1df。**
 - **Step 1 定位完成（铁证）**：egress 罪魁=**读路径**，不是写。`pg_stat_statements` 218k 次 `select payload where key=$1`（每次整块拉 1.6MB blob ≈350GB egress）≈ 211k 次全量写（`insert…on conflict set payload=excluded.payload`）。
   - **唯一读入口** `store.getShippingData()`（store.js:2315）→ DB 模式每次 `getAppState` 整块拉，**无任何缓存**。被 `server.loadShippingData()`（server.js:832）包一层，**59 个路由调它**（每个页面加载/每次 admin 操作/每次 FX refresh 都整块读）。
   - **触发器=外部客户端**（不在仓库代码里）：r21 已确认"某已登录外部源每~2秒打 `POST /admin/:moduleKey/exchange-rates/refresh`"。该 route（server.js:2910）调 `loadShippingData({forceRefreshRates:true})` → **line 833 每次都整块读 1.6MB**，然后才进 FX 节流闸。**r21 掐了写没掐读** → 读 egress 仍全天泄（前端无 setInterval 轮询，已核实 app.js 只是 UI 动画+AJAX 表单提交）。
