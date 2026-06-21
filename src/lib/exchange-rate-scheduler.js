@@ -1,5 +1,5 @@
 const { refreshExchangeRatesIfStale } = require("./exchange-rates");
-const { getShippingData, saveShippingData } = require("./store");
+const { getShippingData, saveExchangeRates } = require("./store");
 
 const DEFAULT_FX_REFRESH_TIME_ZONE = "America/Mexico_City";
 const DEFAULT_FX_REFRESH_HOUR = 0;
@@ -129,7 +129,7 @@ async function refreshExchangeRatesNow(options = {}) {
   });
 
   if (refreshed.changed) {
-    await saveShippingData(refreshed.data);
+    await saveExchangeRates(refreshed.data);
   }
 
   return {

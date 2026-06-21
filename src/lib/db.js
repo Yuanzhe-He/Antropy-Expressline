@@ -146,6 +146,25 @@ async function saveAppState(key, payload) {
 // Insert an immutable audit snapshot of a generated quote. DB-only: callers
 // must guard with shouldUseDatabase() and skip in JSON-fallback mode. The
 // quote_snapshots table is created in migrateDatabase() (zero extra migration).
+// Targeted update of a single top-level app_state key (e.g. exchangeRates) via
+// jsonb_set, so a frequent writer (the FX refresh) cannot clobber concurrent
+// edits to OTHER parts of the same payload. Returns rowCount.
+async function patchAppStateField(key, field, value) {
+  await ensureDatabase();
+  const schema = quoteIdentifier(getDatabaseSchema());
+  const result = await getPool().query(
+    `
+      update ${schema}.app_state
+        set payload = jsonb_set(coalesce(payload, '{}'::jsonb), $2::text[], $3::jsonb, true),
+            revision = revision + 1,
+            updated_at = now()
+      where key = $1
+    `,
+    [key, `{${field}}`, JSON.stringify(value)]
+  );
+  return result.rowCount;
+}
+
 async function insertQuoteSnapshot({ moduleKey = "quote", businessNature = null, input, result }) {
   await ensureDatabase();
   const schema = quoteIdentifier(getDatabaseSchema());
@@ -192,6 +211,7 @@ module.exports = {
   insertQuoteSnapshot,
   listQuoteSnapshots,
   migrateDatabase,
+  patchAppStateField,
   saveAppState,
   shouldUseDatabase,
 };
