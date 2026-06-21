@@ -33,9 +33,27 @@
 const fs = require("node:fs");
 const path = require("node:path");
 require("../src/lib/env").loadLocalEnv();
-const { getAppState, saveAppState, closeDatabase } = require("../src/lib/db");
+const { getAppState, closeDatabase, getDatabaseSchema } = require("../src/lib/db");
+const { Pool } = require("pg");
 const { buildContentoManzanilloYards } = require("../src/lib/contento-yards");
 const { buildNewCarrierShells } = require("./seed-new-carriers");
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// The prod app re-saves shipping-data ~every 3s (an FX-refresh timezone quirk
+// makes rates "stale" each request) — but it ONLY touches exchangeRates and
+// preserves the rest. So a plain write can be clobbered by an in-flight reader.
+// We land the patch with compare-and-swap (write only if revision unchanged)
+// then verify it persists across several FX cycles, re-applying if clobbered.
+function patchedMarker(payload) {
+  const h = payload.modules?.handover?.shippingLines || [];
+  const kmtc = h.find((l) => l.id === "kmtc");
+  const concepts = kmtc ? kmtc.localCharges.map((c) => c.concept) : [];
+  const renamed = concepts.includes("Doc Fee at Destination") && concepts.includes("Container Release Fee");
+  const rfc14 = h.filter((l) => l.notes && l.notes.rfc).length >= 14;
+  const contento26 = (payload.modules?.customs?.yards || []).filter((y) => String(y.id).startsWith("yard-mzo-contento-")).length === 26;
+  return renamed && rfc14 && contento26;
+}
 
 const LOCAL = JSON.parse(
   fs.readFileSync(path.join(__dirname, "..", "data", "shipping-lines.json"), "utf8")
@@ -144,8 +162,51 @@ async function main() {
       return;
     }
 
-    await saveAppState("shipping-data", target);
-    console.log("\n[applied] prod app_state shipping-data updated.");
+    // --- APPLY via compare-and-swap + verify-persist (prod has a ~3s FX writer) ---
+    const schema = getDatabaseSchema();
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+    try {
+      const readRow = async () => {
+        const r = await pool.query(`select payload, revision from "${schema}".app_state where key = 'shipping-data'`);
+        return r.rows[0];
+      };
+      const casApply = async () => {
+        for (let i = 0; i < 50; i += 1) {
+          const row = await readRow();
+          const tgt = JSON.parse(JSON.stringify(row.payload));
+          patch(tgt, { withShells });
+          const upd = await pool.query(
+            `update "${schema}".app_state set payload = $1::jsonb, revision = revision + 1, updated_at = now() where key = 'shipping-data' and revision = $2`,
+            [JSON.stringify(tgt), row.revision]
+          );
+          if (upd.rowCount === 1) return Number(row.revision) + 1;
+          await sleep(120); // lost the CAS race; re-read latest and retry
+        }
+        throw new Error("CAS failed after 50 attempts (prod write contention too high)");
+      };
+
+      let stable = false;
+      for (let outer = 0; outer < 8 && !stable; outer += 1) {
+        const rev = await casApply();
+        console.log(`\n[applied] CAS write landed at revision ${rev}.`);
+        process.stdout.write("[verify] watching it persist across FX cycles");
+        stable = true;
+        for (let p = 0; p < 8; p += 1) {
+          await sleep(1500);
+          const row = await readRow();
+          if (!patchedMarker(row.payload)) {
+            stable = false;
+            console.log(`\n  clobbered by an in-flight writer at rev ${row.revision} — re-applying…`);
+            break;
+          }
+          process.stdout.write(".");
+        }
+        if (stable) console.log("\n[stable] patch persisted across the verify window (FX writer now preserves it).");
+      }
+      if (!stable) throw new Error("patch could not be made to persist — investigate prod writer");
+    } finally {
+      await pool.end();
+    }
   } catch (e) {
     console.error("ERROR:", e.message);
     process.exitCode = 1;
