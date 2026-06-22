@@ -25,6 +25,11 @@ const { refreshExchangeRatesIfStale } = require("./lib/exchange-rates");
 const { startExchangeRateScheduler } = require("./lib/exchange-rate-scheduler");
 const usageGuard = require("./lib/usage-guard");
 const refreshMonitor = require("./lib/refresh-monitor");
+const { attachUser, requireAuth } = require("./middleware/auth");
+const { languageMiddleware } = require("./middleware/i18n");
+const { safeJsonLocals, flashMiddleware } = require("./middleware/locals");
+const healthRoutes = require("./routes/health");
+const exchangeRatesRoutes = require("./routes/exchange-rates");
 const {
   buildTranslator,
   getLanguageOptions,
@@ -82,17 +87,7 @@ const { shouldUseDatabase, insertQuoteSnapshot } = require("./lib/db");
 const port = process.env.PORT || 3000;
 const sessionSecret =
   process.env.SESSION_SECRET || "jose-expressline-consulting-local";
-const publicDemoUser = Object.freeze({
-  id: "public-demo",
-  name: "Express Line",
-  role: "admin",
-  username: "public",
-});
-
-function requireAuth(req, res, next) {
-  req.session.user = req.session.user || publicDemoUser;
-  return next();
-}
+// auth (publicDemoUser/attachUser/requireAuth) moved to ./middleware/auth.
 
 function ensureArray(value) {
   if (Array.isArray(value)) {
@@ -1807,61 +1802,18 @@ function createApp() {
     })
   );
 
-  app.use((req, _res, next) => {
-    const requestedLanguage =
-      req.query.lang ||
-      req.body?.lang ||
-      req.session.language ||
-      normalizeLanguage();
-    req.language = normalizeLanguage(requestedLanguage);
-    req.session.language = req.language;
-    req.t = buildTranslator(req.language);
-    next();
-  });
-
-  app.use((req, _res, next) => {
-    req.session.user = req.session.user || publicDemoUser;
-    next();
-  });
-
-  // B1 (QA): XSS-safe JSON for inlining into <script type="application/json"> blocks.
-  // JSON.stringify does NOT escape "</script>" (or "<!--"), so a user-editable value
-  // containing "</script>" would close the tag early and inject markup. Escaping "<"
-  // and the JS line separators U+2028/U+2029 to their \u form keeps the JSON valid and
-  // identical when parsed, but it can never break out of the <script> element.
-  app.use((req, res, next) => {
-    res.locals.safeJson = (value) =>
-      JSON.stringify(value === undefined ? null : value).replace(
-        /[<\u2028\u2029]/g,
-        (ch) => "\\u" + ch.charCodeAt(0).toString(16).padStart(4, "0")
-      );
-    next();
-  });
-
-  app.use((req, _res, next) => {
-    if (req.session.flash) {
-      req.flash = req.session.flash;
-      delete req.session.flash;
-    }
-    next();
-  });
+  // Middleware order is behavior-sensitive \u2014 keep this exact sequence:
+  // language \u2192 user \u2192 safeJson locals \u2192 flash. (Extracted to ./middleware/*.)
+  app.use(languageMiddleware);
+  app.use(attachUser);
+  app.use(safeJsonLocals);
+  app.use(flashMiddleware);
 
   app.get("/", (req, res) => {
     return res.redirect(`/workbench/${DEFAULT_MODULE_KEY}`);
   });
 
-  // Lightweight, unauthenticated health/usage endpoint. Exposes the in-memory
-  // usage-guard counters (today's app_state DB reads/writes vs thresholds, and
-  // whether an alert fired today) so the storm can be seen live without trawling
-  // logs. No secrets, no DB hit.
-  app.get("/healthz", (_req, res) => {
-    return res.json({
-      status: "ok",
-      shippingCacheTtlMs: Number(process.env.SHIPPING_CACHE_TTL_MS) || 60 * 60 * 1000,
-      usageGuard: usageGuard.getStatus(),
-      refreshRoute: refreshMonitor.getStatus(),
-    });
-  });
+  healthRoutes.register(app); // GET /healthz
 
   app.post("/preferences/language", (req, res) => {
     req.session.language = normalizeLanguage(req.body.language, req.language);
@@ -2921,50 +2873,8 @@ function createApp() {
     return res.redirect(`/admin/${module.key}/settings`);
   });
 
-  app.post(
-    "/admin/:moduleKey/exchange-rates/refresh",
-    requireAuth,
-    async (req, res) => {
-      const module = getBusinessModule(req.params.moduleKey);
-      if (!module) {
-        return res.status(404).render(
-          "not-found",
-          baseView(req, {
-            pageTitle: req.t("system.notFoundTitle"),
-            languageReturnTo: req.originalUrl,
-          })
-        );
-      }
-
-      // Capture the request source (no secrets) so the external client that
-      // hammers this route ~every 2s can be identified at /healthz, then stopped
-      // at its origin. Our own frontend does not poll this route.
-      refreshMonitor.record(refreshMonitor.describeRequest(req));
-
-      // Defense-in-depth: when this route is hammered, short-circuit the refresh
-      // (the FX throttle + read cache already make it cheap, but this caps the
-      // work at the trigger regardless). The manual button is unaffected — a human
-      // clicks far slower than the min-interval, and the settings page it
-      // redirects to renders the current rates anyway.
-      if (refreshMonitor.shouldThrottleRoute()) {
-        refreshMonitor.noteSkipped();
-      } else {
-        refreshMonitor.markRefreshDone();
-        // loadShippingData already persists refreshed rates via the targeted
-        // jsonb_set (saveExchangeRates); no extra full-blob saveShippingData here
-        // (that was redundant AND a data-clobber risk when this route is hammered).
-        await loadShippingData({
-          refreshRates: true,
-          forceRefreshRates: true,
-        });
-      }
-      req.session.flash = {
-        type: "success",
-        message: req.t("admin.exchangeRatesSaved"),
-      };
-      return res.redirect(`/admin/${module.key}/settings`);
-    }
-  );
+  // POST /admin/:moduleKey/exchange-rates/refresh (extracted to ./routes/exchange-rates)
+  exchangeRatesRoutes.register(app, { requireAuth, loadShippingData, baseView });
 
   // --- Container type master (editable on handover; shared with customs) ---
   app.post(
