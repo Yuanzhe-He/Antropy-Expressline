@@ -8,7 +8,17 @@
 ## 定位区（compact 后先读这块）
 ═══════════════════════════════════════════
 
-**【最新 r34，2026-06-22】代码结构重构：server.js/store.js god-file 拆分（Phase 0-2 完成）。分支 `feature/refactor-godfiles`（从 main=58cd443 切）。行为零变化，纯搬移。待开 PR。**
+**【最新 r35，2026-06-22】架构重构收尾 Phase 3→5（一口气做完，不分批停）。分支 `feature/refactor-godfiles`（接 Phase 0-2）。行为零变化，纯搬移。一条分支顺序 commit，跑完全部交一个 PR。**
+- **不变量（每个 commit 后必查）**：① `test:all` 全绿；② get/post/put/delete 路由总数（server.js + src/routes/*.js）= **67**（恒定）；③ server.js `app.use` = 8；④ quote-test 9/9（报价精确输出 diff=0）；⑤ `node -e "require('./src/server')"` load OK。任一不过 → 修到过或回滚该 commit。
+- **测试环境=Option A**：JSON-mode in-process（STORAGE_DRIVER=json + createApp + 真 HTTP + 隔离 temp DATA_DIR）。零生产接触、零 DB 改动。OSRM 经 global.fetch mock 做 hermetic。
+- **lib 模块归属（helper 下沉）**：`lib/rule-engine.js`（buildRuleId/cloneRateConfig/appendProgressiveRule/resequenceRules/removeProgressiveRule/unassignStorageRuleSetAssignments/applySequentialRuleUpdates + ensureArray/uniqueIds/parseWholeNumber/parseNumber-pass）；`lib/customs-rules.js`（find/buildZeroRatesByContainer/buildDefaultCustomsStorageRules/buildCustomsStorageRuleSetDraft/findAssignedStorageRuleSet/getLineContainerAssignmentKey/getAssignedStorageRuleSetId/syncTerminalStorageRulesByContainer/buildCustomsTerminalDraft/buildCustomsPortDraft/countCustomsContainerReferences/buildCustomsYardDraft/parsePercentRatio/formatPercentValue/formatTerminalMixSummary/buildTerminalMixDraft/applyRateCellUpdates/upsertRateCell）；`lib/handover-forms.js`（inferLocalChargeCurrency/buildLocalChargeDraft/slugifyLineId/buildShippingLineDraft/buildSimpleShippingLineMirror/buildHandoverFormData/buildDefaultContainerRows/buildTaxOverrides/buildTaxRatePresets/DEFAULT_NEW_LINE_CONTAINER_GROUPS）。
+- **route 模块**：admin-inland（含 markRouteStale/refreshOneInlandRoute 闭包，16 路由）→ admin-customs（20 路由，含 removeCustomsStorageAssignment）→ admin-handover + admin-shipping-lines（12 路由）→ admin-quote/settings/container-types（settings+notes+container-types）。复刻 workbench 的 `register(app, ctx)` ctx 模式。
+- **关键事实**：所有 helper 都是 server.js 模块级函数（col-0，createApp 之前定义），唯 markRouteStale(1887)/refreshOneInlandRoute(1895)/removeCustomsStorageAssignment(3185) 是 createApp 内闭包（随 inland/customs route 模块走）。quote 备注库 = `POST /admin/:moduleKey/settings` 的 quote 分支（无独立 notes 路由）。bulk customs save 早返坑：open-ended 规则 `_end` 未提交 → parseWholeNumber(undefined,null)=0 → invalidRuleRange（真实表单提交所有 `_end`）。
+- **进度**：
+  - **Phase 3a（commit ⏳）**：新增 `scripts/audit-admin-deep-test.js`（16 子测试：shipping-line local-charges/terminal-mix/demurrage 全 CRUD + 累进规则引擎 + last-rule guard + 大 edit handler + 镜像同步 + customs fixed-charges/storage rule-sets + bulk save + quote notes + 全部 markRouteStale/refreshOneInlandRoute/override/precise paths）。**test:all 13→14/14 绿 = 新基线。**
+  - Phase 3b/4/5：⏳ 待做（见上 lib/route 归属）。
+
+**【r34，2026-06-22】代码结构重构：server.js/store.js god-file 拆分（Phase 0-2 完成）。分支 `feature/refactor-godfiles`（从 main=58cd443 切）。行为零变化，纯搬移。已接 Phase 3（r35）。**
 - **测试环境=Option A（Chandler 选）**：本机无 Docker/Postgres，且代码库测试本就跑 **JSON-mode in-process（createApp+HTTP）**——纯代码搬移用它验证最忠实、零生产风险（本地 Postgres 对纯搬移无意义，测试强制 JSON）。全程零生产接触/零 DB 改动。
 - **Phase 0（f90a4fe）**：`npm run test:all` 运行器 + `audit-admin-routes-test.js`（route 级 CRUD，隔离 temp DATA_DIR，填 ~47 未测 admin 路由）→ 基线 **13/13 绿**。"没绿基线不准动 server.js"。
 - **Phase 1（d288ec8）**：`middleware/{auth,i18n,locals}` + `routes/{health,exchange-rates}`，**中间件顺序原样保留**，requireAuth 重 import 守 61 路由。路由计数守恒。
