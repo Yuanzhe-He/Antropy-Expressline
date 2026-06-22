@@ -8,7 +8,13 @@
 ## 定位区（compact 后先读这块）
 ═══════════════════════════════════════════
 
-**【最新 r27，2026-06-21】合并 PR#17 部署验证 + 从源头定位外部 poller(F1)。分支 `feature/stop-external-poller`（从 main=da81714 切）。待开 PR。**
+**【最新 r33，2026-06-21】实证幽灵(登 Railway 拉真日志)+架构体检+架构重构方案。分支 `feature/ghost-proof-and-arch-plan`（从 main=58cd443 切）。纯查日志+只读+写文档，零业务代码/零 DB 改动。待开 PR。**
+- **幽灵实证(不再推断)**：成功 `railway login`(device code，Chandler 授权)→ `railway logs --http --json` 可用且含 `srcIp`+`clientUa`。**关键实证**：①6/13-20 日志**已过保留期不可恢复**(`--since 30d` 最早只到今天 08:14/共26行；显式 6/13-20 查询 `Problem processing request`)②保留窗口内**0 次 /exchange-rates/refresh**(幽灵当前已停)③今天流量=我的 curl 探针+一个真人(墨西哥 Telmex IP/iPhone Safari)一次浏览 customs，稀疏无轮询。**结论：幽灵历史日志不可考(硬事实)+当前已停；放弃"本地.env 是元凶"的旧推断(无日志证据)；going-forward 若再来用 `railway logs --http` 或 /healthz 陷阱当场抓真 IP/UA。** CLI 现已登录(courteous-courage/Antropy-Expressline)。
+- **架构体检**(`20260621_architecture_health_check_REPORT.md`，A-G+file:line)：两 god-file=`server.js` 4707行(75路由+77内联业务函数+持久化三混)、`store.js` 2606行(46 normalizer+读写+缓存)；`i18n.js` 1526=大但内聚不用拆。store 是 hub(17文件 require)。单 blob 1.83MB 热(FX 299B)冷(inland 1.42MB)混装+镜像手动同步=架构+egress 双问题。
+- **架构重构方案**(`20260621_architecture_redesign_PLAN.md`，A-F，plan-only)：server.js→组合根+routes/+middleware/+业务下沉 lib/；store.js→按模块拆 normalizer→(迁表后)repository。**纯搬移行为不变**，分阶段每步独立 PR+全回归+可回滚。**与数据方案(blob→relational)互补可并行**，store repository 化处汇合；**代码解耦收益=可维护性不是 egress**(egress 是数据层收益，别混)。**先拆 server.js(风险最低)**。
+- **状态**：本轮零代码/零 DB 改动，只产出 3 文档。egress 事件早闭环。架构/数据重构=两份 plan 就绪待 Chandler 拍板。详见 `00z8_chandler_log_round33.md`。
+
+**【r27，2026-06-21】合并 PR#17 部署验证 + 从源头定位外部 poller(F1)。分支 `feature/stop-external-poller`（从 main=da81714 切）。待开 PR。**
 - **PR#17 已合并部署 main=da81714，生产实测**：`/healthz`→200、`shippingCacheTtlMs:3600000`(1h TTL ✓)、`usageGuard{reads:1,writes:0,triggeredToday:false}`(缓存吸收一切)；egress 探针读~1/min；**数据完好 yards=28 / shippingLines=21**。egress 已 ~1.8GB/天，Supabase 不再被烧。
 - **F1 定位外部 poller**：①**前端确认无轮询**（grep public/+views/ 唯一 POST refresh 是 admin-settings.ejs:295 手动按钮；app.js AJAX 只管计算器；无 setInterval）→ 源在仓库外。②Railway log 取不到（CLI OAuth 失效，login=user-only）→ 改 **in-app 抓取**：新增 `src/lib/refresh-monitor.js`（纯内存）记录 refresh 路由来源指纹(IP/UA/Referer/时间，**绝不记 cookie/secret**)，经 `GET /healthz.refreshRoute` 暴露(CC 可 curl 读)。③**路由 min-interval 短路闸**(默认 5s，env `REFRESH_ROUTE_MIN_INTERVAL_MS`)：hammered 时跳过 loadShippingData 只 redirect(手动按钮/scheduler 不受影响)。
 - **来源结果（PR#18 已合并部署 main=455c83c，实测 ~07:15-07:25Z）**：**poller 已自行停止，当前不活跃**。连续观测 ~5 分钟 `/healthz.refreshRoute.totalHitsToday=0`（每 2s 应有 ~150 次→实测 0）、usageGuard reads:1 writes:0、pg_stat 读 ~1/min(基线)。推理：PR#16 缓存只让 refresh hit 变便宜、不阻止 HTTP 到达，故 0 hit = poller 本身今天某时自行停了。抓不到指纹(不活跃)；refresh-monitor 已**永久部署为陷阱**——poller 回来即在 `/healthz.refreshRoute.sources` 抓到 IP/UA/Referer + 路由闸封顶。
