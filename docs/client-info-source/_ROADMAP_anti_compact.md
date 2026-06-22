@@ -14,9 +14,15 @@
 - **lib 模块归属（helper 下沉）**：`lib/rule-engine.js`（buildRuleId/cloneRateConfig/appendProgressiveRule/resequenceRules/removeProgressiveRule/unassignStorageRuleSetAssignments/applySequentialRuleUpdates + ensureArray/uniqueIds/parseWholeNumber/parseNumber-pass）；`lib/customs-rules.js`（find/buildZeroRatesByContainer/buildDefaultCustomsStorageRules/buildCustomsStorageRuleSetDraft/findAssignedStorageRuleSet/getLineContainerAssignmentKey/getAssignedStorageRuleSetId/syncTerminalStorageRulesByContainer/buildCustomsTerminalDraft/buildCustomsPortDraft/countCustomsContainerReferences/buildCustomsYardDraft/parsePercentRatio/formatPercentValue/formatTerminalMixSummary/buildTerminalMixDraft/applyRateCellUpdates/upsertRateCell）；`lib/handover-forms.js`（inferLocalChargeCurrency/buildLocalChargeDraft/slugifyLineId/buildShippingLineDraft/buildSimpleShippingLineMirror/buildHandoverFormData/buildDefaultContainerRows/buildTaxOverrides/buildTaxRatePresets/DEFAULT_NEW_LINE_CONTAINER_GROUPS）。
 - **route 模块**：admin-inland（含 markRouteStale/refreshOneInlandRoute 闭包，16 路由）→ admin-customs（20 路由，含 removeCustomsStorageAssignment）→ admin-handover + admin-shipping-lines（12 路由）→ admin-quote/settings/container-types（settings+notes+container-types）。复刻 workbench 的 `register(app, ctx)` ctx 模式。
 - **关键事实**：所有 helper 都是 server.js 模块级函数（col-0，createApp 之前定义），唯 markRouteStale(1887)/refreshOneInlandRoute(1895)/removeCustomsStorageAssignment(3185) 是 createApp 内闭包（随 inland/customs route 模块走）。quote 备注库 = `POST /admin/:moduleKey/settings` 的 quote 分支（无独立 notes 路由）。bulk customs save 早返坑：open-ended 规则 `_end` 未提交 → parseWholeNumber(undefined,null)=0 → invalidRuleRange（真实表单提交所有 `_end`）。
-- **进度**：
-  - **Phase 3a（commit ⏳）**：新增 `scripts/audit-admin-deep-test.js`（16 子测试：shipping-line local-charges/terminal-mix/demurrage 全 CRUD + 累进规则引擎 + last-rule guard + 大 edit handler + 镜像同步 + customs fixed-charges/storage rule-sets + bulk save + quote notes + 全部 markRouteStale/refreshOneInlandRoute/override/precise paths）。**test:all 13→14/14 绿 = 新基线。**
-  - Phase 3b/4/5：⏳ 待做（见上 lib/route 归属）。
+- **进度（全部完成，13 commit，test:all 全程 14/14 绿，quote-test 9/9 diff=0，路由计数恒 67）**：
+  - **Phase 3a（abdfef5）**：新增 `scripts/audit-admin-deep-test.js`（16 子测试，OSRM hermetic mock），admin 写路由全覆盖。test:all 13→14/14 = 新基线。
+  - **Phase 3b helper 下沉**：`lib/rule-engine.js`（0cf09e6）、`lib/customs-rules.js`（8edcd62）、`lib/handover-forms.js`（e50ceff）。
+  - **Phase 3b route 抽取**：`routes/admin-inland.js`（7486b3a，含 markRouteStale/refreshOneInlandRoute）、`admin-customs.js`（3034091，含 removeCustomsStorageAssignment）、`admin-shipping-lines.js`（fc4a612）、`admin-handover.js`（126dbff，container-types）、`admin-settings.js`（c6d2238，/admin+settings+quote notes）。
+  - **Phase 3b/5 view 层 + createApp 收尾**：`lib/views.js`（2b4b1f2，38 view/form-data/render helper）、`routes/core.js` + 统一 ctx + 删冗余 import（656b600）。**server.js 4707→107 行，纯 wire-up。**
+  - **Phase 4 store 拆（2d9333a）**：`lib/store/{shared,normalize-handover/customs/inland/quote,normalize-shipping-data,index}.js`（7 文件，单向 shared←模块←shipping-data←index，对外 API 不变；shared.js 为打破 handover↔customs 环额外加）。修了 bundledDataDir 深度 + audit-contento require。
+  - **Phase 5 文档（本 commit）**：`docs/ARCHITECTURE.md` 加「模块边界」节 + 本回写。
+  - 终态：server.js 107 行；store.js→6+1 模块；routes/ 9 模块；lib/ +4 模块（rule-engine/customs-rules/handover-forms/views）。
+  - **诚实**：纯代码结构、行为零变化、零生产/零 DB 改动；**解耦不降 egress**（数据层才降）；blob→关系表迁移是独立下一任务。详见各 commit + 待开 PR。
 
 **【r34，2026-06-22】代码结构重构：server.js/store.js god-file 拆分（Phase 0-2 完成）。分支 `feature/refactor-godfiles`（从 main=58cd443 切）。行为零变化，纯搬移。已接 Phase 3（r35）。**
 - **测试环境=Option A（Chandler 选）**：本机无 Docker/Postgres，且代码库测试本就跑 **JSON-mode in-process（createApp+HTTP）**——纯代码搬移用它验证最忠实、零生产风险（本地 Postgres 对纯搬移无意义，测试强制 JSON）。全程零生产接触/零 DB 改动。
