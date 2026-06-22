@@ -24,6 +24,16 @@ if (!suites.length) {
 
 console.log(`run-all-tests: ${suites.length} suites\n`);
 
+// Safety: force JSON storage for every suite so a suite that exercises the real
+// store can NEVER connect to the production DATABASE_URL that src/lib/env loads
+// from .env (shouldUseDatabase() is true whenever DATABASE_URL is set and
+// STORAGE_DRIVER is unset). Suites that test DB-mode behavior (audit-rmw-cache,
+// audit-usage-guard) mock src/lib/db's shouldUseDatabase() in-process, so they
+// are unaffected by this env. Without this, a future suite that calls a real
+// store DB function would silently hit prod — a latent footgun, not a current
+// bug (today no suite both uses the real store AND calls a DB function).
+const childEnv = { ...process.env, STORAGE_DRIVER: "json" };
+
 const results = [];
 const startedAll = Date.now();
 
@@ -32,6 +42,7 @@ for (const suite of suites) {
   const res = spawnSync(process.execPath, [path.join(scriptsDir, suite)], {
     stdio: ["ignore", "pipe", "pipe"],
     encoding: "utf8",
+    env: childEnv,
   });
   const ms = Date.now() - started;
   const ok = res.status === 0;
