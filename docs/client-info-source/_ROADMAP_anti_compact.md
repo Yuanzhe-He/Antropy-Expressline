@@ -8,7 +8,17 @@
 ## 定位区（compact 后先读这块）
 ═══════════════════════════════════════════
 
-**【最新 r27，2026-06-21】合并 PR#17 部署验证 + 从源头定位外部 poller(F1)。分支 `feature/stop-external-poller`（从 main=da81714 切）。待开 PR。**
+**【最新 r34，2026-06-22】代码结构重构：server.js/store.js god-file 拆分（Phase 0-2 完成）。分支 `feature/refactor-godfiles`（从 main=58cd443 切）。行为零变化，纯搬移。待开 PR。**
+- **测试环境=Option A（Chandler 选）**：本机无 Docker/Postgres，且代码库测试本就跑 **JSON-mode in-process（createApp+HTTP）**——纯代码搬移用它验证最忠实、零生产风险（本地 Postgres 对纯搬移无意义，测试强制 JSON）。全程零生产接触/零 DB 改动。
+- **Phase 0（f90a4fe）**：`npm run test:all` 运行器 + `audit-admin-routes-test.js`（route 级 CRUD，隔离 temp DATA_DIR，填 ~47 未测 admin 路由）→ 基线 **13/13 绿**。"没绿基线不准动 server.js"。
+- **Phase 1（d288ec8）**：`middleware/{auth,i18n,locals}` + `routes/{health,exchange-rates}`，**中间件顺序原样保留**，requireAuth 重 import 守 61 路由。路由计数守恒。
+- **Phase 2（5013c76）**：`routes/workbench.js`（5 workbench 路由逐字节搬移，`register(app,ctx)`），quote-test 9/9 断言精确报价=行为 diff 检查。**server.js 4707→~4150 行。**
+- **方法**：纯搬移+改 import，业务逻辑不动；`ctx`=createApp 组装一次的 helper 集传 routes 模块；每阶段 test:all 全绿+路由计数守恒+load OK；大块删除用 node splice（先 assert 边界）。
+- **⏳ Phase 3-4 下一增量**：Phase 3=admin 路由按模块拆（~60 路由，含 markRouteStale 闭包，部分 sub-route 测试薄）+ helper 下沉 lib/；Phase 4=store.js→lib/store/*（接口不变）。**最大最纠缠，留专注 pass 守"行为零变化"，不 end-of-turn 赶工**；Phase 0 测试网已就位使其安全。
+- **诚实**：代码解耦收益=可维护性/改动安全，**不降 egress**（egress 是数据层 blob→表 收益）。详见 `00z9_chandler_log_round34.md`。
+- 注：架构方案/blob→relational/health-check 三份 spec 在 **PR#21（未合并）**，不在本 branch；本轮按其 §B/C/D 执行。
+
+**【r27，2026-06-21】合并 PR#17 部署验证 + 从源头定位外部 poller(F1)。分支 `feature/stop-external-poller`（从 main=da81714 切）。待开 PR。**
 - **PR#17 已合并部署 main=da81714，生产实测**：`/healthz`→200、`shippingCacheTtlMs:3600000`(1h TTL ✓)、`usageGuard{reads:1,writes:0,triggeredToday:false}`(缓存吸收一切)；egress 探针读~1/min；**数据完好 yards=28 / shippingLines=21**。egress 已 ~1.8GB/天，Supabase 不再被烧。
 - **F1 定位外部 poller**：①**前端确认无轮询**（grep public/+views/ 唯一 POST refresh 是 admin-settings.ejs:295 手动按钮；app.js AJAX 只管计算器；无 setInterval）→ 源在仓库外。②Railway log 取不到（CLI OAuth 失效，login=user-only）→ 改 **in-app 抓取**：新增 `src/lib/refresh-monitor.js`（纯内存）记录 refresh 路由来源指纹(IP/UA/Referer/时间，**绝不记 cookie/secret**)，经 `GET /healthz.refreshRoute` 暴露(CC 可 curl 读)。③**路由 min-interval 短路闸**(默认 5s，env `REFRESH_ROUTE_MIN_INTERVAL_MS`)：hammered 时跳过 loadShippingData 只 redirect(手动按钮/scheduler 不受影响)。
 - **来源结果（PR#18 已合并部署 main=455c83c，实测 ~07:15-07:25Z）**：**poller 已自行停止，当前不活跃**。连续观测 ~5 分钟 `/healthz.refreshRoute.totalHitsToday=0`（每 2s 应有 ~150 次→实测 0）、usageGuard reads:1 writes:0、pg_stat 读 ~1/min(基线)。推理：PR#16 缓存只让 refresh hit 变便宜、不阻止 HTTP 到达，故 0 hit = poller 本身今天某时自行停了。抓不到指纹(不活跃)；refresh-monitor 已**永久部署为陷阱**——poller 回来即在 `/healthz.refreshRoute.sources` 抓到 IP/UA/Referer + 路由闸封顶。
