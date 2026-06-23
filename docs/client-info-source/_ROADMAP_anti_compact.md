@@ -201,3 +201,16 @@
 - 2026-06-13 陆运go-live(main 6d107b9)，300费率+43路线
 - 2026-06-11 陆运routes map从0实现PR#1
 - 更早：invoice pipeline、quote PDF系统建成
+
+═══════════════════════════════════════════
+## blob→relational 迁移（2026-06-22 起，按 CODEX_PROMPT_blob_to_relational_FULL.md）
+═══════════════════════════════════════════
+- 权威 schema：docs/specs/20260621_blob_to_relational_redesign.md（v2，已批：Q1/Q2/Q3 留 JSONB/常量、Q4 加 carriers.customs_note、Q5 numeric(14,4)+{MXN,USD}）。
+- 沙盒 DB（隔离做死）：**专用 Supabase 项目 ref=fnczokogchlhutyskbdw**（org hjqdxxkwdrskskyohhrf，us-east-1，名 expressline-mig-sandbox）。连接串在 **gitignored .env.sandbox**（含 SANDBOX_REF + FORBIDDEN_REFS）。密码在 .env.sandbox.pw（gitignored）。
+- 🔴 禁碰 project ref：polxyashvxbzdkkmxuox（生产，含 expressline+public.joyas_*+public.punas_* 三个 app）、somfyvqhnffosvwmdnid（utopiai）。隔离在 **project 级**（schema 名 expressline 生产也有，不算隔离）。
+- 守卫：scripts/sandbox-guard.js（assertSandbox：DATABASE_URL ref 必须==沙盒且∉禁集，fail-closed）。所有 relational 脚本经 scripts/relational/sandbox-env.js connectSandbox() 取 pool（先守卫）。
+- 进度（commit）：
+  - 747633b 守卫 + .gitignore。
+  - a474232 **2a-1 schema DDL → 沙盒 18 表（幂等）**：scripts/relational/{sandbox-env,schema,migrate-schema}.js。`node scripts/relational/migrate-schema.js` 重建。
+- 待做（续，不停到生产 cutover）：2a-2 正向 blob→表(+Q4 orphan/Q5 币种闸) · 2a-3 反向 表→blob(reverse==normalize) · 2a-4 facade STORAGE_MODE=blob|dual|relational(API 不变) · 2a-5 parity 闸(行数+字段 diff=0) · 2a-6 test:all+quote relational&dual 绿 → commit 2a · 2b per-entity 写+并发测试 → commit 2b · 停在生产 cutover 给 Chandler runbook(不执行)。
+- resume：读本块 + git log + TodoWrite；load .env.sandbox；只打沙盒；绝不 prod。
