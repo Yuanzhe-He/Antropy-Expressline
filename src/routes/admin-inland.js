@@ -7,7 +7,7 @@
 // Public API: register(app, ctx).
 
 const { requireAuth } = require("../middleware/auth");
-const { saveShippingData } = require("../lib/store");
+const { saveModule } = require("../lib/store");
 const { resolveLink } = require("../lib/inland-link-resolver");
 const {
   decodePolyline,
@@ -115,7 +115,7 @@ function register(app, ctx) {
       }
     }
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(
       req,
       res,
@@ -148,7 +148,7 @@ function register(app, ctx) {
       viaCities: String(req.body.ovr_via || "").split(",").map((s) => s.trim()).filter(Boolean),
     };
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.routeOverrideSaved"), `${INLAND_ADMIN_TARGET}#dest-${destId}`);
   });
 
@@ -161,7 +161,7 @@ function register(app, ctx) {
     );
     if (rc) rc.manualOverride = null;
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.routeOverrideCleared"), `${INLAND_ADMIN_TARGET}#dest-${destId}`);
   });
 
@@ -195,7 +195,7 @@ function register(app, ctx) {
     }
     inland.origins.push({ id: oid, name, lat, lng });
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.originAdded", { name }), `${INLAND_ADMIN_TARGET}#inland-origins`);
   });
 
@@ -211,7 +211,7 @@ function register(app, ctx) {
       if (lng !== undefined) origin.lng = String(lng).trim() === "" ? null : Number(lng);
     }
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.originsSaved"), `${INLAND_ADMIN_TARGET}#inland-origins`);
   });
 
@@ -227,7 +227,7 @@ function register(app, ctx) {
     inland.origins = origins.filter((o) => o.id !== req.params.id);
     inland.routeCache = (inland.routeCache || []).filter((rc) => rc.originId !== req.params.id);
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.originDeleted"), `${INLAND_ADMIN_TARGET}#inland-origins`);
   });
 
@@ -258,7 +258,7 @@ function register(app, ctx) {
       note: "",
     });
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.destAdded", { name }), `${INLAND_ADMIN_TARGET}#dest-${id}`);
   });
 
@@ -310,7 +310,7 @@ function register(app, ctx) {
       }
     }
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.saved"), INLAND_ADMIN_TARGET);
   });
 
@@ -325,7 +325,7 @@ function register(app, ctx) {
     inland.rateEntries = (inland.rateEntries || []).filter((e) => e.destinationId !== req.params.id);
     inland.routeCache = (inland.routeCache || []).filter((rc) => rc.destinationId !== req.params.id);
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.destDeleted", { name: dest.name }), INLAND_ADMIN_TARGET);
   });
 
@@ -387,7 +387,7 @@ function register(app, ctx) {
       }
     }
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.preciseAdded", { name }), `${INLAND_ADMIN_TARGET}#dest-${dest.id}`);
   });
 
@@ -403,7 +403,7 @@ function register(app, ctx) {
       (rc) => !(rc.destinationId === dest.id && rc.targetType === "precisePoint" && rc.targetId === req.params.pointId)
     );
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.preciseDeleted"), `${INLAND_ADMIN_TARGET}#dest-${dest.id}`);
   });
 
@@ -456,7 +456,7 @@ function register(app, ctx) {
       }
     }
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.preciseSaved") || "OK", `${INLAND_ADMIN_TARGET}#dest-${dest.id}`);
   });
 
@@ -484,7 +484,7 @@ function register(app, ctx) {
       extras: {},
     });
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.rateAdded"), `${INLAND_ADMIN_TARGET}#dest-${destinationId}`);
   });
 
@@ -529,7 +529,7 @@ function register(app, ctx) {
       entry.enabled = req.body[`re_enabled_${entry.id}`] !== undefined;
     }
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(req, res, "success", req.t("inland.saved"), INLAND_ADMIN_TARGET);
   });
 
@@ -539,7 +539,7 @@ function register(app, ctx) {
     const entry = (inland.rateEntries || []).find((e) => e.id === req.params.id);
     inland.rateEntries = (inland.rateEntries || []).filter((e) => e.id !== req.params.id);
     shippingData.modules.inland = inland;
-    await saveShippingData(shippingData);
+    await saveModule("inland", shippingData);
     return redirectWithFlash(
       req,
       res,
