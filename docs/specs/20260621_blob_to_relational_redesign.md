@@ -102,7 +102,9 @@ create table expressline.carriers (
   name        text not null,
   code        text,                         -- notes.code = CODIGO DE NAVIERA
   rfc         text,                         -- notes.rfc = 墨西哥税号
-  notes_extra jsonb not null default '{}'::jsonb,  -- notes 其余键（sourceSheet…）
+  notes_extra jsonb not null default '{}'::jsonb,  -- handover notes 其余键（sourceSheet…）
+  customs_note text,                          -- Q4(2026-06-22): customs 侧 per-line 自由文本备注
+                                              -- (admin-customs customs_line_note_<id>，与 handover 结构化 notes 独立)
   active      boolean not null default true,
   invoice_to_consignee_only boolean not null default false,
   demurrage_cutoff_handled_by text,
@@ -309,7 +311,7 @@ create table expressline.module_settings (
 ### C.1 正向 `scripts/migrate-blob-to-relational.js`（dry-run 默认 / `--apply` 才写）
 1. **备份**：`getAppState('shipping-data')` 整存到 `backups/prod-shipping-data-<ts>.json` + sha256（沿用既有 patch 纪律，`backups/` 已 gitignore）。
 2. **读**：拿整块（迁移时搬一次整块可接受）。
-3. **拆解 + upsert**（单事务）：`exchange_rates ← exchangeRates`；`carriers(+carrier_local_charges) ← handover.shippingLines`（21；customs 镜像丢弃，handover 权威）；`container_types ← handover.containerTypes`（20）；`customs_ports/terminals(+terminal_charges)/yards(+yard_charges)/yard_ports/yard_carriers ← customs.*`（28 堆场）；`inland_origins/destinations/rate_entries/route_cache ← inland.*`（44/300/44+）；`quote_drafts/quote_notes ← quote.*`；`module_settings ← 各模块 settings/taxRatePresets`。
+3. **拆解 + upsert**（单事务）：`exchange_rates ← exchangeRates`；`carriers(+carrier_local_charges) ← handover.shippingLines`（21；customs 镜像丢弃，handover 权威，但 **`carriers.customs_note ← customs.shippingLines[id].notes`** 保留 Q4 的 customs 侧备注）；`container_types ← handover.containerTypes`（20）；`customs_ports/terminals(+terminal_charges)/yards(+yard_charges)/yard_ports/yard_carriers ← customs.*`（28 堆场）；`inland_origins/destinations/rate_entries/route_cache ← inland.*`（44/300/44+）；`quote_drafts/quote_notes ← quote.*`；`module_settings ← 各模块 settings/taxRatePresets`。
 4. **幂等**：全部 `insert … on conflict (id) do update`，重跑安全。`--verify-only` 只跑 §C.3 校验不写。
 5. **不删 blob**：`app_state.shipping-data` 保留为只读 fallback。
 
@@ -322,6 +324,8 @@ create table expressline.module_settings (
 - **计数**：carriers=21、container_types=20、customs_yards=28、inland_destinations=44、inland_rate_entries=300、inland_route_cache=44+。
 - **José 手改抽查**：CMA doc fee=50、KMTC ISD=15、ZIM 改名、COSCO 改价、自建 2 堆场在、7 空壳在。
 - **逐字段**：`blob-projection`（从表 `assembleShippingData()` 组装）vs 原 blob，`JSON.stringify` 深比 = 0。
+- **mirror orphan gate（Q4）**：每个 `yard.shippingLineIds` ∈ carriers、每个 customs `shippingLines[].id` ∈ handover、每个 customs `line.yardIds` ∈ yards；有 orphan → **停**，先和解再迁（否则 `yard_carriers` FK 静默丢链接）。本地 data 已过（0 orphan），**prod blob 必须重跑**（José 的 method-B yard↔line 映射只在 prod）。
+- **币种 gate（Q5）**：扫 prod blob 全部 currency/amountCurrency/quoteCurrency/pairs 字段 ∈ {MXN,USD}（`check (currency in ('MXN','USD'))` 会 fail-loud）；任何越界值 → **停**（不靠 `normalizeCurrencyCode` 静默 coerce 成 MXN）。本地 raw data 已过（0 越界）。
 - **端到端**：固定报价输入，blob 路径 vs 表路径报价结果逐字段一致（复用 `quote-test` 样例）。任何不符 → 回滚。
 
 ---
@@ -387,8 +391,8 @@ create table expressline.module_settings (
 1. **terminal `storage_config`**：留单 JSONB（实现简单、写目标=terminal 行）vs 拆 `terminal_storage_rule_sets` + `terminal_storage_assignments`（更规范、但要在 DB/组装层复刻 `syncNormalizedTerminalStorageRulesByContainer`）？默认 JSONB。
 2. **inland `precise_points`**：留 JSONB（按目的地整取）vs 拆 `inland_precise_points`（若要按点查询/独立编辑/精确点路线）？默认 JSONB。
 3. **`templateRows`**：维持代码常量 seed（不入库、版本可控）vs 入 `quote_template_rows`（允许后台改模板行）？默认代码常量。
-4. **carriers 镜像合并**：确认 handover = 权威、customs `shippingLines` 镜像丢弃后无路由依赖镜像专属字段（customs 侧 `yardIds`→已迁 `yard_carriers`）。
-5. **金额精度/币种**：`numeric(14,4)` + `MXN|USD` check 是否够（USD 起运港价、MXN 本地）？
+4. **carriers 镜像合并** — [Q4 已核查 2026-06-22 → 已解决]：customs `shippingLines` 镜像消费字段 = `id`（→carriers，同 id 空间，add/delete 路由强制同步）+ `yardIds`↔`yard.shippingLineIds`（→`yard_carriers`）+ **`notes`（customs 侧自由文本，admin-customs.js:696 写、admin-customs.ejs:105 显示 → 已加 `carriers.customs_note` 保留）**。`active`/`name` 无独立消费（name=handover name；active 默认 true、无过滤逻辑读它）。本地 `data/shipping-lines.json`：14 carriers、镜像 id 全 ⊆ handover、0 orphan。⚠ **生产 gate**：prod 有 José 的 yard↔line 映射，迁移前必跑 §C.3 mirror orphan gate。
+5. **金额精度/币种** — [Q5 已核查 2026-06-22 → 已确认]：全部币种字段经 `normalizeCurrencyCode` → `CURRENCY_OPTIONS`={MXN,USD}；本地 raw data 0 越界值。`numeric(14,4)` + `MXN|USD` check 采纳（用户批准）。⚠ prod blob 迁移前跑 §C.3 币种 gate（fail-loud，不静默 coerce）。
 6. **PR 切分**：建议 A=DDL+迁移脚本（不切读写）→ B=facade relational + assemble 兼容层（flag 默认 blob）→ C=2a 切 relational/dual + parity 闸 → D=2b per-entity 写。每步独立 PR + 全回归 + 抽查。
 
 ---
