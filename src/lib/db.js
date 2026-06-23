@@ -1,6 +1,8 @@
 const { Pool } = require("pg");
 const { loadLocalEnv } = require("./env");
 const usageGuard = require("./usage-guard");
+const relRepo = require("./store/relational-repo");
+const { decompose, assemble } = require("./store/relational-map");
 
 loadLocalEnv();
 
@@ -217,22 +219,98 @@ async function listQuoteSnapshots(limit = 50) {
   return rows;
 }
 
+// --- relational storage (STORAGE_MODE=relational|dual) ----------------------
+// Shares the same pool + schema as the blob path; project-level isolation is
+// orthogonal. ensureRelationalReady() creates the entity tables once (idempotent),
+// the analog of ensureDatabase() for the blob path.
+let relationalReady = false;
+
+async function ensureRelationalReady() {
+  if (relationalReady) {
+    return;
+  }
+  const schema = getDatabaseSchema();
+  const client = await getPool().connect();
+  try {
+    await client.query("begin");
+    await relRepo.ensureRelationalSchema(client, schema);
+    await client.query("commit");
+    relationalReady = true;
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+// Read all entity tables and assemble the shipping-data shape (pre-normalize, to
+// match getAppState's raw payload). Returns null when the tables are empty
+// (fresh store) so the caller seeds, mirroring getAppState returning null.
+async function getShippingTablesAssembled() {
+  await ensureRelationalReady();
+  // DB-penetration read (the read cache lives a layer up in the store facade).
+  usageGuard.recordRead();
+  const tables = await relRepo.readAllTables(getPool(), getDatabaseSchema());
+  const empty = Object.values(tables).every((rows) => rows.length === 0);
+  return empty ? null : assemble(tables);
+}
+
+// Full overwrite of all entity tables from a normalized blob (2a behavior;
+// per-entity targeted writes arrive in 2b). One transaction.
+async function saveShippingTables(normalized) {
+  await ensureRelationalReady();
+  usageGuard.recordWrite();
+  const schema = getDatabaseSchema();
+  const tables = decompose(normalized);
+  const client = await getPool().connect();
+  try {
+    await client.query("begin");
+    await relRepo.upsertAllTables(client, schema, tables);
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+// Targeted write of ONLY the exchange_rates singleton row (per-entity FX write).
+async function saveExchangeRatesTable(exchangeRates) {
+  await ensureRelationalReady();
+  usageGuard.recordWrite();
+  const schema = getDatabaseSchema();
+  const erRow = decompose({ exchangeRates, modules: {} }).exchange_rates[0];
+  const client = await getPool().connect();
+  try {
+    await relRepo.upsertRows(client, schema, "exchange_rates", [erRow]);
+  } finally {
+    client.release();
+  }
+}
+
 async function closeDatabase() {
   if (pool) {
     await pool.end();
     pool = null;
     schemaReady = false;
+    relationalReady = false;
   }
 }
 
 module.exports = {
   closeDatabase,
+  ensureRelationalReady,
   getAppState,
   getDatabaseSchema,
+  getShippingTablesAssembled,
   insertQuoteSnapshot,
   listQuoteSnapshots,
   migrateDatabase,
   patchAppStateField,
   saveAppState,
+  saveExchangeRatesTable,
+  saveShippingTables,
   shouldUseDatabase,
 };
