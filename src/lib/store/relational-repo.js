@@ -30,7 +30,11 @@ function buildSchemaDDL(schemaName) {
     `create table if not exists ${s}.carriers (
        id text primary key, name text not null, code text, rfc text,
        notes_extra jsonb not null default '{}'::jsonb,
-       customs_note text,
+       -- jsonb (not text): the customs-mirror note is usually a string but some
+       -- carriers carry an OBJECT (handover-style {sourceSheet,code,rfc} copied at
+       -- mirror creation). text would stringify the object to "[object Object]"
+       -- = data loss (caught by the real-prod-data dry-run, 2026-06-23).
+       customs_note jsonb,
        active boolean not null default true,
        invoice_to_consignee_only boolean not null default false,
        demurrage_cutoff_handled_by text,

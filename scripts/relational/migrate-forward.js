@@ -25,11 +25,21 @@ const { decompose } = require("../../src/lib/store/relational-map");
     process.exit(1);
   }
 
-  // GATES — fail loud, do not migrate on a hit.
+  // GATES — fail loud, do not migrate on a hit. --allow-gate-fail is a
+  // SANDBOX-ONLY dry-run switch to continue past a gate and characterize the
+  // full impact; the prod cutover NEVER uses it (it always hard-aborts here).
+  const allowGateFail = process.argv.includes("--allow-gate-fail");
   if (!runGates(blob, "prod-blob")) {
-    console.error("[migrate-forward] ABORT: a data gate failed — reconcile before migrating.");
-    await pool.end();
-    process.exit(2);
+    if (allowGateFail) {
+      console.warn(
+        "[migrate-forward] ⚠ DRY-RUN: a gate FAILED but --allow-gate-fail is set — " +
+          "continuing in the SANDBOX to characterize impact. NEVER used for prod cutover."
+      );
+    } else {
+      console.error("[migrate-forward] ABORT: a data gate failed — reconcile before migrating.");
+      await pool.end();
+      process.exit(2);
+    }
   }
 
   const tables = decompose(blob);

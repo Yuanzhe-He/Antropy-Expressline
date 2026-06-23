@@ -530,7 +530,7 @@ const TABLE_META = {
   carriers: {
     pk: ["id"],
     cols: ["id", "name", "code", "rfc", "notes_extra", "customs_note", "active", "invoice_to_consignee_only", "demurrage_cutoff_handled_by", "sort_order", "container_groups", "demurrage", "guarantee", "terminal_mix", "quote_defaults", "extra"],
-    jsonb: ["notes_extra", "container_groups", "demurrage", "guarantee", "terminal_mix", "quote_defaults", "extra"],
+    jsonb: ["notes_extra", "customs_note", "container_groups", "demurrage", "guarantee", "terminal_mix", "quote_defaults", "extra"],
   },
   carrier_local_charges: {
     pk: ["id"],

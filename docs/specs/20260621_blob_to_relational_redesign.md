@@ -103,8 +103,11 @@ create table expressline.carriers (
   code        text,                         -- notes.code = CODIGO DE NAVIERA
   rfc         text,                         -- notes.rfc = 墨西哥税号
   notes_extra jsonb not null default '{}'::jsonb,  -- handover notes 其余键（sourceSheet…）
-  customs_note text,                          -- Q4(2026-06-22): customs 侧 per-line 自由文本备注
-                                              -- (admin-customs customs_line_note_<id>，与 handover 结构化 notes 独立)
+  customs_note jsonb,                         -- Q4(2026-06-22): customs 侧 per-line 备注（admin-customs
+                                              -- customs_line_note_<id>，与 handover 结构化 notes 独立）。
+                                              -- jsonb 非 text：真生产 dry-run(2026-06-23) 发现 8 个 carrier 的
+                                              -- 镜像 notes 是 OBJECT（建镜像时拷了 handover {sourceSheet,code,rfc}），
+                                              -- text 会 stringify 成 "[object Object]" = 丢数据。
   active      boolean not null default true,
   invoice_to_consignee_only boolean not null default false,
   demurrage_cutoff_handled_by text,

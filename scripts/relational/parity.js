@@ -63,8 +63,31 @@ function firstDiff(a, b, path = "") {
   console.log(`[parity] DATA diff: ${equal ? "0 — PASS ✅" : "NONZERO — FAIL ❌"}`);
 
   if (!equal) {
-    const d = firstDiff(canonicalize(blobProjection), canonicalize(tableProjection));
-    console.error("[parity] first diff:", JSON.stringify(d).slice(0, 600));
+    // Summarize ALL diffs by shape (so a dry-run sees the full scope, not just the first).
+    const diffs = [];
+    (function walk(a, b, p) {
+      if (diffs.length > 200) return;
+      const ta = Array.isArray(a) ? "arr" : a === null ? "null" : typeof a;
+      const tb = Array.isArray(b) ? "arr" : b === null ? "null" : typeof b;
+      if (ta !== tb) { diffs.push(`${p} [${ta} vs ${tb}]`); return; }
+      if (ta === "arr") {
+        if (a.length !== b.length) diffs.push(`${p} arr len ${a.length} vs ${b.length}`);
+        for (let i = 0; i < Math.max(a.length, b.length); i += 1) walk(a[i], b[i], `${p}[${i}]`);
+        return;
+      }
+      if (ta === "object") {
+        for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) walk(a[k], b[k], `${p}.${k}`);
+        return;
+      }
+      if (JSON.stringify(a) !== JSON.stringify(b)) diffs.push(`${p}: ${JSON.stringify(a)} -> ${JSON.stringify(b)}`);
+    })(canonicalize(blobProjection), canonicalize(tableProjection), "");
+    const shapes = {};
+    for (const d of diffs) {
+      const key = d.replace(/\[\d+\]/g, "[]");
+      shapes[key] = (shapes[key] || 0) + 1;
+    }
+    console.error(`[parity] ${diffs.length} canonical diffs. Shapes:`);
+    for (const [k, v] of Object.entries(shapes)) console.error(`  (${v}) ${k.slice(0, 160)}`);
     await pool.end();
     process.exit(1);
   }
