@@ -24,3 +24,4 @@ docs/reference/quote-preview.pdf
 backups/
 .env.sandbox
 .env.sandbox.pw
+.prod-blob-snapshot.json
