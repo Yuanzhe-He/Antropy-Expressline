@@ -8,7 +8,7 @@
 // Public API: register(app, ctx).
 
 const { requireAuth } = require("../middleware/auth");
-const { saveShippingData } = require("../lib/store");
+const { saveModule } = require("../lib/store");
 const { parseNumber } = require("../lib/calculate");
 const {
   findCustomsTerminal,
@@ -73,7 +73,7 @@ function register(app, ctx) {
     const port = buildCustomsPortDraft(moduleData, req.t);
     moduleData.ports = [...(moduleData.ports || []), port];
     shippingData.modules.customs = moduleData;
-    await saveShippingData(shippingData);
+    await saveModule("customs", shippingData);
 
     return redirectWithFlash(
       req,
@@ -95,7 +95,7 @@ function register(app, ctx) {
     );
     const removed = beforeCount !== moduleData.ports.length;
     shippingData.modules.customs = moduleData;
-    await saveShippingData(shippingData);
+    await saveModule("customs", shippingData);
 
     return redirectWithFlash(
       req,
@@ -129,7 +129,7 @@ function register(app, ctx) {
       const terminal = buildCustomsTerminalDraft(moduleData, portEntry, req.t);
       portEntry.terminals = [...(portEntry.terminals || []), terminal];
       shippingData.modules.customs = moduleData;
-      await saveShippingData(shippingData);
+      await saveModule("customs", shippingData);
 
       return redirectWithFlash(
         req,
@@ -167,7 +167,7 @@ function register(app, ctx) {
         (entry) => entry.id !== terminal.id
       );
       shippingData.modules.customs = moduleData;
-      await saveShippingData(shippingData);
+      await saveModule("customs", shippingData);
 
       return redirectWithFlash(
         req,
@@ -213,7 +213,7 @@ function register(app, ctx) {
         },
       ];
       shippingData.modules.customs = moduleData;
-      await saveShippingData(shippingData);
+      await saveModule("customs", shippingData);
       return redirectWithFlash(req, res, "success", req.t("customs.fixedChargeAdded"), `/admin/customs/shipping-lines#customs-terminal-${terminal.id}`);
     }
   );
@@ -237,7 +237,7 @@ function register(app, ctx) {
       );
       const removed = before !== terminal.fixedCharges.length;
       shippingData.modules.customs = moduleData;
-      await saveShippingData(shippingData);
+      await saveModule("customs", shippingData);
       return redirectWithFlash(req, res, removed ? "success" : "error", removed ? req.t("customs.fixedChargeDeleted") : req.t("system.notFoundTitle"), `/admin/customs/shipping-lines#customs-terminal-${terminal.id}`);
     }
   );
@@ -248,7 +248,7 @@ function register(app, ctx) {
     const yard = buildCustomsYardDraft(moduleData, req.t);
     moduleData.yards = [...(moduleData.yards || []), yard];
     shippingData.modules.customs = moduleData;
-    await saveShippingData(shippingData);
+    await saveModule("customs", shippingData);
 
     return redirectWithFlash(
       req,
@@ -288,7 +288,7 @@ function register(app, ctx) {
       (entry) => entry.id !== yard.id
     );
     shippingData.modules.customs = moduleData;
-    await saveShippingData(shippingData);
+    await saveModule("customs", shippingData);
 
     return redirectWithFlash(
       req,
@@ -329,7 +329,7 @@ function register(app, ctx) {
       terminal.storageRuleSets = [...(terminal.storageRuleSets || []), ruleSet];
       syncTerminalStorageRulesByContainer(terminal, moduleData.shippingLines, moduleData.containerTypes);
       shippingData.modules.customs = moduleData;
-      await saveShippingData(shippingData);
+      await saveModule("customs", shippingData);
 
       return redirectWithFlash(
         req,
@@ -371,7 +371,7 @@ function register(app, ctx) {
       resequenceRules(ruleSet.rules);
       syncTerminalStorageRulesByContainer(terminal, moduleData.shippingLines, moduleData.containerTypes);
       shippingData.modules.customs = moduleData;
-      await saveShippingData(shippingData);
+      await saveModule("customs", shippingData);
 
       return redirectWithFlash(
         req,
@@ -428,7 +428,7 @@ function register(app, ctx) {
         moduleData.containerTypes
       );
       shippingData.modules.customs = moduleData;
-      await saveShippingData(shippingData);
+      await saveModule("customs", shippingData);
 
       return redirectWithFlash(
         req,
@@ -478,7 +478,7 @@ function register(app, ctx) {
       resequenceRules(ruleSet.rules);
       syncTerminalStorageRulesByContainer(terminal, moduleData.shippingLines, moduleData.containerTypes);
       shippingData.modules.customs = moduleData;
-      await saveShippingData(shippingData);
+      await saveModule("customs", shippingData);
       return redirectWithFlash(
         req,
         res,
@@ -526,7 +526,7 @@ function register(app, ctx) {
         terminal.storageRulesByContainer[containerType.key] = rules;
       }
       shippingData.modules.customs = moduleData;
-      await saveShippingData(shippingData);
+      await saveModule("customs", shippingData);
 
       return redirectWithFlash(
         req,
@@ -578,7 +578,7 @@ function register(app, ctx) {
         syncTerminalStorageRulesByContainer(terminal, moduleData.shippingLines, moduleData.containerTypes);
       }
       shippingData.modules.customs = moduleData;
-      await saveShippingData(shippingData);
+      await saveModule("customs", shippingData);
       return redirectWithFlash(
         req,
         res,
@@ -634,7 +634,7 @@ function register(app, ctx) {
       moduleData.containerTypes
     );
     shippingData.modules.customs = moduleData;
-    await saveShippingData(shippingData);
+    await saveModule("customs", shippingData);
 
     const safeReturnRuleSetId = String(returnRuleSetId || "");
     const returnRuleSetExists = (terminal.storageRuleSets || []).some(
@@ -882,7 +882,7 @@ function register(app, ctx) {
     }
 
     shippingData.modules.customs = moduleData;
-    await saveShippingData(shippingData);
+    await saveModule("customs", shippingData);
     return redirectWithFlash(
       req,
       res,
