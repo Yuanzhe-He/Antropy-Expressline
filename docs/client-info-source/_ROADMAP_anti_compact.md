@@ -227,3 +227,11 @@
 - **cutover runbook 已出**（未执行）：docs/specs/20260622_blob_to_relational_CUTOVER_RUNBOOK.md（§2 prod 受限 role 隔离证明 + 8 步硬停 + Q4/Q5/parity 闸 + 回滚）。
 - **2b 剩余（cutover 前）**：把 ~60 admin 写路由从 saveShippingData(整坨) 换成 per-entity facade 方法（wrapper 在 blob/json 回落整写，可分模块逐步、每步 test:all 绿）；PR 评审合并；prod 建 expressline-only 受限 role。
 - 测试跑法：`node scripts/relational/integration-test.js` + `node scripts/relational/concurrency-test.js`（打沙盒，先 assertSandbox）。
+
+### blob→relational 进度更新 3（2026-06-23）— 2b 路由 swap 完成
+- **2b 全完成**：所有 admin 写路由从 saveShippingData(整块) 换成 per-module/per-entity 写。
+  - 新原语 saveModule(moduleKey, shippingData)（db.js saveModuleTables + MODULE_TABLES + syncTable：relational 只写该 module 的表、upsert+delete-absent、FK-safe；blob/json 回落整写）。
+  - 路由 swap（一模块一 commit）：admin-handover→saveModule('handover')（dddf36c）/ admin-settings→quote+module.key（d397134）/ admin-inland→'inland' 15 处（aabe88a）/ admin-shipping-lines→'handover' 11 处（fb98f70，customs 镜像 derived + carrier-delete cascade yard_carriers）/ admin-customs→'customs' 16 处（e044570）/ workbench→'quote' 2 处（37e0af7）。exchange-rates.js 已用 saveExchangeRates（per-entity，未改）。
+  - 验证：每模块 test:all 14/14（json 行为不变）；relational integration 9/9（含 saveModule isolation）；concurrency 5/5（per-entity no-clobber）。
+- **granularity 说明**：module-scoped targeted write（写被改 module 的表，不碰其它 module + exchange_rates）→ 根治跨 module clobber + FX-vs-admin clobber；leaf 方法 saveCarrier/saveCustomsYard/saveInlandRateEntry 可用于单实体更细粒度。
+- **状态**：本地 2a+2b 全做完、全绿、全在沙盒 fnczokogchlhutyskbdw 验。停在生产 cutover（runbook=docs/specs/20260622_blob_to_relational_CUTOVER_RUNBOOK.md，未执行）。剩余 cutover 前置：PR 评审合并 + prod expressline-only 受限 role。沙盒保留不删。
