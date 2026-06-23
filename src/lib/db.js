@@ -290,6 +290,90 @@ async function saveExchangeRatesTable(exchangeRates) {
   }
 }
 
+// --- per-entity targeted writes (2b: root-fix concurrent clobber) -----------
+// Each writes ONLY its own entity's row(s) in one transaction, so a write to
+// entity A can never clobber a concurrent write to entity B (the full-blob /
+// full-tables overwrite hazard). sort_order is preserved from the existing row
+// (a content edit must not reorder the entity).
+async function withTxn(fn) {
+  await ensureRelationalReady();
+  usageGuard.recordWrite();
+  const client = await getPool().connect();
+  try {
+    await client.query("begin");
+    const result = await fn(client, getDatabaseSchema());
+    await client.query("commit");
+    return result;
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function preserveSortOrder(client, schema, table, id, row) {
+  const ex = await client.query(
+    `select sort_order from ${relRepo.q(schema)}.${relRepo.q(table)} where id = $1`,
+    [id]
+  );
+  if (ex.rows[0]) {
+    row.sort_order = ex.rows[0].sort_order;
+  }
+  return row;
+}
+
+// Upsert one carrier (carriers row + its carrier_local_charges, replaced atomically).
+async function saveCarrierEntity(carrier) {
+  const tables = decompose({
+    modules: { handover: { shippingLines: [carrier] }, customs: { shippingLines: [] } },
+  });
+  const row = tables.carriers[0];
+  return withTxn(async (client, schema) => {
+    // a carrier content edit must keep its customs_note unless explicitly changed
+    const ex = await client.query(
+      `select sort_order, customs_note from ${relRepo.q(schema)}.carriers where id = $1`,
+      [carrier.id]
+    );
+    if (ex.rows[0]) {
+      row.sort_order = ex.rows[0].sort_order;
+      if (carrier.customs_note === undefined) {
+        row.customs_note = ex.rows[0].customs_note;
+      }
+    }
+    await relRepo.upsertRows(client, schema, "carriers", [row]);
+    await client.query(
+      `delete from ${relRepo.q(schema)}.carrier_local_charges where carrier_id = $1`,
+      [carrier.id]
+    );
+    await relRepo.upsertRows(client, schema, "carrier_local_charges", tables.carrier_local_charges);
+  });
+}
+
+// Upsert one customs yard (customs_yards row + its charges + join rows, atomic).
+async function saveCustomsYardEntity(yard) {
+  const tables = decompose({ modules: { customs: { yards: [yard] } } });
+  const row = tables.customs_yards[0];
+  return withTxn(async (client, schema) => {
+    await preserveSortOrder(client, schema, "customs_yards", yard.id, row);
+    await relRepo.upsertRows(client, schema, "customs_yards", [row]);
+    for (const [table, fk] of [["yard_charges", "yard_id"], ["yard_ports", "yard_id"], ["yard_carriers", "yard_id"]]) {
+      await client.query(`delete from ${relRepo.q(schema)}.${relRepo.q(table)} where ${relRepo.q(fk)} = $1`, [yard.id]);
+      await relRepo.upsertRows(client, schema, table, tables[table]);
+    }
+  });
+}
+
+// Upsert one inland rate entry (single row).
+async function saveInlandRateEntryEntity(entry) {
+  const tables = decompose({ modules: { inland: { rateEntries: [entry] } } });
+  const row = tables.inland_rate_entries[0];
+  return withTxn(async (client, schema) => {
+    await preserveSortOrder(client, schema, "inland_rate_entries", entry.id, row);
+    await relRepo.upsertRows(client, schema, "inland_rate_entries", [row]);
+  });
+}
+
 async function closeDatabase() {
   if (pool) {
     await pool.end();
@@ -310,7 +394,10 @@ module.exports = {
   migrateDatabase,
   patchAppStateField,
   saveAppState,
+  saveCarrierEntity,
+  saveCustomsYardEntity,
   saveExchangeRatesTable,
+  saveInlandRateEntryEntity,
   saveShippingTables,
   shouldUseDatabase,
 };
