@@ -1,14 +1,20 @@
 // Apply the relational target schema (subphase 2a) to the SANDBOX, idempotently.
 // connectSandbox() hard-asserts the project ref before any DDL runs. Re-runnable.
 const { connectSandbox } = require("./sandbox-env");
-const { buildSchemaDDL, RELATIONAL_TABLES } = require("./schema");
+const { buildSchemaDDL, buildDropDDL, RELATIONAL_TABLES } = require("./schema");
 
 (async () => {
+  const reset = process.argv.includes("--reset");
   const { pool, ref, schema } = connectSandbox();
-  console.log(`[migrate-schema] sandbox ref=${ref} schema=${schema}`);
+  console.log(`[migrate-schema] sandbox ref=${ref} schema=${schema}${reset ? " (--reset)" : ""}`);
   const client = await pool.connect();
   try {
     await client.query("begin");
+    if (reset) {
+      for (const stmt of buildDropDDL(schema)) {
+        await client.query(stmt);
+      }
+    }
     for (const stmt of buildSchemaDDL(schema)) {
       await client.query(stmt);
     }

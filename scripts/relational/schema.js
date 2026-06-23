@@ -18,7 +18,9 @@ function buildSchemaDDL(schemaName) {
     `create table if not exists ${s}.exchange_rates (
        id smallint primary key default 1 check (id = 1),
        provider text, docs_url text,
-       as_of_date date, last_checked_at timestamptz, last_error text,
+       -- as_of_date / last_checked_at hold the app's ISO strings verbatim; text
+       -- (not date/timestamptz) so they round-trip exactly (pg would return a Date).
+       as_of_date text, last_checked_at text, last_error text,
        default_quote_currency text not null default 'MXN',
        pairs jsonb not null default '[]'::jsonb,
        updated_at timestamptz not null default now()
@@ -40,9 +42,14 @@ function buildSchemaDDL(schemaName) {
        guarantee jsonb not null default '{}'::jsonb,
        terminal_mix jsonb not null default '[]'::jsonb,
        quote_defaults jsonb not null default '{}'::jsonb,
+       extra jsonb not null default '{}'::jsonb,
        created_at timestamptz not null default now(),
        updated_at timestamptz not null default now()
      )`,
+    // Catch-all for any handover shippingLine top-level field not promoted to a
+    // column (invoiceNote + any future/unknown spread field) — handover lines are
+    // the only entity built with `...shippingLine`, so only carriers needs this.
+    `alter table ${s}.carriers add column if not exists extra jsonb not null default '{}'::jsonb`,
     `create table if not exists ${s}.carrier_local_charges (
        id text primary key,
        carrier_id text not null references ${s}.carriers(id) on delete cascade,
@@ -117,18 +124,21 @@ function buildSchemaDDL(schemaName) {
     `create table if not exists ${s}.yard_ports (
        yard_id text references ${s}.customs_yards(id) on delete cascade,
        port_id text references ${s}.customs_ports(id) on delete cascade,
+       seq integer not null default 0,
        primary key (yard_id, port_id)
      )`,
     `create table if not exists ${s}.yard_carriers (
        yard_id text references ${s}.customs_yards(id) on delete cascade,
        carrier_id text references ${s}.carriers(id) on delete cascade,
+       seq integer not null default 0,
        primary key (yard_id, carrier_id)
      )`,
 
     // B′.5 inland origins / destinations / rate entries / route cache (cold)
     `create table if not exists ${s}.inland_origins (
        id text primary key, name text not null,
-       lat double precision, lng double precision
+       lat double precision, lng double precision,
+       sort_order integer not null default 0
      )`,
     `create table if not exists ${s}.inland_destinations (
        id text primary key,
@@ -153,7 +163,8 @@ function buildSchemaDDL(schemaName) {
        vehicle_prices jsonb not null default '{}'::jsonb,
        currency text not null default 'MXN',
        enabled boolean not null default true, note text,
-       extras jsonb not null default '{}'::jsonb
+       extras jsonb not null default '{}'::jsonb,
+       sort_order integer not null default 0
      )`,
     `create index if not exists inland_rate_entries_destination_idx
        on ${s}.inland_rate_entries (destination_id)`,
@@ -166,9 +177,10 @@ function buildSchemaDDL(schemaName) {
        encoded_polyline text,
        distance_km numeric, duration_min numeric,
        via_cities jsonb not null default '[]'::jsonb,
-       engine text default 'osrm', fetched_at timestamptz,
+       engine text default 'osrm', fetched_at text,
        stale boolean not null default false, has_ferry boolean not null default false,
        manual_override jsonb,
+       sort_order integer not null default 0,
        unique (origin_id, destination_id, target_type, target_id)
      )`,
     `create index if not exists inland_route_cache_destination_idx
@@ -180,7 +192,9 @@ function buildSchemaDDL(schemaName) {
        header jsonb not null default '{}'::jsonb, quote_mode text,
        line_items jsonb not null default '[]'::jsonb,
        note_ids jsonb not null default '[]'::jsonb,
-       language text, created_at timestamptz, updated_at timestamptz
+       -- created_at/updated_at hold the draft's app ISO strings → text, exact round-trip.
+       language text, created_at text, updated_at text,
+       sort_order integer not null default 0
      )`,
     `create table if not exists ${s}.quote_notes (
        id text primary key, en text, es text, zh text,
@@ -216,4 +230,13 @@ const RELATIONAL_TABLES = Object.freeze([
   "module_settings",
 ]);
 
-module.exports = { buildSchemaDDL, RELATIONAL_TABLES, q };
+// Drop all relational tables (sandbox reset during development). Reverse FK
+// order is unnecessary with `cascade`.
+function buildDropDDL(schemaName) {
+  const s = q(schemaName);
+  return RELATIONAL_TABLES.map(
+    (table) => `drop table if exists ${s}.${q(table)} cascade`
+  );
+}
+
+module.exports = { buildSchemaDDL, buildDropDDL, RELATIONAL_TABLES, q };
