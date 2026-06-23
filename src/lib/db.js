@@ -2,7 +2,7 @@ const { Pool } = require("pg");
 const { loadLocalEnv } = require("./env");
 const usageGuard = require("./usage-guard");
 const relRepo = require("./store/relational-repo");
-const { decompose, assemble } = require("./store/relational-map");
+const { decompose, assemble, TABLE_META } = require("./store/relational-map");
 
 loadLocalEnv();
 
@@ -374,6 +374,76 @@ async function saveInlandRateEntryEntity(entry) {
   });
 }
 
+// Tables OWNED by each business module, parent-before-child (FK-safe). carriers
+// live under handover (customs only mirrors them, derived on read); exchange_rates
+// and module_settings.__app__ are not module-owned (untouched by a module save).
+const MODULE_TABLES = {
+  handover: ["container_types", "carriers", "carrier_local_charges"],
+  customs: [
+    "customs_ports",
+    "customs_terminals",
+    "terminal_charges",
+    "customs_yards",
+    "yard_charges",
+    "yard_ports",
+    "yard_carriers",
+  ],
+  inland: ["inland_origins", "inland_destinations", "inland_rate_entries", "inland_route_cache"],
+  quote: ["quote_drafts", "quote_notes"],
+};
+
+// Sync one table to exactly `rows`: delete rows whose PK-tuple isn't in the new
+// set (cascades prune their children), then upsert the new set. Works for single
+// and composite PKs.
+async function syncTable(client, schema, table, rows) {
+  const pk = TABLE_META[table].pk;
+  if (rows.length === 0) {
+    await client.query(`delete from ${relRepo.q(schema)}.${relRepo.q(table)}`);
+  } else {
+    const tupleCols = pk.map(relRepo.q).join(", ");
+    const valuesList = rows
+      .map((_, i) => `(${pk.map((_, j) => `$${i * pk.length + j + 1}`).join(", ")})`)
+      .join(", ");
+    const params = rows.flatMap((r) => pk.map((c) => r[c]));
+    await client.query(
+      `delete from ${relRepo.q(schema)}.${relRepo.q(table)} where (${tupleCols}) not in (${valuesList})`,
+      params
+    );
+  }
+  await relRepo.upsertRows(client, schema, table, rows);
+}
+
+// Module-scoped targeted write: persist ONLY the given module's tables from a
+// normalized document (other modules + exchange_rates untouched → no cross-module
+// clobber). One transaction.
+async function saveModuleTables(moduleKey, normalized) {
+  const owned = MODULE_TABLES[moduleKey];
+  if (!owned) {
+    throw new Error(`saveModuleTables: unknown module ${moduleKey}`);
+  }
+  await ensureRelationalReady();
+  usageGuard.recordWrite();
+  const schema = getDatabaseSchema();
+  const tables = decompose(normalized);
+  const settingsRow = tables.module_settings.find((r) => r.module_key === moduleKey);
+  const client = await getPool().connect();
+  try {
+    await client.query("begin");
+    for (const table of owned) {
+      await syncTable(client, schema, table, tables[table]);
+    }
+    if (settingsRow) {
+      await relRepo.upsertRows(client, schema, "module_settings", [settingsRow]);
+    }
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function closeDatabase() {
   if (pool) {
     await pool.end();
@@ -398,6 +468,7 @@ module.exports = {
   saveCustomsYardEntity,
   saveExchangeRatesTable,
   saveInlandRateEntryEntity,
+  saveModuleTables,
   saveShippingTables,
   shouldUseDatabase,
 };

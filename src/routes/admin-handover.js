@@ -6,7 +6,7 @@
 // Public API: register(app, ctx).
 
 const { requireAuth } = require("../middleware/auth");
-const { saveShippingData, RATE_GROUP_NAMES } = require("../lib/store");
+const { saveModule, RATE_GROUP_NAMES } = require("../lib/store");
 const { countCustomsContainerReferences } = require("../lib/customs-rules");
 
 function register(app, ctx) {
@@ -37,7 +37,7 @@ function register(app, ctx) {
 
       moduleData.containerTypes = [...existing, { key, label: label || key, rateGroup }];
       shippingData.modules.handover = moduleData;
-      await saveShippingData(shippingData);
+      await saveModule("handover", shippingData);
       return redirectWithFlash(req, res, "success", req.t("containerTypes.added", { name: label || key }), target);
     }
   );
@@ -58,7 +58,7 @@ function register(app, ctx) {
         return { key: type.key, label, rateGroup };
       });
       shippingData.modules.handover = moduleData;
-      await saveShippingData(shippingData);
+      await saveModule("handover", shippingData);
       return redirectWithFlash(
         req,
         res,
@@ -111,7 +111,7 @@ function register(app, ctx) {
       // automatically on the next normalize (ensureRatesForContainerTypes).
       moduleData.containerTypes = existing.filter((type) => type.key !== key);
       shippingData.modules.handover = moduleData;
-      await saveShippingData(shippingData);
+      await saveModule("handover", shippingData);
       return redirectWithFlash(req, res, "success", req.t("containerTypes.deleted", { name: key }), target);
     }
   );

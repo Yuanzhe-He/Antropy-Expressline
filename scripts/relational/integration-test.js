@@ -127,6 +127,31 @@ const assert = (cond, m) => {
     "relational FX write left all non-FX data unchanged"
   );
 
+  // (5) saveModule(moduleKey) writes ONLY that module's tables
+  process.env.STORAGE_MODE = "relational";
+  store.invalidateShippingDataCache();
+  const base = await store.getShippingData();
+  const mod = structuredClone(base);
+  mod.modules.inland.destinations[0].note = "MODULE SCOPED NOTE";
+  await store.saveModule("inland", mod);
+  store.invalidateShippingDataCache();
+  const afterMod = await store.getShippingData();
+  assert(
+    afterMod.modules.inland.destinations[0].note === "MODULE SCOPED NOTE",
+    "saveModule(inland) persisted the dest note"
+  );
+  const stripInland = (d) => {
+    const c = structuredClone(d);
+    c.modules.inland = null;
+    return c;
+  };
+  assert(
+    canon(stripInland(afterMod)) === canon(stripInland(base)),
+    "saveModule(inland) left handover/customs/quote/FX untouched (no cross-module clobber)"
+  );
+  mod.modules.inland.destinations[0].note = base.modules.inland.destinations[0].note;
+  await store.saveModule("inland", mod);
+
   await db.closeDatabase();
   console.log(`\n[integration-test] ref=${ref} — ${passed} assertions PASS ✅`);
 })().catch((e) => {
