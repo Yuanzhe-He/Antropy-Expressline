@@ -220,3 +220,10 @@
 - 核心文件：src/lib/store/relational-map.js（纯 decompose/assemble，round-trip 契约 normalize(assemble(decompose(b)))==normalize(b)，canonical 比较因 normalizer spread ...shippingLine 致 key 序无关）；scripts/relational/{schema,repo,gates,seed-sandbox,migrate-forward,migrate-reverse,parity}.js。
 - 跑法：`node scripts/relational/migrate-schema.js --reset && node scripts/relational/seed-sandbox.js && node scripts/relational/migrate-forward.js && node scripts/relational/parity.js`。
 - **待做**：2a-4 facade STORAGE_MODE=blob|dual|relational（把 repo/DDL 合并进 src/lib/store/relational-repo.js 供 sandbox/facade/cutover 同一套；db.js 加 relational 读写；index.js 按 STORAGE_MODE 分支，public API 不变）→ 2a-6 relational 集成测试+test:all 绿 → commit 2a → 2b per-entity 写+并发 → commit 2b → 停在生产 cutover。
+
+### blob→relational 进度更新 2（2026-06-22/23 续）
+- **2a 全完成**（commits e1fe72b, 660c022）：forward+gates+reverse+parity=0 + facade STORAGE_MODE=blob|dual|relational（blob 行为逐字节不变）+ relational 集成测试 7/7 + test:all 14/14。共享模块 src/lib/store/relational-repo.js（DDL+I/O，sandbox/facade/cutover 同一套），db.js 加 relational 读写，index.js 按 STORAGE_MODE 分支。
+- **2b core 完成**（commit f21835e）：per-entity 写 saveCarrier/saveCustomsYard/saveInlandRateEntry（db.js *Entity + index.js facade wrapper，relational 定点写、blob/json 回落整写）+ 并发 no-clobber 证明 5/5（scripts/relational/concurrency-test.js：整写会 clobber、per-entity 不会）。
+- **cutover runbook 已出**（未执行）：docs/specs/20260622_blob_to_relational_CUTOVER_RUNBOOK.md（§2 prod 受限 role 隔离证明 + 8 步硬停 + Q4/Q5/parity 闸 + 回滚）。
+- **2b 剩余（cutover 前）**：把 ~60 admin 写路由从 saveShippingData(整坨) 换成 per-entity facade 方法（wrapper 在 blob/json 回落整写，可分模块逐步、每步 test:all 绿）；PR 评审合并；prod 建 expressline-only 受限 role。
+- 测试跑法：`node scripts/relational/integration-test.js` + `node scripts/relational/concurrency-test.js`（打沙盒，先 assertSandbox）。
