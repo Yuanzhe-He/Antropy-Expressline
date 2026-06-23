@@ -214,3 +214,9 @@
   - a474232 **2a-1 schema DDL → 沙盒 18 表（幂等）**：scripts/relational/{sandbox-env,schema,migrate-schema}.js。`node scripts/relational/migrate-schema.js` 重建。
 - 待做（续，不停到生产 cutover）：2a-2 正向 blob→表(+Q4 orphan/Q5 币种闸) · 2a-3 反向 表→blob(reverse==normalize) · 2a-4 facade STORAGE_MODE=blob|dual|relational(API 不变) · 2a-5 parity 闸(行数+字段 diff=0) · 2a-6 test:all+quote relational&dual 绿 → commit 2a · 2b per-entity 写+并发测试 → commit 2b · 停在生产 cutover 给 Chandler runbook(不执行)。
 - resume：读本块 + git log + TodoWrite；load .env.sandbox；只打沙盒；绝不 prod。
+
+### blob→relational 进度更新（2026-06-22 续）
+- **2a-2/2a-3/2a-5 完成（commit e1fe72b）**：沙盒 fnczokogchlhutyskbdw 上 forward(blob→18表)+Q4/Q5闸+reverse(表→blob)+parity **DATA diff=0**、forward 幂等、reverse==normalize。
+- 核心文件：src/lib/store/relational-map.js（纯 decompose/assemble，round-trip 契约 normalize(assemble(decompose(b)))==normalize(b)，canonical 比较因 normalizer spread ...shippingLine 致 key 序无关）；scripts/relational/{schema,repo,gates,seed-sandbox,migrate-forward,migrate-reverse,parity}.js。
+- 跑法：`node scripts/relational/migrate-schema.js --reset && node scripts/relational/seed-sandbox.js && node scripts/relational/migrate-forward.js && node scripts/relational/parity.js`。
+- **待做**：2a-4 facade STORAGE_MODE=blob|dual|relational（把 repo/DDL 合并进 src/lib/store/relational-repo.js 供 sandbox/facade/cutover 同一套；db.js 加 relational 读写；index.js 按 STORAGE_MODE 分支，public API 不变）→ 2a-6 relational 集成测试+test:all 绿 → commit 2a → 2b per-entity 写+并发 → commit 2b → 停在生产 cutover。
