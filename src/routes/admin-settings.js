@@ -7,7 +7,7 @@
 // Public API: register(app, ctx).
 
 const { requireAuth } = require("../middleware/auth");
-const { saveShippingData } = require("../lib/store");
+const { saveModule } = require("../lib/store");
 const { DEFAULT_MODULE_KEY, getBusinessModule } = require("../lib/modules");
 const { getModulePresentation } = require("../lib/i18n");
 const { ensureArray, parseWholeNumber } = require("../lib/rule-engine");
@@ -129,7 +129,7 @@ function register(app, ctx) {
         }))
         .filter((n) => n.en || n.zh || n.es);
       shippingData.modules.quote = quote;
-      await saveShippingData(shippingData);
+      await saveModule("quote", shippingData);
       return redirectWithFlash(req, res, "success", req.t("quote.adminSaved"), "/admin/quote/settings");
     }
 
@@ -151,7 +151,7 @@ function register(app, ctx) {
         : moduleData.taxRatePresets,
     };
 
-    await saveShippingData(shippingData);
+    await saveModule(module.key, shippingData);
     req.session.flash = {
       type: "success",
       message: req.t("admin.settingsSaved", {
