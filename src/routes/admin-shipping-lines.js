@@ -9,7 +9,7 @@
 // Public API: register(app, ctx).
 
 const { requireAuth } = require("../middleware/auth");
-const { saveShippingData } = require("../lib/store");
+const { saveModule } = require("../lib/store");
 const { parseNumber } = require("../lib/calculate");
 const { getBusinessModule } = require("../lib/modules");
 const {
@@ -134,7 +134,7 @@ function register(app, ctx) {
       const entry = buildTerminalMixDraft(updated, req.t);
       updated.terminalMix = [...(updated.terminalMix || []), entry];
       shippingData.modules[module.key].shippingLines[lineIndex] = updated;
-      await saveShippingData(shippingData);
+      await saveModule("handover", shippingData);
 
       return redirectWithFlash(
         req,
@@ -183,7 +183,7 @@ function register(app, ctx) {
         (entry) => entry.id !== req.params.mixId
       );
       shippingData.modules[module.key].shippingLines[lineIndex] = updated;
-      await saveShippingData(shippingData);
+      await saveModule("handover", shippingData);
 
       return redirectWithFlash(
         req,
@@ -232,7 +232,7 @@ function register(app, ctx) {
       const charge = buildLocalChargeDraft(updated, moduleData, req.t);
       updated.localCharges = [...(updated.localCharges || []), charge];
       shippingData.modules[module.key].shippingLines[lineIndex] = updated;
-      await saveShippingData(shippingData);
+      await saveModule("handover", shippingData);
 
       return redirectWithFlash(
         req,
@@ -283,7 +283,7 @@ function register(app, ctx) {
       );
       const removed = beforeCount !== updated.localCharges.length;
       shippingData.modules[module.key].shippingLines[lineIndex] = updated;
-      await saveShippingData(shippingData);
+      await saveModule("handover", shippingData);
 
       return redirectWithFlash(
         req,
@@ -344,7 +344,7 @@ function register(app, ctx) {
       ruleSets.push(ruleSet);
       updated.demurrage.ruleSets = ruleSets;
       shippingData.modules[module.key].shippingLines[lineIndex] = updated;
-      await saveShippingData(shippingData);
+      await saveModule("handover", shippingData);
 
       return redirectWithFlash(
         req,
@@ -414,7 +414,7 @@ function register(app, ctx) {
         updated.demurrage.rulesByGroup[ruleSet.sourceGroupKey] = ruleSet.rules;
       }
       shippingData.modules[module.key].shippingLines[lineIndex] = updated;
-      await saveShippingData(shippingData);
+      await saveModule("handover", shippingData);
 
       return redirectWithFlash(
         req,
@@ -486,7 +486,7 @@ function register(app, ctx) {
         updated.demurrage.rulesByGroup[ruleSet.sourceGroupKey] = ruleSet.rules;
       }
       shippingData.modules[module.key].shippingLines[lineIndex] = updated;
-      await saveShippingData(shippingData);
+      await saveModule("handover", shippingData);
       return redirectWithFlash(
         req,
         res,
@@ -541,7 +541,7 @@ function register(app, ctx) {
       buildSimpleShippingLineMirror(line),
     ];
 
-    await saveShippingData(shippingData);
+    await saveModule("handover", shippingData);
 
     return redirectWithFlash(
       req,
@@ -599,7 +599,7 @@ function register(app, ctx) {
         );
       }
 
-      await saveShippingData(shippingData);
+      await saveModule("handover", shippingData);
 
       return redirectWithFlash(
         req,
@@ -785,7 +785,7 @@ function register(app, ctx) {
       }
     }
 
-    await saveShippingData(shippingData);
+    await saveModule("handover", shippingData);
     return redirectWithFlash(
       req,
       res,
