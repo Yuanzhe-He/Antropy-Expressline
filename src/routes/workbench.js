@@ -11,7 +11,7 @@ const {
   computeInlandCalculator,
 } = require("../lib/calculate");
 const { getBusinessModule } = require("../lib/modules");
-const { saveShippingData } = require("../lib/store");
+const { saveModule } = require("../lib/store");
 const {
   pullCalculatorValues,
   generateQuoteNumber,
@@ -327,7 +327,7 @@ function register(app, ctx) {
       if (advanceTo !== null) {
         quoteModule.settings.lastQuoteSeq = advanceTo;
       }
-      await saveShippingData(shippingData);
+      await saveModule("quote", shippingData);
       req.flash = {
         type: "success",
         message: `${req.t("quote.draftSaved")}${formData.number}`,
@@ -366,7 +366,7 @@ function register(app, ctx) {
 
       if (advanceTo !== null) {
         quoteModule.settings.lastQuoteSeq = advanceTo;
-        await saveShippingData(shippingData);
+        await saveModule("quote", shippingData);
       }
 
       if (shouldUseDatabase()) {
