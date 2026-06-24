@@ -1,11 +1,14 @@
 // Forward migration: app_state blob → relational tables (subphase 2a-2).
-// Idempotent (upsert). Runs the Q4 orphan + Q5 currency gates on the blob FIRST
-// and ABORTS on any hit (no silent coerce/drop). Does NOT touch app_state (blob
-// stays the rollback source of truth).
+// Idempotent (upsert). Migration normalization: Q5 currency gate (raw) → DROP
+// dangling carrier↔yard refs (target deleted = lossless, logged) → Q4 orphan gate
+// (post-drop; ABORTS on any REMAINING orphan, never silently swallowed). Does NOT
+// touch app_state (blob stays the rollback source of truth). The prod cutover runs
+// this SAME script on the prod blob.
 const { connectSandbox } = require("./sandbox-env");
 const { ensureBaseTables, readBlob, upsertAllTables, tableCounts } = require("./repo");
-const { runGates } = require("./gates");
+const { currencyGate, orphanGate, dropDanglingRefs } = require("./gates");
 const { decompose } = require("../../src/lib/store/relational-map");
+const { normalizeShippingData } = require("../../src/lib/store/normalize-shipping-data");
 
 (async () => {
   const { pool, ref, schema } = connectSandbox();
@@ -25,24 +28,36 @@ const { decompose } = require("../../src/lib/store/relational-map");
     process.exit(1);
   }
 
-  // GATES — fail loud, do not migrate on a hit. --allow-gate-fail is a
-  // SANDBOX-ONLY dry-run switch to continue past a gate and characterize the
-  // full impact; the prod cutover NEVER uses it (it always hard-aborts here).
-  const allowGateFail = process.argv.includes("--allow-gate-fail");
-  if (!runGates(blob, "prod-blob")) {
-    if (allowGateFail) {
-      console.warn(
-        "[migrate-forward] ⚠ DRY-RUN: a gate FAILED but --allow-gate-fail is set — " +
-          "continuing in the SANDBOX to characterize impact. NEVER used for prod cutover."
-      );
-    } else {
-      console.error("[migrate-forward] ABORT: a data gate failed — reconcile before migrating.");
-      await pool.end();
-      process.exit(2);
-    }
+  // (1) Q5 currency gate on the RAW blob — must scan before normalize coerces.
+  const cur = currencyGate(blob);
+  console.log(`[gates] Q5 currency: ${cur.ok ? "PASS" : `FAIL (${cur.violations.length})`}`);
+  if (!cur.ok) {
+    console.error("[migrate-forward] ABORT: Q5 currency violations —", JSON.stringify(cur.violations.slice(0, 20)));
+    await pool.end();
+    process.exit(2);
   }
 
-  const tables = decompose(blob);
+  // (2) Migration normalization + DROP dangling carrier↔yard refs (target deleted
+  // = lossless). Loud, auditable per-ref log.
+  const normalized = normalizeShippingData(blob);
+  const { dropped } = dropDanglingRefs(normalized);
+  for (const d of dropped) {
+    console.log(`[reconcile] DROP ${d.kind}: ${d.owner} → ${d.ref} (target deleted, lossless)`);
+  }
+  console.log(`[reconcile] dropped ${dropped.length} dangling carrier↔yard ref(s)`);
+
+  // (3) Q4 orphan gate AFTER the drop. The dangling-to-deleted class is resolved;
+  // ANY remaining orphan is a DIFFERENT class (target exists, mis-bucketed) →
+  // ABORT, never silently swallowed.
+  const orph = orphanGate(normalized);
+  console.log(`[gates] Q4 orphan (post-drop): ${orph.ok ? "PASS" : `FAIL (${orph.orphans.length})`}`);
+  if (!orph.ok) {
+    console.error("[migrate-forward] ABORT: non-dangling orphan(s) remain after drop —", JSON.stringify(orph.orphans.slice(0, 20)));
+    await pool.end();
+    process.exit(2);
+  }
+
+  const tables = decompose(normalized);
   const txn = await pool.connect();
   try {
     await txn.query("begin");

@@ -7,6 +7,7 @@ const { connectSandbox } = require("./sandbox-env");
 const { readBlob, readAllTables, tableCounts, canonicalJson, canonicalize } = require("./repo");
 const { assemble } = require("../../src/lib/store/relational-map");
 const { normalizeShippingData } = require("../../src/lib/store/normalize-shipping-data");
+const { dropDanglingRefs } = require("./gates");
 
 // Walk two canonicalized values and report the first differing path.
 function firstDiff(a, b, path = "") {
@@ -51,7 +52,10 @@ function firstDiff(a, b, path = "") {
   }
   const tables = await readAllTables(pool, schema);
 
+  // Apply the SAME migration normalization as migrate-forward (drop dangling
+  // carrier↔yard refs) so parity compares the post-drop blob vs the tables.
   const blobProjection = normalizeShippingData(blob);
+  dropDanglingRefs(blobProjection);
   const tableProjection = normalizeShippingData(assemble(tables));
 
   const A = canonicalJson(blobProjection);

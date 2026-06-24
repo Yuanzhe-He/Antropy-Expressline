@@ -68,6 +68,41 @@ function orphanGate(blob) {
   return { ok: orphans.length === 0, orphans };
 }
 
+// Migration normalization (the DROP reconcile, 2026-06-23): remove ONLY carrier↔yard
+// references whose TARGET ID does not exist (the target was deleted → the reference is
+// a dangling pointer → lossless to drop). Mutates the blob in place and returns the
+// list of dropped refs for an auditable, per-ref log. Crucially this does NOT touch
+// any other orphan class (e.g. a mirror line whose id isn't in handover): those
+// survive and the Q4 gate (run AFTER this) still aborts on them — so a "target exists
+// but mis-bucketed" orphan is never silently swallowed.
+function dropDanglingRefs(blob) {
+  const customs = blob?.modules?.customs || {};
+  const handover = blob?.modules?.handover || {};
+  const yardIds = new Set((customs.yards || []).map((y) => y.id));
+  const carrierIds = new Set((handover.shippingLines || []).map((l) => l.id));
+  const dropped = [];
+
+  for (const line of customs.shippingLines || []) {
+    if (!Array.isArray(line.yardIds)) continue;
+    const kept = [];
+    for (const id of line.yardIds) {
+      if (yardIds.has(id)) kept.push(id);
+      else dropped.push({ kind: "customs.line.yardIds→deletedYard", owner: line.id, ref: id });
+    }
+    line.yardIds = kept;
+  }
+  for (const yard of customs.yards || []) {
+    if (!Array.isArray(yard.shippingLineIds)) continue;
+    const kept = [];
+    for (const id of yard.shippingLineIds) {
+      if (carrierIds.has(id)) kept.push(id);
+      else dropped.push({ kind: "yard.shippingLineIds→deletedCarrier", owner: yard.id, ref: id });
+    }
+    yard.shippingLineIds = kept;
+  }
+  return { dropped };
+}
+
 // Run both; print a report. Returns true iff both pass.
 function runGates(blob, label = "blob") {
   const cur = currencyGate(blob);
@@ -85,4 +120,4 @@ function runGates(blob, label = "blob") {
   return cur.ok && orph.ok;
 }
 
-module.exports = { currencyGate, orphanGate, runGates };
+module.exports = { currencyGate, orphanGate, runGates, dropDanglingRefs };

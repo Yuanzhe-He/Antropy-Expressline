@@ -7,6 +7,7 @@ const { connectSandbox } = require("./sandbox-env");
 const { readBlob, readAllTables, writeBlob, canonicalJson } = require("./repo");
 const { assemble } = require("../../src/lib/store/relational-map");
 const { normalizeShippingData } = require("../../src/lib/store/normalize-shipping-data");
+const { dropDanglingRefs } = require("./gates");
 
 (async () => {
   const apply = process.argv.includes("--apply");
@@ -20,7 +21,10 @@ const { normalizeShippingData } = require("../../src/lib/store/normalize-shippin
   // verify against the current source blob, if present
   const sourceBlob = await readBlob(pool, schema);
   if (sourceBlob) {
-    const equal = canonicalJson(normalizeShippingData(sourceBlob)) === canonicalJson(reconstructed);
+    // Compare against the post-drop blob (same migration normalization as forward).
+    const baseline = normalizeShippingData(sourceBlob);
+    dropDanglingRefs(baseline);
+    const equal = canonicalJson(baseline) === canonicalJson(reconstructed);
     console.log(`[migrate-reverse] reverse(forward(blob)) == normalize(blob): ${equal ? "YES ✅" : "NO ❌"}`);
     if (!equal) {
       await pool.end();

@@ -71,10 +71,20 @@ The cutover reuses the SAME verified code as the sandbox: `src/lib/store/relatio
 (18 tables) in prod `expressline` via the restricted role. Does NOT touch `app_state`.
 → report tables created + `app_state` untouched. **[STOP]**
 
-**Step 3 — Forward migrate + prod-data gates.** `expressline.app_state` blob → entity tables.
-Run, on the REAL prod blob (where José's method-B yard↔line mappings actually exist):
-- **Q4 orphan gate** (`scripts/relational/gates.js` `orphanGate`) — every `yard.shippingLineIds`
-  ∈ carriers, every customs line id ∈ handover, every line.yardIds ∈ yards.
+> **DRY-RUN DONE (2026-06-23) on a read-only copy of the real prod blob.** Found + resolved:
+> (a) `customs_note text→jsonb` (object-notes data loss) — schema fix, committed; (b) **8 dangling
+> carrier→yard refs** (cma-cgm/maersk/zim/msc → removed demo yards) — **DROP reconcile approved**:
+> `migrate-forward` now Q5 → `dropDanglingRefs` (drops ONLY refs to non-existent targets = lossless,
+> logs each; any OTHER orphan class still aborts Q4) → Q4 post-drop. On real data: 8 dropped, Q4 PASS,
+> **parity = 0**, reverse-verified, José edits intact (CMA doc fee 50). The 4 carriers become yard-less
+> but so are all 21 (método B) — not anomalous.
+
+**Step 3 — Forward migrate + prod-data gates + DROP reconcile.** `expressline.app_state` blob → entity tables.
+Run, on the REAL prod blob:
+- **Q5 currency** (raw) → **`dropDanglingRefs`** (lossless drop of the 8 dead links, each logged for audit)
+  → **Q4 orphan** (post-drop; ABORTS on any remaining orphan — never silently swallowed).
+- the original Q4 contract — every `yard.shippingLineIds` ∈ carriers, every customs line id ∈ handover,
+  every line.yardIds ∈ yards — now holds after the drop.
 - **Q5 currency gate** (`currencyGate`) — every currency ∈ {MXN,USD}; the `check` constraint
   also rejects fail-loud (no silent coerce).
 Any gate hit → **STOP, report, wait for Chandler's reconcile decision** (do not bypass).
@@ -88,6 +98,11 @@ carriers). → paste parity report (must be diff=0). **[STOP — Chandler confir
 **Step 5 — Deploy STORAGE_MODE=dual.** Writes blob+tables, reads blob, shadow-reads tables and
 diffs. Observation window: José edits → dual-write; shadow diff monitored. Re-run parity before
 the next switch (captures any in-flight José edits). → report observation-window diff. **[STOP]**
+> ⚠ The working `app_state` blob retains the 8 dangling refs (rollback source), but the tables are
+> cleaned by the DROP — so the dual shadow diff will show exactly those 8 known drops, NOT drift.
+> Either (a) apply `dropDanglingRefs` to the blob side of the shadow compare, or (b) clean the
+> working blob too (write the dropped blob to `app_state`; the Step-1 raw backup stays the rollback).
+> Confirm the only shadow delta is the 8 known drops; any OTHER delta is real drift → stop.
 
 **Step 6 — Deploy STORAGE_MODE=relational.** Reads/writes tables; blob kept as fallback one window.
 → report app health + key paths (quote gen, an admin write) exercised live. **[STOP]**
