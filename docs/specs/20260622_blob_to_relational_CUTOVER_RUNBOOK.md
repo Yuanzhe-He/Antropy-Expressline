@@ -1,10 +1,34 @@
-# Production cutover runbook — `app_state` blob → relational (UNEXECUTED)
+# Production cutover runbook — `app_state` blob → relational (STEPS 1–4 EXECUTED; 5–8 PENDING)
 
-> Status: **PLAN ONLY — nothing here has run against production.** Every step is a
-> HARD STOP: do it, report with verification output, then wait for Chandler's
-> explicit "go" on the next step. Source: `docs/specs/CODEX_PROMPT_blob_to_relational_FULL.md`
-> §5 + the prod-cutover prompt. Local 2a→2b is verified on sandbox
-> `fnczokogchlhutyskbdw` (parity=0, integration 7/7, concurrency 5/5, test:all 14/14).
+> Status: **Steps 1–4 (DB build + populate + verify) EXECUTED against prod on 2026-06-24;
+> Steps 5–8 (app deploy: dual/relational/retire) NOT executed — they await PR merge + the
+> 2b route swap and a separate "go".** Every step is a HARD STOP: do it, report with
+> verification output, then wait for Chandler's explicit "go" on the next step.
+> Source: `docs/specs/CODEX_PROMPT_blob_to_relational_FULL.md` §5 + the prod-cutover prompt.
+> Local 2a→2b verified on sandbox `fnczokogchlhutyskbdw` (parity=0, integration 9/9,
+> concurrency 5/5, test:all 14/14).
+>
+> **EXECUTION RECORD — Steps 1–4 on prod `polxyashvxbzdkkmxuox` (2026-06-24, app untouched):**
+> Harness `scripts/relational/prod-{guard,env,00-backup,01-role-and-isolation,02-create-tables,03-migrate-forward,04-parity-reverse,99-final-verify}.js`
+> (prod wrapper of the sandbox-verified modules; only the connection target + guard differ).
+> - **Backup** (Phase 0): `backups/prod-cutover-2026-06-24T03-34-46-938Z/` — app_state(2,
+>   sha 10a690a2…), audit_logs(0), quote_snapshots(5, sha 1140534e…). Gitignored.
+> - **Restricted role + isolation** (Phase 1): `expressline_migrator` created; SELECT-only on
+>   existing app_state/audit_logs/quote_snapshots (stricter than this doc's `grant all` — the
+>   role CANNOT modify app_state), USAGE+CREATE on `expressline` (owns the new 18 tables). Proof:
+>   migrator SELECT on joyas_asset_{products,references,tags} + punas_{appointment_services,
+>   appointments,balance_adjustments} = ALL permission-denied (42501); positive control passed.
+>   Connects via the Supavisor pooler as `expressline_migrator.<ref>`. Creds in gitignored `.env.prod-migrator`.
+> - **18 tables** (Phase 2): created via the migrator, all migrator-owned, app_state row count unchanged.
+> - **Forward + DROP** (Phase 3): pinned the live blob (sha 0b7acb37…; carriers 21/yards 28/dests 44),
+>   Q5 PASS → 8 dangling refs dropped (cma-cgm×2/maersk×3/zim×2/msc×1 → yard-mzo-norte/sur,
+>   yard-lc-central) → Q4 post-drop PASS(0). Upserted; **app_state NOT written**.
+> - **Parity** (Phase 4): DATA diff=0 (× post-migrate AND post-idempotent-reupsert); reverse==normalize
+>   YES (verify-only, no rollback-key write); José edits intact (CMA doc 50 / KMTC ISD 15 / ZIM / COSCO /
+>   2 self-built yards 新场站 4-5 / 7 empty-shell carriers). Final: joyas/punas still isolated.
+>
+> Note vs the live blob: `carrier_local_charges`=45 here (sandbox dry-run had 46) — the live blob is
+> newer than `.prod-blob-snapshot.json`; José edited one charge since. Parity is against the pinned blob.
 
 ## ⚠ The target is a SHARED production project — three live businesses
 `polxyashvxbzdkkmxuox` ("Other Projects" / "Free Org") hosts, in ONE Supabase project:
