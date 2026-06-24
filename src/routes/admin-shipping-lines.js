@@ -733,27 +733,39 @@ function register(app, ctx) {
           : updated.demurrage.ruleSets?.[0]?.id || "";
     }
 
+    // Demurrage save is FAILURE-ISOLATED per rule set. Legacy carriers can hold
+    // rule sets whose stored day-sequence violates the sequential invariant
+    // (mid-position open-ended rule, or a billing tier that restarts day counting
+    // after a free tier). Before this guard, ANY such set made the whole handler
+    // redirect with an error BEFORE saveModule() ran, silently discarding every
+    // other edit on the page (local charges, terminal mix, conceptos, header).
+    // Now each set is validated on a structuredClone: an invalid set is left at
+    // its stored state untouched (no half-applied mutation — applySequentialRule-
+    // Updates mutates in place and bails mid-loop), recorded as skipped, and the
+    // rest of the page still persists.
+    const skippedDemurrage = [];
     updated.demurrage.freeDays.daysByGroup = {};
     for (const ruleSet of updated.demurrage.ruleSets || []) {
       ruleSet.name =
         req.body[`demurrage_set_${ruleSet.id}_name`] ||
         ruleSet.name ||
         ruleSet.id;
-      const rules = ruleSet.rules || [];
+      const storedRules = ruleSet.rules || [];
+      const draftRules = structuredClone(storedRules);
       const updateResult = applySequentialRuleUpdates({
-        rules,
+        rules: draftRules,
         body: req.body,
         getPrefix: (rule) => `rule_set_${ruleSet.id}_${rule.id}`,
         t: req.t,
       });
+      // Commit the validated draft only on success; on failure keep the stored
+      // rules byte-for-byte (draftRules is discarded, so no partial update leaks).
+      const rules = updateResult.ok ? draftRules : storedRules;
       if (!updateResult.ok) {
-        return redirectWithFlash(
-          req,
-          res,
-          "error",
-          updateResult.message,
-          `/admin/${module.key}/shipping-lines/${updated.id}`
-        );
+        skippedDemurrage.push({
+          name: ruleSet.name,
+          motivo: updateResult.message,
+        });
       }
 
       ruleSet.rules = rules;
@@ -786,6 +798,25 @@ function register(app, ctx) {
     }
 
     await saveModule("handover", shippingData);
+    if (skippedDemurrage.length) {
+      // Everything else persisted; the operator gets a named, actionable warning
+      // anchored to the rule sets that need their day-sequence fixed.
+      const sets = skippedDemurrage.map((entry) => entry.name).join(", ");
+      const motivos = [
+        ...new Set(skippedDemurrage.map((entry) => entry.motivo)),
+      ].join(" ");
+      return redirectWithFlash(
+        req,
+        res,
+        "success",
+        req.t("admin.lineSavedExceptDemurrage", {
+          name: updated.name,
+          sets,
+          motivos,
+        }),
+        `/admin/${module.key}/shipping-lines/${updated.id}`
+      );
+    }
     return redirectWithFlash(
       req,
       res,
