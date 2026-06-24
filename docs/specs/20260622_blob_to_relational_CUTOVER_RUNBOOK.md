@@ -17,11 +17,23 @@
 > - **Dual + shadow** (Phase 4): `STORAGE_MODE=dual` (deploy `6b8d0381`); re-aligned (re-pin live blob + re-migrate); shadow via the store facade `blob(post-drop) == relational` = the 8 known drops, nothing else. NB: the static pin-vs-tables parity is unsuitable under live FX writes (it reverts the tables' FX to the pin); the **facade shadow** is the correct gate.
 > - **Relational** (Phase 5): `STORAGE_MODE=relational` (deploy `2d624a6e`, ● Online). Live read smoke from TABLES (carriers render), relational-facade José spot-checks all correct (cmaDocFee=50/kmtcIsd=15/ZIM/COSCO/2 self-built yards/7 shells). joyas/punas still isolated.
 >
-> **ROLLBACK (relational → blob, lossless):** the blob is frozen, so do NOT just set
-> `STORAGE_MODE=blob` (loses relational-era edits). Instead: ① reverse-migrate tables→blob
-> (write mode, admin creds — `reverse==normalize` verified) to write back any relational-era
-> edits, then ② `STORAGE_MODE=blob`. Anchors kept: `app_state` blob + `backups/prod-cutover-…/`
-> + `.prod-migration-pin.json`.
+> **ROLLBACK (relational → blob, lossless) — EXACT COMMANDS (verified scratch-key 2026-06-24):**
+> The blob is frozen, so do NOT just set `STORAGE_MODE=blob` (loses relational-era edits).
+> The reverse WRITE path is `scripts/relational/prod-reverse-to-blob.js` (postgres/admin creds —
+> the only role that can write `app_state`). Lossless round-trip (decompose(rebuilt)==tables,
+> normalize(assemble(decompose(rebuilt)))==rebuilt, José spot-checks) was proven on the live
+> tables writing ONLY the scratch key `shipping-data-rollback-test` (live `shipping-data` revision
+> unchanged). To actually roll back:
+> ```bash
+> # ① write the CURRENT tables (incl. relational-era edits) back into the live shipping-data blob:
+> node scripts/relational/prod-reverse-to-blob.js --apply --i-understand-this-overwrites-the-live-blob
+> # ② flip the app back to the blob path:
+> railway variables --set STORAGE_MODE=blob
+> ```
+> (Without `--apply` the script writes only the scratch key and proves the round-trip — safe to
+> re-run anytime as a rollback drill.) The deeper anchor stays the Phase-0 raw backup
+> `backups/prod-cutover-…/app_state.json` (pre-cutover blob, before any of this) +
+> `.prod-migration-pin.json`. Anchors are gitignored and untouched.
 >
 > **EXECUTION RECORD — Steps 1–4 on prod `polxyashvxbzdkkmxuox` (2026-06-24, app untouched):**
 > Harness `scripts/relational/prod-{guard,env,00-backup,01-role-and-isolation,02-create-tables,03-migrate-forward,04-parity-reverse,99-final-verify}.js`
