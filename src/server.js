@@ -8,6 +8,7 @@ const session = require("express-session");
 const path = require("node:path");
 
 const usageGuard = require("./lib/usage-guard");
+const db = require("./lib/db");
 const { startExchangeRateScheduler } = require("./lib/exchange-rate-scheduler");
 const { attachUser, requireAuth } = require("./middleware/auth");
 const { languageMiddleware } = require("./middleware/i18n");
@@ -100,6 +101,23 @@ if (require.main === module) {
     console.log(
       `shipping-data read cache TTL: ${Math.round(ttlMs / 1000)}s | ${usageGuard.describeConfig()}`
     );
+    // Startup sanity: in DB mode, if the relational tables are populated but STORAGE_MODE
+    // is not relational, the app silently reads the (possibly frozen) blob instead of the
+    // tables — warn loudly. Non-fatal.
+    db.relationalTablesPopulated()
+      .then((tablesPopulated) => {
+        const warning = db.storageModeStartupWarning({
+          usingDb: db.shouldUseDatabase(),
+          storageMode: process.env.STORAGE_MODE,
+          tablesPopulated,
+        });
+        if (warning) {
+          console.warn(warning);
+        }
+      })
+      .catch((error) =>
+        console.warn(`[startup] storage-mode sanity check skipped: ${error.message}`)
+      );
   });
   startExchangeRateScheduler();
 }
