@@ -15,7 +15,8 @@
     "start": "node src/server.js",
     "templates:excel": "python3 scripts/generate_bulk_upload_templates.py",
     "test": "node scripts/smoke-test.js",
-    "test:quote": "node scripts/quote-test.js"
+    "test:quote": "node scripts/quote-test.js",
+    "test:all": "node scripts/run-all-tests.js"
   },
   "dependencies": {
     "ejs": "^3.1.10",

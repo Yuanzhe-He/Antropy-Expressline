@@ -22,3 +22,6 @@ Thumbs.db
 docs/reference/quote-preview.pdf
 # r3 prod backups (full live-data snapshots; rollback anchors, kept local)
 backups/
+.env.sandbox
+.env.sandbox.pw
+.prod-blob-snapshot.json

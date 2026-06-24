@@ -7,7 +7,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const store = require("../src/lib/store.js");
+const store = require("../src/lib/store");
 
 const raw = JSON.parse(
   fs.readFileSync(path.join(__dirname, "..", "data", "shipping-lines.json"), "utf8")

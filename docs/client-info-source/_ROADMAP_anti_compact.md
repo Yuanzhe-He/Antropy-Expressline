@@ -8,7 +8,33 @@
 ## 定位区（compact 后先读这块）
 ═══════════════════════════════════════════
 
-**【最新 r27，2026-06-21】合并 PR#17 部署验证 + 从源头定位外部 poller(F1)。分支 `feature/stop-external-poller`（从 main=da81714 切）。待开 PR。**
+**【最新 r35，2026-06-22】架构重构收尾 Phase 3→5（一口气做完，不分批停）。分支 `feature/refactor-godfiles`（接 Phase 0-2）。行为零变化，纯搬移。一条分支顺序 commit，跑完全部交一个 PR。**
+- **不变量（每个 commit 后必查）**：① `test:all` 全绿；② get/post/put/delete 路由总数（server.js + src/routes/*.js）= **67**（恒定）；③ server.js `app.use` = 8；④ quote-test 9/9（报价精确输出 diff=0）；⑤ `node -e "require('./src/server')"` load OK。任一不过 → 修到过或回滚该 commit。
+- **测试环境=Option A**：JSON-mode in-process（STORAGE_DRIVER=json + createApp + 真 HTTP + 隔离 temp DATA_DIR）。零生产接触、零 DB 改动。OSRM 经 global.fetch mock 做 hermetic。
+- **lib 模块归属（helper 下沉）**：`lib/rule-engine.js`（buildRuleId/cloneRateConfig/appendProgressiveRule/resequenceRules/removeProgressiveRule/unassignStorageRuleSetAssignments/applySequentialRuleUpdates + ensureArray/uniqueIds/parseWholeNumber/parseNumber-pass）；`lib/customs-rules.js`（find/buildZeroRatesByContainer/buildDefaultCustomsStorageRules/buildCustomsStorageRuleSetDraft/findAssignedStorageRuleSet/getLineContainerAssignmentKey/getAssignedStorageRuleSetId/syncTerminalStorageRulesByContainer/buildCustomsTerminalDraft/buildCustomsPortDraft/countCustomsContainerReferences/buildCustomsYardDraft/parsePercentRatio/formatPercentValue/formatTerminalMixSummary/buildTerminalMixDraft/applyRateCellUpdates/upsertRateCell）；`lib/handover-forms.js`（inferLocalChargeCurrency/buildLocalChargeDraft/slugifyLineId/buildShippingLineDraft/buildSimpleShippingLineMirror/buildHandoverFormData/buildDefaultContainerRows/buildTaxOverrides/buildTaxRatePresets/DEFAULT_NEW_LINE_CONTAINER_GROUPS）。
+- **route 模块**：admin-inland（含 markRouteStale/refreshOneInlandRoute 闭包，16 路由）→ admin-customs（20 路由，含 removeCustomsStorageAssignment）→ admin-handover + admin-shipping-lines（12 路由）→ admin-quote/settings/container-types（settings+notes+container-types）。复刻 workbench 的 `register(app, ctx)` ctx 模式。
+- **关键事实**：所有 helper 都是 server.js 模块级函数（col-0，createApp 之前定义），唯 markRouteStale(1887)/refreshOneInlandRoute(1895)/removeCustomsStorageAssignment(3185) 是 createApp 内闭包（随 inland/customs route 模块走）。quote 备注库 = `POST /admin/:moduleKey/settings` 的 quote 分支（无独立 notes 路由）。bulk customs save 早返坑：open-ended 规则 `_end` 未提交 → parseWholeNumber(undefined,null)=0 → invalidRuleRange（真实表单提交所有 `_end`）。
+- **进度（全部完成，13 commit，test:all 全程 14/14 绿，quote-test 9/9 diff=0，路由计数恒 67）**：
+  - **Phase 3a（abdfef5）**：新增 `scripts/audit-admin-deep-test.js`（16 子测试，OSRM hermetic mock），admin 写路由全覆盖。test:all 13→14/14 = 新基线。
+  - **Phase 3b helper 下沉**：`lib/rule-engine.js`（0cf09e6）、`lib/customs-rules.js`（8edcd62）、`lib/handover-forms.js`（e50ceff）。
+  - **Phase 3b route 抽取**：`routes/admin-inland.js`（7486b3a，含 markRouteStale/refreshOneInlandRoute）、`admin-customs.js`（3034091，含 removeCustomsStorageAssignment）、`admin-shipping-lines.js`（fc4a612）、`admin-handover.js`（126dbff，container-types）、`admin-settings.js`（c6d2238，/admin+settings+quote notes）。
+  - **Phase 3b/5 view 层 + createApp 收尾**：`lib/views.js`（2b4b1f2，38 view/form-data/render helper）、`routes/core.js` + 统一 ctx + 删冗余 import（656b600）。**server.js 4707→107 行，纯 wire-up。**
+  - **Phase 4 store 拆（2d9333a）**：`lib/store/{shared,normalize-handover/customs/inland/quote,normalize-shipping-data,index}.js`（7 文件，单向 shared←模块←shipping-data←index，对外 API 不变；shared.js 为打破 handover↔customs 环额外加）。修了 bundledDataDir 深度 + audit-contento require。
+  - **Phase 5 文档（本 commit）**：`docs/ARCHITECTURE.md` 加「模块边界」节 + 本回写。
+  - 终态：server.js 107 行；store.js→6+1 模块；routes/ 9 模块；lib/ +4 模块（rule-engine/customs-rules/handover-forms/views）。
+  - **诚实**：纯代码结构、行为零变化、零生产/零 DB 改动；**解耦不降 egress**（数据层才降）；blob→关系表迁移是独立下一任务。详见各 commit + 待开 PR。
+
+**【r34，2026-06-22】代码结构重构：server.js/store.js god-file 拆分（Phase 0-2 完成）。分支 `feature/refactor-godfiles`（从 main=58cd443 切）。行为零变化，纯搬移。已接 Phase 3（r35）。**
+- **测试环境=Option A（Chandler 选）**：本机无 Docker/Postgres，且代码库测试本就跑 **JSON-mode in-process（createApp+HTTP）**——纯代码搬移用它验证最忠实、零生产风险（本地 Postgres 对纯搬移无意义，测试强制 JSON）。全程零生产接触/零 DB 改动。
+- **Phase 0（f90a4fe）**：`npm run test:all` 运行器 + `audit-admin-routes-test.js`（route 级 CRUD，隔离 temp DATA_DIR，填 ~47 未测 admin 路由）→ 基线 **13/13 绿**。"没绿基线不准动 server.js"。
+- **Phase 1（d288ec8）**：`middleware/{auth,i18n,locals}` + `routes/{health,exchange-rates}`，**中间件顺序原样保留**，requireAuth 重 import 守 61 路由。路由计数守恒。
+- **Phase 2（5013c76）**：`routes/workbench.js`（5 workbench 路由逐字节搬移，`register(app,ctx)`），quote-test 9/9 断言精确报价=行为 diff 检查。**server.js 4707→~4150 行。**
+- **方法**：纯搬移+改 import，业务逻辑不动；`ctx`=createApp 组装一次的 helper 集传 routes 模块；每阶段 test:all 全绿+路由计数守恒+load OK；大块删除用 node splice（先 assert 边界）。
+- **⏳ Phase 3-4 下一增量**：Phase 3=admin 路由按模块拆（~60 路由，含 markRouteStale 闭包，部分 sub-route 测试薄）+ helper 下沉 lib/；Phase 4=store.js→lib/store/*（接口不变）。**最大最纠缠，留专注 pass 守"行为零变化"，不 end-of-turn 赶工**；Phase 0 测试网已就位使其安全。
+- **诚实**：代码解耦收益=可维护性/改动安全，**不降 egress**（egress 是数据层 blob→表 收益）。详见 `00z9_chandler_log_round34.md`。
+- 注：架构方案/blob→relational/health-check 三份 spec 在 **PR#21（未合并）**，不在本 branch；本轮按其 §B/C/D 执行。
+
+**【r27，2026-06-21】合并 PR#17 部署验证 + 从源头定位外部 poller(F1)。分支 `feature/stop-external-poller`（从 main=da81714 切）。待开 PR。**
 - **PR#17 已合并部署 main=da81714，生产实测**：`/healthz`→200、`shippingCacheTtlMs:3600000`(1h TTL ✓)、`usageGuard{reads:1,writes:0,triggeredToday:false}`(缓存吸收一切)；egress 探针读~1/min；**数据完好 yards=28 / shippingLines=21**。egress 已 ~1.8GB/天，Supabase 不再被烧。
 - **F1 定位外部 poller**：①**前端确认无轮询**（grep public/+views/ 唯一 POST refresh 是 admin-settings.ejs:295 手动按钮；app.js AJAX 只管计算器；无 setInterval）→ 源在仓库外。②Railway log 取不到（CLI OAuth 失效，login=user-only）→ 改 **in-app 抓取**：新增 `src/lib/refresh-monitor.js`（纯内存）记录 refresh 路由来源指纹(IP/UA/Referer/时间，**绝不记 cookie/secret**)，经 `GET /healthz.refreshRoute` 暴露(CC 可 curl 读)。③**路由 min-interval 短路闸**(默认 5s，env `REFRESH_ROUTE_MIN_INTERVAL_MS`)：hammered 时跳过 loadShippingData 只 redirect(手动按钮/scheduler 不受影响)。
 - **来源结果（PR#18 已合并部署 main=455c83c，实测 ~07:15-07:25Z）**：**poller 已自行停止，当前不活跃**。连续观测 ~5 分钟 `/healthz.refreshRoute.totalHitsToday=0`（每 2s 应有 ~150 次→实测 0）、usageGuard reads:1 writes:0、pg_stat 读 ~1/min(基线)。推理：PR#16 缓存只让 refresh hit 变便宜、不阻止 HTTP 到达，故 0 hit = poller 本身今天某时自行停了。抓不到指纹(不活跃)；refresh-monitor 已**永久部署为陷阱**——poller 回来即在 `/healthz.refreshRoute.sources` 抓到 IP/UA/Referer + 路由闸封顶。
@@ -175,3 +201,37 @@
 - 2026-06-13 陆运go-live(main 6d107b9)，300费率+43路线
 - 2026-06-11 陆运routes map从0实现PR#1
 - 更早：invoice pipeline、quote PDF系统建成
+
+═══════════════════════════════════════════
+## blob→relational 迁移（2026-06-22 起，按 CODEX_PROMPT_blob_to_relational_FULL.md）
+═══════════════════════════════════════════
+- 权威 schema：docs/specs/20260621_blob_to_relational_redesign.md（v2，已批：Q1/Q2/Q3 留 JSONB/常量、Q4 加 carriers.customs_note、Q5 numeric(14,4)+{MXN,USD}）。
+- 沙盒 DB（隔离做死）：**专用 Supabase 项目 ref=fnczokogchlhutyskbdw**（org hjqdxxkwdrskskyohhrf，us-east-1，名 expressline-mig-sandbox）。连接串在 **gitignored .env.sandbox**（含 SANDBOX_REF + FORBIDDEN_REFS）。密码在 .env.sandbox.pw（gitignored）。
+- 🔴 禁碰 project ref：polxyashvxbzdkkmxuox（生产，含 expressline+public.joyas_*+public.punas_* 三个 app）、somfyvqhnffosvwmdnid（utopiai）。隔离在 **project 级**（schema 名 expressline 生产也有，不算隔离）。
+- 守卫：scripts/sandbox-guard.js（assertSandbox：DATABASE_URL ref 必须==沙盒且∉禁集，fail-closed）。所有 relational 脚本经 scripts/relational/sandbox-env.js connectSandbox() 取 pool（先守卫）。
+- 进度（commit）：
+  - 747633b 守卫 + .gitignore。
+  - a474232 **2a-1 schema DDL → 沙盒 18 表（幂等）**：scripts/relational/{sandbox-env,schema,migrate-schema}.js。`node scripts/relational/migrate-schema.js` 重建。
+- 待做（续，不停到生产 cutover）：2a-2 正向 blob→表(+Q4 orphan/Q5 币种闸) · 2a-3 反向 表→blob(reverse==normalize) · 2a-4 facade STORAGE_MODE=blob|dual|relational(API 不变) · 2a-5 parity 闸(行数+字段 diff=0) · 2a-6 test:all+quote relational&dual 绿 → commit 2a · 2b per-entity 写+并发测试 → commit 2b · 停在生产 cutover 给 Chandler runbook(不执行)。
+- resume：读本块 + git log + TodoWrite；load .env.sandbox；只打沙盒；绝不 prod。
+
+### blob→relational 进度更新（2026-06-22 续）
+- **2a-2/2a-3/2a-5 完成（commit e1fe72b）**：沙盒 fnczokogchlhutyskbdw 上 forward(blob→18表)+Q4/Q5闸+reverse(表→blob)+parity **DATA diff=0**、forward 幂等、reverse==normalize。
+- 核心文件：src/lib/store/relational-map.js（纯 decompose/assemble，round-trip 契约 normalize(assemble(decompose(b)))==normalize(b)，canonical 比较因 normalizer spread ...shippingLine 致 key 序无关）；scripts/relational/{schema,repo,gates,seed-sandbox,migrate-forward,migrate-reverse,parity}.js。
+- 跑法：`node scripts/relational/migrate-schema.js --reset && node scripts/relational/seed-sandbox.js && node scripts/relational/migrate-forward.js && node scripts/relational/parity.js`。
+- **待做**：2a-4 facade STORAGE_MODE=blob|dual|relational（把 repo/DDL 合并进 src/lib/store/relational-repo.js 供 sandbox/facade/cutover 同一套；db.js 加 relational 读写；index.js 按 STORAGE_MODE 分支，public API 不变）→ 2a-6 relational 集成测试+test:all 绿 → commit 2a → 2b per-entity 写+并发 → commit 2b → 停在生产 cutover。
+
+### blob→relational 进度更新 2（2026-06-22/23 续）
+- **2a 全完成**（commits e1fe72b, 660c022）：forward+gates+reverse+parity=0 + facade STORAGE_MODE=blob|dual|relational（blob 行为逐字节不变）+ relational 集成测试 7/7 + test:all 14/14。共享模块 src/lib/store/relational-repo.js（DDL+I/O，sandbox/facade/cutover 同一套），db.js 加 relational 读写，index.js 按 STORAGE_MODE 分支。
+- **2b core 完成**（commit f21835e）：per-entity 写 saveCarrier/saveCustomsYard/saveInlandRateEntry（db.js *Entity + index.js facade wrapper，relational 定点写、blob/json 回落整写）+ 并发 no-clobber 证明 5/5（scripts/relational/concurrency-test.js：整写会 clobber、per-entity 不会）。
+- **cutover runbook 已出**（未执行）：docs/specs/20260622_blob_to_relational_CUTOVER_RUNBOOK.md（§2 prod 受限 role 隔离证明 + 8 步硬停 + Q4/Q5/parity 闸 + 回滚）。
+- **2b 剩余（cutover 前）**：把 ~60 admin 写路由从 saveShippingData(整坨) 换成 per-entity facade 方法（wrapper 在 blob/json 回落整写，可分模块逐步、每步 test:all 绿）；PR 评审合并；prod 建 expressline-only 受限 role。
+- 测试跑法：`node scripts/relational/integration-test.js` + `node scripts/relational/concurrency-test.js`（打沙盒，先 assertSandbox）。
+
+### blob→relational 进度更新 3（2026-06-23）— 2b 路由 swap 完成
+- **2b 全完成**：所有 admin 写路由从 saveShippingData(整块) 换成 per-module/per-entity 写。
+  - 新原语 saveModule(moduleKey, shippingData)（db.js saveModuleTables + MODULE_TABLES + syncTable：relational 只写该 module 的表、upsert+delete-absent、FK-safe；blob/json 回落整写）。
+  - 路由 swap（一模块一 commit）：admin-handover→saveModule('handover')（dddf36c）/ admin-settings→quote+module.key（d397134）/ admin-inland→'inland' 15 处（aabe88a）/ admin-shipping-lines→'handover' 11 处（fb98f70，customs 镜像 derived + carrier-delete cascade yard_carriers）/ admin-customs→'customs' 16 处（e044570）/ workbench→'quote' 2 处（37e0af7）。exchange-rates.js 已用 saveExchangeRates（per-entity，未改）。
+  - 验证：每模块 test:all 14/14（json 行为不变）；relational integration 9/9（含 saveModule isolation）；concurrency 5/5（per-entity no-clobber）。
+- **granularity 说明**：module-scoped targeted write（写被改 module 的表，不碰其它 module + exchange_rates）→ 根治跨 module clobber + FX-vs-admin clobber；leaf 方法 saveCarrier/saveCustomsYard/saveInlandRateEntry 可用于单实体更细粒度。
+- **状态**：本地 2a+2b 全做完、全绿、全在沙盒 fnczokogchlhutyskbdw 验。停在生产 cutover（runbook=docs/specs/20260622_blob_to_relational_CUTOVER_RUNBOOK.md，未执行）。剩余 cutover 前置：PR 评审合并 + prod expressline-only 受限 role。沙盒保留不删。

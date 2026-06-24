@@ -1,6 +1,8 @@
 const { Pool } = require("pg");
 const { loadLocalEnv } = require("./env");
 const usageGuard = require("./usage-guard");
+const relRepo = require("./store/relational-repo");
+const { decompose, assemble, TABLE_META } = require("./store/relational-map");
 
 loadLocalEnv();
 
@@ -217,22 +219,256 @@ async function listQuoteSnapshots(limit = 50) {
   return rows;
 }
 
+// --- relational storage (STORAGE_MODE=relational|dual) ----------------------
+// Shares the same pool + schema as the blob path; project-level isolation is
+// orthogonal. ensureRelationalReady() creates the entity tables once (idempotent),
+// the analog of ensureDatabase() for the blob path.
+let relationalReady = false;
+
+async function ensureRelationalReady() {
+  if (relationalReady) {
+    return;
+  }
+  const schema = getDatabaseSchema();
+  const client = await getPool().connect();
+  try {
+    await client.query("begin");
+    await relRepo.ensureRelationalSchema(client, schema);
+    await client.query("commit");
+    relationalReady = true;
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+// Read all entity tables and assemble the shipping-data shape (pre-normalize, to
+// match getAppState's raw payload). Returns null when the tables are empty
+// (fresh store) so the caller seeds, mirroring getAppState returning null.
+async function getShippingTablesAssembled() {
+  await ensureRelationalReady();
+  // DB-penetration read (the read cache lives a layer up in the store facade).
+  usageGuard.recordRead();
+  const tables = await relRepo.readAllTables(getPool(), getDatabaseSchema());
+  const empty = Object.values(tables).every((rows) => rows.length === 0);
+  return empty ? null : assemble(tables);
+}
+
+// Full overwrite of all entity tables from a normalized blob (2a behavior;
+// per-entity targeted writes arrive in 2b). One transaction.
+async function saveShippingTables(normalized) {
+  await ensureRelationalReady();
+  usageGuard.recordWrite();
+  const schema = getDatabaseSchema();
+  const tables = decompose(normalized);
+  const client = await getPool().connect();
+  try {
+    await client.query("begin");
+    await relRepo.upsertAllTables(client, schema, tables);
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+// Targeted write of ONLY the exchange_rates singleton row (per-entity FX write).
+async function saveExchangeRatesTable(exchangeRates) {
+  await ensureRelationalReady();
+  usageGuard.recordWrite();
+  const schema = getDatabaseSchema();
+  const erRow = decompose({ exchangeRates, modules: {} }).exchange_rates[0];
+  const client = await getPool().connect();
+  try {
+    await relRepo.upsertRows(client, schema, "exchange_rates", [erRow]);
+  } finally {
+    client.release();
+  }
+}
+
+// --- per-entity targeted writes (2b: root-fix concurrent clobber) -----------
+// Each writes ONLY its own entity's row(s) in one transaction, so a write to
+// entity A can never clobber a concurrent write to entity B (the full-blob /
+// full-tables overwrite hazard). sort_order is preserved from the existing row
+// (a content edit must not reorder the entity).
+async function withTxn(fn) {
+  await ensureRelationalReady();
+  usageGuard.recordWrite();
+  const client = await getPool().connect();
+  try {
+    await client.query("begin");
+    const result = await fn(client, getDatabaseSchema());
+    await client.query("commit");
+    return result;
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function preserveSortOrder(client, schema, table, id, row) {
+  const ex = await client.query(
+    `select sort_order from ${relRepo.q(schema)}.${relRepo.q(table)} where id = $1`,
+    [id]
+  );
+  if (ex.rows[0]) {
+    row.sort_order = ex.rows[0].sort_order;
+  }
+  return row;
+}
+
+// Upsert one carrier (carriers row + its carrier_local_charges, replaced atomically).
+async function saveCarrierEntity(carrier) {
+  const tables = decompose({
+    modules: { handover: { shippingLines: [carrier] }, customs: { shippingLines: [] } },
+  });
+  const row = tables.carriers[0];
+  return withTxn(async (client, schema) => {
+    // a carrier content edit must keep its customs_note unless explicitly changed
+    const ex = await client.query(
+      `select sort_order, customs_note from ${relRepo.q(schema)}.carriers where id = $1`,
+      [carrier.id]
+    );
+    if (ex.rows[0]) {
+      row.sort_order = ex.rows[0].sort_order;
+      if (carrier.customs_note === undefined) {
+        row.customs_note = ex.rows[0].customs_note;
+      }
+    }
+    await relRepo.upsertRows(client, schema, "carriers", [row]);
+    await client.query(
+      `delete from ${relRepo.q(schema)}.carrier_local_charges where carrier_id = $1`,
+      [carrier.id]
+    );
+    await relRepo.upsertRows(client, schema, "carrier_local_charges", tables.carrier_local_charges);
+  });
+}
+
+// Upsert one customs yard (customs_yards row + its charges + join rows, atomic).
+async function saveCustomsYardEntity(yard) {
+  const tables = decompose({ modules: { customs: { yards: [yard] } } });
+  const row = tables.customs_yards[0];
+  return withTxn(async (client, schema) => {
+    await preserveSortOrder(client, schema, "customs_yards", yard.id, row);
+    await relRepo.upsertRows(client, schema, "customs_yards", [row]);
+    for (const [table, fk] of [["yard_charges", "yard_id"], ["yard_ports", "yard_id"], ["yard_carriers", "yard_id"]]) {
+      await client.query(`delete from ${relRepo.q(schema)}.${relRepo.q(table)} where ${relRepo.q(fk)} = $1`, [yard.id]);
+      await relRepo.upsertRows(client, schema, table, tables[table]);
+    }
+  });
+}
+
+// Upsert one inland rate entry (single row).
+async function saveInlandRateEntryEntity(entry) {
+  const tables = decompose({ modules: { inland: { rateEntries: [entry] } } });
+  const row = tables.inland_rate_entries[0];
+  return withTxn(async (client, schema) => {
+    await preserveSortOrder(client, schema, "inland_rate_entries", entry.id, row);
+    await relRepo.upsertRows(client, schema, "inland_rate_entries", [row]);
+  });
+}
+
+// Tables OWNED by each business module, parent-before-child (FK-safe). carriers
+// live under handover (customs only mirrors them, derived on read); exchange_rates
+// and module_settings.__app__ are not module-owned (untouched by a module save).
+const MODULE_TABLES = {
+  handover: ["container_types", "carriers", "carrier_local_charges"],
+  customs: [
+    "customs_ports",
+    "customs_terminals",
+    "terminal_charges",
+    "customs_yards",
+    "yard_charges",
+    "yard_ports",
+    "yard_carriers",
+  ],
+  inland: ["inland_origins", "inland_destinations", "inland_rate_entries", "inland_route_cache"],
+  quote: ["quote_drafts", "quote_notes"],
+};
+
+// Sync one table to exactly `rows`: delete rows whose PK-tuple isn't in the new
+// set (cascades prune their children), then upsert the new set. Works for single
+// and composite PKs.
+async function syncTable(client, schema, table, rows) {
+  const pk = TABLE_META[table].pk;
+  if (rows.length === 0) {
+    await client.query(`delete from ${relRepo.q(schema)}.${relRepo.q(table)}`);
+  } else {
+    const tupleCols = pk.map(relRepo.q).join(", ");
+    const valuesList = rows
+      .map((_, i) => `(${pk.map((_, j) => `$${i * pk.length + j + 1}`).join(", ")})`)
+      .join(", ");
+    const params = rows.flatMap((r) => pk.map((c) => r[c]));
+    await client.query(
+      `delete from ${relRepo.q(schema)}.${relRepo.q(table)} where (${tupleCols}) not in (${valuesList})`,
+      params
+    );
+  }
+  await relRepo.upsertRows(client, schema, table, rows);
+}
+
+// Module-scoped targeted write: persist ONLY the given module's tables from a
+// normalized document (other modules + exchange_rates untouched → no cross-module
+// clobber). One transaction.
+async function saveModuleTables(moduleKey, normalized) {
+  const owned = MODULE_TABLES[moduleKey];
+  if (!owned) {
+    throw new Error(`saveModuleTables: unknown module ${moduleKey}`);
+  }
+  await ensureRelationalReady();
+  usageGuard.recordWrite();
+  const schema = getDatabaseSchema();
+  const tables = decompose(normalized);
+  const settingsRow = tables.module_settings.find((r) => r.module_key === moduleKey);
+  const client = await getPool().connect();
+  try {
+    await client.query("begin");
+    for (const table of owned) {
+      await syncTable(client, schema, table, tables[table]);
+    }
+    if (settingsRow) {
+      await relRepo.upsertRows(client, schema, "module_settings", [settingsRow]);
+    }
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function closeDatabase() {
   if (pool) {
     await pool.end();
     pool = null;
     schemaReady = false;
+    relationalReady = false;
   }
 }
 
 module.exports = {
   closeDatabase,
+  ensureRelationalReady,
   getAppState,
   getDatabaseSchema,
+  getShippingTablesAssembled,
   insertQuoteSnapshot,
   listQuoteSnapshots,
   migrateDatabase,
   patchAppStateField,
   saveAppState,
+  saveCarrierEntity,
+  saveCustomsYardEntity,
+  saveExchangeRatesTable,
+  saveInlandRateEntryEntity,
+  saveModuleTables,
+  saveShippingTables,
   shouldUseDatabase,
 };
