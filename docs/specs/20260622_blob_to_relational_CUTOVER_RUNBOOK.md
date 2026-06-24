@@ -1,12 +1,27 @@
-# Production cutover runbook — `app_state` blob → relational (STEPS 1–4 EXECUTED; 5–8 PENDING)
+# Production cutover runbook — `app_state` blob → relational (STEPS 1–6 EXECUTED; 7–8 PENDING)
 
-> Status: **Steps 1–4 (DB build + populate + verify) EXECUTED against prod on 2026-06-24;
-> Steps 5–8 (app deploy: dual/relational/retire) NOT executed — they await PR merge + the
-> 2b route swap and a separate "go".** Every step is a HARD STOP: do it, report with
-> verification output, then wait for Chandler's explicit "go" on the next step.
-> Source: `docs/specs/CODEX_PROMPT_blob_to_relational_FULL.md` §5 + the prod-cutover prompt.
-> Local 2a→2b verified on sandbox `fnczokogchlhutyskbdw` (parity=0, integration 9/9,
-> concurrency 5/5, test:all 14/14).
+> Status: **LIVE IN RELATIONAL. Steps 1–6 EXECUTED against prod on 2026-06-24.** The app
+> (Antropy-Expressline, Railway project `courteous-courage`) now reads+writes the entity
+> tables (`STORAGE_MODE=relational`); the `app_state` blob is **frozen** as the rollback
+> anchor (NOT retired — Step 8 pending). Step 7 (per-entity targeted writes) is implicitly
+> active in relational mode. Source: `docs/specs/CODEX_PROMPT_blob_to_relational_FULL.md` §5
+> + the prod-cutover prompts. Local 2a→2b verified on sandbox `fnczokogchlhutyskbdw`
+> (parity=0, integration 9/9, concurrency 5/5, test:all 14/14).
+>
+> **EXECUTION RECORD — Steps 5–6 (app deploy → dual → relational) on 2026-06-24:**
+> Harness `scripts/relational/prod-{A-grant-app-role,fix-ownership,D-shadow,E-verify}.js`.
+> - **Railway auth** (Phase 0): linked service Antropy-Expressline, prod ref polxyashvxbzdkkmxuox, role postgres; STORAGE_MODE was unset/blob.
+> - **App-role grants** (Phase 1): granted postgres SELECT/INSERT/UPDATE/DELETE on the 18 tables (by owner migrator); proved per-table S+I+U+D+rollback.
+> - **Push + merge** (Phases 2-3): pushed the 25 relational commits → PR #22 (43 commits) → merged (merge commit `bb4930a8`); Railway deployed `08546f87`. Smoke green, STORAGE_MODE still blob, behavior unchanged.
+> - **Ownership fix** (pre-Phase 4): the app-as-postgres could not run `ensureRelationalSchema` (ALTER/CREATE INDEX are owner-only → "must be owner of table carriers"). Transferred all 18 tables' ownership migrator→postgres (re-granted migrator CRUD). REQUIRED before dual.
+> - **Dual + shadow** (Phase 4): `STORAGE_MODE=dual` (deploy `6b8d0381`); re-aligned (re-pin live blob + re-migrate); shadow via the store facade `blob(post-drop) == relational` = the 8 known drops, nothing else. NB: the static pin-vs-tables parity is unsuitable under live FX writes (it reverts the tables' FX to the pin); the **facade shadow** is the correct gate.
+> - **Relational** (Phase 5): `STORAGE_MODE=relational` (deploy `2d624a6e`, ● Online). Live read smoke from TABLES (carriers render), relational-facade José spot-checks all correct (cmaDocFee=50/kmtcIsd=15/ZIM/COSCO/2 self-built yards/7 shells). joyas/punas still isolated.
+>
+> **ROLLBACK (relational → blob, lossless):** the blob is frozen, so do NOT just set
+> `STORAGE_MODE=blob` (loses relational-era edits). Instead: ① reverse-migrate tables→blob
+> (write mode, admin creds — `reverse==normalize` verified) to write back any relational-era
+> edits, then ② `STORAGE_MODE=blob`. Anchors kept: `app_state` blob + `backups/prod-cutover-…/`
+> + `.prod-migration-pin.json`.
 >
 > **EXECUTION RECORD — Steps 1–4 on prod `polxyashvxbzdkkmxuox` (2026-06-24, app untouched):**
 > Harness `scripts/relational/prod-{guard,env,00-backup,01-role-and-isolation,02-create-tables,03-migrate-forward,04-parity-reverse,99-final-verify}.js`
