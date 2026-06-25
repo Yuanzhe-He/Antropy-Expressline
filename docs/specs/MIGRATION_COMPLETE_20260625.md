@@ -1,10 +1,11 @@
 # Migration COMPLETE — `app_state` blob → relational (Steps 1–8)
 
-Date: **2026-06-25**. Status: **DONE — prod live on relational; the frozen blob is retired (reversibly).**
+Date: **2026-06-25**. Status: **✅ MIGRATION 100% CLOSED** — prod live on relational; the frozen blob is
+retired (reversibly). **No code work remains**; only the optional/manual items in "Remaining items" below.
 Companion to [20260622_blob_to_relational_CUTOVER_RUNBOOK.md](20260622_blob_to_relational_CUTOVER_RUNBOOK.md) (full per-step execution records).
 
-## Final prod state (verified 2026-06-25, after PR #29 deploy `ef4f715f`)
-- **Railway**: project `courteous-courage`, service Antropy-Expressline, deploy `ef4f715f`, ● Online, `/healthz` 200.
+## Final prod state (verified 2026-06-25; last CODE change = PR #29, all later deploys are docs-only no-ops)
+- **Railway**: project `courteous-courage`, service Antropy-Expressline, ● Online, `/healthz` 200 (verified across deploys ef4f715f → 65c37f45).
 - **`STORAGE_MODE=relational`** — the 18 per-entity tables are the live read **and** write source.
 - Row counts stable at the cutover baseline (carriers 21, customs_yards 28, inland_destinations 44,
   inland_rate_entries 300, container_types 20, quote_notes 5, module_settings 5; **baseline drift NONE**).
@@ -63,5 +64,31 @@ re-seeding, so they are safe-but-obsolete:
 ## Sandbox cleanup
 The migration sandbox Supabase project `fnczokogchlhutyskbdw` (`expressline-mig-sandbox`) has served its purpose
 (2a→2b parity / integration 9/9 / concurrency 5/5 all proven there). It is now **safe to delete — Chandler's call;
-not done this round.** The local `supabase/.temp/linked-project.json` still points at it and should be gitignored,
-not committed.
+not done this round.** The local `supabase/.temp/` still points at it and is now **gitignored (PR #30)**, not committed.
+
+## Remaining items (none are bugs; none affect the running system)
+The migration itself is closed. Everything below is optional or non-code.
+
+**Deliberately parked (engineering, with triggers)** — detailed above:
+- (a) **Hard DROP of `shipping-data-retired-20260625`** — the ONLY irreversible step; a longer stability window, or never.
+- (b) **Step 7 — route-layer per-entity writes** — before scaling beyond a single app instance; the single-instance
+  deployment + write-through cache-invalidation discipline blocks the cross-edit clobber today.
+
+**Chandler manual decisions / follow-ups:**
+- **Sandbox deletion** — Supabase `fnczokogchlhutyskbdw` (`expressline-mig-sandbox`) is safe to delete (not done this round).
+- **Client docs tracking** — `docs/client-info-source/*` (chandler logs, jose meeting notes, CONTENTO pricing) and the
+  3.4MB `TARIFARIO 15.06.26.xlsx` were **intentionally left untracked** this round; whether to version-control them is
+  Chandler's call (repo read-access / ownership question).
+- **Business follow-up (José / Estefani)** — the legacy bad demurrage rule sets meant **WHAN HAI and OOCL quoted $0
+  demurrage** at every dwell day (billing tiers were unreachable — a revenue leak). Fixed + deployed (PR #25/#26,
+  2026-06-24). José/Estefani should be told: **historical quotes for those two carriers under-charged demurrage;
+  future quotes now include it** — a customer comparing an old quote to a new one will see the demurrage line appear.
+  Not a regression; the old $0 behavior was the bug.
+
+**Obsolete-but-safe cutover scripts** — listed above; left in the tree (now fail-loud via the PR #29 seed guard), not deleted.
+
+## Repo tracking status (2026-06-25, after PR #30)
+Everything that should be version-controlled now is: Step 8 tools + seed guard (PR #29); closeout records + project/spec
+docs + AI-workflow reports + agent rules (`AGENTS.md`/`CLAUDE.md`/`.ai/`/`.cursor/`) + tariff CSV (PR #30);
+`supabase/.temp/` gitignored. The ONLY untracked items left are the deliberately-deferred `docs/client-info-source/*`
+client docs + the 3.4MB xlsx (Chandler's decision). No other dev/project artifact is uncommitted.
