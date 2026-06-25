@@ -1,12 +1,44 @@
-# Production cutover runbook — `app_state` blob → relational (STEPS 1–6 EXECUTED; 7–8 PENDING)
+# Production cutover runbook — `app_state` blob → relational (STEPS 1–6 + 8 EXECUTED; 7 implicit)
 
 > Status: **LIVE IN RELATIONAL. Steps 1–6 EXECUTED against prod on 2026-06-24.** The app
 > (Antropy-Expressline, Railway project `courteous-courage`) now reads+writes the entity
-> tables (`STORAGE_MODE=relational`); the `app_state` blob is **frozen** as the rollback
-> anchor (NOT retired — Step 8 pending). Step 7 (per-entity targeted writes) is implicitly
-> active in relational mode. Source: `docs/specs/CODEX_PROMPT_blob_to_relational_FULL.md` §5
+> tables (`STORAGE_MODE=relational`); the `app_state` blob was **frozen** as the rollback
+> anchor and has now been **RETIRED (Step 8 — reversible rename to `shipping-data-retired-20260625`,
+> 2026-06-25; see the Step 8 execution record below)**. Step 7 (per-entity targeted writes) is
+> implicitly active in relational mode. Source: `docs/specs/CODEX_PROMPT_blob_to_relational_FULL.md` §5
 > + the prod-cutover prompts. Local 2a→2b verified on sandbox `fnczokogchlhutyskbdw`
 > (parity=0, integration 9/9, concurrency 5/5, test:all 14/14).
+>
+> **EXECUTION RECORD — Step 8 (retire frozen blob, REVERSIBLE rename) on 2026-06-25:**
+> Harness `scripts/relational/{app-state-inventory,export-app-state-row,retire-blob,cleanup-stray-shipping-data}.js`
+> (admin/postgres creds — the only role that can write `app_state`; the migrator is SELECT-only).
+> expressline-only; joyas/punas zero contact; relational table data unchanged (baseline drift NONE).
+> - **Inventory + orphan proof (A):** `expressline.app_state` held exactly 2 keys — `shipping-data`
+>   (rev 215132, ~1.27MB, frozen at the cutover moment 2026-06-24T05:31:46Z) and `users` (rev 1, auth).
+>   Code proof: in relational mode the app reads the entity TABLES; `shipping-data` is never read at
+>   runtime (only an empty-tables safety tripwire in `src/lib/store/index.js`) and never written
+>   (`saveShippingData`/`saveExchangeRates`/`saveModule`/`saveCarrier`/… all target tables). `users` stays.
+> - **Archive (B):** full row → gitignored `backups/app_state-shipping-data-retired-20260625.json`
+>   (payload sha256 `f91ce3d1…2c0c22`; file sha256 `85b85451…3ec988`). Second anchor = Phase-0
+>   `backups/prod-cutover-2026-06-24T03-34-46-938Z/app_state.json`.
+> - **Rollback-independence (C):** `prod-reverse-to-blob.js` (no `--apply`) rebuilt a lossless blob
+>   from the LIVE tables (row counts match, canonical round-trip equal, José spot-checks 21/28/50/15/…),
+>   writing only the scratch key — live `shipping-data` rev 215132 untouched.
+> - **Reversible rename (D):** `retire-blob.js --apply` renamed `shipping-data` →
+>   `shipping-data-retired-20260625` in one txn (rowCount=1, total keys unchanged=2, revision+bytes
+>   preserved). `--revert` restores the original name.
+> - **Verify (E):** `/healthz` 200 + STORAGE_MODE=relational + usage-guard no alert (reads/writes well
+>   under threshold) + logs clean; cold relational read with `shipping-data` absent returns correct José
+>   data; reversible carrier write-roundtrip landed+restored; FX still writing the `exchange_rates`
+>   table; badRuleSets=0 across all 21 carriers; row counts stable vs baseline; post-rename rollback
+>   drill PASS (rollback still rebuilds from tables with the blob retired — "safety net intact").
+> - **[SELF-CORRECTION]** the cutover-era `prod-write-roundtrip.js` flips `STORAGE_MODE=blob` and calls
+>   `getShippingData()` for an FX-freshness check; with `shipping-data` now absent that hit the seed
+>   branch and re-created a STRAY `shipping-data` (rev 1 = the bundled seed). Removed via
+>   `cleanup-stray-shipping-data.js --apply` after proving (rev=1 AND canonical payload == bundled seed)
+>   the real data was safe under the retired key. LESSON: once the blob key is retired, do NOT run any
+>   tool that calls `getShippingData()` in blob/dual mode — it re-seeds the key. End state = exactly
+>   `{shipping-data-retired-20260625, users}`.
 >
 > **EXECUTION RECORD — Steps 5–6 (app deploy → dual → relational) on 2026-06-24:**
 > Harness `scripts/relational/prod-{A-grant-app-role,fix-ownership,D-shadow,E-verify}.js`.
@@ -18,7 +50,11 @@
 > - **Relational** (Phase 5): `STORAGE_MODE=relational` (deploy `2d624a6e`, ● Online). Live read smoke from TABLES (carriers render), relational-facade José spot-checks all correct (cmaDocFee=50/kmtcIsd=15/ZIM/COSCO/2 self-built yards/7 shells). joyas/punas still isolated.
 >
 > **ROLLBACK (relational → blob, lossless) — EXACT COMMANDS (verified scratch-key 2026-06-24):**
-> The blob is frozen, so do NOT just set `STORAGE_MODE=blob` (loses relational-era edits).
+> The blob is RETIRED (renamed to `shipping-data-retired-20260625` in Step 8), so setting
+> `STORAGE_MODE=blob` ALONE would now read a MISSING `shipping-data` key and seed demo data — and even
+> the pre-Step-8 frozen blob would lose relational-era edits. The real rollback REBUILDS the live
+> `shipping-data` from the current tables first (step ① below). (To restore the cutover-era frozen blob
+> verbatim instead, `node scripts/relational/retire-blob.js --revert` renames the retired key back.)
 > The reverse WRITE path is `scripts/relational/prod-reverse-to-blob.js` (postgres/admin creds —
 > the only role that can write `app_state`). Lossless round-trip (decompose(rebuilt)==tables,
 > normalize(assemble(decompose(rebuilt)))==rebuilt, José spot-checks) was proven on the live
@@ -161,8 +197,12 @@ the next switch (captures any in-flight José edits). → report observation-win
 **Step 7 — Per-entity writes (2b) effective.** With the route call-sites swapped, admin writes are
 targeted. → report a concurrent two-entity edit doesn't clobber (the prod analog of the 5/5 proof). **[STOP]**
 
-**Step 8 — Retire blob fallback (after a safe window).** Stop writing the blob → eventually drop the
-`app_state` blob row/column (expressline only). **[STOP — final confirm]**
+**Step 8 — Retire blob fallback. ✅ EXECUTED 2026-06-25 (reversible rename, NOT a delete).** The frozen
+`shipping-data` row was renamed to `shipping-data-retired-20260625` (payload fully preserved, rev 215132;
+`node scripts/relational/retire-blob.js --revert` restores the original name). Relational write paths
+already stopped writing the blob at cutover. The HARD DELETE (`DROP`/delete of the retired row) is the
+only irreversible action and is **DEFERRED** to a longer safety window — or never. See the Step 8
+execution record at the top. **[expressline only]**
 
 ## 4. José edit window
 Backup→migrate→switch may overlap José editing prod. Step 5's dual window captures his edits

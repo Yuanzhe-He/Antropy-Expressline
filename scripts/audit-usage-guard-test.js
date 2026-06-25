@@ -145,6 +145,9 @@ async function integrationTests() {
       return 1;
     },
     getDatabaseSchema: () => "expressline",
+    // blob-mode seed guard probes the relational tables before seeding; null = empty
+    // tables, so this fresh-store warm-up seeds exactly as before the guard was added.
+    getShippingTablesAssembled: async () => null,
   };
 
   const dbPath = require.resolve(path.join(__dirname, "../src/lib/db"));

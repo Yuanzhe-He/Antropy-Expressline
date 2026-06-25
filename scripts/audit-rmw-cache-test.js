@@ -54,6 +54,9 @@ const fakeDb = {
   },
   // store.js does not call these, but keep the shape complete.
   getDatabaseSchema: () => "expressline",
+  // blob-mode seed guard probes the relational tables before seeding; null = empty
+  // tables, so this fresh-store warm-up seeds exactly as before the guard was added.
+  getShippingTablesAssembled: async () => null,
   saveUsers: undefined,
 };
 
