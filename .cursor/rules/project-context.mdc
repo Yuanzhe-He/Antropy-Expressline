@@ -1,0 +1,31 @@
+---
+description: "Project context, AI workflow routing, project rules, and scale overrides"
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Project Context
+
+Read:
+
+- `AGENTS.md`
+- `docs/AI_AGENT_PROJECT_RULES.md`
+- `.ai/PROJECT_SCALE_OVERRIDES.md`
+
+If relevant to the task, read:
+
+- `../_AI_WORKFLOW/core/AGENTS.md`
+- `../_AI_WORKFLOW/scales/ui-ux/UI_UX_SCALE.md`
+- `docs/ARCHITECTURE.md`
+- `docs/DATABASE_SCHEMA.md`
+- `docs/business-process.md`
+- `docs/product-uiux-audit.md`
+- `docs/UX_REVIEW_NOTES.md`
+- `docs/BRAND_NOTES.md`
+- `docs/LESSONS.md`
+
+Keep this rule thin. Repo-local project rules are authoritative for project facts. Workspace workflow rules are reusable workflow guidance, not a replacement for this project's docs.
+
+After connection, ordinary development tasks use AI Workflow automatically. `只做 UI/UX 评审` means review only and no code edits.
+
+Every task must end with the exact `Post-task routing` block defined in `docs/AI_AGENT_PROJECT_RULES.md`. Do not replace it with only `Durable lesson captured: none`.
