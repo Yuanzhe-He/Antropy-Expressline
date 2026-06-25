@@ -26,3 +26,5 @@ backups/
 .env.sandbox.pw
 .prod-blob-snapshot.json
 .prod-migration-pin.json
+# transient Supabase CLI state (linked-project ref, cli version marker) — regenerated on use
+supabase/.temp/
