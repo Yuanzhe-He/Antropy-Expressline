@@ -453,8 +453,41 @@ async function closeDatabase() {
   }
 }
 
+// Cheap "is the relational store populated?" probe (1 row, no payload) for the startup
+// sanity warning. Returns false in non-DB mode or on any error (never throws).
+async function relationalTablesPopulated() {
+  if (!shouldUseDatabase()) {
+    return false;
+  }
+  try {
+    const schema = quoteIdentifier(getDatabaseSchema());
+    const result = await getPool().query(`select 1 from ${schema}.carriers limit 1`);
+    return result.rowCount > 0;
+  } catch (error) {
+    return false;
+  }
+}
+
+// Pure: the loud startup warning when DB mode + populated relational tables + a
+// STORAGE_MODE that is NOT relational — in that state the app silently reads the
+// app_state blob (which may be FROZEN/stale after a cutover) instead of the tables.
+// Returns the warning string, or null when the configuration is consistent.
+function storageModeStartupWarning({ usingDb, storageMode, tablesPopulated }) {
+  const mode = String(storageMode || "blob").toLowerCase();
+  if (usingDb && tablesPopulated && mode !== "relational") {
+    return (
+      `[startup] ⚠ relational tables are POPULATED but STORAGE_MODE=${mode} — the app is ` +
+      "reading the app_state blob (which may be FROZEN/stale after a cutover), NOT the tables. " +
+      "If the relational cutover is complete, set STORAGE_MODE=relational."
+    );
+  }
+  return null;
+}
+
 module.exports = {
   closeDatabase,
+  relationalTablesPopulated,
+  storageModeStartupWarning,
   ensureRelationalReady,
   getAppState,
   getDatabaseSchema,
