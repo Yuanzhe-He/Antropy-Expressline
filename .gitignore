@@ -25,3 +25,4 @@ backups/
 .env.sandbox
 .env.sandbox.pw
 .prod-blob-snapshot.json
+.prod-migration-pin.json
