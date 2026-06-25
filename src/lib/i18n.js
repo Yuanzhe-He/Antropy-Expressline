@@ -627,6 +627,8 @@ const MESSAGES = {
       ruleDeleted: "{label} 已删除一条阶梯。",
       shippingLineCount: "{count} 个柜型 / {rules} 套 demoras 规则",
       lineSaved: "{name} 的配置已保存。",
+      lineSavedExceptDemurrage:
+        "{name} 已保存，但 demoras 规则集「{sets}」未更新——请检查天数：{motivos}",
       addShippingLine: "+ 新增船公司",
       createShippingLine: "创建",
       createShippingLineHint:
@@ -1355,6 +1357,8 @@ const MESSAGES = {
       ruleDeleted: "Se elimino un tramo de {label}.",
       shippingLineCount: "{count} tipos / {rules} sets de demoras",
       lineSaved: "Se guardo la configuracion de {name}.",
+      lineSavedExceptDemurrage:
+        "Se guardo {name}, excepto las reglas de demoras de «{sets}» — revisa los dias: {motivos}",
       addShippingLine: "+ Nueva naviera",
       createShippingLine: "Crear",
       createShippingLineHint:
