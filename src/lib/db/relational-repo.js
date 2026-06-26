@@ -193,7 +193,53 @@ function buildSchemaDDL(schemaName) {
        settings jsonb not null default '{}'::jsonb,
        tax_rate_presets jsonb not null default '[]'::jsonb
      )`,
+  ].concat(buildHardeningDDL(schemaName));
+}
+
+// 2026-06-25 non-destructive hardening (DB structure health check M1 + index gap m3).
+// Idempotent, so a redeploy / fresh schema converges to the SAME shape that
+// scripts/relational/prod-harden-2026-06-25.js applied to live prod. Indexes use
+// IF NOT EXISTS; CHECKs are guarded by a pg_constraint existence probe (Postgres has no
+// ADD CONSTRAINT IF NOT EXISTS). These run inside the ensureRelationalSchema transaction,
+// so non-concurrent CREATE INDEX is fine (the entity tables are tiny). A negative
+// rate/price/charge can never be written through the app, so the CHECKs never break
+// startup on clean data; they are belt-and-suspenders for direct/admin writes.
+function buildHardeningDDL(schemaName) {
+  const s = q(schemaName);
+  // [table, constraint_name, predicate] — money/rate columns are never legitimately < 0.
+  const checks = [
+    ["carrier_local_charges", "carrier_local_charges_tax_rate_nonneg", "tax_rate >= 0"],
+    ["terminal_charges", "terminal_charges_tax_rate_nonneg", "tax_rate >= 0"],
+    ["terminal_charges", "terminal_charges_amount_nonneg", "amount >= 0"],
+    ["yard_charges", "yard_charges_tax_rate_nonneg", "tax_rate >= 0"],
+    ["yard_charges", "yard_charges_amount_nonneg", "amount >= 0"],
+    ["inland_rate_entries", "inland_rate_entries_sencillo_nonneg", "sencillo >= 0"],
+    ["inland_rate_entries", "inland_rate_entries_full_nonneg", '"full" >= 0'],
   ];
+  // [index_name, table, "(cols)"] — FK columns lacking a supporting index.
+  const indexes = [
+    ["inland_rate_entries_origin_idx", "inland_rate_entries", "(origin_id)"],
+    ["yard_carriers_carrier_idx", "yard_carriers", "(carrier_id)"],
+    ["yard_ports_port_idx", "yard_ports", "(port_id)"],
+  ];
+  const out = indexes.map(
+    ([name, table, cols]) => `create index if not exists ${name} on ${s}.${q(table)} ${cols}`
+  );
+  for (const [table, name, pred] of checks) {
+    out.push(
+      `do $$ begin
+         if not exists (
+           select 1 from pg_constraint con
+             join pg_class cl on cl.oid = con.conrelid
+             join pg_namespace n on n.oid = cl.relnamespace
+           where n.nspname = '${schemaName}' and cl.relname = '${table}' and con.conname = '${name}'
+         ) then
+           alter table ${s}.${q(table)} add constraint ${name} check (${pred});
+         end if;
+       end $$`
+    );
+  }
+  return out;
 }
 
 const RELATIONAL_TABLES = Object.freeze([...INSERT_ORDER]);
