@@ -71,6 +71,26 @@ function getPool() {
   return pool;
 }
 
+// Runtime / least-privilege guard. A cheap, least-priv-SAFE existence check: `to_regclass`
+// only needs USAGE on the schema (which the runtime role has) — NOT the owner-only DDL
+// privilege that create/alter/index require. When the schema is already built (every prod
+// start, and ANY non-owner runtime role like `expressline_app`), the app must NOT run the
+// startup schema-ensure (migrateDatabase / buildSchemaDDL) — those are owner-only and would
+// fail for a least-privilege role. Only a genuinely fresh DB (table absent) runs the
+// ensure-DDL, which is the initial OWNER-driven setup path (a fresh deploy connects as the
+// owner, or a migration script builds it). Behavior in the existing postgres/owner mode is
+// IDENTICAL: the ensure was already a no-op there (the tables exist), so skipping it has the
+// exact same end state — it just no longer issues owner-only DDL the runtime shouldn't run.
+async function relationExists(schema, table) {
+  try {
+    const qualified = `${quoteIdentifier(schema)}.${quoteIdentifier(table)}`;
+    const r = await getPool().query("select to_regclass($1) as oid", [qualified]);
+    return r.rows[0].oid !== null;
+  } catch (_error) {
+    return false; // any error → fall through to the ensure path (fresh-DB / owner setup)
+  }
+}
+
 async function migrateDatabase() {
   const schema = getDatabaseSchema();
   const quotedSchema = quoteIdentifier(schema);
@@ -120,9 +140,16 @@ async function migrateDatabase() {
 }
 
 async function ensureDatabase() {
-  if (!schemaReady) {
-    await migrateDatabase();
+  if (schemaReady) {
+    return;
   }
+  // Runtime path: the base tables (app_state/audit_logs/quote_snapshots) already exist →
+  // SKIP the owner-only migrateDatabase. Only a fresh DB runs it. See relationExists.
+  if (await relationExists(getDatabaseSchema(), "app_state")) {
+    schemaReady = true;
+    return;
+  }
+  await migrateDatabase();
 }
 
 async function getAppState(key) {
@@ -235,6 +262,14 @@ async function ensureRelationalReady() {
     return;
   }
   const schema = getDatabaseSchema();
+  // Runtime path: the relational entity tables are already built → SKIP the owner-only
+  // buildSchemaDDL (create/alter/index). Only a genuinely fresh DB runs the ensure-DDL.
+  // See relationExists — this is the switch prerequisite that lets a least-privilege role
+  // (expressline_app) start without owner DDL; postgres/owner behavior is unchanged.
+  if (await relationExists(schema, "carriers")) {
+    relationalReady = true;
+    return;
+  }
   const client = await getPool().connect();
   try {
     await client.query("begin");

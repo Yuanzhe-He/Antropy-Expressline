@@ -72,9 +72,10 @@ fs.writeFileSync(pathMod.join(tmpDir, "shipping-lines.json"), JSON.stringify({
 process.env.DATA_DIR = tmpDir;
 
 if (LEAST_PRIV) {
-  // app connects as expressline_app; bypass owner-only startup DDL-ensure (schema pre-built by admin)
+  // app connects as expressline_app. NO monkeypatch — the REAL code now auto-skips the
+  // owner-only startup DDL-ensure when the schema already exists (db/index.js relationExists),
+  // so this run proves the actual skip-ensure change, not a test bypass.
   process.env.DATABASE_URL = LEAST_PRIV.appUrl;
-  require("../../src/lib/db/relational-repo").ensureRelationalSchema = async () => {};
 }
 
 console.log(`[sandbox-admin-crud] ref=${sandboxRef} (SANDBOX) schema=${TEST_SCHEMA} mode=relational${LEAST_PRIV ? " role=expressline_app (LEAST-PRIV, ensure bypassed)" : ""} — guard passed\n`);
