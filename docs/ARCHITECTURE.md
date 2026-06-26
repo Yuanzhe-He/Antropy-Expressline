@@ -33,7 +33,7 @@
 - Persistence selection: Postgres when `DATABASE_URL` is set (`STORAGE_DRIVER=json` forces the local JSON fallback for tests/dev). `STORAGE_MODE` (`blob`|`relational`|`dual`) picks the DB backend; prod is `relational` ([src/lib/store/index.js](../src/lib/store/index.js#L224)).
 - Reads go through an in-process cache (~1h TTL, write-through) over `getShippingTablesAssembled` — the egress guard after the shared-tenant free-tier egress storm. Writes are targeted per-entity / per-module transactions, not full-table overwrites.
 - Shared Supabase project `polxyashvxbzdkkmxuox` (with `public.joyas_*` / `public.punas_*`); `expressline` is FK-isolated (zero cross-schema foreign keys). Excel templates are not runtime data sources.
-- Source: live PROD introspection 2026-06-25, `src/lib/db.js`, `src/lib/store/index.js`, `docs/MIGRATION_COMPLETE_20260625.md`.
+- Source: live PROD introspection 2026-06-25, `src/lib/db/index.js`, `src/lib/store/index.js`, `docs/MIGRATION_COMPLETE_20260625.md`.
 
 ## Auth / permissions
 
