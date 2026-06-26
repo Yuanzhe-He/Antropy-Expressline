@@ -84,10 +84,17 @@ The Supabase project `polxyashvxbzdkkmxuox` is shared by **three independent app
 - `npm run test:all` — full in-process suite (14 JSON-mode + relational round-trip / parity / seed-guard audits). The parity and round-trip gates fail loudly if the blob↔table mapping drifts.
 - Relational-specific tooling lives under `scripts/relational/` (parity, round-trip, prod health check, cutover/reverse runbook scripts).
 
-## Known structural follow-ups (from the 2026-06-25 health check)
+## Structural remediation status (from the 2026-06-25 health check)
 
-Tracked in [docs/specs/20260625_db_structure_health_check_REPORT.md](specs/20260625_db_structure_health_check_REPORT.md) — **no Critical defects**; the actionable hardening items:
-- **M1** — add money/rate sanity `CHECK`s (`tax_rate`/`amount`/`sencillo`/`full ≥ 0`); rate cells inside jsonb are JSON floats.
-- **M2** — domain date fields are `text`; type them as `date`/`timestamptz`.
-- **M3** — drop write-only `carriers.code`/`carriers.rfc` (duplicates of `notes_extra`).
-- **m1** — `audit_logs` is dead (wire or drop); **m3** — 3 FK columns lack a supporting index (harmless at current scale).
+From the [structure health check](specs/20260625_db_structure_health_check_REPORT.md) — **no Critical defects**. Line CLOSED — see [DATABASE_CONSOLIDATION_COMPLETE_20260625.md](specs/DATABASE_CONSOLIDATION_COMPLETE_20260625.md).
+
+- ✅ **DONE (applied to prod + merged to main):**
+  - **M4** — the `lib/db → lib/store` reverse import was removed (the two leaves moved into `lib/db/`).
+  - **M1** — 7 money/rate non-negativity `CHECK`s now enforced (`carrier_local_charges.tax_rate`, `terminal_charges.tax_rate`/`amount`, `yard_charges.tax_rate`/`amount`, `inland_rate_entries.sencillo`/`full` — all `≥ 0`).
+  - **m3 indexes** — the 3 missing FK indexes added (`inland_rate_entries.origin_id`, `yard_carriers.carrier_id`, `yard_ports.port_id`).
+- ⏸ **Deferred to a human decision** (see [remediation decisions](specs/20260625_db_remediation_DECISIONS.md)):
+  - **M2** — domain date fields are `text` (→ `date`/`timestamptz` needs a code change first; app reads them as strings).
+  - **M3** — drop write-only `carriers.code`/`carriers.rfc` (duplicates of `notes_extra`).
+  - **m1** — `audit_logs` dead table (wire or drop); `quote_snapshots` unbounded growth (reader/retention).
+  - jsonb rate cells are JSON floats (app-layer validation, not column-`CHECK`-able); enum/name constraints held (couple DB to mutable code/names).
+  - Auth not enforced + plaintext passwords — **separate spec-first project** (not in this line).
