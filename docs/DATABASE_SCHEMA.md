@@ -5,8 +5,22 @@
 ## Current status (post blob→relational migration)
 
 - **Persistence reality:** production runs on **Supabase Postgres**, schema **`expressline`**, with **`STORAGE_MODE=relational`** — the app reads/writes **18 relational entity tables**, not the legacy JSON blob. The old `app_state.shipping-data` blob has been **retired** (frozen as a rollback anchor). This is no longer "JSON vs Supabase, unresolved" — the relational store is live.
-- **Driver selection** ([src/lib/db.js#shouldUseDatabase](../src/lib/db.js#L28)): Postgres is used when `DATABASE_URL` is set (or `STORAGE_DRIVER=postgres`); `STORAGE_DRIVER=json` forces the local JSON fallback (tests + local dev). `STORAGE_MODE` (`blob` | `relational` | `dual`, default `blob`) selects the DB-mode backend; **prod is `relational`** ([src/lib/store/index.js#getStorageMode](../src/lib/store/index.js#L224)).
-- **Shared project:** `polxyashvxbzdkkmxuox` hosts `expressline` **and** `public.joyas_*` / `public.punas_*` (other tenants). They share one Postgres instance → shared connection/egress/storage quota. **Isolation is clean at the FK level** (zero foreign keys cross into or out of `expressline`); see the health check report §1.2.
+- **Driver selection** ([src/lib/db/index.js#shouldUseDatabase](../src/lib/db/index.js#L28)): Postgres is used when `DATABASE_URL` is set (or `STORAGE_DRIVER=postgres`); `STORAGE_DRIVER=json` forces the local JSON fallback (tests + local dev). `STORAGE_MODE` (`blob` | `relational` | `dual`, default `blob`) selects the DB-mode backend; **prod is `relational`** ([src/lib/store/index.js#getStorageMode](../src/lib/store/index.js#L224)).
+- **Shared project:** `polxyashvxbzdkkmxuox` hosts `expressline` **and** two other businesses (`public.joyas_*`, `public.punas_*`) — see the multi-project section below.
+
+## Multi-project layout — this Supabase project hosts 3 businesses
+
+The Supabase project `polxyashvxbzdkkmxuox` is shared by **three independent apps**. Full census + cross-project boundary verification: [docs/specs/20260625_cross_project_db_layout.md](specs/20260625_cross_project_db_layout.md).
+
+| Project | Business | Isolation | Recognize by |
+|---|---|---|---|
+| **Express Line** (this repo) | logistics cost workbench | dedicated schema | the `expressline` schema (21 tables) |
+| **Althea** | jewelry marketing/content platform | `public` + `joyas_` prefix | `public.joyas_*` (18 tables) |
+| **pang uñas** | nail-salon appointments/POS | `public` + `punas_` prefix | `public.punas_*` (12 tables) |
+
+- **Separation verified clean (2026-06-26):** 51 business tables, **0 unknown**, every `public` table consistently prefixed, **no FK crosses between the 3 business projects**, `expressline` is FK-isolated, no business views. (Only cross-schema FKs are `punas_*→auth.users` — Supabase Auth, pang uñas's own integration.)
+- **Iron rule:** this repo's tooling touches **only `expressline`** (schema-qualified + `assertProd`-gated). `joyas_*` / `punas_*` are **never read (data) or modified** — they belong to the Althea / pang uñas apps. The shared instance means shared connection/egress/storage quota.
+- **Long-term note:** Express Line's dedicated-schema model is the more robust isolation than `public` prefixes (hard role boundary, no prefix-typo risk). Migrating `joyas`/`punas` to their own schemas would require changing those apps — **not this repo's call**. Details + rationale in the layout doc.
 
 ## Object inventory — `expressline` (21 tables + 2 sequences; no views)
 
@@ -42,7 +56,7 @@
 - **`module_settings`** (5) — per-module settings + `tax_rate_presets`. PK `module_key` (values: `handover`/`customs`/`inland`/`quote` + a `__app__` meta row carrying `generatedFrom`).
 - **`exchange_rates`** (1) — USD/MXN snapshot + FX metadata. **Singleton:** PK `id smallint` with CHECK `(id = 1)`; `pairs` jsonb.
 
-### Carry-over / auxiliary tables (created by [db.js#migrateDatabase](../src/lib/db.js#L69))
+### Carry-over / auxiliary tables (created by [db.js#migrateDatabase](../src/lib/db/index.js#L69))
 
 - **`app_state`** (2 rows) — legacy blob table. Keys: **`shipping-data-retired-20260625`** (the frozen ~1.24 MB pre-cutover blob, kept as rollback anchor) + **`users`** (live auth source, 359 B — *not* migrated to a relational table; passwords plaintext). The live `shipping-data` key is gone → cutover complete.
 - **`quote_snapshots`** (5) — append-only audit of generated quotes (written by [workbench.js:374](../src/routes/workbench.js#L374); currently write-only — `listQuoteSnapshots` has no caller).
@@ -51,7 +65,7 @@
 ## Storage model (how the app reads/writes)
 
 - **Read:** `getShippingData()` → in-process cache (DB mode; ~1h TTL, write-through) → on miss, `getShippingTablesAssembled()` reads all 18 tables (`select *`, no filter) and `assemble()`s the shipping-data shape, then `normalizeShippingData()` ([src/lib/store/index.js#getShippingData](../src/lib/store/index.js#L257)). The cache is the egress guard — a single uncached large-object read per request previously blew the free egress tier ~70×.
-- **Write:** targeted, per-entity, single-transaction writes avoid full-table overwrites and cross-entity clobber — `saveModuleTables` (module-scoped), `saveCarrierEntity` / `saveCustomsYardEntity` / `saveInlandRateEntryEntity` (single entity), `saveExchangeRatesTable` (FX singleton only). See [src/lib/db.js](../src/lib/db.js#L293).
+- **Write:** targeted, per-entity, single-transaction writes avoid full-table overwrites and cross-entity clobber — `saveModuleTables` (module-scoped), `saveCarrierEntity` / `saveCustomsYardEntity` / `saveInlandRateEntryEntity` (single entity), `saveExchangeRatesTable` (FX singleton only). See [src/lib/db/index.js](../src/lib/db/index.js#L293).
 - **JSON fallback** (local/tests, `STORAGE_DRIVER=json`): reads/writes `data/shipping-lines.json` + `data/users.json`; no DB, no cache.
 
 ## Safety rules
