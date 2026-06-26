@@ -38,14 +38,28 @@ if (sandboxRef === PROD_REF || extractProjectRef(process.env.DATABASE_URL) === P
 const fs = require("node:fs");
 const os = require("node:os");
 const pathMod = require("node:path");
-const TEST_SCHEMA = "el_admincrud";
+
+// LEAST-PRIVILEGE mode (opt-in): if .env.sandbox-app exists (written by
+// sandbox-create-app-role.js), run the APP as the restricted `expressline_app` role against
+// the pre-created `el_approle` schema, with the startup DDL-ensure monkeypatched to a no-op
+// (a non-owner role can't run buildSchemaDDL — that's the documented switch prerequisite).
+// The independent verification pool stays on the ADMIN connection (for setup + truth reads).
+// Enabled ONLY with APP_ROLE=1 (so the normal run stays normal even when the file exists).
+const APP_ENV_PATH = pathMod.join(__dirname, "../../.env.sandbox-app");
+let LEAST_PRIV = null;
+if (process.env.APP_ROLE === "1" && fs.existsSync(APP_ENV_PATH)) {
+  const env = Object.fromEntries(fs.readFileSync(APP_ENV_PATH, "utf8").split(/\r?\n/).filter((l) => l.includes("=") && !l.trimStart().startsWith("#")).map((l) => { const i = l.indexOf("="); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; }));
+  if (env.SANDBOX_APP_URL) LEAST_PRIV = { appUrl: env.SANDBOX_APP_URL, schema: env.SANDBOX_APP_SCHEMA || "el_approle" };
+}
+
+const adminPoolConfig = sandboxPoolConfig(); // capture ADMIN config BEFORE any DATABASE_URL override
+const TEST_SCHEMA = LEAST_PRIV ? LEAST_PRIV.schema : "el_admincrud";
 process.env.DATABASE_SCHEMA = TEST_SCHEMA;
 process.env.STORAGE_MODE = "relational";
 delete process.env.STORAGE_DRIVER; // must NOT be json
 process.env.SKIP_FX_REFRESH = "1";
 // Minimal fixture via a temp DATA_DIR so the relational seed is ~tens of rows, not the
-// bundled ~700 (which made full table reads crawl over the remote sandbox). DATA_DIR is
-// read at store module-load, so it must be set BEFORE requiring the app.
+// bundled ~700 (which made full table reads crawl over the remote sandbox).
 const tmpDir = fs.mkdtempSync(pathMod.join(os.tmpdir(), "jose-relcrud-"));
 fs.writeFileSync(pathMod.join(tmpDir, "shipping-lines.json"), JSON.stringify({
   modules: {
@@ -57,14 +71,20 @@ fs.writeFileSync(pathMod.join(tmpDir, "shipping-lines.json"), JSON.stringify({
 }));
 process.env.DATA_DIR = tmpDir;
 
-console.log(`[sandbox-admin-crud] ref=${sandboxRef} (SANDBOX) schema=${TEST_SCHEMA} mode=relational — guard passed\n`);
+if (LEAST_PRIV) {
+  // app connects as expressline_app; bypass owner-only startup DDL-ensure (schema pre-built by admin)
+  process.env.DATABASE_URL = LEAST_PRIV.appUrl;
+  require("../../src/lib/db/relational-repo").ensureRelationalSchema = async () => {};
+}
+
+console.log(`[sandbox-admin-crud] ref=${sandboxRef} (SANDBOX) schema=${TEST_SCHEMA} mode=relational${LEAST_PRIV ? " role=expressline_app (LEAST-PRIV, ensure bypassed)" : ""} — guard passed\n`);
 
 // ---- 3) now load the app + store (env is locked to sandbox) -----------------
 const { createApp } = require("../../src/server");
 const store = require("../../src/lib/store");
 
-// independent verification pool (reads the real table rows, bypassing app cache)
-const vpool = new Pool(sandboxPoolConfig());
+// independent verification pool — ADMIN connection (reads truth + does setup/cleanup)
+const vpool = new Pool(adminPoolConfig);
 const S = `"${TEST_SCHEMA}"`;
 const tq = (sql, p = []) => vpool.query(sql, p).then((r) => r.rows);
 const tcount = async (table, where = "", p = []) =>
@@ -119,8 +139,10 @@ const carrierRow = async (id) => (await tq(`select * from ${S}.carriers where id
 const terminalRow = async (id) => (await tq(`select * from ${S}.customs_terminals where id=$1`, [id]))[0];
 
 async function main() {
-  // clean isolated schema (app recreates it via buildSchemaDDL on first relational op)
-  await vpool.query(`drop schema if exists ${S} cascade`);
+  // normal mode: drop so the app recreates the schema via buildSchemaDDL on first op.
+  // LEAST-PRIV mode: el_approle is pre-built + seeded by sandbox-create-app-role.js (a
+  // non-owner role can't run DDL), so DON'T drop — run the 30 ops against it.
+  if (!LEAST_PRIV) await vpool.query(`drop schema if exists ${S} cascade`);
 
   const app = createApp();
   const server = await new Promise((res) => { const s = app.listen(0, () => res(s)); });
@@ -444,7 +466,7 @@ async function main() {
     });
   } finally {
     // cleanup: drop isolated schema, close everything
-    try { await vpool.query(`drop schema if exists ${S} cascade`); } catch (_e) {}
+    if (!LEAST_PRIV) { try { await vpool.query(`drop schema if exists ${S} cascade`); } catch (_e) {} }
     await vpool.end().catch(() => {});
     try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_e) {}
     server.close();
