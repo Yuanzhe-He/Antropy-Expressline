@@ -10,8 +10,8 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { connectProdMigrator } = require("./prod-env");
-const { readAllTables, tableCounts, upsertAllTables, canonicalJson, canonicalize } = require("../../src/lib/store/relational-repo");
-const { assemble, decompose } = require("../../src/lib/store/relational-map");
+const { readAllTables, tableCounts, upsertAllTables, canonicalJson, canonicalize } = require("../../src/lib/db/relational-repo");
+const { assemble, decompose } = require("../../src/lib/db/relational-map");
 const { normalizeShippingData } = require("../../src/lib/store/normalize-shipping-data");
 const { dropDanglingRefs } = require("./gates");
 

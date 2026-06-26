@@ -3,7 +3,7 @@
 // full tables, so the measurement itself creates ~no egress. expressline-scoped (filters
 // pg_stat_statements to our queries; never reads joyas/punas data).
 const { connectProdAdmin } = require("./prod-env");
-const { RELATIONAL_TABLES } = require("../../src/lib/store/relational-repo");
+const { RELATIONAL_TABLES } = require("../../src/lib/db/relational-repo");
 
 const BASELINE = { carriers: 21, customs_yards: 28, inland_destinations: 44, inland_rate_entries: 300, container_types: 20, quote_notes: 5, module_settings: 5 };
 

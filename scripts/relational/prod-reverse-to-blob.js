@@ -12,8 +12,8 @@
 // canonical-equals the rebuilt blob — plus José spot-checks pass; and the live shipping-data
 // key is provably UNTOUCHED (same revision before/after).
 const { connectProdAdmin } = require("./prod-env");
-const { readBlob, writeBlob, readAllTables, tableCounts, canonicalJson } = require("../../src/lib/store/relational-repo");
-const { assemble, decompose } = require("../../src/lib/store/relational-map");
+const { readBlob, writeBlob, readAllTables, tableCounts, canonicalJson } = require("../../src/lib/db/relational-repo");
+const { assemble, decompose } = require("../../src/lib/db/relational-map");
 const { normalizeShippingData } = require("../../src/lib/store/normalize-shipping-data");
 
 const SHIPPING_KEY = "shipping-data";

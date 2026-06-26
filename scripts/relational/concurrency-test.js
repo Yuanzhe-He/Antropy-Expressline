@@ -18,8 +18,8 @@ process.env.STORAGE_DRIVER = "postgres";
 const { assertSandbox } = require("../sandbox-guard");
 const ref = assertSandbox();
 const { connectSandbox } = require("./sandbox-env");
-const repo = require("../../src/lib/store/relational-repo");
-const { decompose } = require("../../src/lib/store/relational-map");
+const repo = require("../../src/lib/db/relational-repo");
+const { decompose } = require("../../src/lib/db/relational-map");
 const { normalizeShippingData } = require("../../src/lib/store/normalize-shipping-data");
 
 let passed = 0;
@@ -52,7 +52,7 @@ const findById = (arr, id) => arr.find((x) => x.id === id);
   }
   async function read() {
     const tables = await repo.readAllTables(setup, schema);
-    return normalizeShippingData(require("../../src/lib/store/relational-map").assemble(tables));
+    return normalizeShippingData(require("../../src/lib/db/relational-map").assemble(tables));
   }
 
   const carrierId = seed.modules.handover.shippingLines[0].id;

@@ -19,7 +19,7 @@ process.env.SHIPPING_CACHE_TTL_MS = "0";
 
 const { assertSandbox } = require("../sandbox-guard");
 const ref = assertSandbox();
-const repo = require("../../src/lib/store/relational-repo");
+const repo = require("../../src/lib/db/relational-repo");
 const { dropDanglingRefs } = require("./gates");
 
 let passed = 0;

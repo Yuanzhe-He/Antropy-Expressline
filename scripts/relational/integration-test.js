@@ -22,8 +22,8 @@ const { assertSandbox } = require("../sandbox-guard");
 const ref = assertSandbox(); // HARD STOP unless DATABASE_URL == sandbox
 
 const { connectSandbox } = require("./sandbox-env");
-const repo = require("../../src/lib/store/relational-repo");
-const { decompose } = require("../../src/lib/store/relational-map");
+const repo = require("../../src/lib/db/relational-repo");
+const { decompose } = require("../../src/lib/db/relational-map");
 const { buildSchemaDDL, buildDropDDL } = repo;
 const { normalizeShippingData } = require("../../src/lib/store/normalize-shipping-data");
 

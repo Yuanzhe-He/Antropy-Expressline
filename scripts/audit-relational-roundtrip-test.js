@@ -22,7 +22,7 @@ process.env.SKIP_FX_REFRESH = "1";
 process.env.STORAGE_MODE = "relational";
 process.env.SHIPPING_CACHE_TTL_MS = "0"; // force a fresh assemble on every read
 
-const { decompose, assemble } = require("../src/lib/store/relational-map");
+const { decompose, assemble } = require("../src/lib/db/relational-map");
 
 const CARRIER_ID = "zt-rel-roundtrip";
 

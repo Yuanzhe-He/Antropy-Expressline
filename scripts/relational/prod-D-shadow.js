@@ -18,7 +18,7 @@ const { dropDanglingRefs } = require("./gates");
 (async () => {
   const store = require("../../src/lib/store");
   const db = require("../../src/lib/db");
-  const repo = require("../../src/lib/store/relational-repo");
+  const repo = require("../../src/lib/db/relational-repo");
   const canon = repo.canonicalJson;
   console.log(`[phase4-shadow] ref=${ref} (PROD) via store facade as app role (postgres)`);
 

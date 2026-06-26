@@ -1,8 +1,13 @@
 const { Pool } = require("pg");
-const { loadLocalEnv } = require("./env");
-const usageGuard = require("./usage-guard");
-const relRepo = require("./store/relational-repo");
-const { decompose, assemble, TABLE_META } = require("./store/relational-map");
+// db is now a directory module (src/lib/db/): relational-map + relational-repo are
+// co-located db-layer leaves (moved here from lib/store/ to remove the lib/db →
+// lib/store reverse edge — see the M4 fix). env + usage-guard are shared bottom
+// leaves (the store layer imports them too), so importing them up one level is not
+// a layer inversion.
+const { loadLocalEnv } = require("../env");
+const usageGuard = require("../usage-guard");
+const relRepo = require("./relational-repo");
+const { decompose, assemble, TABLE_META } = require("./relational-map");
 
 loadLocalEnv();
 

@@ -521,6 +521,12 @@ function chargeFromRow(row) {
 }
 
 // ---- table metadata (column lists, JSONB columns, insert order) -----------
+// SCHEMA TRUTH — this is the LOGICAL projection of the schema (column NAME list + jsonb
+// flags + PK). It MUST stay in sync with the PHYSICAL DDL in ./relational-repo.js
+// (buildSchemaDDL): every column here must exist there with a compatible type, and every
+// jsonb column there must be flagged here. Editing one without the other silently drops a
+// column from upsert/read. The round-trip + parity gates are the drift guard. See the
+// "SCHEMA TRUTH — TWO VIEWS, ONE SCHEMA" note above buildSchemaDDL.
 const TABLE_META = {
   exchange_rates: {
     pk: ["id"],

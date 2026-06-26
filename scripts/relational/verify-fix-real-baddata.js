@@ -29,8 +29,8 @@ process.env.DATA_DIR = tmpDir;
 process.env.SKIP_FX_REFRESH = "1";
 
 const { connectProdAdmin } = require("./prod-env");
-const { readAllTables } = require("../../src/lib/store/relational-repo");
-const { assemble } = require("../../src/lib/store/relational-map");
+const { readAllTables } = require("../../src/lib/db/relational-repo");
+const { assemble } = require("../../src/lib/db/relational-map");
 
 const TARGETS = ["msc", "whan-hai", "oocl"];
 

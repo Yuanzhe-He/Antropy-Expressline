@@ -11,7 +11,7 @@
 //
 // HARD GATE: all 18 tables owned by postgres + app-as-postgres can run buildSchemaDDL no-op.
 const { connectProdAdmin } = require("./prod-env");
-const { RELATIONAL_TABLES, buildSchemaDDL } = require("../../src/lib/store/relational-repo");
+const { RELATIONAL_TABLES, buildSchemaDDL } = require("../../src/lib/db/relational-repo");
 
 const MIGRATOR = "expressline_migrator";
 const APP = "postgres";

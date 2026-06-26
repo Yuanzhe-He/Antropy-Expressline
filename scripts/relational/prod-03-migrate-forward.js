@@ -16,9 +16,9 @@ const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
 const { connectProdMigrator } = require("./prod-env");
-const { readBlob, upsertAllTables, tableCounts, canonicalJson } = require("../../src/lib/store/relational-repo");
+const { readBlob, upsertAllTables, tableCounts, canonicalJson } = require("../../src/lib/db/relational-repo");
 const { currencyGate, orphanGate, dropDanglingRefs } = require("./gates");
-const { decompose } = require("../../src/lib/store/relational-map");
+const { decompose } = require("../../src/lib/db/relational-map");
 const { normalizeShippingData } = require("../../src/lib/store/normalize-shipping-data");
 
 const PIN = path.join(__dirname, "../../backups/.prod-migration-pin.json");
