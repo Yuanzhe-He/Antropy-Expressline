@@ -28,21 +28,20 @@
 
 ## Data model / persistence
 
-- Current prototype source: `data/shipping-lines.json`.
-- Current documented options:
-  - local/default prototype data source: `data/shipping-lines.json`.
-  - production target when using DB: Railway + Supabase Postgres.
-  - documented temporary fallback: JSON storage with Railway Volume at `/app/runtime-data`.
-  - unresolved: which persistence mode the current live deployment is actually using.
-- Excel templates are not runtime data sources.
-- Source: `README.md`, `docs/env-setup.md`, `docs/bulk-upload-design.md`.
+- **Production runs on Supabase Postgres, schema `expressline`, `STORAGE_MODE=relational`** — the app reads/writes **18 relational entity tables**, assembled in-process into the shipping-data shape. The blob→relational migration is **closed** (2026-06-25); the legacy `app_state.shipping-data` JSON blob is **retired** (frozen as a rollback anchor). The "unresolved JSON vs Supabase" question is settled: relational is live.
+- Schema inventory: 18 relational tables + 3 carry-over tables (`app_state` = retired blob + live `users` row; `quote_snapshots` = write-only quote audit; `audit_logs` = dead/unused) + 2 sequences. Full map: [docs/DATABASE_SCHEMA.md](DATABASE_SCHEMA.md); structure health check (no Critical defects): [docs/specs/20260625_db_structure_health_check_REPORT.md](specs/20260625_db_structure_health_check_REPORT.md).
+- Persistence selection: Postgres when `DATABASE_URL` is set (`STORAGE_DRIVER=json` forces the local JSON fallback for tests/dev). `STORAGE_MODE` (`blob`|`relational`|`dual`) picks the DB backend; prod is `relational` ([src/lib/store/index.js](../src/lib/store/index.js#L224)).
+- Reads go through an in-process cache (~1h TTL, write-through) over `getShippingTablesAssembled` — the egress guard after the shared-tenant free-tier egress storm. Writes are targeted per-entity / per-module transactions, not full-table overwrites.
+- Shared Supabase project `polxyashvxbzdkkmxuox` (with `public.joyas_*` / `public.punas_*`); `expressline` is FK-isolated (zero cross-schema foreign keys). Excel templates are not runtime data sources.
+- Source: live PROD introspection 2026-06-25, `src/lib/db.js`, `src/lib/store/index.js`, `docs/MIGRATION_COMPLETE_20260625.md`.
 
 ## Auth / permissions
 
-- Current login entry is temporarily disabled.
-- All visitors can access frontend and admin rule editing.
-- Not suitable for production without auth and permission hardening.
-- Source: `README.md`.
+- **Login is not enforced.** `attachUser` and `requireAuth` both assign every visitor the frozen `publicDemoUser` (role `admin`) — all visitors can access frontend and admin rule editing ([src/middleware/auth.js](../src/middleware/auth.js)). The two names are kept distinct so re-enabling real auth later only touches `requireAuth`.
+- A real `POST /login` path exists (checks username/password against `getUsers()` and sets `session.user`, [src/routes/core.js:26](../src/routes/core.js#L26)) but nothing rejects unauthenticated requests, so it is currently inert.
+- **Auth data was not migrated:** users live in `app_state['users']` (the legacy blob table, 359 B), **not** a relational table, and **passwords are stored plaintext**. Security debt — out of scope for the structure work but tracked in the health check (m6/m7).
+- Not suitable for production without auth + permission hardening and password hashing.
+- Source: `src/middleware/auth.js`, `src/routes/core.js`, `src/lib/store/index.js` (verified 2026-06-25).
 
 ## Key modules
 
@@ -77,6 +76,16 @@
 **Single dependency direction: `routes/* → lib/* → lib/store/* → lib/db`.**
 No reverse imports, no cycles. The refactor was a pure move (zero behavior change;
 `npm run test:all` 14/14 and `quote-test` 9/9 byte-identical throughout).
+
+> **Update (2026-06-25) — M4 reverse edge RESOLVED.** The blob→relational migration had
+> introduced one reverse layer edge (`lib/db.js` imported `lib/store/relational-{map,repo}`).
+> This was fixed by converting `lib/db.js` → `lib/db/index.js` and **co-locating the two
+> pure mapping/DDL leaves as `lib/db/relational-map.js` + `lib/db/relational-repo.js`**.
+> The dependency direction is clean again: `store/index.js → db/* (index + relational-repo)`
+> is the only `store→db` edge, and `db/` imports only its own leaves (plus the shared
+> bottom leaves `env` / `usage-guard`, which the store layer also imports). **No reverse
+> imports, no cycles** — verified, `npm run test:all` 20/20. See finding **M4** +
+> remediation in [docs/specs/20260625_db_remediation_DECISIONS.md](specs/20260625_db_remediation_DECISIONS.md).
 
 ### Composition root
 - `src/server.js` (~107 lines) — `createApp()` wires Express + middleware + the
