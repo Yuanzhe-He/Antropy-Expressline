@@ -1,38 +1,79 @@
 # Database Schema
 
-## Current status
+> Last verified against PROD: **2026-06-25** (read-only introspection of `expressline` on Supabase project `polxyashvxbzdkkmxuox`). Full evidence + a graded structure health check: [docs/specs/20260625_db_structure_health_check_REPORT.md](specs/20260625_db_structure_health_check_REPORT.md). Migration close-out: [docs/MIGRATION_COMPLETE_20260625.md](MIGRATION_COMPLETE_20260625.md).
 
-- Source: `README.md`; project can use Supabase Postgres and can continue using JSON fallback before DB migration.
-- Source: `docs/env-setup.md`; production DB schema name is `expressline`.
-- Source: `docs/env-setup.md`; seed writes repository `data/shipping-lines.json` and `data/users.json` into `expressline.app_state`.
-- Inferred; needs review: exact table definitions should be verified in `scripts/db-migrate.js` before changing schema or persistence behavior.
+## Current status (post blob→relational migration)
 
-## Persistence mode distinction
+- **Persistence reality:** production runs on **Supabase Postgres**, schema **`expressline`**, with **`STORAGE_MODE=relational`** — the app reads/writes **18 relational entity tables**, not the legacy JSON blob. The old `app_state.shipping-data` blob has been **retired** (frozen as a rollback anchor). This is no longer "JSON vs Supabase, unresolved" — the relational store is live.
+- **Driver selection** ([src/lib/db.js#shouldUseDatabase](../src/lib/db.js#L28)): Postgres is used when `DATABASE_URL` is set (or `STORAGE_DRIVER=postgres`); `STORAGE_DRIVER=json` forces the local JSON fallback (tests + local dev). `STORAGE_MODE` (`blob` | `relational` | `dual`, default `blob`) selects the DB-mode backend; **prod is `relational`** ([src/lib/store/index.js#getStorageMode](../src/lib/store/index.js#L224)).
+- **Shared project:** `polxyashvxbzdkkmxuox` hosts `expressline` **and** `public.joyas_*` / `public.punas_*` (other tenants). They share one Postgres instance → shared connection/egress/storage quota. **Isolation is clean at the FK level** (zero foreign keys cross into or out of `expressline`); see the health check report §1.2.
 
-- Current documented options:
-  - JSON fallback / local prototype storage: `data/shipping-lines.json`.
-  - Temporary no-database deployment fallback: `STORAGE_DRIVER=json` and `DATA_DIR=/app/runtime-data` on Railway Volume.
-  - Production DB target: Railway + Supabase Postgres with `DATABASE_SCHEMA=expressline`.
-- Default/local fallback if documented:
-  - README and bulk-upload docs identify `data/shipping-lines.json` as the current prototype data source.
-- Production target if documented:
-  - `docs/env-setup.md` says production DB mode uses Supabase Postgres and should not set `STORAGE_DRIVER=json`.
-- Unresolved:
-  - The existing docs do not prove which persistence mode the currently deployed production instance is using.
+## Object inventory — `expressline` (21 tables + 2 sequences; no views)
+
+**18 relational entity tables** (the live store under `STORAGE_MODE=relational`). Canonical DDL: [relational-repo.js#buildSchemaDDL](../src/lib/db/relational-repo.js#L32); column/jsonb metadata: [relational-map.js#TABLE_META](../src/lib/db/relational-map.js#L530). (Both moved from `lib/store/` to `lib/db/` on 2026-06-25 — M4 remediation.) Row counts as of 2026-06-25.
+
+### Handover (换单) + shared masters
+
+- **`carriers`** (21) — 船公司 master, **authoritative on the handover side** (customs mirrors it on read). PK `id` (text). Promoted columns `name`, `active`, `invoice_to_consignee_only`, `demurrage_cutoff_handled_by`, `sort_order`; jsonb leaves `notes_extra`, `customs_note`, `container_groups`, `demurrage`, `guarantee`, `terminal_mix`, `quote_defaults`, `extra` (exact-reconstruction spill). `created_at`/`updated_at` = `timestamptz`. ⚠ `code`/`rfc` columns are write-only duplicates of `notes_extra.{code,rfc}` (report M3).
+- **`carrier_local_charges`** (45) — per-carrier local charges. PK `id`; FK `carrier_id → carriers.id` **ON DELETE CASCADE** (indexed). `tax_rate numeric(8,4)`, `group_rates`/`bl_rate` jsonb.
+- **`container_types`** (20) — container-type master. PK `key` (text); `rate_group` maps a container to its rate group (`RATE_GROUP_NAMES` domain, not CHECK-constrained).
+
+### Customs (清关 / Despacho)
+
+- **`customs_ports`** (2) — ports. PK `id`.
+- **`customs_terminals`** (7) — terminals per port. PK `id`; FK `port_id → customs_ports.id` CASCADE (indexed). `storage_config` jsonb holds the whole storage-rule subtree (`storageRuleSets`, `storageAssignmentsBy*`, …).
+- **`terminal_charges`** (7) — terminal fixed charges. PK `id`; FK `terminal_id → customs_terminals.id` CASCADE (indexed). `basis` CHECK `(per_day|per_occurrence)`; `amount numeric(14,4)`.
+- **`customs_yards`** (28) — yards (patios). PK `id`.
+- **`yard_charges`** (56) — yard charges. PK `id`; FK `yard_id → customs_yards.id` CASCADE (indexed). `kind` CHECK `(dropoff|customs)`; `basis` CHECK `(per_day|per_occurrence)`; `amount numeric(14,4)`.
+- **`yard_ports`** (28) — yard↔port join. Composite PK `(yard_id, port_id)`; both FKs CASCADE.
+- **`yard_carriers`** (**0**) — yard↔carrier join. Composite PK `(yard_id, carrier_id)`; both FKs CASCADE. **Currently empty** → yards are scoped by port only (carrier dimension unpopulated; report m8).
+
+### Inland (陆运 / Transporte)
+
+- **`inland_origins`** (1) — origins. PK `id`; `lat`/`lng` = `double precision`.
+- **`inland_destinations`** (44) — destinations. PK `id`; i18n names (`name_zh`/`name_es`), `lat`/`lng`, `image_urls`/`precise_points` jsonb. `created_at`/`updated_at` = `timestamptz`.
+- **`inland_rate_entries`** (300) — rate table. PK `id`; FK `destination_id → inland_destinations.id` CASCADE (indexed), FK `origin_id → inland_origins.id` **NO ACTION**. `sencillo`/`full numeric(14,4)`; `vehicle_prices`/`burreo`/`extras` jsonb.
+- **`inland_route_cache`** (44) — OSRM route cache. PK `id`; FKs to destination (CASCADE, indexed) + origin (NO ACTION). Natural **UNIQUE `(origin_id, destination_id, target_type, target_id)`** prevents dup cache rows; `target_type` CHECK `(destination|precisePoint)`.
+
+### Quote + settings
+
+- **`quote_drafts`** (0) — saved quote drafts. PK `id`; `header`/`line_items`/`note_ids` jsonb.
+- **`quote_notes`** (5) — reusable quote remarks (en/es/zh). PK `id`.
+- **`module_settings`** (5) — per-module settings + `tax_rate_presets`. PK `module_key` (values: `handover`/`customs`/`inland`/`quote` + a `__app__` meta row carrying `generatedFrom`).
+- **`exchange_rates`** (1) — USD/MXN snapshot + FX metadata. **Singleton:** PK `id smallint` with CHECK `(id = 1)`; `pairs` jsonb.
+
+### Carry-over / auxiliary tables (created by [db.js#migrateDatabase](../src/lib/db.js#L69))
+
+- **`app_state`** (2 rows) — legacy blob table. Keys: **`shipping-data-retired-20260625`** (the frozen ~1.24 MB pre-cutover blob, kept as rollback anchor) + **`users`** (live auth source, 359 B — *not* migrated to a relational table; passwords plaintext). The live `shipping-data` key is gone → cutover complete.
+- **`quote_snapshots`** (5) — append-only audit of generated quotes (written by [workbench.js:374](../src/routes/workbench.js#L374); currently write-only — `listQuoteSnapshots` has no caller).
+- **`audit_logs`** (0) — **dead scaffolding**: created by the migrator but no code path writes it (report m1). Either wire it up or drop it.
+
+## Storage model (how the app reads/writes)
+
+- **Read:** `getShippingData()` → in-process cache (DB mode; ~1h TTL, write-through) → on miss, `getShippingTablesAssembled()` reads all 18 tables (`select *`, no filter) and `assemble()`s the shipping-data shape, then `normalizeShippingData()` ([src/lib/store/index.js#getShippingData](../src/lib/store/index.js#L257)). The cache is the egress guard — a single uncached large-object read per request previously blew the free egress tier ~70×.
+- **Write:** targeted, per-entity, single-transaction writes avoid full-table overwrites and cross-entity clobber — `saveModuleTables` (module-scoped), `saveCarrierEntity` / `saveCustomsYardEntity` / `saveInlandRateEntryEntity` (single entity), `saveExchangeRatesTable` (FX singleton only). See [src/lib/db.js](../src/lib/db.js#L293).
+- **JSON fallback** (local/tests, `STORAGE_DRIVER=json`): reads/writes `data/shipping-lines.json` + `data/users.json`; no DB, no cache.
 
 ## Safety rules
 
 - Do not print or store real `DATABASE_URL`, database passwords, Supabase service keys, session secrets, cookies, or API keys.
-- Do not run `npm run db:seed` against production without explicit confirmation, because existing docs say it can overwrite online configuration with repository seed data.
-- Keep this project inside `DATABASE_SCHEMA=expressline` unless a reviewed migration plan says otherwise.
+- Do not run `npm run db:seed` against production without explicit confirmation — seed writes repository data into `expressline.app_state` and can overwrite online config.
+- Keep this project inside `DATABASE_SCHEMA=expressline` unless a reviewed migration plan says otherwise. **Never touch `public.joyas_*` / `public.punas_*`** — shared project, different tenants.
+- PROD scripts must pass the ref guard (`assertProd` → `ref == polxyashvxbzdkkmxuox`, [scripts/relational/prod-guard.js](../scripts/relational/prod-guard.js)); the restricted `expressline_migrator` role enforces schema-level isolation. Any structural change is **DDL** — review and run as a migration, never ad-hoc against prod.
+- After any out-of-band prod data write (`scripts/patch-prod-data.js`, `db:seed`), redeploy/restart the app so its warm in-process cache does not clobber or mask the change.
 
-## Migration commands
+## Migration / verification commands
 
-- `npm run db:migrate`
-- `npm run db:seed`
-- `npm run db:check`
+- `npm run db:migrate` — create base tables (`app_state`/`audit_logs`/`quote_snapshots`); relational entity tables are created idempotently by `ensureRelationalReady`.
+- `npm run db:seed` — seed repository data into `app_state` (⚠ guarded; not for prod without confirmation).
+- `npm run db:check` — connectivity / schema sanity check.
+- `npm run test:all` — full in-process suite (14 JSON-mode + relational round-trip / parity / seed-guard audits). The parity and round-trip gates fail loudly if the blob↔table mapping drifts.
+- Relational-specific tooling lives under `scripts/relational/` (parity, round-trip, prod health check, cutover/reverse runbook scripts).
 
-## Open questions
+## Known structural follow-ups (from the 2026-06-25 health check)
 
-- Inferred; needs review: whether production currently uses JSON fallback or Supabase Postgres.
-- Inferred; needs review: whether `expressline.app_state` is the only persistent table after current migrations.
+Tracked in [docs/specs/20260625_db_structure_health_check_REPORT.md](specs/20260625_db_structure_health_check_REPORT.md) — **no Critical defects**; the actionable hardening items:
+- **M1** — add money/rate sanity `CHECK`s (`tax_rate`/`amount`/`sencillo`/`full ≥ 0`); rate cells inside jsonb are JSON floats.
+- **M2** — domain date fields are `text`; type them as `date`/`timestamptz`.
+- **M3** — drop write-only `carriers.code`/`carriers.rfc` (duplicates of `notes_extra`).
+- **m1** — `audit_logs` is dead (wire or drop); **m3** — 3 FK columns lack a supporting index (harmless at current scale).
