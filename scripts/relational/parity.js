@@ -5,7 +5,7 @@
 // Exits non-zero unless diff = 0. Also reports per-table row counts.
 const { connectSandbox } = require("./sandbox-env");
 const { readBlob, readAllTables, tableCounts, canonicalJson, canonicalize } = require("./repo");
-const { assemble } = require("../../src/lib/store/relational-map");
+const { assemble } = require("../../src/lib/db/relational-map");
 const { normalizeShippingData } = require("../../src/lib/store/normalize-shipping-data");
 const { dropDanglingRefs } = require("./gates");
 

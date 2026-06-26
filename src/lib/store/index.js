@@ -19,7 +19,7 @@ const {
   saveShippingTables,
   shouldUseDatabase,
 } = require("../db");
-const { canonicalJson } = require("./relational-repo");
+const { canonicalJson } = require("../db/relational-repo");
 const {
   normalizeExchangeRates,
   // re-exported as part of the public API (defined in ./shared):

@@ -5,7 +5,7 @@
 // shipping-data key, the rollback action). Never drops the source blob.
 const { connectSandbox } = require("./sandbox-env");
 const { readBlob, readAllTables, writeBlob, canonicalJson } = require("./repo");
-const { assemble } = require("../../src/lib/store/relational-map");
+const { assemble } = require("../../src/lib/db/relational-map");
 const { normalizeShippingData } = require("../../src/lib/store/normalize-shipping-data");
 const { dropDanglingRefs } = require("./gates");
 

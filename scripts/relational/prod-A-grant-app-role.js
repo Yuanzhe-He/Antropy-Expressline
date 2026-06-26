@@ -9,8 +9,8 @@
 // HARD GATE: as postgres, for EVERY table, an in-txn select+insert+update+delete (all
 // no-op via WHERE false / SELECT…WHERE false, then ROLLBACK) succeeds. Any denial → STOP.
 const { connectProdMigrator, connectProdAdmin } = require("./prod-env");
-const { RELATIONAL_TABLES } = require("../../src/lib/store/relational-repo");
-const { TABLE_META } = require("../../src/lib/store/relational-map");
+const { RELATIONAL_TABLES } = require("../../src/lib/db/relational-repo");
+const { TABLE_META } = require("../../src/lib/db/relational-map");
 
 const APP_ROLE = "postgres";
 const EXECUTE = process.argv.includes("--execute");

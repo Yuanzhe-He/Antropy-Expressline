@@ -9,7 +9,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
 const { connectProdAdmin } = require("./prod-env");
-const { canonicalJson } = require("../../src/lib/store/relational-repo");
+const { canonicalJson } = require("../../src/lib/db/relational-repo");
 
 const KEY = "shipping-data";
 const OUT = path.join(__dirname, "../../backups/app_state-shipping-data-retired-20260625.json");

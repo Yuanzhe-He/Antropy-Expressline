@@ -7,7 +7,7 @@
 const { connectSandbox } = require("./sandbox-env");
 const { ensureBaseTables, readBlob, upsertAllTables, tableCounts } = require("./repo");
 const { currencyGate, orphanGate, dropDanglingRefs } = require("./gates");
-const { decompose } = require("../../src/lib/store/relational-map");
+const { decompose } = require("../../src/lib/db/relational-map");
 const { normalizeShippingData } = require("../../src/lib/store/normalize-shipping-data");
 
 (async () => {

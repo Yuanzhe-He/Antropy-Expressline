@@ -2,7 +2,7 @@
 // are populated, app_state is still intact (2 rows, shipping-data present), and isolation
 // STILL holds (joyas/punas still permission-denied). No writes.
 const { connectProdMigrator } = require("./prod-env");
-const { tableCounts } = require("../../src/lib/store/relational-repo");
+const { tableCounts } = require("../../src/lib/db/relational-repo");
 
 (async () => {
   const { pool, ref, schema, role } = connectProdMigrator();

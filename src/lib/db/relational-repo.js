@@ -15,6 +15,20 @@ function q(identifier) {
 const SHIPPING_KEY = "shipping-data";
 
 // ---- DDL (idempotent; mirrors docs/specs/20260621_blob_to_relational_redesign §B′) ----
+//
+// SCHEMA TRUTH — TWO VIEWS, ONE SCHEMA (must stay in sync):
+//   1. buildSchemaDDL (here)            — the PHYSICAL schema: column types, NOT NULL,
+//                                         defaults, PK/FK/UNIQUE/CHECK, indexes.
+//   2. TABLE_META (./relational-map.js) — the LOGICAL projection: per-table column NAME
+//                                         list + which columns are jsonb + PK columns,
+//                                         used to generate upsert/read SQL.
+// They are deliberately NOT merged into a single spec (DDL has nuance — composite PKs,
+// CHECK predicates, the quoted "full" column, the `add column if not exists` for
+// carriers.extra — that a generated DDL would obscure). Adding/removing/renaming a column
+// REQUIRES editing BOTH: the DDL statement here AND the matching TABLE_META.cols/jsonb
+// entry — otherwise upsert/read silently drops the column. The GUARD against drift is the
+// round-trip + parity gates (scripts/relational/parity.js, audit-relational-roundtrip-test),
+// which fail loudly when the two views disagree. Keep them in CI.
 function buildSchemaDDL(schemaName) {
   const s = q(schemaName);
   return [

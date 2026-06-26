@@ -10,7 +10,7 @@
 // HARD GATE: all 18 RELATIONAL_TABLES present (owned by the migrator) + app_state row
 // count unchanged.
 const { connectProdMigrator } = require("./prod-env");
-const { buildSchemaDDL, RELATIONAL_TABLES } = require("../../src/lib/store/relational-repo");
+const { buildSchemaDDL, RELATIONAL_TABLES } = require("../../src/lib/db/relational-repo");
 
 const EXECUTE = process.argv.includes("--execute");
 

@@ -13,7 +13,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
 const { connectProdAdmin } = require("./prod-env");
-const { canonicalJson } = require("../../src/lib/store/relational-repo");
+const { canonicalJson } = require("../../src/lib/db/relational-repo");
 const { normalizeShippingData } = require("../../src/lib/store/normalize-shipping-data");
 
 const STRAY_KEY = "shipping-data";
