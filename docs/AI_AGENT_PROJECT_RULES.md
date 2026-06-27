@@ -103,7 +103,7 @@ It does not mean AI Workflow only applies when the phrase is used.
 ## Data Access Rules
 
 - Source: `README.md`; current prototype data uses `data/shipping-lines.json`.
-- Source: `README.md`; the app supports Supabase Postgres and can continue using JSON fallback before DB migration.
+- Source: `README.md`; the app runs on Supabase Postgres in production (relational store, schema `expressline`); the JSON fallback (`STORAGE_DRIVER=json`) is now used only for tests / local dev, not as a pre-migration production path.
 - Source: `docs/env-setup.md`; project DB schema is `expressline` when using Supabase Postgres.
 - Source: `docs/env-setup.md`; `db:seed` writes repository seed data into `expressline.app_state`; do not run seed against production without explicit confirmation.
 - Source: `docs/bulk-upload-design.md`; do not make Excel a runtime data source.
@@ -111,7 +111,7 @@ It does not mean AI Workflow only applies when the phrase is used.
   - local/default prototype data source: `data/shipping-lines.json` and JSON fallback.
   - production target when using DB: Railway + Supabase Postgres with `DATABASE_SCHEMA=expressline`.
   - documented temporary fallback: `STORAGE_DRIVER=json` with `DATA_DIR=/app/runtime-data`; docs say production DB mode should not set `STORAGE_DRIVER=json`.
-  - unresolved: which persistence mode the current live deployment is actually using.
+  - resolved (2026-06-25): the live deployment runs on Supabase Postgres, schema `expressline`, `STORAGE_MODE=relational` (18 relational entity tables); the legacy JSON blob is retired/frozen as a rollback anchor. The app runtime connects as the least-privilege `expressline_app` role (not `postgres`) — see `docs/specs/EL_SECURITY_HARDENING_COMPLETE_20260626.md`.
 - Do not print, copy, or persist raw passwords, database URLs, API keys, session secrets, cookies, or tokens.
 - Treat `data/users.json` and real environment values as sensitive even when local auth is disabled.
 
