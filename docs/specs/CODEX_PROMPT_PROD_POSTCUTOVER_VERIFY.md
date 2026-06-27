@@ -28,7 +28,7 @@
 
 ## Part 4 — 配置耐久性 + 角色/隔离/出处确认（只读）
 1. **STORAGE_MODE 耐久性**：确认 Railway 上 STORAGE_MODE=relational 是**持久设置**（重启后还在）。文档化风险：若它被清掉，facade 默认回 `blob`（getStorageMode 里 `|| "blob"`）→ app 静默读**冻结的 blob**＝服务过时数据。建议：加一条启动断言（DB 模式 + 表非空 + STORAGE_MODE≠relational → 打醒目 warning）。
-2. **app 的角色/隔离**：确认 live app 连库用的 role（是 postgres 吗？）。说明：现在 app 对 joyas/punas 的隔离是**代码级**（postgres 能访问它们，只是 app 代码不查）——不是物理权限挡的。确认 app 所有查询都 schema 限定在 expressline、代码里没有任何 joyas/punas 访问。澄清 CC 之前报告里"joyas/punas permission denied"指的是 migrator、不是运行中的 app。
+2. **app 的角色/隔离**：（历史：cutover 当时 app 以 `postgres` 连库，joyas/punas 隔离是代码级——postgres 能访问它们，只是 app 代码不查。）**终态（2026-06-26）**：app 运行时已切到最小权限 `expressline_app`，对 joyas/punas 被拒（42501）——隔离已是物理权限边界，不再仅代码级。确认 app 所有查询仍 schema 限定在 expressline、代码里没有任何 joyas/punas 访问。（详见 EL_SECURITY_HARDENING_COMPLETE_20260626.md。）
 3. **出处**：确认 main tip = bb4930a8、部署的代码树 == 0569cc2（Claude 审过的），无意外 diff。
 - 报告以上发现。
 

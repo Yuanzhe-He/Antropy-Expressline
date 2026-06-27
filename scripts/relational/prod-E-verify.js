@@ -1,5 +1,8 @@
-// PHASE 5 verify — read prod via the APP store facade in RELATIONAL mode (as postgres,
-// exactly what the deployed app now does) and assert José's hand-edits survive. Read-only.
+// PHASE 5 verify — read prod via the APP store facade in RELATIONAL mode and assert José's
+// hand-edits survive. Read-only. NOTE: this local verify connects with the postgres admin
+// cred from .env to exercise the SAME relational read path the deployed app uses; the
+// deployed app itself now runs as the least-privilege `expressline_app` role (2026-06-26),
+// not postgres. The read path/result is identical — only the connecting role differs.
 const { loadLocalEnv } = require("../../src/lib/env");
 loadLocalEnv();
 process.env.STORAGE_DRIVER = "postgres";

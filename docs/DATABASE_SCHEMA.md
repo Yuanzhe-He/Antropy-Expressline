@@ -74,7 +74,7 @@ The Supabase project `polxyashvxbzdkkmxuox` is shared by **three independent app
 - Do not print or store real `DATABASE_URL`, database passwords, Supabase service keys, session secrets, cookies, or API keys.
 - Do not run `npm run db:seed` against production without explicit confirmation — seed writes repository data into `expressline.app_state` and can overwrite online config.
 - Keep this project inside `DATABASE_SCHEMA=expressline` unless a reviewed migration plan says otherwise. **Never touch `public.joyas_*` / `public.punas_*`** — shared project, different tenants.
-- PROD scripts must pass the ref guard (`assertProd` → `ref == polxyashvxbzdkkmxuox`, [scripts/relational/prod-guard.js](../scripts/relational/prod-guard.js)); the restricted `expressline_migrator` role enforces schema-level isolation. Any structural change is **DDL** — review and run as a migration, never ad-hoc against prod.
+- PROD scripts must pass the ref guard (`assertProd` → `ref == polxyashvxbzdkkmxuox`, [scripts/relational/prod-guard.js](../scripts/relational/prod-guard.js)); the restricted `expressline_migrator` role enforces schema-level isolation for migration tooling (the live app runtime is isolated separately via the least-privilege `expressline_app` role — see the App runtime role note above). Any structural change is **DDL** — review and run as a migration, never ad-hoc against prod.
 - After any out-of-band prod data write (`scripts/patch-prod-data.js`, `db:seed`), redeploy/restart the app so its warm in-process cache does not clobber or mask the change.
 
 ## Migration / verification commands

@@ -33,6 +33,7 @@
 - Persistence selection: Postgres when `DATABASE_URL` is set (`STORAGE_DRIVER=json` forces the local JSON fallback for tests/dev). `STORAGE_MODE` (`blob`|`relational`|`dual`) picks the DB backend; prod is `relational` ([src/lib/store/index.js](../src/lib/store/index.js#L224)).
 - Reads go through an in-process cache (~1h TTL, write-through) over `getShippingTablesAssembled` — the egress guard after the shared-tenant free-tier egress storm. Writes are targeted per-entity / per-module transactions, not full-table overwrites.
 - Shared Supabase project `polxyashvxbzdkkmxuox` (with `public.joyas_*` / `public.punas_*`); `expressline` is FK-isolated (zero cross-schema foreign keys). Excel templates are not runtime data sources.
+- **App runtime DB role — least-privilege (2026-06-26):** the live app connects as `expressline_app` (not `postgres`) — CRUD on the 18 entity tables + `app_state` R/W + `quote_snapshots` INSERT + `expressline` schema USAGE only, and **denied (42501) on `joyas_*`/`punas_*`**, so cross-tenant isolation is now a *privilege* boundary, not just code-level. `postgres` is retained as table owner (fresh-DB setup / migrations); rollback anchor = Railway var `DATABASE_URL_POSTGRES_BACKUP`. Full record: [docs/specs/EL_SECURITY_HARDENING_COMPLETE_20260626.md](specs/EL_SECURITY_HARDENING_COMPLETE_20260626.md).
 - Source: live PROD introspection 2026-06-25, `src/lib/db/index.js`, `src/lib/store/index.js`, `docs/MIGRATION_COMPLETE_20260625.md`.
 
 ## Auth / permissions
