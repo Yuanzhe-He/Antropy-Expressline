@@ -85,6 +85,7 @@ A least-privilege role cannot run `CREATE/ALTER/INDEX` (owner-only). The app the
 - **Hard gate (post-revoke):** `postgres` still R/W (via ownership) ✅ · `expressline_migrator` still R/W (independent grants) ✅ · isolation intact (`public.punas_customers` denied 42501) ✅ → **PASS**.
 - **App impact:** none. `expressline_app` never used the membership; its grants are independent.
 - **Reversible:** re-`grant expressline_migrator to postgres`.
+- **Update (2026-06-26, self-correction):** the membership was later observed **present again** — it is re-granted by Supabase's platform role **`supabase_admin`** (`admin_option=true`), so a revoke run as `postgres` is **not durable** against the platform. This is **not a security regression**: the membership remains a confirmed **no-op** (`postgres` owns all 18 tables, so it confers nothing extra; the app runs as `expressline_app` and never uses it). Treat this membership as platform-managed/benign rather than a controllable cleanup. (This is why §15's default-privileges are set `FOR ROLE <self>` from each role's own connection, not via the membership.)
 
 ---
 
@@ -149,7 +150,7 @@ isolation (migrator): public.joyas_asset_products + public.punas_customers permi
 
 ## 11. The ONLY remaining security workflow: application auth (product-decision-gated)
 
-This is **not** a loose end of the DB-hardening line — it is a separate, deliberately-staged initiative blocked on product decisions by Chandler. Current state (verified 2026-06-26):
+This is **not** a loose end of the DB-hardening line — it is a separate, deliberately-staged initiative blocked on product decisions by Chandler. **Gated specifically on José's explicit confirmation before the auth work starts** (recorded 2026-06-26). Current state (verified 2026-06-26):
 
 - **No login wall.** `requireAuth` / `attachUser` ([`src/middleware/auth.js`](../../src/middleware/auth.js)) unconditionally assign every visitor the frozen `publicDemoUser` (role `admin`); they never redirect or 401/403. All `/admin/*` and `/workbench/*` routes pass everyone through as admin.
 - **A working login backend already exists.** `POST /login` ([`src/routes/core.js`](../../src/routes/core.js)) validates credentials and sets `session.user`; a login view + i18n strings exist. `GET /login` currently redirects away. So the work is **"flip the guard on + harden," not "build auth from scratch."**
@@ -197,5 +198,27 @@ Stale "the app runs as `postgres` / isolation is code-level only" statements wer
 - Schema invariants — **present + valid** (§9–10).
 - Doc drift — **swept** (§12).
 - Abandoned branches — **deleted** (§13).
+- "Add-table → forget grant → 42501" footgun — **closed by mechanism** (`ALTER DEFAULT PRIVILEGES`, both creating roles, proven via throwaway probe) (§15).
 
 **Open (separate initiative, product-gated):** application auth (§11).
+
+---
+
+## 15. ⚠ OPERATIONAL RULE — adding a table under the least-privilege runtime role
+
+**✅ RESOLVED 2026-06-26 — the footgun is closed by a standing mechanism (`ALTER DEFAULT PRIVILEGES`).** Future tables created in the `expressline` schema are **auto-granted** to `expressline_app`; no manual grant is needed and the "table exists but the app gets 42501" symptom can no longer occur for a normal new table.
+
+**Background (the footgun this closed):** the live app runs as **`expressline_app`**, which held table-level grants on only the tables that existed at switch time (the 18 entity tables + `app_state` + `quote_snapshots`). Plain table grants do **not** auto-extend to new tables — so before this mechanism, any new table needed a manual grant or the deployed app would hit `permission denied (42501)` on it *even though the table exists* (a confusing "the table is there but I can't read it" symptom that wastes debugging time).
+
+**The applied mechanism — single source [`scripts/relational/prod-G-default-privs.js`](../../scripts/relational/prod-G-default-privs.js)** (assertProd-gated; `preview` / `--execute` / `--verify` / `--revoke` / `--probe`). Because `ALTER DEFAULT PRIVILEGES` is keyed by the *creating* role, it was applied for **both** roles that create tables in `expressline` — `postgres` (owner) and `expressline_migrator` (migration tooling) — each set from its own connection (`FOR ROLE <self>`, so it is independent of the platform-managed postgres↔migrator membership; see §7):
+```sql
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres             IN SCHEMA expressline GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO expressline_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres             IN SCHEMA expressline GRANT USAGE, SELECT ON SEQUENCES TO expressline_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE expressline_migrator IN SCHEMA expressline GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO expressline_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE expressline_migrator IN SCHEMA expressline GRANT USAGE, SELECT ON SEQUENCES TO expressline_app;
+```
+The `expressline` schema contains only Express Line's own tables (Althea/pang uñas live in `public.*`), so this does **not** weaken cross-project isolation — `expressline_app` is still denied (42501) on `joyas_*`/`punas_*`. Additive + reversible (`prod-G --revoke`); affects only tables created *after* it ran (existing grants, incl. the deliberately-narrower `app_state` S/I/U-no-delete and `quote_snapshots` append-only, are untouched).
+
+**Proven (2026-06-26, `prod-G --probe`):** a throwaway table created by `postgres` **and** one created by `expressline_migrator`, each with no explicit grant, were both immediately SELECT/INSERT-able AS `expressline_app`; isolation stayed denied (42501) and existing tables stayed readable; the probe tables were dropped.
+
+**Manual grant is now only a FALLBACK** — for a table that needs a *different* privilege set than the S/I/U/D default, or to back-fill a pre-existing table: add it to the single source [`scripts/relational/app-role-grants.js`](../../scripts/relational/app-role-grants.js), apply via [`scripts/relational/prod-F-create-app-role.js`](../../scripts/relational/prod-F-create-app-role.js), and verify by connecting AS `expressline_app`.
