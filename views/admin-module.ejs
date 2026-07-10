@@ -407,12 +407,22 @@
                       <input type="text" name="demurrage_set_<%= ruleSet.id %>_name" value="<%= ruleSet.name %>" />
                     </label>
                   </div>
-                  <button
-                    type="submit"
-                    class="ghost-button compact-button"
-                    formaction="/admin/<%= currentModuleKey %>/shipping-lines/<%= selectedLine.id %>/demurrage-rule-sets/<%= ruleSet.id %>/add"
-                    formmethod="post"
-                  ><%= t("admin.addRule") %></button>
+                  <div class="inline-actions">
+                    <button
+                      type="submit"
+                      class="ghost-button compact-button"
+                      formaction="/admin/<%= currentModuleKey %>/shipping-lines/<%= selectedLine.id %>/demurrage-rule-sets/<%= ruleSet.id %>/add"
+                      formmethod="post"
+                    ><%= t("admin.addRule") %></button>
+                    <button
+                      type="submit"
+                      class="ghost-button compact-button danger-button"
+                      formaction="/admin/<%= currentModuleKey %>/shipping-lines/<%= selectedLine.id %>/demurrage-rule-sets/<%= ruleSet.id %>/delete"
+                      formmethod="post"
+                      data-confirm-submit="<%= t("admin.confirmDeleteRuleSet", { name: ruleSet.name }) %>"
+                      <%= (selectedLine.demurrage.ruleSets || []).length <= 1 ? "disabled" : "" %>
+                    ><%= t("admin.deleteRuleSet") %></button>
+                  </div>
                 </div>
                 <table>
                   <thead>

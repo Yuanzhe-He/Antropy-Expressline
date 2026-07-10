@@ -28,6 +28,40 @@ const {
   applySequentialRuleUpdates,
 } = require("../lib/rule-engine");
 
+function syncDemurrageDerivedFields(demurrage, containerTypes = []) {
+  const ruleSets = demurrage.ruleSets || [];
+  const validRuleSetIds = new Set(ruleSets.map((set) => set.id));
+  const fallbackRuleSetId = ruleSets[0]?.id || "";
+  const currentAssignments = demurrage.assignmentsByContainerType || {};
+  const nextAssignments = {};
+
+  for (const type of containerTypes || []) {
+    const assignedRuleSetId = currentAssignments[type.key];
+    nextAssignments[type.key] = validRuleSetIds.has(assignedRuleSetId)
+      ? assignedRuleSetId
+      : fallbackRuleSetId;
+  }
+  demurrage.assignmentsByContainerType = nextAssignments;
+
+  demurrage.rulesByGroup = demurrage.rulesByGroup || {};
+  for (const set of ruleSets) {
+    if (set.sourceGroupKey) {
+      demurrage.rulesByGroup[set.sourceGroupKey] = set.rules || [];
+    }
+  }
+
+  const daysByGroup = {};
+  for (const set of ruleSets) {
+    const freeRule = (set.rules || []).find((rule) => rule.freeRule && rule.endDay);
+    if (freeRule) {
+      daysByGroup[set.id] = freeRule.endDay;
+    }
+  }
+  demurrage.freeDays = demurrage.freeDays || {};
+  demurrage.freeDays.daysByGroup = daysByGroup;
+  demurrage.freeDays.defaultDays = Object.values(daysByGroup)[0] || 0;
+}
+
 function register(app, ctx) {
   const {
     loadShippingData,
@@ -351,6 +385,98 @@ function register(app, ctx) {
         res,
         "success",
         req.t("admin.ruleAdded", { label: ruleSet.name }),
+        `/admin/${module.key}/shipping-lines/${updated.id}`
+      );
+    }
+  );
+
+  app.post(
+    "/admin/:moduleKey/shipping-lines/:id/demurrage-rule-sets/:ruleSetId/delete",
+    requireAuth,
+    async (req, res) => {
+      const module = getBusinessModule(req.params.moduleKey);
+      if (!module || module.key === "customs") {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const shippingData = await loadShippingData({ refreshRates: false });
+      const moduleData = getModuleData(shippingData, module.key);
+      const lineIndex = moduleData.shippingLines.findIndex(
+        (entry) => entry.id === req.params.id
+      );
+
+      if (lineIndex < 0) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const updated = structuredClone(moduleData.shippingLines[lineIndex]);
+      updated.demurrage = updated.demurrage || {};
+      const ruleSets = updated.demurrage.ruleSets || [];
+      if (ruleSets.length <= 1) {
+        return redirectWithFlash(
+          req,
+          res,
+          "error",
+          req.t("admin.cannotDeleteLastRuleSet"),
+          `/admin/${module.key}/shipping-lines/${updated.id}`
+        );
+      }
+
+      const removed = ruleSets.find((entry) => entry.id === req.params.ruleSetId);
+      if (!removed) {
+        return res.status(404).render(
+          "not-found",
+          baseView(req, {
+            pageTitle: req.t("system.notFoundTitle"),
+            languageReturnTo: req.originalUrl,
+          })
+        );
+      }
+
+      const remaining = ruleSets.filter((entry) => entry.id !== removed.id);
+      const fallbackRuleSetId = remaining[0]?.id || "";
+      const reassignedKeys = [];
+      const currentAssignments = updated.demurrage.assignmentsByContainerType || {};
+      updated.demurrage.assignmentsByContainerType = {};
+      for (const type of moduleData.containerTypes || []) {
+        const current = currentAssignments[type.key];
+        if (current === removed.id) {
+          updated.demurrage.assignmentsByContainerType[type.key] = fallbackRuleSetId;
+          reassignedKeys.push(type.key);
+        } else {
+          updated.demurrage.assignmentsByContainerType[type.key] = current;
+        }
+      }
+
+      updated.demurrage.ruleSets = remaining;
+      if (removed.sourceGroupKey && updated.demurrage.rulesByGroup) {
+        delete updated.demurrage.rulesByGroup[removed.sourceGroupKey];
+      }
+      syncDemurrageDerivedFields(updated.demurrage, moduleData.containerTypes);
+
+      shippingData.modules[module.key].shippingLines[lineIndex] = updated;
+      await saveModule("handover", shippingData);
+
+      return redirectWithFlash(
+        req,
+        res,
+        "success",
+        req.t("admin.ruleSetDeleted", {
+          label: removed.name || removed.id,
+          keys: reassignedKeys.join(", ") || req.t("admin.noAssignmentsRepointed"),
+        }),
         `/admin/${module.key}/shipping-lines/${updated.id}`
       );
     }

@@ -1344,6 +1344,13 @@ th {
   padding-inline: 0.75rem;
 }
 
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
 .module-rail {
   display: flex;
   gap: 0.6rem;

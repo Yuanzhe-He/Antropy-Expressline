@@ -108,6 +108,68 @@ const inland = () => mod("inland");
 const quote = () => mod("quote");
 const lineById = (m, id) => (m.shippingLines || []).find((l) => l.id === id);
 
+function buildHandoverAdminForm(moduleData, line) {
+  const form = {
+    line_name: line.name || "",
+    line_code: line.notes?.code || "",
+    line_rfc: line.notes?.rfc || "",
+    invoiceNote: line.invoiceNote || "",
+    demurrageCutoffHandledBy: line.demurrageCutoffHandledBy || "",
+    benefitExpiresAt: line.guarantee?.benefitExpiresAt || "",
+    benefitNote: line.guarantee?.benefitNote || "",
+    guaranteeTaxRate: String(line.guarantee?.taxRate ?? 0),
+  };
+  if (line.invoiceToConsigneeOnly) form.invoiceToConsigneeOnly = "on";
+  if (line.guarantee?.benefitEnabled) form.benefitEnabled = "on";
+
+  for (const charge of line.localCharges || []) {
+    form[`charge_concept_${charge.id}`] = charge.concept || "";
+    form[`charge_tax_${charge.id}`] = String(charge.taxRate ?? 0);
+    if (charge.blRate) {
+      form[`charge_bl_${charge.id}_rate`] = String(charge.blRate.rate ?? 0);
+      form[`charge_bl_${charge.id}_currency`] = charge.blRate.currency || "USD";
+    }
+    for (const [groupKey, rate] of Object.entries(charge.groupRates || {})) {
+      if (!rate) continue;
+      form[`charge_${charge.id}_${groupKey}_rate`] = String(rate.rate ?? 0);
+      form[`charge_${charge.id}_${groupKey}_currency`] = rate.currency || "USD";
+    }
+  }
+
+  for (const [groupKey, rate] of Object.entries(line.guarantee?.ratesByGroup || {})) {
+    if (!rate) continue;
+    form[`guarantee_${groupKey}_rate`] = String(rate.rate ?? 0);
+    form[`guarantee_${groupKey}_currency`] = rate.currency || "USD";
+  }
+
+  for (const entry of line.terminalMix || []) {
+    form[`terminal_mix_${entry.id}_port`] = entry.port || "";
+    form[`terminal_mix_${entry.id}_terminal`] = entry.terminal || "";
+    form[`terminal_mix_${entry.id}_ratio`] = String(Math.round((entry.ratio || 0) * 10000) / 100);
+  }
+
+  for (const type of moduleData.containerTypes || []) {
+    form[`demurrage_assignment_${type.key}`] =
+      line.demurrage?.assignmentsByContainerType?.[type.key] ||
+      line.demurrage?.ruleSets?.[0]?.id ||
+      "";
+  }
+
+  for (const ruleSet of line.demurrage?.ruleSets || []) {
+    form[`demurrage_set_${ruleSet.id}_name`] = ruleSet.name || "";
+    for (const rule of ruleSet.rules || []) {
+      const prefix = `rule_set_${ruleSet.id}_${rule.id}`;
+      form[`${prefix}_end`] =
+        rule.endDay === null || rule.endDay === undefined ? "" : String(rule.endDay);
+      form[`${prefix}_tax`] = String(rule.taxRate ?? 0);
+      form[`${prefix}_rate`] = String(rule.rateConfig?.rate ?? 0);
+      form[`${prefix}_currency`] = rule.rateConfig?.currency || "USD";
+    }
+  }
+
+  return form;
+}
+
 let passed = 0;
 const ok = (m) => {
   passed += 1;
@@ -194,9 +256,52 @@ async function main() {
       line = lineById(await handover(), lineId);
       rs = line.demurrage.ruleSets.find((s) => s.id === setId);
       assert.equal(rs.rules.length, 1, "last-rule delete is blocked (rules unchanged)");
-      // NOTE: shipping-line demurrage has no delete-whole-set route (only add-set,
-      // add-rule, delete-rule) — verified against server.js. So we stop here.
-      ok("shipping-line demurrage: rule-set add → add-rule → delete-rule → last-rule guard");
+
+      // Assign one concrete container to the added set, then delete the whole set.
+      // The delete route must repoint that assignment to the first remaining set.
+      const handoverModule = await handover();
+      line = lineById(handoverModule, lineId);
+      const firstTypeKey = handoverModule.containerTypes[0].key;
+      const fallbackSetId = line.demurrage.ruleSets[0].id;
+      const form = buildHandoverAdminForm(handoverModule, line);
+      form[`demurrage_assignment_${firstTypeKey}`] = setId;
+      r = await req(`/admin/handover/shipping-lines/${lineId}`, { form });
+      assert.equal(r.status, 302, "assign new rule-set redirects");
+      line = lineById(await handover(), lineId);
+      assert.equal(
+        line.demurrage.assignmentsByContainerType[firstTypeKey],
+        setId,
+        "test setup: container assignment points at added set"
+      );
+
+      r = await req(`/admin/handover/shipping-lines/${lineId}/demurrage-rule-sets/${setId}/delete`);
+      assert.equal(r.status, 302, "demurrage rule-set delete redirects");
+      line = lineById(await handover(), lineId);
+      assert.equal(line.demurrage.ruleSets.length, setsBefore, "rule-set count restored");
+      assert.ok(!line.demurrage.ruleSets.some((s) => s.id === setId), "deleted rule-set removed");
+      assert.equal(
+        line.demurrage.assignmentsByContainerType[firstTypeKey],
+        fallbackSetId,
+        "assignment repointed to first remaining set"
+      );
+      assert.equal(
+        Object.keys(line.demurrage.assignmentsByContainerType || {}).length,
+        handoverModule.containerTypes.length,
+        "assignments remain explicit for all container types"
+      );
+
+      while (line.demurrage.ruleSets.length > 1) {
+        const removableSetId = line.demurrage.ruleSets[line.demurrage.ruleSets.length - 1].id;
+        r = await req(`/admin/handover/shipping-lines/${lineId}/demurrage-rule-sets/${removableSetId}/delete`);
+        assert.equal(r.status, 302, "reduce to one demurrage rule-set redirects");
+        line = lineById(await handover(), lineId);
+      }
+      const lastSetId = line.demurrage.ruleSets[0].id;
+      r = await req(`/admin/handover/shipping-lines/${lineId}/demurrage-rule-sets/${lastSetId}/delete`);
+      assert.equal(r.status, 302, "last demurrage rule-set delete still redirects");
+      line = lineById(await handover(), lineId);
+      assert.equal(line.demurrage.ruleSets.length, 1, "last-set delete is blocked");
+      ok("shipping-line demurrage: rule-set add → add-rule → delete-rule → delete-set reassignment → last-set guard");
     }
 
     // === B) big shipping-line edit handler + customs mirror sync ==============
