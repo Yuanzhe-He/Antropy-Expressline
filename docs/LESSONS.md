@@ -19,6 +19,30 @@ Only record lessons that may change future behavior.
 - landed_in:
 - next_action:
 
+## 2026-07-11 - Golden regressions must lock resolution RESULTS and money, never mechanism internals
+
+- source_type: ai-self-correction
+- task_type: pricing capability rollout with zero-behavior-change proof
+- domain: rate-group resolution, golden regression design, container-type master persistence
+- trigger: The size-split capability grows every container type's `rateGroupKeys` candidate array by design. A first golden draft captured whole calculator results including `containerRows` (which embed those arrays) — it would have failed on the intended change and proven nothing.
+- incident_or_feedback: Capturing derived internals makes a golden break on intended mechanism changes and pass on real money bugs it never asserted. The useful invariants are: which key each (line, charge, container type) RESOLVES to (with fallback marked), and every cent of output — plus hard invariants for the key census and the frozen fallback matrix.
+- lesson: Two rules proved out here. (1) Golden = resolution results + money projection (scalar whitelists), never candidate arrays / labels / i18n strings. (2) Never persist derived mechanism names: sized rate-group variants (dry20/tank40) exist only at the keys-derivation point, persisted master entries keep legacy names — that single decision is what made code rollback unconditionally inert (verifier had rated persisted-name poisoning a major).
+- scope: project (rule 1 is a global candidate)
+- landed_in: `scripts/golden-local-charges-test.js`, `src/lib/store/shared.js` (sizedKeysGroup + LEGACY_RATE_GROUP_SIGNATURES), `src/lib/store/normalize-handover.js`, spec `outputs/20260710_local_charges_size_split_spec.md`
+- next_action: When ZIM OT-FR-RF demurrage tiers arrive from Estefani (problem ticket #3), extend the same golden before applying data.
+
+## 2026-07-09 - Demoras size split belongs in assignments, not sequential tiers
+
+- source_type: project-incident
+- task_type: production data patch + admin hardening
+- domain: handover demurrage rule sets, container-type assignments, production data scripts
+- trigger: TS Lines tariff rows split the same day windows by 20"/40" size, but production had only two demurrage sets and had folded 40" values into the 20" sequential tier axis.
+- incident_or_feedback: A rule set is one progressive day axis. If Excel has duplicate day windows for different sizes, those rows must not be resequenced into one set; they need separate rule sets and explicit `assignmentsByContainerType` by concrete keys such as `20GP`, `40HC`, `20FR`, and `40RF`.
+- lesson: For demoras updates, treat `demurrage.ruleSets[] + assignmentsByContainerType` as the product contract for type/size differences. Preserve existing set IDs when reusing sets, rebuild all 20 assignments and `freeDays`, sync `rulesByGroup` for source-backed sets, and run quote examples before/after. If a carrier sheet has relative-day vs size ambiguity, prebuild dry-run payloads but do not apply until Estefani/Jose confirms the caliber.
+- scope: project
+- landed_in: `scripts/patch-demurrage-size-split.js`, `docs/business-process.md`, TSL/SINOTRANS production patch reports in Antropy `outputs/`
+- next_action: Keep SNK/HMM on dry-run-only payloads until Estefani answers A/B; add importer guards if Excel automation is later introduced.
+
 ## 2026-06-17 - JSON.stringify into a <script> block is XSS unless you escape "<"
 
 - source_type: ai-self-correction / security
