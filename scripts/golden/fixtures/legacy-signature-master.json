@@ -1,0 +1,623 @@
+{
+ "generatedFrom": "synthetic: legacy master WITHOUT rateGroup names + frozen pre-change rateGroupKeys arrays (signature-guard path); version>=1 so the seed gate does NOT discard it",
+ "exchangeRates": {
+  "provider": "golden-pin",
+  "asOfDate": "2026-07-10",
+  "pairs": [
+   {
+    "base": "USD",
+    "quote": "MXN",
+    "rate": 17.5
+   },
+   {
+    "base": "MXN",
+    "quote": "USD",
+    "rate": 0.0571428571
+   }
+  ]
+ },
+ "modules": {
+  "handover": {
+   "settings": {
+    "defaultQuoteCurrency": "USD",
+    "defaultPriceMode": "pretax",
+    "containerTypeMasterVersion": 1
+   },
+   "containerTypes": [
+    {
+     "key": "40GP",
+     "label": "40GP - Forty foot general purpose",
+     "rateGroupKeys": [
+      "gp-hq-dc",
+      "gp-hc-sd",
+      "gp-hq-dc-20-40",
+      "imo-dry"
+     ]
+    },
+    {
+     "key": "20FR",
+     "label": "20FR - Twenty foot flatrack",
+     "rateGroupKeys": [
+      "fr-20",
+      "ot-fr-rf",
+      "ot-fl-pl"
+     ]
+    },
+    {
+     "key": "20GP",
+     "label": "20GP - Twenty foot general purpose",
+     "rateGroupKeys": [
+      "gp-hq-dc",
+      "gp-hc-sd",
+      "gp-hq-dc-20-40",
+      "imo-dry"
+     ]
+    },
+    {
+     "key": "20NOR",
+     "label": "20NOR - Twenty foot non-operating reefer",
+     "rateGroupKeys": [
+      "gp-hq-dc",
+      "gp-hc-sd",
+      "gp-hq-dc-20-40",
+      "imo-dry"
+     ]
+    },
+    {
+     "key": "20OT",
+     "label": "20OT - Twenty foot open top",
+     "rateGroupKeys": [
+      "ot-20",
+      "ot-fr-rf",
+      "ot-fl-pl"
+     ]
+    },
+    {
+     "key": "20PL",
+     "label": "20PL - Twenty foot platform",
+     "rateGroupKeys": [
+      "ot-fl-pl",
+      "ot-fr-rf",
+      "fr-20"
+     ]
+    },
+    {
+     "key": "40FR",
+     "label": "40FR - Forty foot flatrack",
+     "rateGroupKeys": [
+      "fr-40",
+      "ot-fr-rf",
+      "ot-fl-pl"
+     ]
+    },
+    {
+     "key": "40NOR",
+     "label": "40NOR - Forty foot non-operating reefer",
+     "rateGroupKeys": [
+      "gp-hq-dc",
+      "gp-hc-sd",
+      "gp-hq-dc-20-40",
+      "imo-dry"
+     ]
+    },
+    {
+     "key": "40OT",
+     "label": "40OT - Forty foot open top",
+     "rateGroupKeys": [
+      "ot-40",
+      "ot-fr-rf",
+      "ot-fl-pl"
+     ]
+    },
+    {
+     "key": "40PL",
+     "label": "40PL - Forty foot platform",
+     "rateGroupKeys": [
+      "ot-fl-pl",
+      "ot-fr-rf",
+      "fr-40"
+     ]
+    },
+    {
+     "key": "20HC",
+     "label": "20HC - Twenty foot high cube",
+     "rateGroupKeys": [
+      "gp-hq-dc",
+      "gp-hc-sd",
+      "gp-hq-dc-20-40",
+      "imo-dry"
+     ]
+    },
+    {
+     "key": "20RHC",
+     "label": "20RHC - Twenty Foot high cube Reefer",
+     "rateGroupKeys": [
+      "rf-20",
+      "reefer",
+      "rf-rq",
+      "ot-fr-rf",
+      "imo-reefer"
+     ]
+    },
+    {
+     "key": "20RF",
+     "label": "20RF - Twenty foot reefer",
+     "rateGroupKeys": [
+      "rf-20",
+      "reefer",
+      "rf-rq",
+      "ot-fr-rf",
+      "imo-reefer"
+     ]
+    },
+    {
+     "key": "20TK",
+     "label": "20TK - Twenty foot Tank trailer",
+     "rateGroupKeys": [
+      "ot-fr-rf",
+      "ot-fl-pl"
+     ]
+    },
+    {
+     "key": "40HC",
+     "label": "40HC - Forty foot high cube",
+     "rateGroupKeys": [
+      "gp-hq-dc",
+      "gp-hc-sd",
+      "gp-hq-dc-20-40",
+      "imo-dry"
+     ]
+    },
+    {
+     "key": "40RHC",
+     "label": "40RHC - Forty foot high cube reefer",
+     "rateGroupKeys": [
+      "rf-40",
+      "reefer",
+      "rf-rq",
+      "ot-fr-rf",
+      "imo-reefer"
+     ]
+    },
+    {
+     "key": "40RF",
+     "label": "40RF - Forty foot reefer",
+     "rateGroupKeys": [
+      "rf-40",
+      "reefer",
+      "rf-rq",
+      "ot-fr-rf",
+      "imo-reefer"
+     ]
+    },
+    {
+     "key": "40TK",
+     "label": "40TK - Forty foot Tank trailer",
+     "rateGroupKeys": [
+      "ot-fr-rf",
+      "ot-fl-pl"
+     ]
+    },
+    {
+     "key": "45HC",
+     "label": "45HC - Forty Five foot high cube",
+     "rateGroupKeys": [
+      "special-45",
+      "imo-special-45",
+      "gp-hq-dc",
+      "gp-hc-sd",
+      "gp-hq-dc-20-40",
+      "imo-dry"
+     ]
+    },
+    {
+     "key": "45OT",
+     "label": "45OT - Forty five foot open top",
+     "rateGroupKeys": [
+      "special-45",
+      "imo-special-45",
+      "ot-40",
+      "ot-fr-rf",
+      "ot-fl-pl"
+     ]
+    }
+   ],
+   "shippingLines": [
+    {
+     "active": true,
+     "invoiceNote": "Factura en linea con nombre de Express",
+     "id": "zim",
+     "name": "ZIM",
+     "notes": {
+      "rfc": "520015041",
+      "code": "ZIM_MEX",
+      "sourceSheet": "ZIM"
+     },
+     "invoiceToConsigneeOnly": true,
+     "demurrageCutoffHandledBy": "customer_only",
+     "containerGroups": [
+      {
+       "key": "gp-hq-dc",
+       "label": "GP HQ DC"
+      },
+      {
+       "key": "ot-fr-rf",
+       "label": "OT FR RF"
+      }
+     ],
+     "guarantee": {
+      "benefitEnabled": false,
+      "benefitExpiresAt": null,
+      "benefitNote": "Se tiene beneficio garantia",
+      "taxRate": 0,
+      "ratesByGroup": {
+       "gp-hq-dc": {
+        "rate": 0,
+        "label": "GP HQ DC",
+        "qtyHint": 1,
+        "currency": "USD",
+        "taxMultiplier": 1
+       },
+       "ot-fr-rf": {
+        "rate": 0,
+        "label": "OT FR RF",
+        "qtyHint": 1,
+        "currency": "USD",
+        "taxMultiplier": 1
+       }
+      },
+      "fallbackRatesByGroup": {
+       "gp-hq-dc": {
+        "rate": 1000,
+        "label": "GP HQ DC",
+        "qtyHint": 1,
+        "currency": "USD",
+        "taxMultiplier": 1
+       },
+       "ot-fr-rf": {
+        "rate": 1000,
+        "label": "OT FR RF",
+        "qtyHint": 1,
+        "currency": "USD",
+        "taxMultiplier": 1
+       }
+      },
+      "blRate": null
+     },
+     "demurrage": {
+      "calculationMode": "progressive",
+      "freeDays": {
+       "defaultDays": 7,
+       "daysByGroup": {
+        "demurrage-set-gp-hq-dc": 7,
+        "demurrage-set-ot-fr-rf": 7
+       }
+      },
+      "rulesByGroup": {
+       "gp-hq-dc": [
+        {
+         "id": "zim-gp-hq-dc-free",
+         "label": "0-7",
+         "note": null,
+         "startDay": 1,
+         "endDay": 7,
+         "freeRule": true,
+         "taxRate": 0,
+         "rateConfig": {
+          "rate": 0,
+          "label": "GP HQ DC",
+          "qtyHint": 1,
+          "currency": "USD"
+         }
+        },
+        {
+         "id": "zim-demurrage-11-gp-hq-dc",
+         "label": "8-10",
+         "note": null,
+         "startDay": 8,
+         "endDay": 10,
+         "freeRule": false,
+         "taxRate": 0,
+         "rateConfig": {
+          "rate": 120,
+          "label": "GP HQ DC",
+          "qtyHint": 1,
+          "currency": "USD",
+          "taxMultiplier": 1
+         }
+        },
+        {
+         "id": "zim-demurrage-12-gp-hq-dc",
+         "label": "11-14",
+         "note": null,
+         "startDay": 11,
+         "endDay": 14,
+         "freeRule": false,
+         "taxRate": 0,
+         "rateConfig": {
+          "rate": 150,
+          "label": "GP HQ DC",
+          "qtyHint": 1,
+          "currency": "USD",
+          "taxMultiplier": 1
+         }
+        },
+        {
+         "id": "zim-demurrage-13-gp-hq-dc",
+         "label": ">14",
+         "note": null,
+         "startDay": 15,
+         "endDay": null,
+         "freeRule": false,
+         "taxRate": 0,
+         "rateConfig": {
+          "rate": 165,
+          "label": "GP HQ DC",
+          "qtyHint": 1,
+          "currency": "USD",
+          "taxMultiplier": 1
+         }
+        }
+       ],
+       "ot-fr-rf": [
+        {
+         "id": "zim-ot-fr-rf-free",
+         "label": "0-7",
+         "note": null,
+         "startDay": 1,
+         "endDay": 7,
+         "freeRule": true,
+         "taxRate": 0,
+         "rateConfig": {
+          "rate": 0,
+          "label": "OT FR RF",
+          "qtyHint": 1,
+          "currency": "USD"
+         }
+        }
+       ]
+      },
+      "ruleSets": [
+       {
+        "id": "demurrage-set-gp-hq-dc",
+        "name": "GP HQ DC",
+        "sourceGroupKey": "gp-hq-dc",
+        "rules": [
+         {
+          "id": "zim-gp-hq-dc-free",
+          "label": "0-7",
+          "note": null,
+          "startDay": 1,
+          "endDay": 7,
+          "freeRule": true,
+          "taxRate": 0,
+          "rateConfig": {
+           "rate": 0,
+           "label": "GP HQ DC",
+           "qtyHint": 1,
+           "currency": "USD"
+          }
+         },
+         {
+          "id": "zim-demurrage-11-gp-hq-dc",
+          "label": "8-10",
+          "note": null,
+          "startDay": 8,
+          "endDay": 10,
+          "freeRule": false,
+          "taxRate": 0,
+          "rateConfig": {
+           "rate": 120,
+           "label": "GP HQ DC",
+           "qtyHint": 1,
+           "currency": "USD",
+           "taxMultiplier": 1
+          }
+         },
+         {
+          "id": "zim-demurrage-12-gp-hq-dc",
+          "label": "11-14",
+          "note": null,
+          "startDay": 11,
+          "endDay": 14,
+          "freeRule": false,
+          "taxRate": 0,
+          "rateConfig": {
+           "rate": 150,
+           "label": "GP HQ DC",
+           "qtyHint": 1,
+           "currency": "USD",
+           "taxMultiplier": 1
+          }
+         },
+         {
+          "id": "zim-demurrage-13-gp-hq-dc",
+          "label": ">14",
+          "note": null,
+          "startDay": 15,
+          "endDay": null,
+          "freeRule": false,
+          "taxRate": 0,
+          "rateConfig": {
+           "rate": 165,
+           "label": "GP HQ DC",
+           "qtyHint": 1,
+           "currency": "USD",
+           "taxMultiplier": 1
+          }
+         }
+        ]
+       },
+       {
+        "id": "demurrage-set-ot-fr-rf",
+        "name": "OT FR RF",
+        "sourceGroupKey": "ot-fr-rf",
+        "rules": [
+         {
+          "id": "zim-ot-fr-rf-free",
+          "label": "0-7",
+          "note": null,
+          "startDay": 1,
+          "endDay": 7,
+          "freeRule": true,
+          "taxRate": 0,
+          "rateConfig": {
+           "rate": 0,
+           "label": "OT FR RF",
+           "qtyHint": 1,
+           "currency": "USD"
+          }
+         }
+        ]
+       }
+      ],
+      "assignmentsByContainerType": {
+       "40GP": "demurrage-set-ot-fr-rf",
+       "20FR": "demurrage-set-ot-fr-rf",
+       "20GP": "demurrage-set-gp-hq-dc",
+       "20NOR": "demurrage-set-ot-fr-rf",
+       "20OT": "demurrage-set-ot-fr-rf",
+       "20PL": "demurrage-set-ot-fr-rf",
+       "40FR": "demurrage-set-ot-fr-rf",
+       "40NOR": "demurrage-set-ot-fr-rf",
+       "40OT": "demurrage-set-ot-fr-rf",
+       "40PL": "demurrage-set-ot-fr-rf",
+       "20HC": "demurrage-set-gp-hq-dc",
+       "20RHC": "demurrage-set-ot-fr-rf",
+       "20RF": "demurrage-set-ot-fr-rf",
+       "20TK": "demurrage-set-ot-fr-rf",
+       "40HC": "demurrage-set-ot-fr-rf",
+       "40RHC": "demurrage-set-ot-fr-rf",
+       "40RF": "demurrage-set-ot-fr-rf",
+       "40TK": "demurrage-set-ot-fr-rf",
+       "45HC": "demurrage-set-ot-fr-rf",
+       "45OT": "demurrage-set-ot-fr-rf"
+      }
+     },
+     "terminalMix": [
+      {
+       "id": "terminal-mix-manzanillo-ssa",
+       "port": "MANZANILLO",
+       "terminal": "SSA",
+       "ratio": 1
+      }
+     ],
+     "quoteDefaults": {
+      "priceMode": "aftertax",
+      "quoteCurrency": "MXN"
+     },
+     "localCharges": [
+      {
+       "id": "zim-3",
+       "concept": "Service Fee",
+       "note": "Referencia transferencia No.BL Sin Comision bancaria",
+       "taxRate": 0,
+       "groupRates": {
+        "gp-hq-dc": {
+         "rate": 30,
+         "label": "GP HQ DC",
+         "qtyHint": 1,
+         "currency": "USD"
+        },
+        "ot-fr-rf": {
+         "rate": 30,
+         "label": "OT FR RF",
+         "qtyHint": 1,
+         "currency": "USD"
+        }
+       },
+       "blRate": null
+      },
+      {
+       "id": "zim-4",
+       "concept": "Electronic Data Interchange",
+       "note": null,
+       "taxRate": 0,
+       "groupRates": {},
+       "blRate": {
+        "rate": 30,
+        "qtyHint": 1,
+        "currency": "USD"
+       }
+      },
+      {
+       "id": "zim-5",
+       "concept": "Delivery Order Fee",
+       "note": null,
+       "taxRate": 0,
+       "groupRates": {},
+       "blRate": {
+        "rate": 60,
+        "qtyHint": 1,
+        "currency": "USD"
+       }
+      },
+      {
+       "id": "zim-6",
+       "concept": "Import Container Management Fee 20 GP",
+       "note": "20'",
+       "taxRate": 0,
+       "groupRates": {
+        "gp-hq-dc": {
+         "rate": 20,
+         "label": "GP HQ DC",
+         "qtyHint": 1,
+         "currency": "USD"
+        },
+        "ot-fr-rf": {
+         "rate": 20,
+         "label": "OT FR RF",
+         "qtyHint": 1,
+         "currency": "USD"
+        }
+       },
+       "blRate": null
+      },
+      {
+       "id": "zim-7",
+       "concept": "Import Container Management Fee 40 GP HC",
+       "note": "40'",
+       "taxRate": 0,
+       "groupRates": {
+        "gp-hq-dc": {
+         "rate": 40,
+         "label": "GP HQ DC",
+         "qtyHint": 1,
+         "currency": "USD"
+        },
+        "ot-fr-rf": {
+         "rate": 40,
+         "label": "OT FR RF",
+         "qtyHint": 1,
+         "currency": "USD"
+        }
+       },
+       "blRate": null
+      },
+      {
+       "id": "zim-8",
+       "concept": "Container Insurance",
+       "note": "20'",
+       "taxRate": 0,
+       "groupRates": {
+        "gp-hq-dc": {
+         "rate": 35,
+         "label": "GP HQ DC",
+         "qtyHint": 1,
+         "currency": "USD"
+        },
+        "ot-fr-rf": {
+         "rate": 35,
+         "label": "OT FR RF",
+         "qtyHint": 1,
+         "currency": "USD"
+        }
+       },
+       "blRate": null
+      }
+     ]
+    }
+   ]
+  }
+ }
+}
