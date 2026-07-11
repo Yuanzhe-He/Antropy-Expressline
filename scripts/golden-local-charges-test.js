@@ -50,9 +50,10 @@ const PINNED_FX = {
 // any charge of the prod fixture. Guards against a normalize change silently
 // dropping a key shape the sweep would then never exercise.
 const EXPECTED_PROD_GROUP_KEYS = [
-  "fr-20", "fr-40", "gp-hc-sd", "gp-hq-dc", "gp-hq-dc-20-40", "imo-dry",
-  "imo-reefer", "imo-special-45", "ot-20", "ot-40", "ot-fl-pl", "ot-fr-rf",
-  "reefer", "rf-20", "rf-40", "rf-rq", "special-45",
+  "fr-20", "fr-40", "gp-hc-sd", "gp-hq-dc", "gp-hq-dc-20", "gp-hq-dc-20-40",
+  "gp-hq-dc-40", "imo-dry", "imo-reefer", "imo-special-45", "ot-20", "ot-40",
+  "ot-fl-pl", "ot-fr-rf", "ot-fr-rf-20", "ot-fr-rf-40", "reefer", "rf-20",
+  "rf-40", "rf-rq", "special-45",
 ].sort();
 
 // Frozen prod fallback matrix (2026-07-10): the ONLY (line, charge, type) combos
@@ -267,7 +268,7 @@ function buildGolden() {
   const golden = {};
 
   // 1. Sanitized prod snapshot — full sweep.
-  const prodDoc = loadJson(path.join(FIXTURES, "prod-snapshot-20260710.json"));
+  const prodDoc = loadJson(path.join(FIXTURES, "prod-snapshot-20260711-postpatch.json"));
   golden.prod = sweepFixture(prodDoc, { fullSweep: true });
 
   // 2. Repo seed (JSON-mode reality: master version missing → reseeded from the
@@ -299,8 +300,12 @@ function buildGolden() {
     quotes: sweepFixture(noAssignDoc, { fullSweep: false }).quotes,
   };
 
-  // 5. Custom container type without a size prefix: must keep resolving the
-  //    generic column, before and after the capability change.
+  // 5. Custom container type without a size prefix. Two locked behaviors:
+  //    - on a line that still has generic columns (cma-cgm): resolves the
+  //      generic column, same as before the size split;
+  //    - on a 4-sized-column line (zim, post-payload): falls back to the jsonb
+  //      first key — the documented SOP #8 risk (custom types need a size
+  //      prefix, and non-standard types need an explicit demurrage assignment).
   const customDoc = structuredClone(prodDoc);
   customDoc.modules.handover.containerTypes.push({
     key: "GPX",
@@ -308,7 +313,7 @@ function buildGolden() {
     rateGroup: "dry",
   });
   customDoc.modules.handover.shippingLines = customDoc.modules.handover.shippingLines.filter(
-    (line) => line.id === "zim"
+    (line) => line.id === "zim" || line.id === "cma-cgm"
   );
   golden.customType = sweepFixture(customDoc, { fullSweep: false });
 
@@ -320,7 +325,7 @@ function assertHardInvariants(golden) {
 
   // Census: group-rate keys present in the prod fixture.
   const seen = new Set();
-  const prodDoc = loadJson(path.join(FIXTURES, "prod-snapshot-20260710.json"));
+  const prodDoc = loadJson(path.join(FIXTURES, "prod-snapshot-20260711-postpatch.json"));
   for (const line of prodDoc.modules.handover.shippingLines) {
     for (const charge of line.localCharges || []) {
       for (const key of Object.keys(charge.groupRates || {})) {
@@ -363,10 +368,16 @@ function assertHardInvariants(golden) {
     }
   }
 
-  // Custom no-prefix type must resolve the generic dry column on ZIM.
-  for (const [chargeId, types] of Object.entries(golden.customType.resolution.zim || {})) {
+  // Custom no-prefix type: generic column on a generic-column line; documented
+  // first-key fallback on the 4-sized-column line (SOP #8).
+  for (const [chargeId, types] of Object.entries(golden.customType.resolution["cma-cgm"] || {})) {
     if (types.GPX !== "gp-hq-dc") {
-      failures.push(`custom type GPX on zim charge ${chargeId}: resolved '${types.GPX}' != 'gp-hq-dc'`);
+      failures.push(`custom type GPX on cma-cgm charge ${chargeId}: resolved '${types.GPX}' != 'gp-hq-dc'`);
+    }
+  }
+  for (const [chargeId, types] of Object.entries(golden.customType.resolution.zim || {})) {
+    if (types.GPX !== "!gp-hq-dc-20") {
+      failures.push(`custom type GPX on zim charge ${chargeId}: resolved '${types.GPX}' != '!gp-hq-dc-20' (SOP #8 fallback)`);
     }
   }
 
