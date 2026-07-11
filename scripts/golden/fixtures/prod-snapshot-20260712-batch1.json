@@ -1,5 +1,5 @@
 {
- "generatedFrom": "prod-readonly-snapshot 2026-07-11 post ZIM size-split payloads #1+#2 (sanitized pricing structures; no credentials)",
+ "generatedFrom": "prod-readonly-snapshot 2026-07-12 post batch-1 tarifario fixes (sanitized pricing structures; no credentials)",
  "exchangeRates": {
   "provider": "golden-pin",
   "asOfDate": "2026-07-10",
@@ -461,7 +461,7 @@
          "currency": "USD"
         },
         "ot-fr-rf": {
-         "rate": 30,
+         "rate": 90,
          "label": "OT FR RF",
          "qtyHint": 1,
          "currency": "USD"
@@ -1224,13 +1224,13 @@
        "blRate": null,
        "groupRates": {
         "reefer": {
-         "rate": 50,
+         "rate": 60,
          "label": "REEFER",
          "qtyHint": 1,
          "currency": "USD"
         },
         "imo-dry": {
-         "rate": 50,
+         "rate": 60,
          "label": "IMO DRY",
          "qtyHint": 1,
          "currency": "USD"
@@ -1242,19 +1242,19 @@
          "currency": "USD"
         },
         "imo-reefer": {
-         "rate": 50,
+         "rate": 60,
          "label": "IMO REEFER",
          "qtyHint": 1,
          "currency": "USD"
         },
         "special-45": {
-         "rate": 50,
+         "rate": 60,
          "label": "SPECIAL & 45'",
          "qtyHint": 1,
          "currency": "USD"
         },
         "imo-special-45": {
-         "rate": 50,
+         "rate": 60,
          "label": "IMO SPECIAL & 45'",
          "qtyHint": 1,
          "currency": "USD"
@@ -2032,6 +2032,57 @@
          "rate": 35,
          "label": "GP HQ DC 20' 40'",
          "qtyHint": 2,
+         "currency": "USD"
+        }
+       }
+      },
+      {
+       "id": "one-6",
+       "concept": "IFD Inland Fuel",
+       "note": null,
+       "taxRate": 0,
+       "blRate": null,
+       "groupRates": {
+        "fr-20": {
+         "rate": 25,
+         "label": "FR 20'",
+         "qtyHint": 1,
+         "currency": "USD"
+        },
+        "fr-40": {
+         "rate": 25,
+         "label": "FR 40'",
+         "qtyHint": 1,
+         "currency": "USD"
+        },
+        "ot-20": {
+         "rate": 25,
+         "label": "OT 20'",
+         "qtyHint": 1,
+         "currency": "USD"
+        },
+        "ot-40": {
+         "rate": 25,
+         "label": "OT 40'",
+         "qtyHint": 1,
+         "currency": "USD"
+        },
+        "rf-20": {
+         "rate": 25,
+         "label": "RF 20'",
+         "qtyHint": 1,
+         "currency": "USD"
+        },
+        "rf-40": {
+         "rate": 25,
+         "label": "RF 40'",
+         "qtyHint": 1,
+         "currency": "USD"
+        },
+        "gp-hq-dc-20-40": {
+         "rate": 25,
+         "label": "GP HQ DC 20' 40'",
+         "qtyHint": 1,
          "currency": "USD"
         }
        }
@@ -3215,21 +3266,12 @@
        "concept": "ISP",
        "note": "Referencia transferencia No.BL Sin Comision bancaria",
        "taxRate": 0,
-       "blRate": null,
-       "groupRates": {
-        "gp-hc-sd": {
-         "rate": 12,
-         "label": "GP HC SD",
-         "qtyHint": 1,
-         "currency": "USD"
-        },
-        "ot-fr-rf": {
-         "rate": 12,
-         "label": "OT FR RF",
-         "qtyHint": 1,
-         "currency": "USD"
-        }
-       }
+       "blRate": {
+        "rate": 12,
+        "qtyHint": 1,
+        "currency": "USD"
+       },
+       "groupRates": {}
       },
       {
        "id": "whan-hai-4",
@@ -3268,8 +3310,11 @@
      "demurrage": {
       "calculationMode": "progressive",
       "freeDays": {
-       "defaultDays": 0,
-       "daysByGroup": {}
+       "defaultDays": 7,
+       "daysByGroup": {
+        "demurrage-set-gp-hc-sd": 7,
+        "demurrage-set-ot-fr-rf": 3
+       }
       },
       "rulesByGroup": {
        "gp-hc-sd": [
@@ -3346,12 +3391,27 @@
         "rules": [
          {
           "id": "whan-hai-gp-hc-sd-free",
-          "label": "1-3",
+          "label": "1-7",
           "note": null,
           "startDay": 1,
-          "endDay": 3,
+          "endDay": 7,
+          "freeRule": true,
+          "taxRate": 0,
+          "rateConfig": {
+           "rate": 0,
+           "label": "GP HC SD",
+           "qtyHint": 1,
+           "currency": "USD"
+          }
+         },
+         {
+          "id": "whan-hai-demurrage-1-gp-hc-sd",
+          "label": "8-10",
+          "note": null,
+          "startDay": 8,
+          "endDay": 10,
           "freeRule": false,
-          "taxRate": 0.16,
+          "taxRate": 0,
           "rateConfig": {
            "rate": 150,
            "label": "GP HC SD",
@@ -3360,13 +3420,13 @@
           }
          },
          {
-          "id": "whan-hai-demurrage-set-gp-hc-sd-1782691730746-gce2jz",
-          "label": ">3",
+          "id": "whan-hai-demurrage-2-gp-hc-sd",
+          "label": ">10",
           "note": null,
-          "startDay": 4,
+          "startDay": 11,
           "endDay": null,
           "freeRule": false,
-          "taxRate": 0.16,
+          "taxRate": 0,
           "rateConfig": {
            "rate": 165,
            "label": "GP HC SD",
@@ -3382,29 +3442,43 @@
         "sourceGroupKey": "ot-fr-rf",
         "rules": [
          {
-          "id": "whan-hai-demurrage-7-ot-fr-rf",
+          "id": "whan-hai-ot-fr-rf-free",
           "label": "1-3",
           "note": null,
           "startDay": 1,
           "endDay": 3,
+          "freeRule": true,
+          "taxRate": 0,
+          "rateConfig": {
+           "rate": 0,
+           "label": "OT FR RF",
+           "qtyHint": 1,
+           "currency": "USD"
+          }
+         },
+         {
+          "id": "whan-hai-demurrage-1-ot-fr-rf",
+          "label": "4-6",
+          "note": null,
+          "startDay": 4,
+          "endDay": 6,
           "freeRule": false,
-          "taxRate": 0.16,
+          "taxRate": 0,
           "rateConfig": {
            "rate": 195,
            "label": "OT FR RF",
            "qtyHint": 1,
-           "currency": "USD",
-           "taxMultiplier": 1
+           "currency": "USD"
           }
          },
          {
-          "id": "whan-hai-demurrage-set-ot-fr-rf-1782692076989-ctlx1j",
-          "label": ">3",
+          "id": "whan-hai-demurrage-2-ot-fr-rf",
+          "label": ">6",
           "note": null,
-          "startDay": 4,
+          "startDay": 7,
           "endDay": null,
           "freeRule": false,
-          "taxRate": 0.16,
+          "taxRate": 0,
           "rateConfig": {
            "rate": 205,
            "label": "OT FR RF",
@@ -4556,8 +4630,11 @@
      "demurrage": {
       "calculationMode": "progressive",
       "freeDays": {
-       "defaultDays": 0,
-       "daysByGroup": {}
+       "defaultDays": 14,
+       "daysByGroup": {
+        "demurrage-set-gp-hq-dc": 14,
+        "demurrage-set-ot-fr-rf": 3
+       }
       },
       "rulesByGroup": {
        "gp-hq-dc": [
@@ -4665,46 +4742,45 @@
         "sourceGroupKey": "gp-hq-dc",
         "rules": [
          {
-          "id": "oocl-demurrage-9-gp-hq-dc",
-          "label": "1-5",
+          "id": "oocl-gp-hq-dc-free",
+          "label": "1-14",
           "note": null,
           "startDay": 1,
-          "endDay": 5,
-          "freeRule": false,
+          "endDay": 14,
+          "freeRule": true,
           "taxRate": 0,
           "rateConfig": {
-           "rate": 150,
-           "label": "GP HQ DC",
-           "qtyHint": 1,
-           "currency": "USD",
-           "taxMultiplier": 1
-          }
-         },
-         {
-          "id": "oocl-demurrage-set-gp-hq-dc-1782692716102-wlt4fx",
-          "label": "6",
-          "note": null,
-          "startDay": 6,
-          "endDay": 6,
-          "freeRule": false,
-          "taxRate": 0,
-          "rateConfig": {
-           "rate": 160,
+           "rate": 0,
            "label": "GP HQ DC",
            "qtyHint": 1,
            "currency": "USD"
           }
          },
          {
-          "id": "oocl-demurrage-set-gp-hq-dc-1782693050687-mu11fp",
-          "label": ">6",
+          "id": "oocl-demurrage-1-gp-hq-dc",
+          "label": "15-19",
           "note": null,
-          "startDay": 7,
-          "endDay": null,
+          "startDay": 15,
+          "endDay": 19,
           "freeRule": false,
           "taxRate": 0,
           "rateConfig": {
-           "rate": 170,
+           "rate": 150,
+           "label": "GP HQ DC",
+           "qtyHint": 1,
+           "currency": "USD"
+          }
+         },
+         {
+          "id": "oocl-demurrage-2-gp-hq-dc",
+          "label": "20-24",
+          "note": null,
+          "startDay": 20,
+          "endDay": 24,
+          "freeRule": false,
+          "taxRate": 0,
+          "rateConfig": {
+           "rate": 160,
            "label": "GP HQ DC",
            "qtyHint": 1,
            "currency": "USD"
@@ -4719,40 +4795,24 @@
         "rules": [
          {
           "id": "oocl-ot-fr-rf-free",
-          "label": "1-5",
+          "label": "1-3",
           "note": null,
           "startDay": 1,
-          "endDay": 5,
-          "freeRule": false,
+          "endDay": 3,
+          "freeRule": true,
           "taxRate": 0,
           "rateConfig": {
-           "rate": 210,
+           "rate": 0,
            "label": "OT FR RF",
            "qtyHint": 1,
            "currency": "USD"
           }
          },
          {
-          "id": "oocl-demurrage-8-ot-fr-rf",
-          "label": "6-10",
+          "id": "oocl-demurrage-1-ot-fr-rf",
+          "label": ">3",
           "note": null,
-          "startDay": 6,
-          "endDay": 10,
-          "freeRule": false,
-          "taxRate": 0,
-          "rateConfig": {
-           "rate": 210,
-           "label": "OT FR RF",
-           "qtyHint": 1,
-           "currency": "USD",
-           "taxMultiplier": 1
-          }
-         },
-         {
-          "id": "oocl-demurrage-10-ot-fr-rf",
-          "label": ">10",
-          "note": null,
-          "startDay": 11,
+          "startDay": 4,
           "endDay": null,
           "freeRule": false,
           "taxRate": 0,
@@ -4760,8 +4820,7 @@
            "rate": 210,
            "label": "OT FR RF",
            "qtyHint": 1,
-           "currency": "USD",
-           "taxMultiplier": 1
+           "currency": "USD"
           }
          }
         ]
@@ -4786,7 +4845,7 @@
        "40RHC": "demurrage-set-ot-fr-rf",
        "40RF": "demurrage-set-ot-fr-rf",
        "40TK": "demurrage-set-ot-fr-rf",
-       "45HC": "demurrage-set-ot-fr-rf",
+       "45HC": "demurrage-set-gp-hq-dc",
        "45OT": "demurrage-set-ot-fr-rf"
       }
      },
@@ -6076,24 +6135,11 @@
        "note": null,
        "taxRate": 0.16,
        "blRate": {
-        "rate": 0,
+        "rate": 60,
         "qtyHint": 1,
-        "currency": "MXN"
+        "currency": "USD"
        },
-       "groupRates": {
-        "gp-hc-sd": {
-         "rate": 60,
-         "label": "GP HC SD",
-         "qtyHint": 1,
-         "currency": "USD"
-        },
-        "ot-fr-rf": {
-         "rate": 60,
-         "label": "OT FR RF",
-         "qtyHint": 1,
-         "currency": "USD"
-        }
-       }
+       "groupRates": {}
       },
       {
        "id": "sinokor-local-charge-1783566806809-jysah5",
@@ -7322,7 +7368,7 @@
         "currency": "USD"
        },
        "ot-fr-rf": {
-        "rate": 1500,
+        "rate": 2500,
         "qtyHint": 1,
         "currency": "USD"
        }
@@ -7399,7 +7445,7 @@
        "id": "hmm-local-charge-1783577923389-tps0jx",
        "concept": "Flete Marítimo (si aplica)",
        "note": null,
-       "taxRate": 0,
+       "taxRate": 0.16,
        "blRate": {
         "rate": 45,
         "qtyHint": 1,
