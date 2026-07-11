@@ -11,10 +11,12 @@ const {
 } = require("../options");
 const {
   CONTAINER_TYPE_MASTER_VERSION,
+  LEGACY_NAME_BY_SIZED_GROUP,
   RATE_GROUPS,
   RATE_GROUP_NAMES,
   RATE_GROUP_NAME_BY_SIGNATURE,
   STANDARD_HANDOVER_CONTAINER_TYPES,
+  sizedKeysGroup,
   formatDemurrageRuleLabel,
   inferTaxRateFromMultiplier,
   normalizeCharge,
@@ -355,13 +357,18 @@ function deriveContainerTypes(shippingLines) {
 // named rate group (resolved back from the standard rateGroupKeys signature).
 
 function buildSeedContainerTypeMaster() {
-  return STANDARD_HANDOVER_CONTAINER_TYPES.map((type) => ({
-    key: type.key,
-    label: type.label,
-    rateGroup:
+  return STANDARD_HANDOVER_CONTAINER_TYPES.map((type) => {
+    const signatureName =
       RATE_GROUP_NAME_BY_SIGNATURE.get((type.rateGroupKeys || []).join("|")) ||
-      RATE_GROUP_NAMES[0],
-  }));
+      RATE_GROUP_NAMES[0];
+    return {
+      key: type.key,
+      label: type.label,
+      // Sized variants (dry20/…) are key-derivation internals — persist the
+      // legacy name so any build, old or new, resolves the seed identically.
+      rateGroup: LEGACY_NAME_BY_SIZED_GROUP[signatureName] || signatureName,
+    };
+  });
 }
 
 // Turn persisted master entries ({ key, label, rateGroup }) into the full
@@ -382,16 +389,21 @@ function normalizeContainerTypeMaster(entries, shippingLines = []) {
         return null;
       }
       seen.add(key);
-      const rateGroup = RATE_GROUPS[entry?.rateGroup]
+      const resolvedName = RATE_GROUPS[entry?.rateGroup]
         ? entry.rateGroup
         : RATE_GROUP_NAME_BY_SIGNATURE.get(
             (entry?.rateGroupKeys || []).join("|")
           ) || RATE_GROUP_NAMES[0];
+      // Persisted names stay LEGACY (a sized name is normalized back), while
+      // the candidate KEYS come from the per-size variant for the mixed-size
+      // groups. Keeping sized names out of the data is what makes a code
+      // rollback inert.
+      const rateGroup = LEGACY_NAME_BY_SIZED_GROUP[resolvedName] || resolvedName;
       return {
         key,
         label: String(entry?.label || key).trim() || key,
         rateGroup,
-        rateGroupKeys: [...RATE_GROUPS[rateGroup]],
+        rateGroupKeys: [...RATE_GROUPS[sizedKeysGroup(rateGroup, key)]],
         shippingLineCount: lineNames.length,
         shippingLines: lineNames,
       };

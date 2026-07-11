@@ -14,26 +14,92 @@ const CUSTOMS_STORAGE_TIER_POLICY_VERSION = 2;
 
 const CUSTOMS_CONTAINER_TAXONOMY_VERSION = 1;
 
+// Candidate order rule: per-family size keys (fr-20 …) > merged-column size keys
+// (ot-fr-rf-20 / gp-hq-dc-20 …) > merged generic keys. A line opts into per-size
+// pricing by defining the size keys in its charge groupRates; every existing
+// charge resolves exactly as before because the new keys precede but never
+// shadow a key that any existing data defines.
 const RATE_GROUPS = Object.freeze({
   dry: ["gp-hq-dc", "gp-hc-sd", "gp-hq-dc-20-40", "imo-dry"],
+  dry20: ["gp-hq-dc-20", "gp-hq-dc", "gp-hc-sd", "gp-hq-dc-20-40", "imo-dry"],
+  dry40: ["gp-hq-dc-40", "gp-hq-dc", "gp-hc-sd", "gp-hq-dc-20-40", "imo-dry"],
   fortyFiveDry: [
     "special-45",
     "imo-special-45",
+    "gp-hq-dc-40",
     "gp-hq-dc",
     "gp-hc-sd",
     "gp-hq-dc-20-40",
     "imo-dry",
   ],
-  flatrack20: ["fr-20", "ot-fr-rf", "ot-fl-pl"],
-  flatrack40: ["fr-40", "ot-fr-rf", "ot-fl-pl"],
-  openTop20: ["ot-20", "ot-fr-rf", "ot-fl-pl"],
-  openTop40: ["ot-40", "ot-fr-rf", "ot-fl-pl"],
-  reefer20: ["rf-20", "reefer", "rf-rq", "ot-fr-rf", "imo-reefer"],
-  reefer40: ["rf-40", "reefer", "rf-rq", "ot-fr-rf", "imo-reefer"],
+  flatrack20: ["fr-20", "ot-fr-rf-20", "ot-fr-rf", "ot-fl-pl"],
+  flatrack40: ["fr-40", "ot-fr-rf-40", "ot-fr-rf", "ot-fl-pl"],
+  openTop20: ["ot-20", "ot-fr-rf-20", "ot-fr-rf", "ot-fl-pl"],
+  openTop40: ["ot-40", "ot-fr-rf-40", "ot-fr-rf", "ot-fl-pl"],
+  reefer20: ["rf-20", "reefer", "rf-rq", "ot-fr-rf-20", "ot-fr-rf", "imo-reefer"],
+  reefer40: ["rf-40", "reefer", "rf-rq", "ot-fr-rf-40", "ot-fr-rf", "imo-reefer"],
   tank: ["ot-fr-rf", "ot-fl-pl"],
-  platform20: ["ot-fl-pl", "ot-fr-rf", "fr-20"],
-  platform40: ["ot-fl-pl", "ot-fr-rf", "fr-40"],
-  fortyFiveOpenTop: ["special-45", "imo-special-45", "ot-40", "ot-fr-rf", "ot-fl-pl"],
+  tank20: ["ot-fr-rf-20", "ot-fr-rf", "ot-fl-pl"],
+  tank40: ["ot-fr-rf-40", "ot-fr-rf", "ot-fl-pl"],
+  platform20: ["ot-fl-pl", "ot-fr-rf-20", "ot-fr-rf", "fr-20"],
+  platform40: ["ot-fl-pl", "ot-fr-rf-40", "ot-fr-rf", "fr-40"],
+  fortyFiveOpenTop: ["special-45", "imo-special-45", "ot-40", "ot-fr-rf-40", "ot-fr-rf", "ot-fl-pl"],
+});
+
+// The mixed-size legacy groups and their per-size key-derivation variants. The
+// sized names (dry20/dry40/tank20/tank40) exist ONLY to pick a candidate array:
+// persisted master entries always keep the LEGACY name (see sizedKeysGroup
+// callers in normalize-handover), so a code rollback stays inert — an old build
+// resolves the persisted names exactly as it always did.
+const SIZED_LEGACY_GROUPS = Object.freeze({
+  dry: Object.freeze(["dry20", "dry40"]),
+  tank: Object.freeze(["tank20", "tank40"]),
+});
+
+const LEGACY_NAME_BY_SIZED_GROUP = Object.freeze({
+  dry20: "dry",
+  dry40: "dry",
+  tank20: "tank",
+  tank40: "tank",
+});
+
+// Rate group whose KEYS a container type should use, given its size prefix:
+// 2x -> the 20-foot variant, 4x (covers 45) -> the 40-foot variant. Keys
+// without a numeric size prefix keep the legacy group and keep resolving the
+// generic columns, exactly as before the size split.
+function sizedKeysGroup(groupName, typeKey) {
+  const sized = SIZED_LEGACY_GROUPS[groupName];
+  if (!sized) {
+    return groupName;
+  }
+  const key = String(typeKey || "");
+  if (/^2\d/.test(key)) {
+    return sized[0];
+  }
+  if (/^4\d/.test(key)) {
+    return sized[1];
+  }
+  return groupName;
+}
+
+// Pre-size-split signatures (frozen literals of the arrays as they were before
+// the split). Master entries persisted WITHOUT a rateGroup name — historical
+// blob backups / external imports — carry these arrays verbatim; without this
+// registration they would all fall back to RATE_GROUP_NAMES[0] ("dry") after
+// the arrays above changed.
+const LEGACY_RATE_GROUP_SIGNATURES = Object.freeze({
+  "gp-hq-dc|gp-hc-sd|gp-hq-dc-20-40|imo-dry": "dry",
+  "special-45|imo-special-45|gp-hq-dc|gp-hc-sd|gp-hq-dc-20-40|imo-dry": "fortyFiveDry",
+  "fr-20|ot-fr-rf|ot-fl-pl": "flatrack20",
+  "fr-40|ot-fr-rf|ot-fl-pl": "flatrack40",
+  "ot-20|ot-fr-rf|ot-fl-pl": "openTop20",
+  "ot-40|ot-fr-rf|ot-fl-pl": "openTop40",
+  "rf-20|reefer|rf-rq|ot-fr-rf|imo-reefer": "reefer20",
+  "rf-40|reefer|rf-rq|ot-fr-rf|imo-reefer": "reefer40",
+  "ot-fr-rf|ot-fl-pl": "tank",
+  "ot-fl-pl|ot-fr-rf|fr-20": "platform20",
+  "ot-fl-pl|ot-fr-rf|fr-40": "platform40",
+  "special-45|imo-special-45|ot-40|ot-fr-rf|ot-fl-pl": "fortyFiveOpenTop",
 });
 
 // Editable display container-type master. Bumped to (re)seed the persisted
@@ -42,11 +108,17 @@ const RATE_GROUPS = Object.freeze({
 const CONTAINER_TYPE_MASTER_VERSION = 1;
 // Reverse lookup: a container type's rateGroupKeys array → its named rate group.
 
-const RATE_GROUP_NAME_BY_SIGNATURE = new Map(
-  Object.entries(RATE_GROUPS).map(([name, keys]) => [keys.join("|"), name])
-);
+const RATE_GROUP_NAME_BY_SIGNATURE = new Map([
+  ...Object.entries(LEGACY_RATE_GROUP_SIGNATURES),
+  ...Object.entries(RATE_GROUPS).map(([name, keys]) => [keys.join("|"), name]),
+]);
 
-const RATE_GROUP_NAMES = Object.freeze(Object.keys(RATE_GROUPS));
+// Selectable/persistable group names. The sized variants are key-derivation
+// internals — they must never appear in the admin rate-group picker nor be
+// persisted on a master entry.
+const RATE_GROUP_NAMES = Object.freeze(
+  Object.keys(RATE_GROUPS).filter((name) => !LEGACY_NAME_BY_SIZED_GROUP[name])
+);
 
 const STANDARD_HANDOVER_CONTAINER_TYPES = Object.freeze([
   {
@@ -57,7 +129,7 @@ const STANDARD_HANDOVER_CONTAINER_TYPES = Object.freeze([
     mode: "SEA",
     containerType: "DRY",
     teu: 2,
-    rateGroupKeys: RATE_GROUPS.dry,
+    rateGroupKeys: RATE_GROUPS.dry40,
   },
   {
     key: "20FR",
@@ -77,7 +149,7 @@ const STANDARD_HANDOVER_CONTAINER_TYPES = Object.freeze([
     mode: "SEA",
     containerType: "DRY",
     teu: 1,
-    rateGroupKeys: RATE_GROUPS.dry,
+    rateGroupKeys: RATE_GROUPS.dry20,
   },
   {
     key: "20NOR",
@@ -87,7 +159,7 @@ const STANDARD_HANDOVER_CONTAINER_TYPES = Object.freeze([
     mode: "SEA",
     containerType: "DRY",
     teu: 1,
-    rateGroupKeys: RATE_GROUPS.dry,
+    rateGroupKeys: RATE_GROUPS.dry20,
   },
   {
     key: "20OT",
@@ -127,7 +199,7 @@ const STANDARD_HANDOVER_CONTAINER_TYPES = Object.freeze([
     mode: "SEA",
     containerType: "DRY",
     teu: 2,
-    rateGroupKeys: RATE_GROUPS.dry,
+    rateGroupKeys: RATE_GROUPS.dry40,
   },
   {
     key: "40OT",
@@ -157,7 +229,7 @@ const STANDARD_HANDOVER_CONTAINER_TYPES = Object.freeze([
     mode: "SEA",
     containerType: "DRY",
     teu: 1,
-    rateGroupKeys: RATE_GROUPS.dry,
+    rateGroupKeys: RATE_GROUPS.dry20,
   },
   {
     key: "20RHC",
@@ -187,7 +259,7 @@ const STANDARD_HANDOVER_CONTAINER_TYPES = Object.freeze([
     mode: "SEA",
     containerType: "TNK",
     teu: 1,
-    rateGroupKeys: RATE_GROUPS.tank,
+    rateGroupKeys: RATE_GROUPS.tank20,
   },
   {
     key: "40HC",
@@ -197,7 +269,7 @@ const STANDARD_HANDOVER_CONTAINER_TYPES = Object.freeze([
     mode: "SEA",
     containerType: "DRY",
     teu: 2,
-    rateGroupKeys: RATE_GROUPS.dry,
+    rateGroupKeys: RATE_GROUPS.dry40,
   },
   {
     key: "40RHC",
@@ -227,7 +299,7 @@ const STANDARD_HANDOVER_CONTAINER_TYPES = Object.freeze([
     mode: "SEA",
     containerType: "TNK",
     teu: 2,
-    rateGroupKeys: RATE_GROUPS.tank,
+    rateGroupKeys: RATE_GROUPS.tank40,
   },
   {
     key: "45HC",
@@ -568,6 +640,8 @@ module.exports = {
   CONTAINER_TYPE_MASTER_VERSION,
   RATE_GROUP_NAME_BY_SIGNATURE,
   RATE_GROUP_NAMES,
+  LEGACY_NAME_BY_SIZED_GROUP,
+  sizedKeysGroup,
   STANDARD_HANDOVER_CONTAINER_TYPES,
   parseNumber,
   inferTaxRateFromMultiplier,
