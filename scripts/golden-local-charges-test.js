@@ -67,7 +67,10 @@ for (const chargeId of ["msc-3", "msc-4", "msc-5"]) {
     EXPECTED_FALLBACK_COMBOS.push(`msc|${chargeId}|${typeKey}|reefer`);
   }
 }
-for (const chargeId of ["one-4", "one-5"]) {
+// one-6 (IFD Inland Fuel, added 2026-07-12 batch 1) inherits ONE's 7-column key
+// set, so TK types fall back the same way as one-4/one-5 (amount coincides at
+// $25 across all columns). Ticket P10 owns the real TK answer.
+for (const chargeId of ["one-4", "one-5", "one-6"]) {
   for (const typeKey of ["20TK", "40TK"]) {
     EXPECTED_FALLBACK_COMBOS.push(`one|${chargeId}|${typeKey}|fr-20`);
   }
@@ -268,7 +271,7 @@ function buildGolden() {
   const golden = {};
 
   // 1. Sanitized prod snapshot — full sweep.
-  const prodDoc = loadJson(path.join(FIXTURES, "prod-snapshot-20260711-postpatch.json"));
+  const prodDoc = loadJson(path.join(FIXTURES, "prod-snapshot-20260712-batch1.json"));
   golden.prod = sweepFixture(prodDoc, { fullSweep: true });
 
   // 2. Repo seed (JSON-mode reality: master version missing → reseeded from the
@@ -325,7 +328,7 @@ function assertHardInvariants(golden) {
 
   // Census: group-rate keys present in the prod fixture.
   const seen = new Set();
-  const prodDoc = loadJson(path.join(FIXTURES, "prod-snapshot-20260711-postpatch.json"));
+  const prodDoc = loadJson(path.join(FIXTURES, "prod-snapshot-20260712-batch1.json"));
   for (const line of prodDoc.modules.handover.shippingLines) {
     for (const charge of line.localCharges || []) {
       for (const key of Object.keys(charge.groupRates || {})) {
