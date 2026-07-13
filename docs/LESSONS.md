@@ -19,6 +19,42 @@ Only record lessons that may change future behavior.
 - landed_in:
 - next_action:
 
+## 2026-07-13 - ZIM special demurrage tiers landed (ticket #3 closed); fixture leaf diff is the real out-of-scope gate
+
+- source_type: project-incident
+- task_type: production data patch (batch 2A) + golden regen
+- domain: handover demurrage rule sets, golden fixture regen discipline
+- trigger: Estefani's 2026-07-13 WhatsApp + TARIFARIO 13.07.26 supplied the missing ZIM OT/FR/RF demurrage tiers (problem ticket #3 / recon P8): specials split by size, 20" $185/day and 40" $195/day from day 8 (7 free days), IVA EX.
+- incident_or_feedback: Executed per the "extend the same golden before applying data" next_action from 2026-07-11: patch (drift gate → backup → saveCarrier → 14 cent-exact read-backs) then fixture regen. golden's diffPaths prints only the FIRST 20 paths — it can never prove an out-of-scope change is absent.
+- lesson: The strong out-of-scope evidence after a data patch is the fixture-level leaf diff (previous fixture vs fresh read-only dump) classified against an explicit allowed-path list, plus the hard invariants (key census / frozen fallback matrix) that run even in --write. golden diffPaths is auxiliary. The dump itself is now a committed script (scripts/golden/dump-prod-fixture.js) that inherits golden-pin exchangeRates and never dumps live FX.
+- scope: project
+- landed_in: `scripts/patch-batch2-tarifario.js`, `scripts/golden/dump-prod-fixture.js`, `scripts/golden/fixtures/prod-snapshot-20260713-batch2.json`, execution report `outputs/20260713_batch2_tarifario_execution_report.md`
+- next_action: Remaining ZIM item is garantía (P9, unanswered). Any future data batch reuses dump-prod-fixture.js + the leaf-diff classification instead of an out-of-band snapshot.
+
+## 2026-07-13 - Tarifario values can sit in the group-label column, not the USD column
+
+- source_type: project-incident
+- task_type: tarifario machine extraction / reconciliation
+- domain: Excel parsing of client tarifario sheets
+- trigger: HAPAG sheet writes the special-container demoras rate 210 in J8 (the OT FR RF group-label/qty column) while the group's USD column K8 is empty; a parser reading the conventional USD column sees blank and would conclude "no rate". KMTC/RCL show the same habit on other rows.
+- incident_or_feedback: The 13.07.26 re-verification only caught this because cells were dumped exhaustively per sheet instead of reading the agreed USD/MXN columns.
+- lesson: Machine extraction of client tarifarios must tolerate values landing in label/qty columns (per-sheet exhaustive dump + human spot-check of every non-empty cell in a charge row); per-sheet spot checks cannot be limited to the conventional columns.
+- scope: project
+- landed_in: `docs/specs/20260713_estefani_feedback_tarifario1307_PLAN.md` §2.3 (evidence), this entry
+- next_action: If tarifario ingestion is ever automated, add a "value in unexpected column" warning pass per row.
+
+## 2026-07-13 - Live prod can be hand-edited in parallel with a batch patch; drift gate = detector + decision tree
+
+- source_type: project-incident
+- task_type: production data patch coordination
+- domain: prod data patch discipline, admin UI parallel edits
+- trigger: During batch-2A execution the ZIM special demurrage set had gained a manual admin rule (>7 @ $195 flat for ALL 13 special types, id `zim-demurrage-set-ot-fr-rf-1783925143346-gay37k`, created ~07-13 00:41) — someone hand-patched half of Estefani's fix after her message, overcharging 20' specials $10/day vs her authoritative numbers.
+- incident_or_feedback: The drift gate correctly refused to write. The right handling was not an unconditional stop: the target state is absolutely defined by the client's written numbers, and the per-line prepatch backup preserves the manual state, so superseding the manual edit is a safe, traceable net correction (Chandler ruling A, CONTINUE_PROMPT §0).
+- lesson: Treat the drift gate as detector + decision tree, not an unconditional barrier: (a) live already equals target → skip write, still assert; (b) display-only drift (name/note/label) → absorb into the pin and proceed; (c) money/structure drift → back up the drifted state, let the whole-set builder replace it, record the drift verbatim, and register origin verification as a pending-ruling item. Re-pin the drift check to the CURRENT live state so the window between ruling and apply stays guarded.
+- scope: project
+- landed_in: `scripts/patch-batch2-tarifario.js` (re-pinned DRIFT_CHECKS.zim), `docs/specs/20260713_batch2A_tarifario_CONTINUE_PROMPT.md`, execution report drift log
+- next_action: Verify the manual rule's origin with Chandler/Jose (backup `backups/zim-prepatch-batch2-*.json` holds the original); if Jose had a separate agreement, open a correction batch.
+
 ## 2026-07-11 - Golden regressions must lock resolution RESULTS and money, never mechanism internals
 
 - source_type: ai-self-correction

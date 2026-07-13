@@ -110,3 +110,9 @@ Chandler 问："我看到你的 csv 里有部分数据，但是有的路线没�
 - 西语车型译名最终确认（Camioneta/Rabón/Torton/Cama baja 等）。
 - 是否启用 Google Directions 付费 API（当前 OSRM 免费 + 后台人工覆盖已满足"修改选项"，建议不接）。
 - 非墨西哥段起运港费用的最终 USD 价（当前按 CNY 折算预设，待 José 给 USD 报价或确认汇率）。
+
+---
+
+## Tarifario 档案登记
+
+- `TARIFARIO 13.07.26.xlsx` — WhatsApp Estefani 2026-07-13 附件；vs 09.07.26 权威逐 cell diff 结论见 `docs/specs/20260713_estefani_feedback_tarifario1307_PLAN.md` §2（仅 ZIM / WHAN HAI 两页变更；ZIM 特种 demoras 20"/$185、40"/$195 自第 8 天起，WHAN HAI garantía MXN-only 20,000/30,000）。
