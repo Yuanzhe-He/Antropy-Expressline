@@ -271,7 +271,7 @@ function buildGolden() {
   const golden = {};
 
   // 1. Sanitized prod snapshot — full sweep.
-  const prodDoc = loadJson(path.join(FIXTURES, "prod-snapshot-20260712-batch1.json"));
+  const prodDoc = loadJson(path.join(FIXTURES, "prod-snapshot-20260713-batch2.json"));
   golden.prod = sweepFixture(prodDoc, { fullSweep: true });
 
   // 2. Repo seed (JSON-mode reality: master version missing → reseeded from the
@@ -328,7 +328,7 @@ function assertHardInvariants(golden) {
 
   // Census: group-rate keys present in the prod fixture.
   const seen = new Set();
-  const prodDoc = loadJson(path.join(FIXTURES, "prod-snapshot-20260712-batch1.json"));
+  const prodDoc = loadJson(path.join(FIXTURES, "prod-snapshot-20260713-batch2.json"));
   for (const line of prodDoc.modules.handover.shippingLines) {
     for (const charge of line.localCharges || []) {
       for (const key of Object.keys(charge.groupRates || {})) {
