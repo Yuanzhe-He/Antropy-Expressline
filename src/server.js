@@ -5,6 +5,7 @@
 
 const express = require("express");
 const session = require("express-session");
+const { BoundedSessionStore } = require("./lib/bounded-session-store");
 const path = require("node:path");
 
 const usageGuard = require("./lib/usage-guard");
@@ -31,7 +32,7 @@ const port = process.env.PORT || 3000;
 const sessionSecret =
   process.env.SESSION_SECRET || "jose-expressline-consulting-local";
 
-function createApp() {
+function createApp({ sessionStore = new BoundedSessionStore() } = {}) {
   const app = express();
 
   app.set("view engine", "ejs");
@@ -45,8 +46,12 @@ function createApp() {
     })
   );
   app.use(express.static(path.join(__dirname, "../public")));
+  // Health probes only read operational counters; they must not create a
+  // language/demo-user session on every cookie-less request.
+  healthRoutes.register(app); // GET /healthz
   app.use(
     session({
+      store: sessionStore,
       secret: sessionSecret,
       resave: false,
       saveUninitialized: false,
@@ -70,7 +75,6 @@ function createApp() {
   // /admin/customs/shipping-lines routes must register before the generic
   // /admin/:moduleKey/shipping-lines routes. This sequence matches the original.
   coreRoutes.register(app); // /, /login, /logout, /preferences/language
-  healthRoutes.register(app); // GET /healthz
   workbenchRoutes.register(app, ctx);
   adminInlandRoutes.register(app, ctx);
   adminSettingsRoutes.register(app, ctx);
