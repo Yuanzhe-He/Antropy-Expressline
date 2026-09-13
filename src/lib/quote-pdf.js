@@ -1,6 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const ejs = require("ejs");
+const { createIdleBrowser, readIdleTimeout } = require("./idle-browser");
 
 const publicDir = path.join(__dirname, "../../public");
 const templatePath = path.join(__dirname, "../../views/quote-document.ejs");
@@ -15,7 +16,10 @@ const MIME_BY_EXT = {
 };
 
 let assetCache = null;
-let browserPromise = null;
+const browserLifecycle = createIdleBrowser({
+  launch: launchBrowser,
+  idleTimeoutMs: readIdleTimeout(process.env.PDF_BROWSER_IDLE_TIMEOUT_MS),
+});
 
 function fileToDataUri(relativePath) {
   const absolute = path.join(publicDir, relativePath);
@@ -47,23 +51,20 @@ function loadAssets() {
   return assetCache;
 }
 
-async function getBrowser() {
-  if (!browserPromise) {
-    // Lazy require: only pulled in when a PDF is actually requested, so the
-    // rest of the app boots even if Chromium is unavailable.
-    const puppeteer = require("puppeteer");
-    browserPromise = puppeteer.launch({
-      headless: true,
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--font-render-hinting=none",
-      ],
-    });
-  }
-  return browserPromise;
+function launchBrowser() {
+  // Lazy require: only pulled in when a PDF is actually requested, so the
+  // rest of the app boots even if Chromium is unavailable.
+  const puppeteer = require("puppeteer");
+  return puppeteer.launch({
+    headless: true,
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--font-render-hinting=none",
+    ],
+  });
 }
 
 async function renderQuoteHtml(quoteView) {
@@ -71,37 +72,30 @@ async function renderQuoteHtml(quoteView) {
 }
 
 async function renderQuotePdf(quoteView) {
-  const html = await renderQuoteHtml(quoteView);
-  const browser = await getBrowser();
-  const page = await browser.newPage();
-  try {
-    // Inlined @font-face data URIs never trigger network activity, so
-    // networkidle0 would stall until timeout. Wait for load + fonts instead —
-    // this is what makes CJK render reliably, incl. on Railway cold start.
-    await page.setContent(html, { waitUntil: "load", timeout: 60000 });
-    await page.evaluateHandle(() => document.fonts.ready);
-    return await page.pdf({
-      format: "A4",
-      printBackground: true,
-      preferCSSPageSize: true,
-      margin: { top: "12mm", right: "10mm", bottom: "14mm", left: "10mm" },
-      displayHeaderFooter: false,
-    });
-  } finally {
-    await page.close();
-  }
+  return browserLifecycle.run(async (browser) => {
+    const html = await renderQuoteHtml(quoteView);
+    const page = await browser.newPage();
+    try {
+      // Inlined @font-face data URIs never trigger network activity, so
+      // networkidle0 would stall until timeout. Wait for load + fonts instead —
+      // this is what makes CJK render reliably, incl. on Railway cold start.
+      await page.setContent(html, { waitUntil: "load", timeout: 60000 });
+      await page.evaluateHandle(() => document.fonts.ready);
+      return await page.pdf({
+        format: "A4",
+        printBackground: true,
+        preferCSSPageSize: true,
+        margin: { top: "12mm", right: "10mm", bottom: "14mm", left: "10mm" },
+        displayHeaderFooter: false,
+      });
+    } finally {
+      await page.close();
+    }
+  });
 }
 
 async function closeQuoteBrowser() {
-  if (browserPromise) {
-    try {
-      const browser = await browserPromise;
-      await browser.close();
-    } catch (_error) {
-      /* already closed */
-    }
-    browserPromise = null;
-  }
+  await browserLifecycle.close();
 }
 
 module.exports = {
