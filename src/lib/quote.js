@@ -422,7 +422,7 @@ const QUOTE_TRANSPORT_MODE_OPTIONS = Object.freeze([
   "AIR", "SEA", "FSA", "FAS", "ROA", "RAI", "COU",
 ]);
 const QUOTE_CARGO_TYPE_OPTIONS = Object.freeze([
-  "FCL", "LCL", "BLK", "LQD", "BBK", "BCN", "SCN", "ROR",
+  "FCL", "LCL", "BBK",
 ]);
 
 function normalizeQuoteCargoCode(value) {
@@ -498,7 +498,8 @@ function toNumber(value, fallback = 0) {
 }
 
 function roundMoney(value) {
-  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+  const cents = Number(value) * 100;
+  return Math.round(cents + Number.EPSILON * Math.max(1, Math.abs(cents))) / 100;
 }
 
 function formatMoney(value) {
@@ -595,26 +596,28 @@ function generateQuoteNumber(settings = {}) {
 // Seed a fresh set of editable line items (new ids) from the template rows.
 // mexico_only drops the NO MEXICO (foreign) rows so a fresh quote = legacy 11
 // rows; ocean_mexico keeps both sections (foreign first).
-function buildInitialLineItems(quoteMode = "mexico_only") {
+function buildInitialLineItems(quoteMode = "mexico_only", templates = QUOTE_TEMPLATE_ROWS) {
   const mode = normalizeQuoteMode(quoteMode);
   const rows =
     mode === "ocean_mexico"
-      ? QUOTE_TEMPLATE_ROWS
-      : QUOTE_TEMPLATE_ROWS.filter((row) => row.section !== "foreign");
-  return rows.map((row, index) => ({
+      ? templates
+      : templates.filter((row) => row.section !== "foreign");
+  return rows.filter((row) => row.enabled !== false).map((row, index) => ({
     ...row,
+    included: row.included ?? !row.selectionRequired,
     calcRef: row.calcRef ? { ...row.calcRef } : null,
-    id: `li-${index + 1}`,
+    id: row.id || `li-${index + 1}`,
   }));
 }
 
 // Fresh copies (new ids) of just the NO MEXICO (foreign) preset rows.
-function buildForeignLineItems() {
-  return QUOTE_TEMPLATE_ROWS.filter((row) => row.section === "foreign").map(
+function buildForeignLineItems(templates = QUOTE_TEMPLATE_ROWS) {
+  return templates.filter((row) => row.section === "foreign" && row.enabled !== false).map(
     (row, index) => ({
       ...row,
+      included: row.included ?? !row.selectionRequired,
       calcRef: row.calcRef ? { ...row.calcRef } : null,
-      id: `li-fgn-${index + 1}`,
+      id: row.id || `li-fgn-${index + 1}`,
     })
   );
 }
@@ -625,15 +628,15 @@ function buildForeignLineItems() {
 //   (e.g. switching up from mexico_only, or an old draft), prepend a fresh copy.
 //   Idempotent: a recompute that already has foreign rows is left untouched so
 //   operator edits to those rows survive.
-function reconcileLineItemsForMode(lineItems = [], quoteMode = "mexico_only") {
+function reconcileLineItemsForMode(lineItems = [], quoteMode = "mexico_only", templates = QUOTE_TEMPLATE_ROWS, preserveInactive = false) {
   const mode = normalizeQuoteMode(quoteMode);
   if (mode === "mexico_only") {
-    return lineItems.filter((row) => row.section !== "foreign");
+    return preserveInactive ? lineItems : lineItems.filter((row) => row.section !== "foreign");
   }
   if (lineItems.some((row) => row.section === "foreign")) {
     return lineItems;
   }
-  return [...buildForeignLineItems(), ...lineItems];
+  return [...buildForeignLineItems(templates), ...lineItems];
 }
 
 // --- Currency conversion (indicative only) -----------------------------------
@@ -658,10 +661,14 @@ function computeQuoteTotals(lineItems = [], options = {}) {
   const subtotals = {};
   const rows = lineItems.map((item) => {
     const atCost = Boolean(item.isAtCost) || isAtCostValue(item.unitPrice);
-    const unit = item.unit === null || item.unit === undefined ? null : toNumber(item.unit, 0);
-    const unitPrice = atCost ? null : toNumber(item.unitPrice, 0);
-    const total = atCost || unit === null ? null : roundMoney(unit * unitPrice);
-    if (total !== null && item.currency) {
+    const absent = (value) => value == null || String(value).trim() === "";
+    const unit = absent(item.unit) ? null : toNumber(item.unit, null);
+    const unitPrice = atCost || absent(item.unitPrice) ? null : toNumber(item.unitPrice, null);
+    const total = atCost || unit === null || unitPrice === null ? null : roundMoney(unit * unitPrice);
+    const hasRange = item.unitPriceMax !== null && item.unitPriceMax !== undefined && item.unitPriceMax !== "" && Number(item.unitPriceMax) > unitPrice;
+    const totalMax = hasRange && total !== null ? roundMoney(unit * Number(item.unitPriceMax)) : null;
+    const contingent = item.chargeKind === "contingent";
+    if (total !== null && !contingent && item.included !== false && !hasRange && item.currency) {
       subtotals[item.currency] = roundMoney((subtotals[item.currency] || 0) + total);
     }
     return {
@@ -670,8 +677,9 @@ function computeQuoteTotals(lineItems = [], options = {}) {
       unit,
       unitPrice: atCost ? "AT COST" : unitPrice,
       total,
-      totalLabel: total === null ? "AT COST" : formatMoney(total),
-      unitPriceLabel: atCost ? "AT COST" : formatMoney(unitPrice),
+      totalMax,
+      totalLabel: atCost ? "AT COST" : total === null ? "—" : hasRange ? `${formatMoney(total)}–${formatMoney(totalMax)}` : formatMoney(total),
+      unitPriceLabel: atCost ? "AT COST" : unitPrice === null ? "—" : hasRange ? `${formatMoney(unitPrice)}–${formatMoney(item.unitPriceMax)}` : formatMoney(unitPrice),
     };
   });
 

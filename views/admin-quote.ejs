@@ -17,6 +17,7 @@
 </style>
 
 <form method="post" action="/admin/quote/settings" class="stack-form">
+  <%- include("partials/quote-fee-settings", { quoteSettings, feeCategories, feeUomOptions, feeError, feeErrorCode, currencyError, postedCurrencyRows: typeof postedCurrencyRows !== 'undefined' ? postedCurrencyRows : undefined, lang }) %>
   <section class="panel" id="quote-cargo-types" data-cargo-editor>
     <input type="hidden" name="cargoTypesPresent" value="1" />
     <div class="section-title">
@@ -125,5 +126,6 @@
 </template>
 
 <script src="/admin-quote.js" defer></script>
+<script src="/admin-quote-fees.js" defer></script>
 
 <%- include("partials/footer") %>

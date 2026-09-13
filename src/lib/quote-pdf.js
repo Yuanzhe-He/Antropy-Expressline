@@ -81,12 +81,17 @@ async function renderQuotePdf(quoteView) {
       // this is what makes CJK render reliably, incl. on Railway cold start.
       await page.setContent(html, { waitUntil: "load", timeout: 60000 });
       await page.evaluateHandle(() => document.fonts.ready);
+      const assets = loadAssets();
+      const marks = [assets.logoIata, assets.logoCtpat].filter(Boolean)
+        .map((src) => `<img src="${src}" style="height:20px;max-width:76px;object-fit:contain;margin-left:8px" />`).join("");
       return await page.pdf({
         format: "A4",
         printBackground: true,
         preferCSSPageSize: true,
-        margin: { top: "12mm", right: "10mm", bottom: "14mm", left: "10mm" },
-        displayHeaderFooter: false,
+        margin: { top: "12mm", right: "10mm", bottom: "16mm", left: "10mm" },
+        displayHeaderFooter: true,
+        headerTemplate: "<span></span>",
+        footerTemplate: `<div style="width:100%;margin:0 10mm;border-top:1px solid #2f3b8c;padding-top:4px;display:flex;align-items:center;justify-content:space-between;font-family:Arial,sans-serif;font-size:9px;color:#2f3b8c"><b>Express Line Corporation</b><div style="display:flex;align-items:center">${marks}</div></div>`,
       });
     } finally {
       await page.close();

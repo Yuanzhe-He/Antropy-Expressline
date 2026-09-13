@@ -1,38 +1,18 @@
 <%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
 
-<style>
-  .quote-shell { display: grid; gap: 1.25rem; }
-  .quote-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-  .quote-field { display: grid; gap: 0.35rem; font-size: 0.85rem; }
-  .quote-field span { font-weight: 600; opacity: 0.85; }
-  .quote-field input, .quote-field select, .quote-field textarea {
-    padding: 0.5rem 0.6rem; border-radius: 8px; border: 1px solid var(--border, #4444); background: transparent; color: inherit; font: inherit;
-  }
-  .quote-card { border: 1px solid var(--border, #4444); border-radius: 12px; padding: 1rem 1.1rem; }
-  .quote-card > h3 { margin: 0 0 0.75rem; font-size: 1rem; }
-  .quote-hint { font-size: 0.8rem; opacity: 0.7; margin: 0.25rem 0 0.75rem; }
-  .quote-table-wrap { overflow-x: auto; }
-  /* A (round-r3, José feedback "字体小一些 + 排版更紧凑"): compact density for the
-     line-item editor only. Visual density only — no logic/field changes. */
-  table.quote-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
-  table.quote-table th, table.quote-table td { border: 1px solid var(--border, #3334); padding: 0.2rem 0.3rem; vertical-align: top; text-align: left; }
-  table.quote-table th { font-weight: 600; opacity: 0.85; white-space: nowrap; }
-  table.quote-table input, table.quote-table select { width: 100%; box-sizing: border-box; padding: 0.2rem 0.3rem; border-radius: 5px; border: 1px solid var(--border, #4444); background: transparent; color: inherit; font: inherit; line-height: 1.2; }
-  /* Tri-lingual concept stack (EN/中/ES): smaller font + minimal gap so the three
-     rows occupy far less vertical space without losing per-language editability. */
-  table.quote-table .concept-cell input { margin-bottom: 0.1rem; font-size: 0.68rem; }
-  table.quote-table .concept-cell input:last-child { margin-bottom: 0; }
-  .cat-head td { background: rgba(127,127,127,0.12); font-weight: 700; letter-spacing: 0.04em; }
-  .quote-total-cell { font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; font-weight: 600; }
-  .quote-atcost { opacity: 0.6; }
-  .quote-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
-  .quote-subtotals { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: baseline; }
-  .quote-subtotals strong { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
-  .quote-row-remove { cursor: pointer; }
-  .quote-notes-list { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.4rem; font-size: 0.8rem; }
-  .quote-notes-list .zh { opacity: 0.75; }
-  .quote-source-pill { font-size: 0.7rem; opacity: 0.7; }
-</style>
+<link rel="stylesheet" href="/quote-workbench.css" />
+<%
+  const ql = (zh, es) => lang === 'zh' ? zh : es;
+  const pricing = formData.cargoPricing || {};
+  const containerRows = pricing.containers && pricing.containers.length ? pricing.containers : [{}];
+  const packageRows = pricing.packages && pricing.packages.length ? pricing.packages : [{}];
+  const pricingValue = (v) => v == null ? '' : v;
+  const hasPricingValue = (v) => v != null && String(v).trim() !== '';
+  const transportCurrency = typeof feeCurrencyDefaults !== 'undefined' && ['MXN','USD'].includes(feeCurrencyDefaults.TRANSPORTATION) ? feeCurrencyDefaults.TRANSPORTATION : 'MXN';
+  const initialContainerCurrency = (r) => r.currency || (['containerType','quantity','unitPrice'].some((k) => hasPricingValue(r[k])) ? '' : transportCurrency);
+  const hasPackagePricing = hasPricingValue(pricing.unitPrice) || packageRows.some((r) => Object.values(r).some(hasPricingValue));
+  const initialPackageCurrency = pricing.currency || (hasPackagePricing ? '' : transportCurrency);
+%>
 
 <section class="page-heading page-heading-card">
   <div class="page-heading-title"><h2><%= selectedModule.title %></h2></div>
@@ -40,17 +20,68 @@
 </section>
 
 <form id="quote-form" method="post" action="/workbench/quote" class="quote-shell" data-quote-form>
-  <!-- Quote mode (round11): mexico_only vs ocean_mexico. Changing it submits the
-       form so the server re-seeds / reconciles the NO MEXICO section rows. -->
-  <section class="quote-card">
-    <h3><%= t("quote.quoteMode") %></h3>
-    <label class="quote-field" style="max-width: 360px;">
-      <select name="quoteMode" data-quote-mode>
-        <option value="mexico_only" <%= formData.quoteMode !== "ocean_mexico" ? "selected" : "" %>><%= t("quote.quoteModeMexicoOnly") %></option>
-        <option value="ocean_mexico" <%= formData.quoteMode === "ocean_mexico" ? "selected" : "" %>><%= t("quote.quoteModeOceanMexico") %></option>
-      </select>
-    </label>
-    <p class="quote-hint"><%= t("quote.quoteModeHint") %></p>
+  <input type="hidden" name="quoteFormPresent" value="1" />
+  <section class="quote-card quote-setup">
+    <div class="quote-grid quote-mode-grid">
+      <label class="quote-field"><span><%= t("quote.quoteMode") %></span>
+        <select name="quoteMode" data-quote-mode>
+          <option value="mexico_only" <%= formData.quoteMode !== "ocean_mexico" ? "selected" : "" %>><%= t("quote.quoteModeMexicoOnly") %></option>
+          <option value="ocean_mexico" <%= formData.quoteMode === "ocean_mexico" ? "selected" : "" %>><%= t("quote.quoteModeOceanMexico") %></option>
+        </select>
+      </label>
+      <label class="quote-field"><span><%= t("quote.cargoType") %></span>
+        <select name="cargoType" data-cargo-type>
+          <option value="" <%= !formData.header.cargoType ? 'selected' : '' %>><%= ql('请选择装载方式', 'Seleccionar modalidad de carga') %></option>
+          <% headerOptions.cargoType.forEach((entry) => { %>
+            <option value="<%= entry.code %>" <%= formData.header.cargoType === entry.code ? 'selected' : '' %>><%= entry.label %></option>
+          <% }) %>
+        </select>
+        <% if (!headerOptions.cargoType.length) { %><small><%= t('quote.cargoTypesEmpty') %></small><% } %>
+      </label>
+    </div>
+    <p class="quote-hint"><%= ql('先选择报价范围与装载方式，再填写对应的计价信息。切换装载方式会保留已填写的内容。', 'Elija el alcance y la modalidad de carga para completar la tarifa. Cambiar la modalidad conserva los datos capturados.') %></p>
+
+    <div class="quote-pricing-panel" data-cargo-panel="FCL" <%= formData.header.cargoType !== 'FCL' ? 'hidden' : '' %>>
+      <h3><%= ql('FCL · 按箱型与箱量计价', 'FCL · Tarifa por tipo y cantidad de contenedores') %></h3>
+      <div class="quote-table-wrap"><table class="quote-table quote-cargo-table">
+        <thead><tr><th><%= ql('箱型', 'Tipo de contenedor') %></th><th><%= ql('箱量', 'Cantidad') %></th><th><%= ql('每箱金额', 'Precio por contenedor') %></th><th><%= t('quote.colCurrency') %></th><th><%= t('quote.colTotal') %></th><th></th></tr></thead>
+        <tbody data-cargo-container-rows>
+          <% containerRows.forEach((r) => { %>
+            <tr data-cargo-container-row>
+              <td><input name="cargo_containerType[]" value="<%= r.containerType || '' %>" list="cargo-container-types" placeholder="40HQ" aria-label="<%= ql('箱型', 'Tipo de contenedor') %>" /></td>
+              <td><input type="number" min="1" step="1" name="cargo_containerQuantity[]" value="<%= pricingValue(r.quantity) %>" aria-label="<%= ql('箱量', 'Cantidad de contenedores') %>" /></td>
+              <td><input type="number" min="0" step="0.01" name="cargo_containerPrice[]" value="<%= pricingValue(r.unitPrice) %>" aria-label="<%= ql('每箱金额', 'Precio por contenedor') %>" /></td>
+              <td><select name="cargo_containerCurrency[]" aria-label="<%= t('quote.colCurrency') %>"><option value="">—</option><% ['MXN','USD'].forEach((c) => { %><option value="<%= c %>" <%= initialContainerCurrency(r) === c ? 'selected' : '' %>><%= c %></option><% }) %></select></td>
+              <td class="quote-total-cell" data-cargo-container-total>—</td>
+              <td><button type="button" class="ghost-button compact-button" data-cargo-remove aria-label="<%= t('quote.removeRow') %>">×</button></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table></div>
+      <button type="button" class="ghost-button compact-button" data-cargo-add="container"><%= ql('＋ 新增箱型', '＋ Agregar tipo de contenedor') %></button>
+    </div>
+
+    <div class="quote-pricing-panel" data-cargo-panel="packages" <%= !['LCL','BBK'].includes(formData.header.cargoType) ? 'hidden' : '' %>>
+      <h3><%= ql('LCL / BBK · 计费重', 'LCL / BBK · Valor facturable') %></h3>
+      <p class="quote-hint"><%= ql('总体积 = 长 × 宽 × 高（cm）× 包装数量；总重量 = 单件重量（kg）× 重量件数。直接比较总体积 cm³ 与总重量 kg 的数值，取较大值 × 单价。', 'Volumen total = largo × ancho × alto (cm) × bultos; peso total = peso unitario (kg) × cantidad. Se compara directamente el valor numérico de cm³ con kg y se multiplica el mayor por el precio unitario.') %></p>
+      <div class="quote-table-wrap"><table class="quote-table quote-cargo-table">
+        <thead><tr><th><%= ql('长 cm', 'Largo cm') %></th><th><%= ql('宽 cm', 'Ancho cm') %></th><th><%= ql('高 cm', 'Alto cm') %></th><th><%= ql('包装数量', 'Cantidad de bultos') %></th><th><%= ql('单件重量 kg', 'Peso unitario kg') %></th><th><%= ql('重量件数', 'Cantidad para peso') %></th><th></th></tr></thead>
+        <tbody data-cargo-package-rows>
+          <% packageRows.forEach((r) => { %><tr data-cargo-package-row>
+            <% [['lengthCm','长 cm','Largo cm'],['widthCm','宽 cm','Ancho cm'],['heightCm','高 cm','Alto cm'],['packageCount','包装数量','Cantidad de bultos'],['weightKg','单件重量 kg','Peso unitario kg'],['weightCount','重量件数','Cantidad para peso']].forEach(([field,zh,es]) => { %>
+              <td><input type="number" min="<%= field.endsWith('Count') ? '1' : '0' %>" step="<%= field.endsWith('Count') ? '1' : 'any' %>" name="cargo_<%= field %>[]" value="<%= pricingValue(r[field]) %>" aria-label="<%= ql(zh,es) %>" /></td>
+            <% }) %>
+            <td><button type="button" class="ghost-button compact-button" data-cargo-remove aria-label="<%= t('quote.removeRow') %>">×</button></td>
+          </tr><% }) %>
+        </tbody>
+      </table></div>
+      <div class="quote-actions quote-package-actions">
+        <button type="button" class="ghost-button compact-button" data-cargo-add="package"><%= ql('＋ 新增包装规格', '＋ Agregar presentación') %></button>
+        <label class="quote-field"><span><%= ql('每计费单位金额', 'Precio por unidad facturable') %></span><input type="number" min="0" step="any" name="cargo_unitPrice" value="<%= pricingValue(pricing.unitPrice) %>" /></label>
+        <label class="quote-field"><span><%= t('quote.colCurrency') %></span><select name="cargo_currency"><option value="">—</option><% ['MXN','USD'].forEach((c) => { %><option value="<%= c %>" <%= initialPackageCurrency === c ? 'selected' : '' %>><%= c %></option><% }) %></select></label>
+      </div>
+    </div>
+    <div class="quote-pricing-result" data-cargo-result role="status" aria-live="polite" hidden></div>
   </section>
 
   <!-- General Data -->
@@ -90,122 +121,59 @@
         <input type="text" name="pol" value="<%= formData.header.pol %>" /></label>
       <label class="quote-field"><span><%= t("quote.pod") %></span>
         <input type="text" name="pod" value="<%= formData.header.pod %>" /></label>
-      <label class="quote-field"><span><%= t("quote.cargoType") %></span>
-        <select name="cargoType">
-          <option value="" <%= formData.header.cargoType === "" ? "selected" : "" %>>—</option>
-          <% headerOptions.cargoType.forEach((entry) => { %>
-            <option value="<%= entry.code %>" <%= formData.header.cargoType === entry.code ? "selected" : "" %>><%= entry.label %></option>
-          <% }) %>
-        </select>
-        <% if (!headerOptions.cargoType.length) { %><small><%= t("quote.cargoTypesEmpty") %></small><% } %>
-      </label>
       <label class="quote-field"><span><%= t("quote.commodity") %></span>
         <input type="text" name="commodity" value="<%= formData.header.commodity %>" /></label>
       <label class="quote-field" style="grid-column: 1 / -1;"><span><%= t("quote.delivery") %></span>
         <textarea name="delivery" rows="2"><%= formData.header.delivery %></textarea></label>
     </div>
 
-    <%# Q7.2: ordered custom general-data rows (label/value) — add/remove. %>
-    <h4 style="margin: 0.9rem 0 0.4rem; font-size: 0.85rem;"><%= t("quote.extraFieldsTitle") %></h4>
-    <div data-gd-rows class="quote-grid">
+    <fieldset class="quote-qualification">
+      <legend><%= ql('清关资质', 'Requisitos de importación') %></legend>
+      <div class="quote-grid">
+        <label class="quote-field"><span><%= ql('进口资质来源', 'Importador') %></span>
+          <select name="importerQualification"><option value=""><%= ql('请选择', 'Seleccionar') %></option><% [['own','客户自有进口资质','Padrón propio del cliente'],['trading_company','借贸易公司进口','Importación mediante comercializadora']].forEach(([v,zh,es]) => { %><option value="<%= v %>" <%= formData.header.importerQualification === v ? 'selected' : '' %>><%= ql(zh,es) %></option><% }) %></select>
+        </label>
+        <% [['specialImportQualification','是否需要特殊进口资质','¿Requiere padrón o permiso especial?'],['nomCertification','是否需要 NOM 认证','¿Requiere certificación NOM?'],['ministryRegistration','是否需要经济部备案','¿Requiere registro ante Economía?']].forEach(([name,zh,es]) => { %>
+          <label class="quote-field"><span><%= ql(zh,es) %></span><select name="<%= name %>"><option value=""><%= ql('请选择', 'Seleccionar') %></option><% [['yes','是','Sí'],['no','否','No'],['unknown','待确认','Por confirmar']].forEach(([v,z,e]) => { %><option value="<%= v %>" <%= formData.header[name] === v ? 'selected' : '' %>><%= ql(z,e) %></option><% }) %></select></label>
+        <% }) %>
+      </div>
+    </fieldset>
+    <h4 class="quote-extra-title"><%= t('quote.extraFieldsTitle') %></h4>
+    <p class="quote-hint"><%= ql('用于补充报价基础信息，例如：字段名称「客户参考号」，填写内容「PO-001」。', 'Agregue datos adicionales, por ejemplo: nombre «Referencia del cliente», contenido «PO-001».') %></p>
+    <div data-gd-rows class="quote-extra-rows">
       <% (formData.header.extraFields || []).forEach((f) => { %>
-        <div class="quote-field" data-gd-row style="display:flex; gap:0.4rem; align-items:flex-end;">
-          <input type="text" name="gd_label[]" value="<%= f.label %>" placeholder="<%= t('quote.extraFieldLabel') %>" />
-          <input type="text" name="gd_value[]" value="<%= f.value %>" placeholder="<%= t('quote.extraFieldValue') %>" />
-          <button type="button" class="ghost-button compact-button" data-gd-remove aria-label="<%= t('quote.removeRow') %>">✕</button>
+        <div class="quote-extra-row" data-gd-row>
+          <label class="quote-field"><span><%= ql('字段名称', 'Nombre del campo') %></span><input type="text" name="gd_label[]" value="<%= f.label %>" placeholder="<%= ql('例如：客户参考号', 'Ej.: Referencia del cliente') %>" /></label>
+          <label class="quote-field"><span><%= ql('填写内容', 'Contenido') %></span><input type="text" name="gd_value[]" value="<%= f.value %>" placeholder="<%= ql('例如：PO-001', 'Ej.: PO-001') %>" /></label>
+          <button type="button" class="ghost-button compact-button" data-gd-remove aria-label="<%= t('quote.removeRow') %>">×</button>
         </div>
       <% }) %>
     </div>
-    <div class="quote-actions" style="margin-top: 0.4rem;">
-      <button type="button" class="ghost-button compact-button" data-gd-add><%= t("quote.addExtraField") %></button>
-    </div>
+    <div class="quote-actions"><button type="button" class="ghost-button compact-button" data-gd-add><%= t('quote.addExtraField') %></button></div>
   </section>
 
   <%# Q9 (20260617): "pull from calculators" removed — a quote is a price, not a
       cost; it does not auto-pull from the handover/customs/inland calculators. %>
 
-  <!-- Line items -->
-  <section class="quote-card">
-    <h3><%= t("quote.lineItems") %></h3>
-    <div class="quote-table-wrap">
-      <table class="quote-table" data-quote-table>
-        <thead>
-          <tr>
-            <th><%= t("quote.colSection") %></th>
-            <th><%= t("quote.colCategory") %></th>
-            <th style="min-width: 220px;"><%= t("quote.colConcept") %></th>
-            <th><%= t("quote.colCode") %></th>
-            <th><%= t("quote.colQty") %></th>
-            <th><%= t("quote.colUom") %></th>
-            <th><%= t("quote.colUnitPrice") %></th>
-            <th><%= t("quote.colCurrency") %></th>
-            <th><%= t("quote.colTotal") %></th>
-            <th style="min-width: 160px;"><%= t("quote.colRemark") %></th>
-            <th><%= t("quote.colSource") %></th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody data-quote-rows>
-          <% quoteView.rows.forEach((row) => { %>
-            <tr data-quote-row data-currency="<%= row.currency %>">
-              <td>
-                <select name="li_section[]">
-                  <option value="foreign" <%= row.section === "foreign" ? "selected" : "" %>><%= t("quote.sectionForeign") %></option>
-                  <option value="mexico" <%= row.section !== "foreign" ? "selected" : "" %>><%= t("quote.sectionMexico") %></option>
-                </select>
-              </td>
-              <td>
-                <select name="li_category[]">
-                  <% categoryOptions.forEach((cat) => { %>
-                    <option value="<%= cat %>" <%= row.category === cat ? "selected" : "" %>><%= cat %></option>
-                  <% }) %>
-                </select>
-              </td>
-              <td class="concept-cell">
-                <input type="text" name="li_conceptEn[]" value="<%= row.conceptEn %>" placeholder="<%= t('quote.conceptEnPlaceholder') %>" />
-                <input type="text" name="li_conceptZh[]" value="<%= row.conceptZh %>" placeholder="<%= t('quote.conceptZhPlaceholder') %>" lang="zh" />
-                <input type="text" name="li_conceptEs[]" value="<%= row.conceptEs || '' %>" placeholder="ES" />
-              </td>
-              <td>
-                <input type="text" name="li_code[]" value="<%= row.code %>" list="fee-codes" data-quote-code title="<%= t('quote.pickCode') %>" />
-              </td>
-              <td><input type="number" min="0" step="1" name="li_unit[]" value="<%= row.unit === null ? '' : row.unit %>" data-quote-unit /></td>
-              <td>
-                <select name="li_uom[]">
-                  <option value=""></option>
-                  <% uomOptions.forEach((u) => { %>
-                    <option value="<%= u %>" <%= row.unitOfMeasure === u ? "selected" : "" %>><%= t("quote.uom_" + u) %></option>
-                  <% }) %>
-                </select>
-              </td>
-              <td><input type="number" min="0" step="0.01" name="li_unitPrice[]" value="<%= row.isAtCost ? '' : row.unitPrice %>" data-quote-price <%= row.isAtCost ? "disabled" : "" %> /></td>
-              <td>
-                <select name="li_currency[]" data-quote-currency>
-                  <option value="" <%= row.currency === "" ? "selected" : "" %>>—</option>
-                  <option value="MXN" <%= row.currency === "MXN" ? "selected" : "" %>>MXN</option>
-                  <option value="USD" <%= row.currency === "USD" ? "selected" : "" %>>USD</option>
-                </select>
-              </td>
-              <td class="quote-total-cell <%= row.total === null ? 'quote-atcost' : '' %>" data-quote-rowtotal><%= row.totalLabel %></td>
-              <td><input type="text" name="li_remark[]" value="<%= row.remark %>" /></td>
-              <td>
-                <label class="quote-source-pill"><input type="checkbox" data-quote-atcost-toggle <%= row.isAtCost ? "checked" : "" %> /> <%= t("quote.atCostToggle") %></label>
-                <input type="hidden" name="li_atCost[]" value="<%= row.isAtCost ? '1' : '0' %>" data-quote-atcost />
-                <input type="hidden" name="li_id[]" value="<%= row.id %>" />
-                <input type="hidden" name="li_source[]" value="<%= row.source %>" />
-                <input type="hidden" name="li_calcModule[]" value="<%= row.calcRef ? row.calcRef.module : '' %>" />
-                <input type="hidden" name="li_calcField[]" value="<%= row.calcRef ? row.calcRef.field : '' %>" />
-              </td>
-              <td><button type="button" class="ghost-button compact-button quote-row-remove" data-quote-remove aria-label="<%= t('quote.removeRow') %>">✕</button></td>
-            </tr>
+  <% ['fixed','contingent'].forEach((kind) => { %>
+    <section class="quote-card quote-fee-section" data-fee-section="<%= kind %>">
+      <div class="quote-card-heading"><h3><%= kind === 'fixed' ? ql('固定费用', 'Cargos fijos') : ql('发生才收取的费用', 'Cargos si se generan') %></h3><span class="quote-kind-pill"><%= kind === 'fixed' ? ql('计入报价', 'Incluidos en la cotización') : ql('仅供告知', 'Solo informativos') %></span></div>
+      <p class="quote-hint"><%= kind === 'fixed' ? ql('勾选的固定费用计入报价，未选项目不计入；实报实销项目另按实际账单结算。', 'Solo los cargos seleccionados se incluyen en la cotización; los conceptos AT COST se liquidan contra factura real.') : ql('仅在相应情况实际发生时收取。以下金额用于提前告知，不计入本次报价小计。', 'Se cobran únicamente si ocurre la situación indicada. Los importes siguientes son informativos y no se suman al subtotal.') %></p>
+      <div class="quote-table-wrap"><table class="quote-table" data-quote-table="<%= kind %>">
+        <thead><tr><th><%= t('quote.colSection') %></th><th><%= t('quote.colCategory') %></th><th class="quote-concept-heading"><%= ql('费用名称', 'Concepto') %></th><th><%= t('quote.colCode') %></th><th><%= t('quote.colQty') %></th><th><%= t('quote.colUom') %></th><th><%= t('quote.colUnitPrice') %></th><th><%= t('quote.colCurrency') %></th><th><%= kind === 'contingent' ? ql('发生时金额','Importe si ocurre') : t('quote.colTotal') %></th><th class="quote-remark-heading"><%= t('quote.colRemark') %></th><th><%= ql('计价方式', 'Tratamiento') %></th><th></th></tr></thead>
+        <tbody data-quote-rows="<%= kind %>">
+          <% (quoteView.editableRows || quoteView.rows.filter((r) => !r.isCargoCharge)).filter((r) => (r.chargeKind === 'contingent' ? 'contingent' : 'fixed') === kind).forEach((row) => { %>
+            <%- include('partials/quote-fee-row', { row, lang, t, categoryOptions, uomOptions }) %>
           <% }) %>
         </tbody>
-      </table>
-    </div>
-    <div class="quote-actions" style="margin-top: 0.75rem;">
-      <button type="button" class="ghost-button" data-quote-add><%= t("quote.addRow") %></button>
-    </div>
-  </section>
+      </table></div>
+      <div class="quote-actions">
+        <button type="button" class="ghost-button compact-button" data-quote-add="<%= kind %>"><%= t('quote.addRow') %></button>
+        <label class="quote-field quote-template-picker"><span><%= ql('后台费用库', 'Catálogo de cargos') %></span><select data-quote-template-picker="<%= kind %>"><option value=""><%= ql('选择已启用的费用', 'Seleccionar cargo habilitado') %></option></select></label>
+        <button type="button" class="ghost-button compact-button" data-quote-add-template="<%= kind %>" disabled><%= ql('添加所选费用', 'Agregar cargo seleccionado') %></button>
+      </div>
+    </section>
+  <% }) %>
 
   <!-- Subtotals -->
   <section class="quote-card">
@@ -214,7 +182,7 @@
       <div><span><%= t("quote.subtotalMxn") %>:</span> <strong data-quote-subtotal-mxn><%= (quoteView.subtotals.find((s) => s.currency === "MXN") || {}).amountLabel || "0.00" %></strong> MXN</div>
       <div><span><%= t("quote.subtotalUsd") %>:</span> <strong data-quote-subtotal-usd><%= (quoteView.subtotals.find((s) => s.currency === "USD") || {}).amountLabel || "0.00" %></strong> USD</div>
       <% if (quoteView.indicative) { %>
-        <div class="quote-atcost"><span><%= t("quote.indicative") %>:</span> <strong><%= quoteView.indicative.amountLabel %></strong> <%= quoteView.indicative.currency %> · <small><%= t("quote.indicativeHint") %></small></div>
+        <div class="quote-atcost" data-quote-indicative><span><%= t("quote.indicative") %>:</span> <strong><%= quoteView.indicative.amountLabel %></strong> <%= quoteView.indicative.currency %> · <small><%= t("quote.indicativeHint") %></small></div>
       <% } %>
     </div>
   </section>
@@ -233,11 +201,11 @@
     %>
     <div class="quote-notes-list" data-remark-list>
       <% orderedNotes.forEach((note) => { %>
-        <div class="quote-remark-item" data-remark-item draggable="true" style="display:flex; gap:0.5rem; align-items:flex-start; margin-bottom:0.35rem;">
-          <span class="quote-remark-handle" data-remark-handle title="<%= t('quote.dragToReorder') %>" style="cursor:grab; user-select:none;">⋮⋮</span>
-          <label style="display:flex; gap:0.5rem; align-items:flex-start; flex:1;">
+        <div class="quote-remark-item" data-remark-item draggable="true">
+          <span class="quote-remark-handle" data-remark-handle title="<%= t('quote.dragToReorder') %>">⋮⋮</span>
+          <label class="quote-note-label">
             <input type="checkbox" name="note_sel[]" value="<%= note.id %>" <%= selIds.includes(note.id) ? "checked" : "" %> />
-            <span><div><%= note.en %></div><% if (note.zh) { %><div class="zh" lang="zh"><%= note.zh %></div><% } %></span>
+            <span class="quote-note-copy"><span><%= lang === "es" ? (note.es || note.en) : (note.zh || note.en) %></span><% if (lang === "zh" && note.en) { %><small><%= note.en %></small><% } %></span>
           </label>
         </div>
       <% }) %>
@@ -271,6 +239,17 @@
 <script id="quote-uom-options" type="application/json"><%- safeJson(uomOptions.map((u) => ({ value: u, label: t("quote.uom_" + u) }))) %></script>
 <script id="quote-section-labels" type="application/json"><%- safeJson({ foreign: t("quote.sectionForeign"), mexico: t("quote.sectionMexico") }) %></script>
 <script id="quote-category-options" type="application/json"><%- safeJson(categoryOptions) %></script>
+<script id="quote-fee-settings" type="application/json"><%- safeJson({ currencyDefaults: typeof feeCurrencyDefaults !== 'undefined' ? feeCurrencyDefaults : {}, templates: typeof quoteTemplates !== 'undefined' ? quoteTemplates : [] }) %></script>
+<script id="quote-ui-labels" type="application/json"><%- safeJson({
+  uiLang: lang, templateSelect: ql('选择已启用的费用', 'Seleccionar cargo habilitado'), templateEmpty: ql('当前适用费用均已添加', 'No hay cargos disponibles para agregar'),
+  pending: ql('待填写完整计价信息', 'Complete los datos de la tarifa'), emptyCargo: ql('可填写对应计价信息，自动计算费用。', 'Capture los datos para calcular la tarifa.'),
+  pricingTotal: ql('装载计价金额', 'Importe por modalidad'), weight: ql('总重量', 'Peso total'), volume: ql('总体积', 'Volumen total'), chargeable: ql('计费数值', 'Valor facturable'),
+  cargoIncluded: ql('此金额计入固定费用小计。', 'Este importe se incluye en el subtotal fijo.'), cargoPreview: ql('计价预览', 'Vista previa de tarifa'),
+  fieldName: ql('字段名称', 'Nombre del campo'), fieldValue: ql('填写内容', 'Contenido'), fieldExample: ql('例如：客户参考号', 'Ej.: Referencia del cliente'), valueExample: ql('例如：PO-001', 'Ej.: PO-001'), remove: t('quote.removeRow')
+}) %></script>
+<datalist id="cargo-container-types"><% ((selectorData && selectorData.containerTypes) || []).forEach((c) => { %><option value="<%= c.key || c.code || c.label %>"><%= c.label || c.key || c.code %></option><% }) %></datalist>
+<template id="quote-row-template"><table><tbody><%- include('partials/quote-fee-row', { row: { category: 'SHIPPING LINE', unit: 1, source: 'manual' }, lang, t, categoryOptions, uomOptions }) %></tbody></table></template>
+<script src="/quote-pricing.js"></script>
 <script src="/quote.js"></script>
 
 <%- include("partials/footer") %>

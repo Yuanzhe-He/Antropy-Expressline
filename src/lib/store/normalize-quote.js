@@ -21,6 +21,8 @@ const {
   parseNumber,
   slugifyId,
 } = require("./shared");
+const { normalizeCargoPricing } = require("../../../public/quote-pricing");
+const { QUOTE_CONFIG_VERSION, DEFAULT_QUOTE_FEE_TEMPLATES, DEFAULT_CURRENCY_BY_CATEGORY, normalizeQuoteFeeTemplates } = require("../quote-config");
 
 function normalizeQuoteLineItem(item = {}, fallbackId) {
   const atCost =
@@ -53,12 +55,16 @@ function normalizeQuoteLineItem(item = {}, fallbackId) {
     // gap as the P0 header fix). Back-compat: missing -> "" / "mexico".
     conceptEs: String(item.conceptEs || "").trim(),
     section: item.section === "foreign" ? "foreign" : "mexico",
+    chargeKind: item.chargeKind === "contingent" ? "contingent" : "fixed",
+    included: item.included !== false,
+    unitPriceMax: item.unitPriceMax === "" || item.unitPriceMax === null || item.unitPriceMax === undefined ? null : Math.max(0, parseNumber(item.unitPriceMax, 0)),
+    appliesTo: Array.isArray(item.appliesTo) ? item.appliesTo.map(String).filter((code) => ["FCL", "LCL", "BBK"].includes(code)) : ["FCL", "LCL", "BBK"],
     unitOfMeasure: String(item.unitOfMeasure || "").trim(),
     unit:
       item.unit === null || item.unit === "" || item.unit === undefined
         ? null
         : Math.max(0, parseNumber(item.unit, 1)),
-    unitPrice: atCost ? "AT COST" : parseNumber(item.unitPrice, 0),
+    unitPrice: atCost ? "AT COST" : item.unitPrice == null || String(item.unitPrice).trim() === "" ? null : parseNumber(item.unitPrice, 0),
     currency,
     remark: String(item.remark || ""),
     isAtCost: atCost,
@@ -97,6 +103,11 @@ function normalizeQuoteHeader(header = {}) {
     pod: String(header.pod ?? DEFAULT_QUOTE_HEADER.pod).trim(),
     commodity: String(header.commodity || "").trim(),
     cargoType,
+    importerQualification: ["own", "trading_company"].includes(header.importerQualification) ? header.importerQualification : "",
+    specialImportQualification: ["yes", "no", "unknown"].includes(header.specialImportQualification) ? header.specialImportQualification : "",
+    nomCertification: ["yes", "no", "unknown"].includes(header.nomCertification) ? header.nomCertification : "",
+    ministryRegistration: ["yes", "no", "unknown"].includes(header.ministryRegistration) ? header.ministryRegistration : "",
+    ...(header.cargoPricing ? { cargoPricing: normalizeCargoPricing(header.cargoPricing) } : {}),
     ...(cargoType && typeof header.cargoTypeLabel === "string" && header.cargoTypeLabel.trim()
       ? { cargoTypeLabel: header.cargoTypeLabel.trim().slice(0, 120) }
       : {}),
@@ -171,7 +182,12 @@ function normalizeQuoteHeaderDefaults(hd = {}, cargoTypes) {
 
 function normalizeQuoteModuleData(moduleData = {}) {
   const settingsIn = moduleData.settings || {};
-  const cargoTypes = normalizeQuoteCargoTypes(settingsIn.cargoTypes);
+  let cargoTypes = normalizeQuoteCargoTypes(settingsIn.cargoTypes);
+  if (Number(settingsIn.cargoTypePolicyVersion || 0) < 1) cargoTypes = cargoTypes.filter((entry) => ["FCL", "LCL", "BBK"].includes(entry.code));
+  const feeTemplates = normalizeQuoteFeeTemplates(Array.isArray(settingsIn.feeTemplates)
+    ? settingsIn.feeTemplates
+    : [...QUOTE_TEMPLATE_ROWS.filter((row) => row.section === "foreign").map((row, index) => ({...row, id: `foreign-${index + 1}`, chargeKind: "fixed", enabled: true, appliesTo: ["FCL", "LCL", "BBK"]})), ...DEFAULT_QUOTE_FEE_TEMPLATES]);
+  const defaultCurrencyByCategory = Object.fromEntries(Object.entries(DEFAULT_CURRENCY_BY_CATEGORY).map(([category, fallback]) => [category, ["MXN", "USD"].includes(settingsIn.defaultCurrencyByCategory?.[category]) ? settingsIn.defaultCurrencyByCategory[category] : fallback]));
   const templateVersion = parseNumber(settingsIn.templateVersion, 0);
   const seedTemplate =
     templateVersion < QUOTE_TEMPLATE_VERSION ||
@@ -202,6 +218,10 @@ function normalizeQuoteModuleData(moduleData = {}) {
       showIndicativeConversion: Boolean(settingsIn.showIndicativeConversion),
       indicativeCurrency: normalizeCurrencyCode(settingsIn.indicativeCurrency, "MXN"),
       cargoTypes,
+      cargoTypePolicyVersion: 1,
+      feeTemplates,
+      feeTemplateConfigVersion: QUOTE_CONFIG_VERSION,
+      defaultCurrencyByCategory,
       // Only enabled cargo types can remain the default for a new quote.
       headerDefaults: normalizeQuoteHeaderDefaults(settingsIn.headerDefaults, cargoTypes),
       templateVersion: QUOTE_TEMPLATE_VERSION,

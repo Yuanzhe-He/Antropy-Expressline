@@ -68,9 +68,9 @@ const MESSAGES = {
     },
     quote: {
       heading: "报价构建器",
-      intro: "填写报价表头与 MEXICO LOCAL CHARGES 行项；可从换单/清关/陆运计算器取数，或手填 / 标 AT COST，然后一键生成中英对照报价 PDF。",
+      intro: "选择报价模式和装载方式，填写清关资质与费用，生成客户报价 PDF。发生才收的费用单独告知，不计入报价小计。",
       adminTitle: "报价后台",
-      adminDescription: "管理装载方式、默认表头、报价编号格式与备注库。",
+      adminDescription: "管理装载方式、费用模板、默认币种、默认表头、报价编号与附加条款。",
       cargoTypesTitle: "装载方式选项",
       cargoTypesHint: "编辑名称并选择是否启用，保存后前台只显示启用项。已有代码不可改；不再使用的选项请停用，历史报价保留原值。新增项默认停用。",
       addCargoType: "新增装载方式",
@@ -809,9 +809,9 @@ const MESSAGES = {
     },
     quote: {
       heading: "Generador de cotización",
-      intro: "Captura el encabezado y los conceptos de MEXICO LOCAL CHARGES; toma valores de las calculadoras o captura manual / AT COST, y genera el PDF bilingue.",
+      intro: "Elige el alcance y la modalidad de carga, completa los requisitos y cargos, y genera la cotización en PDF. Los cargos eventuales se muestran por separado y no se suman al subtotal.",
       adminTitle: "Administración de cotización",
-      adminDescription: "Administra los tipos de carga, encabezados, formato de número y notas.",
+      adminDescription: "Administra modalidades de carga, cargos, monedas predeterminadas, encabezados, numeración y cláusulas adicionales.",
       cargoTypesTitle: "Opciones de tipo de carga",
       cargoTypesHint: "Edita los nombres y el estado. Al guardar, solo las opciones activas aparecen en la cotización. Los códigos existentes no cambian; desactiva los que ya no usas. Las cotizaciones guardadas conservan sus valores. Las opciones nuevas inician inactivas.",
       addCargoType: "Agregar tipo de carga",

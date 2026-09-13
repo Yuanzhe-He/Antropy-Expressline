@@ -1,0 +1,49 @@
+<% const activeConcept = lang === 'zh' ? 'Zh' : 'Es'; const concepts = ['En', 'Zh', 'Es']; const conceptLabels = { En: 'English', Zh: '中文', Es: 'Español' }; %>
+<tr data-quote-row data-charge-kind="<%= row.chargeKind === 'contingent' ? 'contingent' : 'fixed' %>">
+  <td><select name="li_section[]" aria-label="<%= t('quote.colSection') %>">
+    <option value="foreign" <%= row.section === 'foreign' ? 'selected' : '' %>><%= t('quote.sectionForeign') %></option>
+    <option value="mexico" <%= row.section !== 'foreign' ? 'selected' : '' %>><%= t('quote.sectionMexico') %></option>
+  </select></td>
+  <td><select name="li_category[]" aria-label="<%= t('quote.colCategory') %>">
+    <% categoryOptions.forEach((cat) => { %><option value="<%= cat %>" <%= row.category === cat ? 'selected' : '' %>><%= cat %></option><% }) %>
+  </select></td>
+  <td class="concept-cell">
+    <input type="text" name="li_concept<%= activeConcept %>[]" value="<%= row['concept' + activeConcept] || '' %>" placeholder="<%= conceptLabels[activeConcept] %>" aria-label="<%= t('quote.colConcept') %> · <%= conceptLabels[activeConcept] %>" />
+    <details class="quote-translations"><summary><%= lang === 'zh' ? '其他语言' : 'Otros idiomas' %></summary>
+      <% concepts.filter((c) => c !== activeConcept).forEach((c) => { %>
+        <label><span><%= conceptLabels[c] %></span><input type="text" name="li_concept<%= c %>[]" value="<%= row['concept' + c] || '' %>" placeholder="<%= conceptLabels[c] %>" /></label>
+      <% }) %>
+    </details>
+  </td>
+  <td><input type="text" name="li_code[]" value="<%= row.code || '' %>" list="fee-codes" data-quote-code aria-label="<%= t('quote.colCode') %>" /></td>
+  <td><input type="number" min="0" step="any" name="li_unit[]" value="<%= row.unit == null ? '' : row.unit %>" data-quote-unit aria-label="<%= t('quote.colQty') %>" /></td>
+  <td><select name="li_uom[]" aria-label="<%= t('quote.colUom') %>">
+    <option value=""></option>
+    <% uomOptions.forEach((u) => { %><option value="<%= u %>" <%= row.unitOfMeasure === u ? 'selected' : '' %>><%= t('quote.uom_' + u) %></option><% }) %>
+  </select></td>
+  <td class="quote-price-cell">
+    <input type="number" min="0" step="0.01" name="li_unitPrice[]" value="<%= row.unitPrice == null ? '' : row.unitPrice %>" data-quote-price <%= row.isAtCost ? 'readonly' : '' %> aria-label="<%= t('quote.colUnitPrice') %>" />
+    <input type="hidden" name="li_unitPriceMax[]" value="<%= row.unitPriceMax == null ? '' : row.unitPriceMax %>" data-quote-price-max />
+    <span data-quote-range-label class="quote-range-label" <%= row.unitPriceMax == null ? 'hidden' : '' %>><%= row.unitPriceMax == null ? '' : '– ' + row.unitPriceMax %></span>
+  </td>
+  <td><select name="li_currency[]" data-quote-currency aria-label="<%= t('quote.colCurrency') %>">
+    <option value="" <%= !row.currency ? 'selected' : '' %>>—</option>
+    <option value="MXN" <%= row.currency === 'MXN' ? 'selected' : '' %>>MXN</option>
+    <option value="USD" <%= row.currency === 'USD' ? 'selected' : '' %>>USD</option>
+  </select></td>
+  <td class="quote-total-cell" data-quote-rowtotal><%= row.totalLabel || '—' %></td>
+  <td><input type="text" name="li_remark[]" value="<%= row.remark || '' %>" title="<%= row.remark || '' %>" aria-label="<%= t('quote.colRemark') %>" /></td>
+  <td>
+    <% if (row.chargeKind !== 'contingent') { %><label class="quote-inclusion"><input type="checkbox" data-quote-included-toggle <%= row.included !== false && !(row.included == null && row.selectionRequired) ? 'checked' : '' %> /><span><%= lang === 'zh' ? '计入报价' : 'Incluir' %></span></label><% } %>
+    <input type="hidden" name="li_included[]" value="<%= row.chargeKind !== 'contingent' && row.included !== false && !(row.included == null && row.selectionRequired) ? '1' : '0' %>" data-quote-included />
+    <label class="quote-source-pill"><input type="checkbox" data-quote-atcost-toggle <%= row.isAtCost ? 'checked' : '' %> /><span>AT COST</span></label>
+    <input type="hidden" name="li_atCost[]" value="<%= row.isAtCost ? '1' : '0' %>" data-quote-atcost />
+    <input type="hidden" name="li_id[]" value="<%= row.id || '' %>" />
+    <input type="hidden" name="li_source[]" value="<%= row.source || 'manual' %>" />
+    <input type="hidden" name="li_chargeKind[]" value="<%= row.chargeKind === 'contingent' ? 'contingent' : 'fixed' %>" />
+    <input type="hidden" name="li_appliesTo[]" value="<%= Array.isArray(row.appliesTo) ? row.appliesTo.join(',') : (row.appliesTo || '') %>" />
+    <input type="hidden" name="li_calcModule[]" value="<%= row.calcRef ? row.calcRef.module : '' %>" />
+    <input type="hidden" name="li_calcField[]" value="<%= row.calcRef ? row.calcRef.field : '' %>" />
+  </td>
+  <td><button type="button" class="ghost-button compact-button quote-row-remove" data-quote-remove aria-label="<%= t('quote.removeRow') %>" title="<%= t('quote.removeRow') %>">×</button></td>
+</tr>

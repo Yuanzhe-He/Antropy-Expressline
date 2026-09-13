@@ -103,7 +103,7 @@ async function main() {
   let server;
   try {
     assert.deepEqual(normalizeQuoteCargoTypes(undefined), QUOTE_CARGO_TYPE_OPTIONS.map((code) => ({ code, label: code, enabled: true })));
-    assert.equal(normalizeQuoteCargoTypes(undefined).length, 8, "missing legacy settings retain eight choices");
+    assert.deepEqual(normalizeQuoteCargoTypes(undefined).map((row) => row.code), ["FCL", "LCL", "BBK"], "new quotes start with the three approved choices");
     assert.deepEqual(normalizeQuoteCargoTypes([]), [], "explicit empty list does not fall back");
     ok("legacy missing configuration falls back to eight; explicit empty remains empty");
 

@@ -361,6 +361,22 @@ function register(app, ctx) {
 
     const quoteView = assembleQuoteView(quoteModule, formData, shippingData);
 
+    // Drafts may retain incomplete inputs; a priced PDF must have a complete,
+    // server-validated calculation for the currently selected loading mode.
+    if (quoteView.cargoCalculation.attempted && !quoteView.cargoCalculation.valid) {
+      req.flash = {
+        type: "error",
+        message: req.language === "es"
+          ? "Complete los datos de carga y use cantidades, pesos, medidas y tarifas válidos antes de generar el PDF."
+          : "请补全当前装载方式的计价信息，并检查箱量、包装数量、尺寸、重量及单价后再生成 PDF。",
+      };
+      res.status(400);
+      return renderQuoteWorkbench(req, res, {
+        moduleKey: "quote", quoteModule, formData, quoteView,
+        selectorData: buildQuoteSelectorData(shippingData), feeCodes: loadFeeCodes(),
+      });
+    }
+
     try {
       const pdf = await renderQuotePdf(quoteView);
 

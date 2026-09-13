@@ -20,7 +20,41 @@ const {
   normalizeQuoteCargoTypes,
   normalizeQuoteCargoCode,
   validateQuoteCargoTypes,
+  QUOTE_UOM_OPTIONS,
 } = require("../lib/quote");
+const {
+  QUOTE_FEE_CATEGORIES,
+  getQuoteDefaultCurrency,
+  normalizeQuoteFeeTemplates,
+  validateQuoteFeeTemplates,
+} = require("../lib/quote-config");
+
+const FEE_FORM_FIELDS = ["id", "chargeKind", "category", "section", "en", "zh", "es", "unit", "uom", "price", "max", "currency", "remark", "active", "modes", "selectionRequired", "sourceNote"];
+
+function quoteConfigErrorMessage(code, language) {
+  const messages = {
+    invalid_currency_defaults: ["请为每个费用分组选择 USD 或 MXN，不能重复或遗漏分组。", "Selecciona USD o MXN para cada grupo, sin grupos duplicados ni faltantes."],
+    invalid_fee_templates: ["费用表单不完整，或超过 100 项。请检查后重试。", "La lista está incompleta o supera 100 cargos. Revisa los datos."],
+    invalid_fee_template: ["费用内容无效，请检查后重试。", "El cargo contiene datos no válidos."],
+    invalid_fee_template_id: ["费用编号只能包含字母、数字、下划线和连字符，最长 80 字符。", "El identificador admite letras, números, guiones y guiones bajos; máximo 80 caracteres."],
+    duplicate_fee_template_id: ["费用编号重复，请为新增费用使用不同编号。", "Hay identificadores de cargo duplicados."],
+    invalid_fee_template_label: ["每项费用至少填写中文或英文名称，每个名称最多 200 字符。", "Cada cargo requiere un nombre chino o inglés de hasta 200 caracteres."],
+    invalid_fee_template_category: ["请选择有效的费用分组。", "Selecciona un grupo de cargos válido."],
+    invalid_fee_template_currency: ["费用币种只能为 USD 或 MXN。", "La moneda del cargo debe ser USD o MXN."],
+    invalid_fee_template_charge_kind: ["请选择固定费用或发生才收费用。", "Selecciona cargo fijo o cargo si ocurre."],
+    invalid_fee_template_section: ["请选择墨西哥段或非墨西哥段。", "Selecciona la sección México o fuera de México."],
+    invalid_fee_template_enabled: ["请选择费用的启用状态。", "Selecciona el estado del cargo."],
+    invalid_fee_template_selection: ["请选择报价时的添加方式。", "Selecciona cómo se agrega el cargo a la cotización."],
+    invalid_fee_template_cargo_types: ["适用装载方式只能填写 FCL、LCL、BBK，逗号分隔，至少选择一种。", "Indica al menos FCL, LCL o BBK, separados por comas."],
+    invalid_fee_template_price: ["价格必须是非负数字，也可以留空。", "El precio debe ser un número no negativo o quedar vacío."],
+    invalid_fee_template_price_range: ["价格上限必须是非负数字，并且不低于下限；单一价格请留空上限。", "El precio máximo debe ser numérico y no menor que el mínimo; déjalo vacío para un precio único."],
+    invalid_fee_template_quantity: ["默认数量必须是非负数字，也可以留空。", "La cantidad predeterminada debe ser un número no negativo o quedar vacía."],
+    invalid_fee_template_unit: ["计费单位最多 40 字符。", "La unidad admite hasta 40 caracteres."],
+    invalid_fee_template_remark: ["费用说明最多 3,000 字符。", "La descripción admite hasta 3,000 caracteres."],
+    invalid_fee_template_source: ["内部来源备注最多 2,000 字符。", "La referencia interna admite hasta 2,000 caracteres."],
+  };
+  return (messages[code] || messages.invalid_fee_template)[language === "es" ? 1 : 0];
+}
 
 function register(app, ctx) {
   const {
@@ -47,6 +81,11 @@ function register(app, ctx) {
       selectedModule: moduleMeta,
       quoteSettings: quote.settings,
       quoteNotes: quote.notes || [],
+      feeCategories: QUOTE_FEE_CATEGORIES,
+      feeUomOptions: QUOTE_UOM_OPTIONS,
+      feeError: "",
+      feeErrorCode: "",
+      currencyError: "",
       headerOptions: {
         department: QUOTE_DEPARTMENT_OPTIONS,
         transportMode: QUOTE_TRANSPORT_MODE_OPTIONS,
@@ -114,6 +153,61 @@ function register(app, ctx) {
       const b = req.body;
       const storedCargoCodes = normalizeQuoteCargoTypes(quote.settings.cargoTypes).map((entry) => entry.code);
       let cargoError = "";
+      let feeError = "";
+      let currencyError = "";
+      let postedCurrencyRows;
+      if (b.currencyDefaultsPresent === "1") {
+        const categories = ensureArray(b.currency_category);
+        const values = ensureArray(b.currency_value);
+        postedCurrencyRows = categories.map((category, index) => ({
+          category: typeof category === "string" ? category : "",
+          value: typeof values[index] === "string" ? values[index] : "",
+        }));
+        if (categories.length !== QUOTE_FEE_CATEGORIES.length || categories.length !== values.length ||
+          new Set(categories).size !== categories.length || categories.some((category) => !QUOTE_FEE_CATEGORIES.includes(category)) ||
+          values.some((value) => !["USD", "MXN"].includes(value))) {
+          currencyError = "invalid_currency_defaults";
+        } else {
+          quote.settings.defaultCurrencyByCategory = Object.fromEntries(postedCurrencyRows.map((row) => [row.category, row.value]));
+        }
+      }
+      if (b.feeTemplatesPresent === "1") {
+        const fields = Object.fromEntries(FEE_FORM_FIELDS.map((field) => [field, ensureArray(b[`fee_${field}`])]));
+        const previous = new Map((quote.settings.feeTemplates || []).map((entry) => [entry.id, entry]));
+        const text = (field, index) => typeof fields[field][index] === "string" ? fields[field][index].trim() : "";
+        const rows = fields.id.map((_id, index) => {
+          const id = text("id", index);
+          const category = text("category", index);
+          const stored = previous.get(id) || {};
+          // Explicit submitted currencies always win. The category default is
+          // used only for an empty currency, never to reprice existing rows.
+          const currency = text("currency", index) || getQuoteDefaultCurrency(category, quote.settings);
+          return {
+            ...stored,
+            id, category, currency,
+            code: stored.code || id.toUpperCase().replace(/-/g, "_"),
+            chargeKind: text("chargeKind", index), section: text("section", index),
+            conceptEn: text("en", index), conceptZh: text("zh", index), conceptEs: text("es", index),
+            unit: text("unit", index), defaultQuantity: text("unit", index), unitOfMeasure: text("uom", index),
+            unitPrice: text("price", index), unitPriceMax: text("max", index),
+            remark: text("remark", index), sourceNote: text("sourceNote", index),
+            enabled: text("active", index) === "1", selectionRequired: text("selectionRequired", index) === "1",
+            editorActiveValue: text("active", index), editorSelectionValue: text("selectionRequired", index),
+            appliesTo: text("modes", index).split(",").map((value) => value.trim()).filter(Boolean),
+          };
+        });
+        feeError = validateQuoteFeeTemplates(rows);
+        if (FEE_FORM_FIELDS.some((field) => fields[field].length !== fields.id.length || fields[field].some((value) => typeof value !== "string"))) {
+          feeError = "invalid_fee_templates";
+        } else if (fields.active.some((value) => !["0", "1"].includes(value))) {
+          feeError = "invalid_fee_template_enabled";
+        } else if (fields.selectionRequired.some((value) => !["0", "1"].includes(value))) {
+          feeError = "invalid_fee_template_selection";
+        } else if (fields.section.some((value) => !["mexico", "foreign"].includes(value))) {
+          feeError = "invalid_fee_template_section";
+        }
+        quote.settings.feeTemplates = feeError ? rows : normalizeQuoteFeeTemplates(rows);
+      }
       if (b.cargoTypesPresent === "1") {
         const codes = ensureArray(b.cargo_code);
         const labels = ensureArray(b.cargo_label);
@@ -157,10 +251,14 @@ function register(app, ctx) {
           zh: String(zhs[i] || "").trim(),
         }))
         .filter((n) => n.en || n.zh || n.es);
-      if (cargoError) {
+      if (cargoError || feeError || currencyError) {
         res.status(400);
         return renderQuoteSettings(req, res, quote, {
-          cargoError: req.t(`quote.${cargoError}`),
+          cargoError: cargoError ? req.t(`quote.${cargoError}`) : "",
+          feeError: feeError ? quoteConfigErrorMessage(feeError, req.language) : "",
+          feeErrorCode: feeError,
+          currencyError: currencyError ? quoteConfigErrorMessage(currencyError, req.language) : "",
+          postedCurrencyRows,
           storedCargoCodes,
         });
       }

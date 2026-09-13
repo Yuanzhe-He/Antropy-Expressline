@@ -1539,7 +1539,8 @@ async function main() {
     response = await request(baseUrl, "/workbench/quote", { jar: publicJar });
     assert.equal(response.status, 200, "quote workbench loads");
     expectContains(response.text, "data-quote-form", "quote builder form");
-    expectContains(response.text, "MEXICO LOCAL CHARGES", "quote charges table");
+    expectContains(response.text, 'data-quote-table="fixed"', "fixed quote charges table");
+    expectContains(response.text, 'data-quote-table="contingent"', "informational contingent charges table");
     expectContains(response.text, "SHIPPING LINE", "quote group shipping line");
     expectContains(response.text, "TRANSPORTATION", "quote group transportation");
     expectContains(response.text, "换单费", "quote concept zh present");
@@ -1580,7 +1581,7 @@ async function main() {
     // selector and has NO NO-MEXICO (foreign) rows.
     expectContains(response.text, "data-quote-mode", "quote mode selector present");
     assert.ok(
-      !response.text.includes("海运费"),
+      !(response.text.match(/<tbody data-quote-rows="fixed">([\s\S]*?)<\/tbody>/) || [])[1]?.includes("海运费"),
       "mode mexico_only: fresh quote has no NO MEXICO ocean rows"
     );
 
@@ -1611,8 +1612,7 @@ async function main() {
     expectContains(response.text, "OCEAN FREIGHT", "mode ocean_mexico: OCEAN FREIGHT category present");
     expectContains(response.text, "电放费", "mode ocean_mexico: origin telex-release row injected");
 
-    // Switching back to mexico_only drops foreign rows even when they are posted,
-    // and keeps the MEXICO rows.
+    // Switching back preserves editable foreign rows, but excludes their amounts.
     response = await request(baseUrl, "/workbench/quote", {
       method: "POST",
       jar: publicJar,
@@ -1642,10 +1642,8 @@ async function main() {
       ],
     });
     assert.equal(response.status, 200, "quote mexico_only recompute ok");
-    assert.ok(
-      !response.text.includes("海运费"),
-      "mode mexico_only: foreign rows dropped on switch-down"
-    );
+    expectContains(response.text, 'value="li-fgn-1"', "foreign edits survive switch-down");
+    assert.match(response.text, /data-quote-subtotal-usd>0\.00<\//, "hidden foreign charges excluded from subtotal");
     expectContains(response.text, "换单服务费", "mode mexico_only: mexico rows kept on switch-down");
 
     // Pull from calculators then recompute.

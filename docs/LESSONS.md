@@ -443,3 +443,14 @@ Only record lessons that may change future behavior.
 - compatibility: Explicit empty/all-disabled lists must not reseed legacy options. Store historical draft codes and label snapshots independently of current choices.
 - evidence: `scripts/audit-quote-cargo-types-test.js`; `docs/specs/20260913_quote_cargo_types_IMPLEMENTATION_SPEC.md`; local browser save/reload, duplicate correction, default retention and mobile checks.
 - status: local; no global promotion.
+
+
+## 2026-09-13 - Quote pricing and compact editor verification
+
+- source: Chandler changes 2-6 and attached screenshots; explicit raw kg/cm3 comparison confirmation.
+- type: user feedback + self-correction; scope: local project only.
+- lesson: Keep missing prices distinct from zero through form parsing, normalization, totals and PDF. Conditional ranges and unselected alternatives must stay out of currency, tax and FX totals. Recompute cargo charges on the server with the same pure engine as the browser.
+- UI lesson: Hidden number inputs still participate in native validation. Use step=any while inactive and restore active constraints; removing step restores an integer constraint. Test save after entering a fractional rate and switching loading modes.
+- print lesson: Render real multi-page PDFs. Group section titles with table headers, and place repeated branding in the PDF page-margin footer so it cannot overlay fee rows.
+- evidence: scripts/audit-quote-workflow-v2-test.js (26 checks), complete 25-suite regression, desktop/mobile/ES browser checks and rendered FCL/LCL PDFs.
+- status: local; no global promotion.

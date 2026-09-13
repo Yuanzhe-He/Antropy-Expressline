@@ -137,3 +137,12 @@ Landed in:
 - `public/styles.css`
 - `src/lib/i18n.js`
 - `public/favicon.svg`
+
+
+## 2026-09-13 - Quote setup, fee density and custom fields
+
+Chandler requested early loading-mode selection, clearer fee sections, smaller checkmarks and less empty row height. Quote scope and cargo mode now precede general data, with FCL container rows or LCL/BBK package inputs. Four customs questions have explicit unanswered/unknown values.
+
+Fixed fees and charges-if-incurred have separate tables, editable backend libraries and local template restoration. The current editing language uses one visible concept input; other translations expand on demand. Custom fields say field name/content with examples. Quote-scoped blue-gray surfaces replace the flat black table, and native checkboxes are 16px square. Existing unrelated screens retain their styling.
+
+Verified desktop fee rows around 82px, checkbox16px, mobile390px viewport without page-wide overflow, ES controls, mixed containers, raw kg/cm3 calculations, mode changes with fractional inputs, draft save and category-currency readback. PDF qualifications use wider labels; repeated section headers and margin footers avoid orphan titles and overlaps.
