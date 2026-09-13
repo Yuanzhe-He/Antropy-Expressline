@@ -17,7 +17,9 @@ const {
   QUOTE_DEPARTMENT_OPTIONS,
   QUOTE_TRANSPORT_MODE_OPTIONS,
   QUOTE_INCOTERM_OPTIONS,
-  QUOTE_CARGO_TYPE_OPTIONS,
+  normalizeQuoteCargoTypes,
+  normalizeQuoteCargoCode,
+  validateQuoteCargoTypes,
 } = require("../lib/quote");
 
 function register(app, ctx) {
@@ -29,6 +31,32 @@ function register(app, ctx) {
     renderAdminSettings,
     pickFromOptions,
   } = ctx;
+
+  function renderQuoteSettings(req, res, quote, overrides = {}) {
+    const moduleMeta = getModulePresentation("quote", req.language);
+    // A rejected blank name must not erase the user's default selection while
+    // they correct the row. This fallback is for the unsaved editor only.
+    const cargoOptions = overrides.cargoError
+      ? quote.settings.cargoTypes.map((entry) => ({ ...entry, label: entry.label || entry.code }))
+      : quote.settings.cargoTypes;
+    return res.render("admin-quote", baseView(req, {
+      pageTitle: `${moduleMeta.title} | ${req.t("app.name")}`,
+      currentArea: "admin",
+      currentModuleKey: "quote",
+      currentAdminSection: "settings",
+      selectedModule: moduleMeta,
+      quoteSettings: quote.settings,
+      quoteNotes: quote.notes || [],
+      headerOptions: {
+        department: QUOTE_DEPARTMENT_OPTIONS,
+        transportMode: QUOTE_TRANSPORT_MODE_OPTIONS,
+        incoterm: QUOTE_INCOTERM_OPTIONS,
+        cargoType: normalizeQuoteCargoTypes(cargoOptions).filter((entry) => entry.enabled),
+      },
+      languageReturnTo: req.originalUrl,
+      ...overrides,
+    }));
+  }
 
   app.get("/admin", requireAuth, (_req, res) => {
     res.redirect(`/admin/${DEFAULT_MODULE_KEY}/settings`);
@@ -56,26 +84,7 @@ function register(app, ctx) {
     if (module.key === "quote") {
       const shippingData = await loadShippingData();
       const quote = getModuleData(shippingData, "quote");
-      const moduleMeta = getModulePresentation("quote", req.language);
-      return res.render(
-        "admin-quote",
-        baseView(req, {
-          pageTitle: `${moduleMeta.title} | ${req.t("app.name")}`,
-          currentArea: "admin",
-          currentModuleKey: "quote",
-          currentAdminSection: "settings",
-          selectedModule: moduleMeta,
-          quoteSettings: quote.settings,
-          quoteNotes: quote.notes || [],
-          headerOptions: {
-            department: QUOTE_DEPARTMENT_OPTIONS,
-            transportMode: QUOTE_TRANSPORT_MODE_OPTIONS,
-            incoterm: QUOTE_INCOTERM_OPTIONS,
-            cargoType: QUOTE_CARGO_TYPE_OPTIONS,
-          },
-          languageReturnTo: req.originalUrl,
-        })
-      );
+      return renderQuoteSettings(req, res, quote);
     }
 
     const shippingData = await loadShippingData();
@@ -103,24 +112,44 @@ function register(app, ctx) {
       const shippingData = await loadShippingData({ refreshRates: false });
       const quote = structuredClone(getModuleData(shippingData, "quote"));
       const b = req.body;
+      const storedCargoCodes = normalizeQuoteCargoTypes(quote.settings.cargoTypes).map((entry) => entry.code);
+      let cargoError = "";
+      if (b.cargoTypesPresent === "1") {
+        const codes = ensureArray(b.cargo_code);
+        const labels = ensureArray(b.cargo_label);
+        const enabled = ensureArray(b.cargo_enabled);
+        const cargoTypes = codes.map((code, index) => ({
+          code: typeof code === "string" ? code.trim() : "",
+          label: typeof labels[index] === "string" ? labels[index].trim() : "",
+          enabled: enabled[index] === "1",
+        }));
+        cargoError = validateQuoteCargoTypes(cargoTypes);
+        if (codes.length !== labels.length || codes.length !== enabled.length || enabled.some((value) => !["0", "1"].includes(value))) {
+          cargoError = "invalid_cargo_types";
+        }
+        quote.settings.cargoTypes = cargoError ? cargoTypes : normalizeQuoteCargoTypes(cargoTypes);
+      }
       if (typeof b.quoteNumberPrefix === "string") quote.settings.quoteNumberPrefix = b.quoteNumberPrefix.trim();
       if (typeof b.quoteNumberSuffix === "string") quote.settings.quoteNumberSuffix = b.quoteNumberSuffix.trim();
       if (b.quoteNumberPad !== undefined) quote.settings.quoteNumberPad = Math.max(1, Math.min(8, parseWholeNumber(b.quoteNumberPad, 3) || 3));
       if (b.lastQuoteSeq !== undefined) quote.settings.lastQuoteSeq = Math.max(0, parseWholeNumber(b.lastQuoteSeq, 0));
       // S5: default header preset (validated against the option sets; empty clears).
+      const hd = quote.settings.headerDefaults || {};
+      const enabledCargoCodes = cargoError
+        ? quote.settings.cargoTypes.filter((entry) => entry.enabled).map((entry) => normalizeQuoteCargoCode(entry.code)).filter(Boolean)
+        : normalizeQuoteCargoTypes(quote.settings.cargoTypes).filter((entry) => entry.enabled).map((entry) => entry.code);
       quote.settings.headerDefaults = {
-        department: pickFromOptions(b.hd_department, QUOTE_DEPARTMENT_OPTIONS, ""),
-        transportMode: pickFromOptions(b.hd_transportMode, QUOTE_TRANSPORT_MODE_OPTIONS, ""),
-        incoterm: pickFromOptions(b.hd_incoterm, QUOTE_INCOTERM_OPTIONS, ""),
-        cargoType: pickFromOptions(b.hd_cargoType, QUOTE_CARGO_TYPE_OPTIONS, ""),
-        // S5: default quote mode for fresh quotes (mexico_only | ocean_mexico).
-        quoteMode: normalizeQuoteMode(b.hd_quoteMode),
+        department: pickFromOptions(b.hd_department ?? hd.department, QUOTE_DEPARTMENT_OPTIONS, ""),
+        transportMode: pickFromOptions(b.hd_transportMode ?? hd.transportMode, QUOTE_TRANSPORT_MODE_OPTIONS, ""),
+        incoterm: pickFromOptions(b.hd_incoterm ?? hd.incoterm, QUOTE_INCOTERM_OPTIONS, ""),
+        cargoType: pickFromOptions(b.hd_cargoType ?? hd.cargoType, enabledCargoCodes, ""),
+        quoteMode: normalizeQuoteMode(b.hd_quoteMode ?? hd.quoteMode),
       };
       const ids = ensureArray(b.note_id);
       const ens = ensureArray(b.note_en);
       const zhs = ensureArray(b.note_zh);
       const ess = ensureArray(b.note_es);
-      quote.notes = ids
+      if (b.notesPresent === "1" || b.note_id !== undefined) quote.notes = ids
         .map((id, i) => ({
           id: String(id || `note-${i + 1}`),
           en: String(ens[i] || "").trim(),
@@ -128,6 +157,13 @@ function register(app, ctx) {
           zh: String(zhs[i] || "").trim(),
         }))
         .filter((n) => n.en || n.zh || n.es);
+      if (cargoError) {
+        res.status(400);
+        return renderQuoteSettings(req, res, quote, {
+          cargoError: req.t(`quote.${cargoError}`),
+          storedCargoCodes,
+        });
+      }
       shippingData.modules.quote = quote;
       await saveModule("quote", shippingData);
       return redirectWithFlash(req, res, "success", req.t("quote.adminSaved"), "/admin/quote/settings");

@@ -152,7 +152,7 @@
   <table class="general">
     <tr><td class="k"><%= L("operation") %></td><td><%= header.operation %></td><td class="k"><%= L("incoterm") %></td><td><%= header.incoterm %></td></tr>
     <tr><td class="k"><%= L("department") %></td><td><%= header.department %></td><td class="k"><%= L("transport") %></td><td><%= header.transportMode || "" %></td></tr>
-    <tr><td class="k"><%= L("cargo") %></td><td><%= header.cargoType %></td><td class="k"><%= L("pol") %></td><td><%= header.pol %></td></tr>
+    <tr><td class="k"><%= L("cargo") %></td><td><%= header.cargoTypeLabel || header.cargoType %></td><td class="k"><%= L("pol") %></td><td><%= header.pol %></td></tr>
     <tr><td class="k"><%= L("commodity") %></td><td><%= header.commodity %></td><td class="k"><%= L("pod") %></td><td><%= header.pod %></td></tr>
     <tr><td class="k"><%= L("delivery") %></td><td colspan="3"><%= header.delivery %></td></tr>
     <% (header.extraFields || []).forEach((f) => { %>

@@ -412,7 +412,8 @@ const QUOTE_NOTES = Object.freeze([
 // Q3-Q6 (20260617): header dropdown option sets. Standard trade codes — rendered
 // as code = value = label (no translation needed) except department, which keeps
 // its i18n labels. parseQuoteHeader normalizes against these; values not in the
-// list are cleared (Jose supplied the standard sets — old free-text is dropped).
+// list are cleared. Cargo types below are legacy defaults; the current list and
+// its display names are maintained in quote settings.
 const QUOTE_DEPARTMENT_OPTIONS = Object.freeze(["OCEAN", "AIR", "INLAND"]);
 const QUOTE_INCOTERM_OPTIONS = Object.freeze([
   "EXW", "FCA", "FAS", "FOB", "CFR", "CIF", "CPT", "CIP", "DAP", "DPU", "DDP", "DAT",
@@ -423,6 +424,51 @@ const QUOTE_TRANSPORT_MODE_OPTIONS = Object.freeze([
 const QUOTE_CARGO_TYPE_OPTIONS = Object.freeze([
   "FCL", "LCL", "BLK", "LQD", "BBK", "BCN", "SCN", "ROR",
 ]);
+
+function normalizeQuoteCargoCode(value) {
+  if (typeof value !== "string") return "";
+  const code = value.trim();
+  return /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/.test(code) ? code.toUpperCase() : "";
+}
+
+// Validate before saving so a malformed editor request cannot partially replace
+// the configured list. Normalization below is also safe for legacy stored data.
+function validateQuoteCargoTypes(value) {
+  if (!Array.isArray(value) || value.length > 100) return "invalid_cargo_types";
+  const codes = new Set();
+  for (const entry of value) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      return "invalid_cargo_types";
+    }
+    const code = normalizeQuoteCargoCode(entry.code);
+    if (!code) return "invalid_cargo_type_code";
+    if (typeof entry.label !== "string" || !entry.label.trim() || entry.label.trim().length > 120) {
+      return "invalid_cargo_type_label";
+    }
+    if (typeof entry.enabled !== "boolean") return "invalid_cargo_type_enabled";
+    if (codes.has(code)) return "duplicate_cargo_type_code";
+    codes.add(code);
+  }
+  return "";
+}
+
+function normalizeQuoteCargoTypes(value) {
+  // An explicit empty list is an administrator's configuration, not a seed cue.
+  if (!Array.isArray(value)) {
+    return QUOTE_CARGO_TYPE_OPTIONS.map((code) => ({ code, label: code, enabled: true }));
+  }
+  const codes = new Set();
+  const entries = [];
+  for (const entry of value.slice(0, 100)) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
+    const code = normalizeQuoteCargoCode(entry.code);
+    const label = typeof entry.label === "string" ? entry.label.trim().slice(0, 120) : "";
+    if (!code || !label || codes.has(code)) continue;
+    codes.add(code);
+    entries.push({ code, label, enabled: entry.enabled === true });
+  }
+  return entries;
+}
 
 // Q7.3: unit of measure (separate from the numeric qty). Stored as a code;
 // labels are resolved per language in the view via i18n (quote.uom_*).
@@ -924,6 +970,9 @@ module.exports = {
   QUOTE_INCOTERM_OPTIONS,
   QUOTE_TRANSPORT_MODE_OPTIONS,
   QUOTE_CARGO_TYPE_OPTIONS,
+  normalizeQuoteCargoCode,
+  normalizeQuoteCargoTypes,
+  validateQuoteCargoTypes,
   QUOTE_UOM_OPTIONS,
   isAtCostValue,
   toNumber,

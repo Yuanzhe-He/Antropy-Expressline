@@ -7,7 +7,42 @@
 
 <%- include("partials/admin-tabs", { modules, currentModuleKey, currentAdminSection, t }) %>
 
+<style>
+  .cargo-type-row { display: grid; grid-template-columns: minmax(90px, 0.7fr) minmax(160px, 2fr) minmax(100px, 0.8fr) auto; gap: 0.75rem; align-items: end; }
+  .cargo-type-row label { min-width: 0; }
+  .cargo-type-row input[readonly] { opacity: 0.7; }
+  .cargo-type-row .actions { margin: 0; }
+  .cargo-type-error { color: var(--danger, #d94c4c); }
+  @media (max-width: 650px) { .cargo-type-row { grid-template-columns: 1fr 1fr; } .cargo-type-name { grid-column: 1 / -1; grid-row: 2; } }
+</style>
+
 <form method="post" action="/admin/quote/settings" class="stack-form">
+  <section class="panel" id="quote-cargo-types" data-cargo-editor>
+    <input type="hidden" name="cargoTypesPresent" value="1" />
+    <div class="section-title">
+      <div><p class="eyebrow"><%= t("quote.cargoTypesTitle") %></p><small><%= t("quote.cargoTypesHint") %></small></div>
+      <button type="button" class="ghost-button compact-button" data-cargo-add><%= t("quote.addCargoType") %></button>
+    </div>
+    <% if (typeof cargoError !== "undefined" && cargoError) { %>
+      <p class="cargo-type-error" role="alert" tabindex="-1" data-cargo-error><%= cargoError %></p>
+    <% } %>
+    <div data-cargo-rows class="stack-form">
+      <% const existingCargoRows = new Set();
+      (quoteSettings.cargoTypes || []).forEach((entry) => {
+        const existing = typeof storedCargoCodes === "undefined" || (storedCargoCodes.includes(entry.code) && !existingCargoRows.has(entry.code));
+        if (existing) existingCargoRows.add(entry.code);
+      %>
+        <div class="table-card nested-card cargo-type-row" data-cargo-row>
+          <label><span><%= t("quote.cargoTypeCode") %></span><input type="text" name="cargo_code[]" value="<%= entry.code %>" required maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,31}" <%= existing ? 'readonly' : '' %> /></label>
+          <label class="cargo-type-name"><span><%= t("quote.cargoTypeName") %></span><input type="text" name="cargo_label[]" value="<%= entry.label %>" required maxlength="120" /></label>
+          <label><span><%= t("quote.cargoTypeStatus") %></span><select name="cargo_enabled[]"><option value="1" <%= entry.enabled ? 'selected' : '' %>><%= t("quote.cargoTypeEnabled") %></option><option value="0" <%= !entry.enabled ? 'selected' : '' %>><%= t("quote.cargoTypeDisabled") %></option></select></label>
+          <% if (!existing) { %><div class="actions"><button type="button" class="ghost-button compact-button" data-cargo-remove><%= t("quote.removeNewCargoType") %></button></div><% } %>
+        </div>
+      <% }) %>
+    </div>
+    <p class="quote-hint" data-cargo-empty <%= (quoteSettings.cargoTypes || []).some((entry) => entry.enabled) ? 'hidden' : '' %>><%= t("quote.cargoTypesEmpty") %></p>
+  </section>
+
   <section class="panel" id="quote-number">
     <div class="section-title"><div><p class="eyebrow"><%= t("quote.numberFormat") %></p></div></div>
     <div class="grid-form">
@@ -36,7 +71,7 @@
         </select></label>
       <label><span><%= t("quote.cargoType") %></span>
         <select name="hd_cargoType"><option value="">—</option>
-          <% headerOptions.cargoType.forEach((c) => { %><option value="<%= c %>" <%= hd.cargoType === c ? "selected" : "" %>><%= c %></option><% }) %>
+          <% headerOptions.cargoType.forEach((entry) => { %><option value="<%= entry.code %>" <%= hd.cargoType === entry.code ? "selected" : "" %>><%= entry.label %></option><% }) %>
         </select></label>
       <label><span><%= t("quote.quoteMode") %></span>
         <select name="hd_quoteMode">
@@ -47,6 +82,7 @@
   </section>
 
   <section class="panel" id="quote-remarks">
+    <input type="hidden" name="notesPresent" value="1" />
     <div class="section-title">
       <div><p class="eyebrow"><%= t("quote.remarksLibrary") %></p><small><%= t("quote.remarksLibraryHint") %></small></div>
       <button type="button" class="ghost-button compact-button" data-remark-add><%= t("quote.addRemark") %></button>
@@ -69,6 +105,15 @@
   </div>
 </form>
 
+<template id="cargo-row-template">
+  <div class="table-card nested-card cargo-type-row" data-cargo-row>
+    <label><span><%= t("quote.cargoTypeCode") %></span><input type="text" name="cargo_code[]" value="" required maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,31}" /></label>
+    <label class="cargo-type-name"><span><%= t("quote.cargoTypeName") %></span><input type="text" name="cargo_label[]" value="" required maxlength="120" /></label>
+    <label><span><%= t("quote.cargoTypeStatus") %></span><select name="cargo_enabled[]"><option value="1"><%= t("quote.cargoTypeEnabled") %></option><option value="0" selected><%= t("quote.cargoTypeDisabled") %></option></select></label>
+    <div class="actions"><button type="button" class="ghost-button compact-button" data-cargo-remove><%= t("quote.removeNewCargoType") %></button></div>
+  </div>
+</template>
+
 <template id="remark-row-template">
   <div class="table-card nested-card" data-remark-row>
     <input type="hidden" name="note_id[]" value="" />
@@ -79,25 +124,6 @@
   </div>
 </template>
 
-<script>
-  (function () {
-    const rows = document.querySelector("[data-remark-rows]");
-    const addBtn = document.querySelector("[data-remark-add]");
-    const tpl = document.getElementById("remark-row-template");
-    if (addBtn && rows && tpl) {
-      addBtn.addEventListener("click", () => {
-        const node = tpl.content.cloneNode(true);
-        node.querySelector('input[name="note_id[]"]').value = "note-" + Date.now();
-        rows.appendChild(node);
-      });
-      rows.addEventListener("click", (event) => {
-        const btn = event.target.closest("[data-remark-remove]");
-        if (!btn) return;
-        const row = btn.closest("[data-remark-row]");
-        if (row) row.remove();
-      });
-    }
-  })();
-</script>
+<script src="/admin-quote.js" defer></script>
 
 <%- include("partials/footer") %>

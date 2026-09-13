@@ -6,7 +6,6 @@ const {
 } = require("../options");
 const {
   DEFAULT_QUOTE_HEADER,
-  QUOTE_CARGO_TYPE_OPTIONS,
   QUOTE_DEPARTMENT_OPTIONS,
   QUOTE_GROUP_ORDER,
   QUOTE_INCOTERM_OPTIONS,
@@ -15,6 +14,8 @@ const {
   QUOTE_TEMPLATE_VERSION,
   QUOTE_TRANSPORT_MODE_OPTIONS,
   normalizeQuoteMode,
+  normalizeQuoteCargoCode,
+  normalizeQuoteCargoTypes,
 } = require("../quote");
 const {
   parseNumber,
@@ -68,8 +69,8 @@ function normalizeQuoteLineItem(item = {}, fallbackId) {
 
 // P0 (20260617 batch3): kept in lockstep with server.js parseQuoteHeader so a
 // quote round-tripped through a saved draft does NOT lose INLAND department, the
-// new cargo types, transportMode, or extraFields. Values outside the option sets
-// are dropped (same as parseQuoteHeader) — Jose supplied the standard sets.
+// transportMode, or extraFields. Cargo codes and display-label snapshots are
+// historical values: removing or renaming a current option must not erase them.
 
 function pickQuoteHeaderOption(value, options, fallback = "") {
   const normalized = String(value ?? "").trim().toUpperCase();
@@ -78,6 +79,7 @@ function pickQuoteHeaderOption(value, options, fallback = "") {
 
 function normalizeQuoteHeader(header = {}) {
   const operation = String(header.operation || "").toUpperCase();
+  const cargoType = normalizeQuoteCargoCode(header.cargoType);
   return {
     operation: operation === "EXPORT" ? "EXPORT" : "IMPORT",
     department: pickQuoteHeaderOption(
@@ -94,7 +96,10 @@ function normalizeQuoteHeader(header = {}) {
     pol: String(header.pol ?? DEFAULT_QUOTE_HEADER.pol).trim(),
     pod: String(header.pod ?? DEFAULT_QUOTE_HEADER.pod).trim(),
     commodity: String(header.commodity || "").trim(),
-    cargoType: pickQuoteHeaderOption(header.cargoType, QUOTE_CARGO_TYPE_OPTIONS, ""),
+    cargoType,
+    ...(cargoType && typeof header.cargoTypeLabel === "string" && header.cargoTypeLabel.trim()
+      ? { cargoTypeLabel: header.cargoTypeLabel.trim().slice(0, 120) }
+      : {}),
     delivery: String(header.delivery || "").trim(),
     extraFields: Array.isArray(header.extraFields)
       ? header.extraFields
@@ -145,7 +150,7 @@ function normalizeQuoteDraft(draft = {}, fallbackId) {
 
 // S5: default header preset (each value validated against its option set; "" = none).
 
-function normalizeQuoteHeaderDefaults(hd = {}) {
+function normalizeQuoteHeaderDefaults(hd = {}, cargoTypes) {
   const pick = (value, options) => {
     const v = String(value ?? "").trim().toUpperCase();
     return options.includes(v) ? v : "";
@@ -155,7 +160,10 @@ function normalizeQuoteHeaderDefaults(hd = {}) {
     department: pick(src.department, QUOTE_DEPARTMENT_OPTIONS),
     transportMode: pick(src.transportMode, QUOTE_TRANSPORT_MODE_OPTIONS),
     incoterm: pick(src.incoterm, QUOTE_INCOTERM_OPTIONS),
-    cargoType: pick(src.cargoType, QUOTE_CARGO_TYPE_OPTIONS),
+    cargoType: pick(
+      normalizeQuoteCargoCode(src.cargoType),
+      normalizeQuoteCargoTypes(cargoTypes).filter((entry) => entry.enabled).map((entry) => entry.code)
+    ),
     // S5/round11: default quote mode for fresh quotes (mexico_only default).
     quoteMode: normalizeQuoteMode(src.quoteMode),
   };
@@ -163,6 +171,7 @@ function normalizeQuoteHeaderDefaults(hd = {}) {
 
 function normalizeQuoteModuleData(moduleData = {}) {
   const settingsIn = moduleData.settings || {};
+  const cargoTypes = normalizeQuoteCargoTypes(settingsIn.cargoTypes);
   const templateVersion = parseNumber(settingsIn.templateVersion, 0);
   const seedTemplate =
     templateVersion < QUOTE_TEMPLATE_VERSION ||
@@ -192,9 +201,9 @@ function normalizeQuoteModuleData(moduleData = {}) {
       lastQuoteSeq: Math.max(0, Math.trunc(parseNumber(settingsIn.lastQuoteSeq, 4))),
       showIndicativeConversion: Boolean(settingsIn.showIndicativeConversion),
       indicativeCurrency: normalizeCurrencyCode(settingsIn.indicativeCurrency, "MXN"),
-      // S5 (batch3): default header values pre-filled on a new quote. Validated
-      // against the same option sets; empty = no preset.
-      headerDefaults: normalizeQuoteHeaderDefaults(settingsIn.headerDefaults),
+      cargoTypes,
+      // Only enabled cargo types can remain the default for a new quote.
+      headerDefaults: normalizeQuoteHeaderDefaults(settingsIn.headerDefaults, cargoTypes),
       templateVersion: QUOTE_TEMPLATE_VERSION,
     },
     templateRows: (seedTemplate ? QUOTE_TEMPLATE_ROWS : moduleData.templateRows).map(

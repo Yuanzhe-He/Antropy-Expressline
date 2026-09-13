@@ -93,10 +93,12 @@
       <label class="quote-field"><span><%= t("quote.cargoType") %></span>
         <select name="cargoType">
           <option value="" <%= formData.header.cargoType === "" ? "selected" : "" %>>—</option>
-          <% headerOptions.cargoType.forEach((code) => { %>
-            <option value="<%= code %>" <%= formData.header.cargoType === code ? "selected" : "" %>><%= code %></option>
+          <% headerOptions.cargoType.forEach((entry) => { %>
+            <option value="<%= entry.code %>" <%= formData.header.cargoType === entry.code ? "selected" : "" %>><%= entry.label %></option>
           <% }) %>
-        </select></label>
+        </select>
+        <% if (!headerOptions.cargoType.length) { %><small><%= t("quote.cargoTypesEmpty") %></small><% } %>
+      </label>
       <label class="quote-field"><span><%= t("quote.commodity") %></span>
         <input type="text" name="commodity" value="<%= formData.header.commodity %>" /></label>
       <label class="quote-field" style="grid-column: 1 / -1;"><span><%= t("quote.delivery") %></span>

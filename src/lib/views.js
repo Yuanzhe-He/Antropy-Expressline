@@ -41,7 +41,7 @@ const {
   QUOTE_DEPARTMENT_OPTIONS,
   QUOTE_INCOTERM_OPTIONS,
   QUOTE_TRANSPORT_MODE_OPTIONS,
-  QUOTE_CARGO_TYPE_OPTIONS,
+  normalizeQuoteCargoTypes,
   QUOTE_UOM_OPTIONS,
   QUOTE_GROUP_ORDER,
   QUOTE_MODES,
@@ -768,15 +768,17 @@ function renderAdminRules(req, res, payload) {
   );
 }
 
-// Q4/Q5/Q6 (20260617): header fields are now dropdowns over fixed option sets.
-// A submitted value outside its set is dropped to "" (no legacy free-text kept)
-// — Jose supplied the standard sets, so stray values get normalized away.
+// Header values are controlled choices. Cargo types use the enabled admin
+// configuration; the other fields continue to use their fixed option sets.
+// Unknown/disabled submissions become empty rather than operator free text.
 function pickFromOptions(value, options, fallback = "") {
   const normalized = String(value ?? "").trim().toUpperCase();
   return options.includes(normalized) ? normalized : fallback;
 }
 
-function parseQuoteHeader(body = {}) {
+function parseQuoteHeader(body = {}, cargoTypes = normalizeQuoteCargoTypes()) {
+  const code = pickFromOptions(body.cargoType, cargoTypes.filter((entry) => entry.enabled).map((entry) => entry.code), "");
+  const cargoType = cargoTypes.find((entry) => entry.enabled && entry.code === code);
   return {
     operation: body.operation === "EXPORT" ? "EXPORT" : "IMPORT",
     department: pickFromOptions(
@@ -793,7 +795,8 @@ function parseQuoteHeader(body = {}) {
     pol: body.pol ?? DEFAULT_QUOTE_HEADER.pol,
     pod: body.pod ?? DEFAULT_QUOTE_HEADER.pod,
     commodity: body.commodity || "",
-    cargoType: pickFromOptions(body.cargoType, QUOTE_CARGO_TYPE_OPTIONS, ""),
+    cargoType: code,
+    ...(cargoType ? { cargoTypeLabel: cargoType.label } : {}),
     delivery: body.delivery || "",
     // Q7.2: ordered, addable/removable custom general-data rows (label/value).
     extraFields: parseQuoteExtraFields(body),
@@ -944,14 +947,21 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
   const libraryIds = (quoteModule.notes || []).map((n) => n.id);
   const postedNoteIds = ensureArray(body.note_sel).map(String);
   const language = pickFromOptions(body.quoteLang, ["EN", "ZH", "ES"], "");
-  const header = parseQuoteHeader(body);
+  const cargoTypes = normalizeQuoteCargoTypes(quoteModule.settings?.cargoTypes);
+  const header = parseQuoteHeader(body, cargoTypes);
   // S5: pre-fill a fresh quote's header from the admin default preset.
   if (!hasPostedRows) {
     const hd = quoteModule.settings?.headerDefaults || {};
     if (hd.department) header.department = hd.department;
     if (hd.transportMode) header.transportMode = hd.transportMode;
     if (hd.incoterm) header.incoterm = hd.incoterm;
-    if (hd.cargoType) header.cargoType = hd.cargoType;
+    if (body.cargoType === undefined && hd.cargoType) {
+      const defaultCargo = cargoTypes.find((entry) => entry.enabled && entry.code === hd.cargoType);
+      if (defaultCargo) {
+        header.cargoType = defaultCargo.code;
+        header.cargoTypeLabel = defaultCargo.label;
+      }
+    }
   }
   return {
     number,
@@ -985,7 +995,7 @@ function renderQuoteWorkbench(req, res, payload) {
         department: QUOTE_DEPARTMENT_OPTIONS,
         transportMode: QUOTE_TRANSPORT_MODE_OPTIONS,
         incoterm: QUOTE_INCOTERM_OPTIONS,
-        cargoType: QUOTE_CARGO_TYPE_OPTIONS,
+        cargoType: normalizeQuoteCargoTypes(payload.quoteModule.settings?.cargoTypes).filter((entry) => entry.enabled),
       },
       categoryOptions: QUOTE_GROUP_ORDER,
       quoteModes: QUOTE_MODES,
