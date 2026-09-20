@@ -1,0 +1,42 @@
+{
+  "source_type": "user_text_attachment",
+  "source_received_date": "2026-09-13",
+  "as_of": "2026-09-13",
+  "method": "Codex directly opened and visually inspected both attached images in this conversation. Manual transcription, no OCR substitute.",
+  "confidence": "Confirmed for legible visible fields; cropped or ambiguous content is explicitly flagged.",
+  "fee_image": "20260913_quote_fees.png",
+  "ui_image": "20260913_quote_ui.png",
+  "service_type": "CY-Door 港到门",
+  "visible_sheet_name": "正清墨西哥清关送货",
+  "container_type": "40HQ",
+  "coverage": "14 complete visible fee rows: 8 in Mexico Section Cost and 6 in Charges (if incurred). Bottom of screenshot is cropped; not the complete source workbook.",
+  "fee_rows": [
+    {"id":"F01","source_row":3,"section":"fixed","zh":"预检费","en":"Pre-inspection Fee","price_min":350,"price_max":350,"quantity":1,"unit":"柜/Container","currency":"USD","remark_zh":"建议做，加速通关","remark_en":"Recommended, speeds up customs clearance","review_issue":"截图置于上半部但标为建议做；请核对是否列入固定费用。"},
+    {"id":"F02","source_row":4,"section":"fixed","zh":"船公司LOCAL","en":"Delivery Order Fee","price_min":190,"price_max":190,"quantity":1,"unit":"柜/Container","currency":"USD","remark_zh":"实报实销，提供船司发票","remark_en":"Actual cost, shipping line invoice to be provided","review_issue":"按船司实际发票结算；190 为截图参考价格。"},
+    {"id":"F03","source_row":5,"section":"fixed","zh":"换单费","en":"Destination Handling fee","price_min":2000,"price_max":2000,"quantity":1,"unit":"票/bill","currency":"MXN","remark_zh":"含AMS费用，这个AMS不是国内订舱发的AMS，是向墨西哥税局申报的AMS","remark_en":"Including AMS fee (AMS filing to the Mexican tax authority, not the AMS filed by origin booking).","review_issue":""},
+    {"id":"F04","source_row":6,"section":"fixed","zh":"HONORARIOS（清关服务费）","en":"Customs Clearance Service Fee","price_min":7000,"price_max":7000,"quantity":1,"unit":"柜/Container","currency":"MXN","remark_zh":"如一个集装箱涉及多份报关单，则按实际报关单数量分别计费。","remark_en":"Multiple customs declarations per container will be charged separately.","review_issue":"截图单位为柜，但备注按多份报关单分别计费；请确认口径。"},
+    {"id":"F05","source_row":7,"section":"fixed","zh":"电子货值申报费","en":"MV Electronic Filing Fee","price_min":1500,"price_max":1500,"quantity":1,"unit":"柜/Container","currency":"MXN","remark_zh":"如贵司委托我司申报则收取，贵司自己申报，则不收取。","remark_en":"Fee applies if we handle the declaration; no fee if you do it yourself.","review_issue":"截图上半部但仅委托申报才收；请核对是否应移至发生才收。"},
+    {"id":"F06","source_row":8,"section":"fixed","zh":"码头费","en":"Terminal Handling Fee","price_min":16000,"price_max":16000,"quantity":1,"unit":"柜/Container","currency":"MXN","remark_zh":"报价费用为预估，实报实销，提供码头发票","remark_en":"Estimated cost, Actual cost, terminal invoice to be provided","review_issue":"16000 为预估，结算以码头发票为准。"},
+    {"id":"F07","source_row":9,"section":"fixed","zh":"拖车费（Single）","en":"Transportation","price_min":53000,"price_max":53000,"quantity":1,"unit":"柜/Container","currency":"MXN","remark_zh":"单拖，货重21吨以下","remark_en":"Single, cargo weight ≤ 21 tons","review_issue":"与双拖为备选方案，不同时汇总。"},
+    {"id":"F08","source_row":10,"section":"fixed","zh":"拖车费（Full）","en":"Transportation","price_min":75000,"price_max":75000,"quantity":2,"unit":"柜/Container","currency":"MXN","remark_zh":"双拖，货重20吨以下","remark_en":"Full, cargo weight ≤ 20 tons","review_issue":"与单拖为备选方案。截图数量2；请确认75000为每柜单价还是双拖总价。"},
+    {"id":"C01","source_row":12,"section":"conditional","zh":"集装箱清洁费","en":"Container Cleaning Fee","price_min":800,"price_max":2000,"quantity":1,"unit":"柜/Container","currency":"MXN","remark_zh":"由船公司指定堆场收取，具体费用根据集装箱实际状况确定，通常为 800–2,000 墨西哥比索/柜（未含税）","remark_en":"Charged by the shipping line designated yard, depending on container condition. Usually MXN 800–2,000/container before VAT.","review_issue":"发生才收；保留800–2000区间和原币种MXN。收款方/费用分组请核对。"},
+    {"id":"C02","source_row":13,"section":"conditional","zh":"海关查验费","en":"Customs Inspection Fee","price_min":8000,"price_max":10000,"quantity":1,"unit":"柜/Container","currency":"MXN","remark_zh":"海关查验费一般8000-1000比索税前，由码头收取","remark_en":"","review_issue":"价格列为8000–10000；中文备注可见为8000-1000（疑似漏0），保留原文请Bill核实。"},
+    {"id":"C03","source_row":14,"section":"conditional","zh":"码头到堆场的操作费","en":"Operation Fee from Terminal to Container Yard","price_min":9000,"price_max":9000,"quantity":1,"unit":"柜/Container","currency":"MXN","remark_zh":"集装箱从码头提出后，如贵司暂时无法收货，暂存于车队堆场。该费用包含码头至堆场短驳费及堆场操作费。","remark_en":"Temporary storage at the truck yard if the container cannot be received. Includes terminal-to-yard drayage and yard handling.","review_issue":"仅无法接收并转存车队堆场时发生。"},
+    {"id":"C04","source_row":15,"section":"conditional","zh":"单拖空放费","en":"Single Truck Empty Run Fee","price_min":6000,"price_max":6000,"quantity":1,"unit":"柜/Container","currency":"MXN","remark_zh":"车队按预约时间（CITA）前往码头提柜，如因码头提前关闭等原因导致提柜失败，产生的车辆空放费用。","remark_en":"Truck empty run fee if pickup fails due to terminal closure or other terminal issues.","review_issue":"按发生的单拖方案适用。"},
+    {"id":"C05","source_row":16,"section":"conditional","zh":"双拖空放费","en":"Double Truck Empty Run Fee","price_min":10000,"price_max":10000,"quantity":2,"unit":"柜/Container","currency":"MXN","remark_zh":"车队按预约时间（CITA）前往码头提柜，如因码头提前关闭等原因导致提柜失败，产生的车辆空放费用。","remark_en":"Truck empty run fee if pickup fails due to terminal closure or other terminal issues.","review_issue":"截图数量2；请确认10000为每柜单价还是双拖总价。"},
+    {"id":"C06","source_row":17,"section":"conditional","zh":"卡车待时费","en":"Truck Waiting Time Fee","price_min":6000,"price_max":6000,"quantity":1,"unit":"day","currency":"MXN","remark_zh":"8小时内免费","remark_en":"Free for the first 8 hours.","review_issue":"请确认8小时后按整天、跨日或不足一天计费规则。"}
+  ],
+  "screenshot_notes": [
+    {"id":"N01","en":"The above prices are exclusive of VAT. A 16% VAT will be added at the time of invoicing and settlement.","zh":"上述价格均不含税；开票及结算时将另加 16% 增值税（VAT）。"},
+    {"id":"N02","en":"Any costs not caused by our company will be charged based on actual expenses.","zh":"非我方原因产生的任何费用，将按实际发生金额收取。"},
+    {"id":"N03","en":"The transport fee excludes cargo insurance. If insurance is required, it will be 0.25% of the insured value plus 16% VAT.","zh":"运费不含货物保险；如需投保，按保额的 0.25% 加收，并另加 16% 增值税。"},
+    {"id":"N04","en":"Any exchange rate differences will be settled based on the exchange rate on the invoicing date.","zh":"任何汇率差异均按开票当日汇率结算。"},
+    {"id":"N05","en":"This quotation is valid for 90 days.","zh":"本报价有效期为 90 天。"}
+  ],
+  "ui_observations": [
+    "Each fee name uses three vertically stacked EN/ZH/ES fields while most other columns contain a single control.",
+    "Large check marks appear for AT COST and selected notes.",
+    "Selected note text is far to the right of the checkboxes; five note rows are visible.",
+    "Displayed quote subtotal is MXN 182,000.00 and USD 0.00; this is screenshot state, not a total of the separate fee-reference screenshot."
+  ]
+}

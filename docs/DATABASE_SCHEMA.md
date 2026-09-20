@@ -55,6 +55,7 @@ The Supabase project `polxyashvxbzdkkmxuox` is shared by **three independent app
 - **`quote_drafts`** (0) — saved quote drafts. PK `id`; `header`/`line_items`/`note_ids` jsonb.
 - **`quote_notes`** (5) — reusable quote remarks (en/es/zh). PK `id`.
 - **`module_settings`** (5) — per-module settings + `tax_rate_presets`. PK `module_key` (values: `handover`/`customs`/`inland`/`quote` + a `__app__` meta row carrying `generatedFrom`).
+  - Quote settings support `cargoTypes: [{code, label, enabled}]` and an enabled-only `headerDefaults.cargoType`. Saved draft headers retain their cargo code and optional `cargoTypeLabel` snapshot independently of the current list. These use existing JSONB columns; no schema migration. See `docs/specs/20260913_quote_cargo_types_IMPLEMENTATION_SPEC.md`.
 - **`exchange_rates`** (1) — USD/MXN snapshot + FX metadata. **Singleton:** PK `id smallint` with CHECK `(id = 1)`; `pairs` jsonb.
 
 ### Carry-over / auxiliary tables (created by [db.js#migrateDatabase](../src/lib/db/index.js#L69))

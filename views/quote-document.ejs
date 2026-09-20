@@ -24,7 +24,6 @@
     font-family: "Noto Sans", "Noto Sans SC", Arial, sans-serif;
     color: #15202b; font-size: 9.5px; line-height: 1.35;
     background: #ffffff;
-    padding-bottom: 16mm;
   }
   .zh { font-family: "Noto Sans SC", "Noto Sans", sans-serif; }
 
@@ -38,7 +37,7 @@
   .quote-meta .lbl { font-weight: 700; color: #2f3b8c; font-size: 8px; letter-spacing: 0.04em; }
   .quote-meta div + div { border-left: 1px solid #2f3b8c; }
 
-  .band { background: #2f3b8c; color: #fff; font-weight: 700; letter-spacing: 0.05em; padding: 4px 8px; font-size: 9px; margin-top: 10px; }
+  .band { break-after: avoid; page-break-after: avoid; background: #2f3b8c; color: #fff; font-weight: 700; letter-spacing: 0.05em; padding: 4px 8px; font-size: 9px; margin-top: 10px; }
 
   table.general { width: 100%; border-collapse: collapse; }
   table.general td { border: 1px solid #b9c2cc; padding: 3px 7px; }
@@ -46,6 +45,16 @@
 
   table.charges { width: 100%; border-collapse: collapse; margin-top: 0; }
   table.charges th { background: #3b4ab0; color: #fff; padding: 4px 6px; font-size: 8px; letter-spacing: 0.03em; border: 1px solid #2f3b8c; text-align: left; }
+  table.charges thead { display: table-header-group; break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid; }
+  table.charges thead tr { break-after: avoid; page-break-after: avoid; }
+  table.charges tbody tr:first-child { break-before: avoid; page-break-before: avoid; }
+  table.charges td.charge-heading-cell { padding: 0; border: 0; }
+  table.charges tr { break-inside: avoid; page-break-inside: avoid; }
+  table.general td.qualification-key { white-space: normal; width: 50%; }
+  .charge-section-label { padding: 4px 7px; background: #eef1f8; color: #2f3b8c; font-weight: 700; font-size: 8px; border: 1px solid #b9c2cc; border-bottom: 0; margin-top: 5px; break-after: avoid; page-break-after: avoid; }
+  .charge-section-hint { margin: 4px 0 6px; color: #41505f; font-size: 8px; }
+  .contingent-band { background: #53657f; }
+  .subtotal-note { margin-top: 5px; color: #41505f; font-size: 8px; }
   table.charges td { border: 1px solid #b9c2cc; padding: 3px 6px; vertical-align: middle; }
   table.charges td.cat { font-weight: 700; background: #eef1f8; width: 92px; vertical-align: middle; }
   table.charges td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -77,7 +86,7 @@
   .notes .zh { color: #41505f; }
 
   .doc-footer {
-    position: fixed; bottom: 0; left: 0; right: 0; height: 13mm;
+    position: static; margin-top: 12px; height: 12mm; break-inside: avoid;
     display: flex; align-items: center; justify-content: space-between;
     border-top: 1px solid #2f3b8c; padding-top: 4px;
   }
@@ -85,6 +94,8 @@
   .doc-footer .marks { display: flex; align-items: center; gap: 10px; }
   .doc-footer .marks img { height: 24px; width: auto; max-width: 90px; object-fit: contain; }
   .doc-footer .mark-ph { border: 1px dashed #9aa7b4; color: #6b7785; font-size: 7px; padding: 3px 6px; border-radius: 3px; }
+  /* The PDF renderer places the repeating footer in its reserved page margin. */
+  @media print { .doc-footer { display: none; } }
 </style>
 </head>
 <body>
@@ -93,6 +104,9 @@
   var qlang = (typeof language !== "undefined" && language) ? language : "";
   var single = qlang === "EN" || qlang === "ZH" || qlang === "ES";
   var labelLang = single ? qlang : "EN";
+  var internal = typeof outputAudience !== "undefined" && outputAudience === "internal";
+  var includeTotals = typeof showTotals !== "undefined" && showTotals === true;
+  var tax = typeof taxTreatment !== "undefined" ? taxTreatment : "unspecified";
   var LBL = {
     date: { EN: "DATE", ZH: "日期", ES: "FECHA" },
     number: { EN: "QUOTATION NUMBER", ZH: "报价编号", ES: "NÚMERO" },
@@ -106,9 +120,25 @@
     pod: { EN: "POD", ZH: "目的港", ES: "POD" },
     commodity: { EN: "COMMODITY", ZH: "品名", ES: "MERCANCÍA" },
     delivery: { EN: "DELIVERY", ZH: "目的地", ES: "ENTREGA" },
+    importerQualification: { EN: "IMPORT QUALIFICATION", ZH: "进口资质来源", ES: "IMPORTADOR" },
+    specialImportQualification: { EN: "SPECIAL IMPORT QUALIFICATION REQUIRED", ZH: "是否需要特殊进口资质", ES: "¿REQUIERE PERMISO O PADRÓN ESPECIAL?" },
+    nomCertification: { EN: "NOM CERTIFICATION REQUIRED", ZH: "是否需要 NOM 认证", ES: "¿REQUIERE CERTIFICACIÓN NOM?" },
+    ministryRegistration: { EN: "ECONOMY MINISTRY REGISTRATION REQUIRED", ZH: "是否需要经济部备案", ES: "¿REQUIERE REGISTRO ANTE ECONOMÍA?" },
+    fixedCharges: { EN: "FIXED CHARGES", ZH: "固定费用", ES: "CARGOS FIJOS" },
+    contingentCharges: { EN: "CHARGES IF INCURRED", ZH: "发生才收取的费用", ES: "CARGOS SI SE GENERAN" },
+    contingentHint: { EN: "For information only. These charges apply only if the stated event occurs and are excluded from this quotation subtotal.", ZH: "仅供提前告知。相应情况实际发生时才收取，不计入本次报价小计。", ES: "Solo informativos. Se cobran únicamente si ocurre la situación indicada y se excluyen del subtotal de esta cotización." },
+    fixedHint: { EN: "Selected fixed charges for the agreed service. AT COST and price ranges remain subject to final confirmation and are excluded from the subtotal.", ZH: "已选定的服务固定费用。AT COST 及区间金额待最终确认，不计入小计。", ES: "Cargos fijos seleccionados del servicio acordado. Los conceptos AT COST y rangos de precio quedan pendientes de confirmación y se excluyen del subtotal." },
+    ifIncurredAmount: { EN: "AMOUNT IF INCURRED", ZH: "发生时金额", ES: "IMPORTE SI OCURRE" },
+    subtotalLabel: { EN: "FIXED SUBTOTAL", ZH: "固定费用小计", ES: "SUBTOTAL FIJO" },
+    indicativeLabel: { EN: "Reference conversion only", ZH: "换汇金额仅供参考", ES: "Conversión solo como referencia" },
+    noFixedAmount: { EN: "No confirmed fixed amount. AT COST, unconfirmed price ranges and charges if incurred are excluded.", ZH: "暂无已确认的固定金额；AT COST、待确认区间及或有费用不计入。", ES: "Sin importe fijo confirmado. Se excluyen AT COST, rangos pendientes y cargos si se generan." },
     secForeign: { EN: "NO MEXICO CHARGES", ZH: "境外 / 起运费用", ES: "CARGOS FUERA DE MÉXICO" },
     secMexico: { EN: "MEXICO LOCAL CHARGES", ZH: "墨西哥本地费用", ES: "CARGOS LOCALES MÉXICO" },
     colCat: { EN: "CHARGE CATEGORY", ZH: "费用类别", ES: "CATEGORÍA" },
+    colCode: { EN: "INTERNAL CODE", ZH: "内部计费代码", ES: "CÓDIGO INTERNO" },
+    internalCopy: { EN: "INTERNAL COPY", ZH: "内部版", ES: "COPIA INTERNA" },
+    taxIncluded: { EN: "Entered prices include tax. No additional tax has been added.", ZH: "输入价格已含税，未重复加税。", ES: "Los precios incluyen impuestos. No se agregaron impuestos adicionales." },
+    taxExcluded: { EN: "Entered prices exclude tax. Applicable tax is not included in these amounts.", ZH: "输入价格未含税，所示金额未加税。", ES: "Los precios no incluyen impuestos. Los impuestos aplicables no están incluidos." },
     colConcept: { EN: "CONCEPT", ZH: "费用", ES: "CONCEPTO" },
     colQty: { EN: "QTY", ZH: "数量", ES: "CANT." },
     colUom: { EN: "UNIT", ZH: "单位", ES: "UNIDAD" },
@@ -119,6 +149,20 @@
     notes: { EN: "NOTES", ZH: "备注", ES: "NOTAS" },
   };
   function L(key) { var m = LBL[key] || {}; return m[labelLang] || m.EN || key; }
+  function bilingualLabel(key) { return single ? L(key) : L(key) + " / " + LBL[key].ZH; }
+  function qualificationValue(value, isImporter) {
+    var values = isImporter ? {
+      own: { EN: "Customer's own import qualification", ZH: "客户自有进口资质", ES: "Padrón propio del cliente" },
+      trading_company: { EN: "Import via a trading company", ZH: "借贸易公司进口", ES: "Importación mediante comercializadora" }
+    } : {
+      yes: { EN: "Yes", ZH: "是", ES: "Sí" },
+      no: { EN: "No", ZH: "否", ES: "No" },
+      unknown: { EN: "To be confirmed", ZH: "待确认", ES: "Por confirmar" }
+    };
+    var answer = values[value];
+    if (!answer) return "—";
+    return single ? answer[labelLang] : answer.EN + " / " + answer.ZH;
+  }
   var UOM = {
     container: { EN: "container", ZH: "柜", ES: "contenedor" },
     bl: { EN: "BL", ZH: "提单", ES: "BL" },
@@ -126,6 +170,13 @@
     piece: { EN: "piece", ZH: "个", ES: "pieza" },
     vehicle: { EN: "vehicle", ZH: "车型", ES: "vehículo" },
     day: { EN: "day", ZH: "天", ES: "día" },
+    chargeable: { EN: "chargeable unit", ZH: "计费单位", ES: "unidad facturable" },
+    shipment: { EN: "shipment", ZH: "票", ES: "embarque" },
+    truck: { EN: "truck", ZH: "车", ES: "camión" },
+    kg: { EN: "kg", ZH: "千克", ES: "kg" },
+    ton: { EN: "ton", ZH: "吨", ES: "tonelada" },
+    cbm: { EN: "m³", ZH: "立方米", ES: "m³" },
+    flat: { EN: "flat fee", ZH: "一口价", ES: "tarifa fija" },
   };
   function uomLabel(code) { var m = UOM[code]; return m ? (m[labelLang] || m.EN) : (code || ""); }
   function noteText(note) {
@@ -136,11 +187,15 @@
   var sectionList = (typeof sections !== "undefined" && sections && sections.length)
     ? sections
     : [{ section: "mexico", groups: (typeof groups !== "undefined" ? groups : []) }];
+  var chargeList = (typeof chargeSections !== "undefined" && Array.isArray(chargeSections))
+    ? chargeSections
+    : [{ chargeKind: "fixed", sections: sectionList }];
 %>
   <header class="doc-header">
     <div class="logo-box">
       <% if (assets.logoExpressLine) { %><img src="<%= assets.logoExpressLine %>" alt="Express Line Corporation" /><% } else { %><div class="logo-ph">Express Line Corporation<br/>(logo pending)</div><% } %>
     </div>
+    <% if (internal) { %><strong><%= bilingualLabel('internalCopy') %></strong><% } %>
   </header>
 
   <div class="quote-meta">
@@ -152,25 +207,45 @@
   <table class="general">
     <tr><td class="k"><%= L("operation") %></td><td><%= header.operation %></td><td class="k"><%= L("incoterm") %></td><td><%= header.incoterm %></td></tr>
     <tr><td class="k"><%= L("department") %></td><td><%= header.department %></td><td class="k"><%= L("transport") %></td><td><%= header.transportMode || "" %></td></tr>
-    <tr><td class="k"><%= L("cargo") %></td><td><%= header.cargoType %></td><td class="k"><%= L("pol") %></td><td><%= header.pol %></td></tr>
+    <tr><td class="k"><%= L("cargo") %></td><td><%= header.cargoTypeLabel || header.cargoType %></td><td class="k"><%= L("pol") %></td><td><%= header.pol %></td></tr>
     <tr><td class="k"><%= L("commodity") %></td><td><%= header.commodity %></td><td class="k"><%= L("pod") %></td><td><%= header.pod %></td></tr>
     <tr><td class="k"><%= L("delivery") %></td><td colspan="3"><%= header.delivery %></td></tr>
+    <% ['importerQualification', 'specialImportQualification', 'nomCertification', 'ministryRegistration'].forEach((key) => { %>
+      <tr><td class="k qualification-key" colspan="2"><%= bilingualLabel(key) %></td><td colspan="2"><%= qualificationValue(header[key], key === 'importerQualification') %></td></tr>
+    <% }); %>
     <% (header.extraFields || []).forEach((f) => { %>
       <tr><td class="k"><%= f.label %></td><td colspan="3"><%= f.value %></td></tr>
     <% }); %>
   </table>
 
-  <% sectionList.forEach((sec) => { %>
-    <div class="band"><%= sec.section === "foreign" ? L("secForeign") : L("secMexico") %></div>
+  <% chargeList.forEach((charge) => {
+      var contingent = charge.chargeKind === 'contingent';
+      var chargeGeographies = (charge.sections || []).map((sec) => ({
+        section: sec.section,
+        groups: (sec.groups || []).map((group) => ({ ...group, items: (group.items || []).filter((row) => contingent || row.included !== false) })).filter((group) => group.items.length)
+      })).filter((sec) => sec.groups.length);
+      if (!chargeGeographies.length) return;
+  %>
+    <% chargeGeographies.forEach((sec, secIndex) => { %>
     <table class="charges">
       <thead>
+        <%# Keep the section title, explanation, geography and column headings
+            inside the same print header group so none can orphan before a row. %>
+        <tr><td colspan="<%= internal ? 9 : 8 %>" class="charge-heading-cell">
+          <% if (secIndex === 0) { %>
+            <div class="band <%= contingent ? 'contingent-band' : '' %>"><%= bilingualLabel(contingent ? 'contingentCharges' : 'fixedCharges') %></div>
+            <p class="charge-section-hint"><%= L(contingent ? 'contingentHint' : 'fixedHint') %><% if (!single) { %><br/><span class="zh"><%= LBL[contingent ? 'contingentHint' : 'fixedHint'].ZH %></span><% } %></p>
+          <% } %>
+          <div class="charge-section-label"><%= bilingualLabel(sec.section === 'foreign' ? 'secForeign' : 'secMexico') %></div>
+        </td></tr>
         <tr>
           <th style="width:92px;"><%= L("colCat") %></th>
+          <% if (internal) { %><th style="width:62px;"><%= L("colCode") %></th><% } %>
           <th><%= L("colConcept") %></th>
           <th style="width:30px;"><%= L("colQty") %></th>
           <th style="width:44px;"><%= L("colUom") %></th>
           <th style="width:78px;"><%= L("colUnitPrice") %></th>
-          <th style="width:78px;"><%= L("colTotal") %></th>
+          <th style="width:78px;"><%= L(contingent ? "ifIncurredAmount" : "colTotal") %></th>
           <th style="width:46px;"><%= L("colCur") %></th>
           <th style="width:140px;"><%= L("colRemark") %></th>
         </tr>
@@ -179,6 +254,7 @@
         <% sec.groups.forEach((group) => { group.items.forEach((row, idx) => { %>
           <tr>
             <% if (idx === 0) { %><td class="cat" rowspan="<%= group.items.length %>"><%= group.category %></td><% } %>
+            <% if (internal) { %><td style="overflow-wrap:anywhere;"><%= row.code || '' %></td><% } %>
             <td>
               <% if (single) { %>
                 <div class="concept-en"><%= qlang === "ZH" ? (row.conceptZh || row.conceptEn) : (qlang === "ES" ? (row.conceptEs || row.conceptEn) : row.conceptEn) %></div>
@@ -195,9 +271,10 @@
             <td><%= row.remark %></td>
           </tr>
         <% }); }); %>
-        <% if (!sec.groups.length) { %><tr><td colspan="8" class="atcost">—</td></tr><% } %>
+        <% if (!sec.groups.length) { %><tr><td colspan="<%= internal ? 9 : 8 %>" class="atcost">—</td></tr><% } %>
       </tbody>
     </table>
+    <% }); %>
   <% }); %>
 
   <% if (typeof route !== "undefined" && route) { %>
@@ -211,36 +288,19 @@
     </div>
   <% } %>
 
+  <% if (includeTotals) { %>
   <div class="subtotals">
     <% subtotals.forEach((s) => { %>
-      <div><%= s.currency %> SUBTOTAL: <b><%= s.amountLabel %> <%= s.currency %></b></div>
+      <div><%= s.currency %> <%= L("subtotalLabel") %>: <b><%= s.amountLabel %> <%= s.currency %></b></div>
     <% }); %>
-    <% if (!subtotals.length) { %><div class="atcost">All line items are AT COST / TBD.</div><% } %>
+    <% if (!subtotals.length) { %><div class="atcost"><%= bilingualLabel("noFixedAmount") %></div><% } %>
   </div>
-  <% if (indicative) { %>
-    <div class="indicative">Indicative total ≈ <%= indicative.amountLabel %> <%= indicative.currency %><%= indicative.asOfDate ? ` (FX as of ${indicative.asOfDate})` : "" %> — reference only, settled at invoicing-date FX.</div>
+  <% if (typeof indicative !== 'undefined' && indicative) { %>
+    <p class="indicative"><%= bilingualLabel('indicativeLabel') %>: <%= indicative.amountLabel %> <%= indicative.currency %><% if (indicative.asOfDate) { %> · <%= indicative.asOfDate %><% } %></p>
   <% } %>
-
-  <% if (typeof dualTotals !== "undefined" && dualTotals) { %>
-    <div class="dual-totals">
-      <div class="dual-box">
-        <div class="dual-cur">MXN <span class="zh">比索</span></div>
-        <div class="dual-amt"><%= dualTotals.mxn.shownLabel ? `$${dualTotals.mxn.shownLabel} MXN` : "—" %></div>
-        <div class="dual-iva"><%= dualTotals.mxn.iva ? `IVA ${Math.round(dualTotals.mxn.iva * 100)}% incluido / 含税` : "sin IVA / 不含税" %></div>
-      </div>
-      <div class="dual-box">
-        <div class="dual-cur">USD <span class="zh">美金</span></div>
-        <div class="dual-amt"><%= dualTotals.usd.shownLabel ? `$${dualTotals.usd.shownLabel} USD` : "—" %></div>
-        <div class="dual-iva"><%= dualTotals.usd.iva ? `IVA ${Math.round(dualTotals.usd.iva * 100)}% incluido / 含税` : "sin IVA / 不含税" %></div>
-      </div>
-      <% if (dualTotals.fxRate) { %>
-        <div class="dual-fx">FX: 1 USD = <%= dualTotals.fxRate %> MXN<%= dualTotals.fxAsOf ? ` · ${dualTotals.fxAsOf}` : "" %></div>
-      <% } %>
-    </div>
-    <div class="dual-note">
-      The two amounts above exclude items marked AT COST (delivery order fee, destination port charges, yard storage, duties, etc.), which are billed separately at actual cost — they are not a grand total.
-      <div class="zh">上方两个金额不含标注 AT COST 的项目（换单费、目的港码头操作费、堆存费、税金等，按实际发生另收），并非最终总价。</div>
-    </div>
+  <% } %>
+  <% if (tax === 'included' || tax === 'excluded') { %>
+    <p class="subtotal-note"><%= bilingualLabel(tax === 'included' ? 'taxIncluded' : 'taxExcluded') %></p>
   <% } %>
 
   <div class="notes">

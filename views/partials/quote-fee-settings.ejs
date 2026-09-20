@@ -1,0 +1,118 @@
+<%
+  const feeText = (zh, es) => lang === 'es' ? es : zh;
+  const defaultCurrency = quoteSettings.defaultCurrencyByCategory || {};
+  const rows = quoteSettings.feeTemplates || [];
+  const valuesWithCurrent = (options, value) => value && !options.includes(value) ? [value, ...options] : options;
+  const currencyRows = postedCurrencyRows || feeCategories.map((category) => ({category, value: defaultCurrency[category] || (category === 'SHIPPING LINE' ? 'USD' : 'MXN')}));
+  const kindLabel = (kind) => kind === 'contingent' ? feeText('发生才收', 'Si ocurre') : feeText('固定费用', 'Cargo fijo');
+%>
+<style>
+  .quote-fee-editor { --fee-border: var(--border, rgba(130, 151, 175, .3)); }
+  .quote-fee-editor .fee-settings-intro { margin: 0 0 1rem; line-height: 1.5; }
+  .quote-fee-editor .fee-currency-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .75rem; }
+  .quote-fee-editor .fee-group { margin: .75rem 0 0; border: 1px solid var(--fee-border); border-radius: 10px; }
+  .quote-fee-editor .fee-group > summary { cursor: pointer; padding: .9rem 1rem; font-weight: 650; }
+  .quote-fee-editor .fee-group-body { padding: 0 .8rem .8rem; }
+  .quote-fee-editor .fee-list { display: grid; gap: .45rem; }
+  .quote-fee-editor .fee-rule { border: 1px solid var(--fee-border); border-radius: 7px; min-width: 0; }
+  .quote-fee-editor .fee-rule > summary { cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: .65rem .8rem; font-weight: normal; }
+  .quote-fee-editor .fee-rule > summary::before { content: '›'; display: inline-block; font-size: 1rem; }
+  .quote-fee-editor .fee-rule[open] > summary::before { transform: rotate(90deg); }
+  .quote-fee-editor [data-fee-summary-name] { flex: 1 1 200px; font-weight: 600; }
+  .quote-fee-editor [data-fee-summary-meta] { font-size: .85rem; opacity: .85; }
+  .quote-fee-editor .fee-rule-body { padding: .2rem .8rem .8rem; }
+  .quote-fee-editor .fee-fields { display: grid; grid-template-columns: repeat(4, minmax(110px, 1fr)); gap: .6rem .75rem; }
+  .quote-fee-editor .fee-names { grid-template-columns: repeat(3, minmax(140px, 1fr)); margin-bottom: .65rem; }
+  .quote-fee-editor .fee-fields label { min-width: 0; gap: .25rem; }
+  .quote-fee-editor .fee-fields label > span { font-size: .8rem; }
+  .quote-fee-editor input, .quote-fee-editor select, .quote-fee-editor textarea { width: 100%; min-height: 36px; padding: .45rem .6rem; font-size: .9rem; }
+  .quote-fee-editor input[readonly] { opacity: .65; }
+  .quote-fee-editor .fee-mode-options { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .75rem; min-height: 36px; }
+  .quote-fee-editor .fee-mode-options label { display: inline-flex; align-items: center; gap: .3rem; margin: 0; }
+  .quote-fee-editor .fee-mode-options input[type="checkbox"] { width: 14px; height: 14px; min-height: 14px; padding: 0; margin: 0; flex: 0 0 14px; }
+  .quote-fee-editor textarea { resize: vertical; line-height: 1.5; }
+  .quote-fee-editor .fee-full { grid-column: 1 / -1; }
+  .quote-fee-editor .fee-rule-actions { display: flex; justify-content: flex-end; margin-top: .6rem; }
+  .quote-fee-editor .fee-add-actions { display: flex; gap: .6rem; margin: .75rem 0 0; }
+  .quote-fee-editor .fee-error { color: var(--danger, #b83d31); }
+  .quote-fee-editor .fee-empty { margin: .8rem 0; font-size: .9rem; opacity: .8; }
+  @media (max-width: 900px) { .quote-fee-editor .fee-fields { grid-template-columns: repeat(2, minmax(110px, 1fr)); } .quote-fee-editor .fee-names { grid-template-columns: 1fr; } }
+  @media (max-width: 500px) { .quote-fee-editor .fee-fields { grid-template-columns: 1fr; } }
+</style>
+
+<section class="panel quote-fee-editor" data-fee-editor>
+  <input type="hidden" name="feeTemplatesPresent" value="1" />
+  <input type="hidden" name="currencyDefaultsPresent" value="1" />
+  <div class="section-title"><div><p class="eyebrow"><%= feeText('报价费用与默认币种', 'Cargos y monedas predeterminadas') %></p></div></div>
+  <p class="fee-settings-intro"><%= feeText('保存后，前台使用已启用的费用。发生才收的费用用于告知客户可能产生的收费，不计入当前报价小计。', 'Al guardar, la cotización usa los cargos activos. Los cargos eventuales informan al cliente y no se suman al subtotal de la cotización.') %></p>
+  <% if (currencyError) { %><p class="fee-error" role="alert" tabindex="-1" data-fee-error data-error-code="invalid_currency_defaults"><%= currencyError %></p><% } %>
+  <% if (feeError) { %><p class="fee-error" role="alert" tabindex="-1" data-fee-error data-error-code="<%= feeErrorCode %>"><%= feeError %></p><% } %>
+  <details class="fee-group" <%= currencyError ? 'open' : '' %>>
+    <summary><%= feeText('默认币种', 'Monedas predeterminadas') %></summary>
+    <div class="fee-group-body">
+      <p class="quote-hint"><%= feeText('用于新增费用或更改费用分组。船司预设 USD，其余预设 MXN；已有费用中明确填写的币种保持不变。', 'Se aplica al crear un cargo o cambiar su grupo. Navieras: USD; otros: MXN. Las monedas ya indicadas se conservan.') %></p>
+      <div class="fee-currency-grid">
+        <% currencyRows.forEach((row) => { %>
+          <label data-currency-default-row><span><%= row.category %></span>
+            <input type="hidden" name="currency_category[]" value="<%= row.category %>" />
+            <select name="currency_value[]" data-currency-category="<%= row.category %>">
+              <% valuesWithCurrent(['USD', 'MXN'], row.value).forEach((currency) => { %><option value="<%= currency %>" <%= row.value === currency ? 'selected' : '' %>><%= currency %></option><% }) %>
+            </select>
+          </label>
+        <% }) %>
+      </div>
+    </div>
+  </details>
+
+  <% function renderFee(entry, isNewTemplate = false) { %>
+    <details class="fee-rule" data-fee-row <%= feeError || isNewTemplate ? 'open' : '' %>>
+      <summary><span data-fee-summary-name><%= (lang === 'es' ? entry.conceptEs : entry.conceptZh) || entry.conceptEn || feeText('新费用', 'Nuevo cargo') %></span><span data-fee-summary-meta><%= kindLabel(entry.chargeKind) %> · <%= entry.unitPrice === '' || entry.unitPrice == null ? '—' : entry.unitPrice %><%= entry.unitPriceMax !== '' && entry.unitPriceMax != null ? '–' + entry.unitPriceMax : '' %> <%= entry.currency %> · <%= entry.enabled ? feeText('启用', 'Activo') : feeText('停用', 'Inactivo') %></span></summary>
+      <div class="fee-rule-body">
+        <input type="hidden" name="fee_id[]" value="<%= entry.id || '' %>" />
+        <div class="fee-fields fee-names">
+          <label><span><%= feeText('费用名称（中文）', 'Nombre chino') %></span><input name="fee_zh[]" value="<%= entry.conceptZh || '' %>" maxlength="200" /></label>
+          <label><span><%= feeText('费用名称（English）', 'Nombre en inglés') %></span><input name="fee_en[]" value="<%= entry.conceptEn || '' %>" maxlength="200" /></label>
+          <label><span><%= feeText('费用名称（Español）', 'Nombre en español') %></span><input name="fee_es[]" value="<%= entry.conceptEs || '' %>" maxlength="200" /></label>
+        </div>
+        <div class="fee-fields">
+          <label><span><%= feeText('费用分组', 'Grupo') %></span><select name="fee_category[]"><% valuesWithCurrent(feeCategories, entry.category).forEach((category) => { %><option value="<%= category %>" <%= entry.category === category ? 'selected' : '' %>><%= category %></option><% }) %></select></label>
+          <label><span><%= feeText('费用板块', 'Tipo de cargo') %></span><select name="fee_chargeKind[]"><% valuesWithCurrent(['fixed', 'contingent'], entry.chargeKind).forEach((kind) => { %><option value="<%= kind %>" <%= entry.chargeKind === kind ? 'selected' : '' %>><%= ['fixed', 'contingent'].includes(kind) ? kindLabel(kind) : kind %></option><% }) %></select></label>
+          <label><span><%= feeText('报价区段', 'Sección') %></span><select name="fee_section[]"><% valuesWithCurrent(['mexico', 'foreign'], entry.section).forEach((section) => { %><option value="<%= section %>" <%= entry.section === section ? 'selected' : '' %>><%= section === 'mexico' ? feeText('墨西哥段', 'México') : section === 'foreign' ? feeText('非墨西哥段', 'Fuera de México') : section %></option><% }) %></select></label>
+          <% const activeValue = entry.editorActiveValue ?? (entry.enabled ? '1' : '0'); %>
+          <label><span><%= feeText('状态', 'Estado') %></span><select name="fee_active[]"><% valuesWithCurrent(['1', '0'], activeValue).forEach((value) => { %><option value="<%= value %>" <%= activeValue === value ? 'selected' : '' %>><%= value === '1' ? feeText('启用', 'Activo') : value === '0' ? feeText('停用', 'Inactivo') : value %></option><% }) %></select></label>
+          <label><span><%= feeText('默认数量', 'Cantidad predeterminada') %></span><input name="fee_unit[]" inputmode="decimal" value="<%= entry.defaultQuantity ?? entry.unit ?? '' %>" /></label>
+          <label><span><%= feeText('计费单位', 'Unidad') %></span><input name="fee_uom[]" value="<%= entry.unitOfMeasure || '' %>" maxlength="40" list="quote-fee-uom-list" /></label>
+          <label><span><%= feeText('价格／范围下限', 'Precio / mínimo') %></span><input name="fee_price[]" inputmode="decimal" value="<%= entry.unitPrice ?? '' %>" /></label>
+          <label><span><%= feeText('范围上限（可留空）', 'Máximo (opcional)') %></span><input name="fee_max[]" inputmode="decimal" value="<%= entry.unitPriceMax ?? '' %>" /></label>
+          <label><span><%= feeText('币种', 'Moneda') %></span><select name="fee_currency[]"><% valuesWithCurrent(['USD', 'MXN'], entry.currency).forEach((currency) => { %><option value="<%= currency %>" <%= entry.currency === currency ? 'selected' : '' %>><%= currency %></option><% }) %></select></label>
+          <div><span><%= feeText('适用装载方式', 'Tipos de carga') %></span>
+            <input type="hidden" name="fee_modes[]" value="<%= (entry.appliesTo || []).join(',') %>" />
+            <div class="fee-mode-options" role="group" aria-label="<%= feeText('适用装载方式', 'Tipos de carga') %>">
+              <% ['FCL', 'LCL', 'BBK', 'AIR'].forEach((mode) => { %><label><input type="checkbox" data-fee-mode="<%= mode %>" <%= (entry.appliesTo || []).includes(mode) ? 'checked' : '' %> /><span><%= mode %></span></label><% }) %>
+            </div>
+          </div>
+          <% const selectionValue = entry.editorSelectionValue ?? (entry.selectionRequired ? '1' : '0'); %>
+          <label><span><%= feeText('加入报价的方式', 'Agregar a la cotización') %></span><select name="fee_selectionRequired[]"><% valuesWithCurrent(['0', '1'], selectionValue).forEach((value) => { %><option value="<%= value %>" <%= selectionValue === value ? 'selected' : '' %>><%= value === '0' ? feeText('自动预填', 'Precargar') : value === '1' ? feeText('报价时选择', 'Elegir al cotizar') : value %></option><% }) %></select></label>
+          <label><span><%= feeText('官方费用代码（可留空）', 'Código oficial (opcional)') %></span><input name="fee_code[]" value="<%= entry.code || '' %>" maxlength="100" placeholder="<%= feeText('填写公司确认的代码', 'Código confirmado por la empresa') %>" /></label>
+          <label class="fee-full"><span><%= feeText('客户可见的费用说明／发生条件', 'Descripción / condición visible para el cliente') %></span><textarea name="fee_remark[]" rows="2" maxlength="3000"><%= entry.remark || '' %></textarea></label>
+          <label class="fee-full"><span><%= feeText('内部来源备注', 'Referencia interna') %></span><textarea name="fee_sourceNote[]" rows="2" maxlength="2000"><%= entry.sourceNote || '' %></textarea></label>
+        </div>
+        <div class="fee-rule-actions"><button type="button" class="ghost-button compact-button danger-button" data-fee-remove><%= feeText('删除此费用', 'Eliminar cargo') %></button></div>
+      </div>
+    </details>
+  <% } %>
+  <% ['fixed', 'contingent'].forEach((kind) => { %>
+    <details class="fee-group" data-fee-group="<%= kind %>" open>
+      <summary><%= kindLabel(kind) %> <span data-fee-count="<%= kind %>"><%= rows.filter((row) => (row.chargeKind === 'contingent' ? 'contingent' : 'fixed') === kind).length %></span></summary>
+      <div class="fee-group-body">
+        <div class="fee-list" data-fee-list="<%= kind %>">
+          <% rows.filter((row) => (row.chargeKind === 'contingent' ? 'contingent' : 'fixed') === kind).forEach((row) => renderFee(row)); %>
+        </div>
+        <p class="fee-empty" data-fee-empty="<%= kind %>" <%= rows.some((row) => (row.chargeKind === 'contingent' ? 'contingent' : 'fixed') === kind) ? 'hidden' : '' %>><%= feeText('此板块尚无费用。', 'Esta sección aún no tiene cargos.') %></p>
+        <div class="fee-add-actions"><button type="button" class="ghost-button compact-button" data-fee-add="<%= kind %>"><%= feeText('新增费用', 'Agregar cargo') %></button></div>
+      </div>
+    </details>
+  <% }) %>
+  <datalist id="quote-fee-uom-list"><% feeUomOptions.forEach((unit) => { %><option value="<%= unit %>"></option><% }) %></datalist>
+  <template id="quote-fee-row-template"><% renderFee({id:'',code:'',category:'SHIPPING LINE',chargeKind:'fixed',section:'mexico',currency:'USD',unit:1,defaultQuantity:1,unitPrice:'',unitPriceMax:'',unitOfMeasure:'container',appliesTo:['FCL','LCL','BBK','AIR'],enabled:true,selectionRequired:true}, true); %></template>
+</section>

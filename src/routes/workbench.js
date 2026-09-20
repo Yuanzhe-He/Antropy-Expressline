@@ -16,6 +16,7 @@ const {
   pullCalculatorValues,
   generateQuoteNumber,
   loadFeeCodes,
+  QUOTE_CARGO_TYPE_OPTIONS,
 } = require("../lib/quote");
 const { renderQuotePdf } = require("../lib/quote-pdf");
 const { shouldUseDatabase, insertQuoteSnapshot } = require("../lib/db");
@@ -109,7 +110,20 @@ function register(app, ctx) {
 
     if (module.key === "quote") {
       const quoteModule = moduleData;
-      const formData = buildQuoteFormData(quoteModule, {});
+      const draft = typeof req.query.draft === "string"
+        ? (quoteModule.drafts || []).find((entry) => entry.id === req.query.draft) : null;
+      const formData = draft ? {
+        ...draft,
+        draftId: draft.id,
+        cargoPricing: draft.header.cargoPricing || {},
+        cargoPricingByType: draft.header.cargoPricingByType || (QUOTE_CARGO_TYPE_OPTIONS.includes(draft.header.cargoType) && draft.header.cargoPricing ? { [draft.header.cargoType]: draft.header.cargoPricing } : {}),
+        showTotals: draft.header.showTotals === true,
+        outputAudience: draft.header.outputAudience || "customer",
+        taxTreatment: draft.header.taxTreatment || "unspecified",
+        noteIds: draft.header.notesSelectionExplicit || draft.noteIds?.length
+          ? draft.noteIds : (quoteModule.notes || []).map((note) => note.id),
+        pullInputs: {},
+      } : buildQuoteFormData(quoteModule, {});
       return renderQuoteWorkbench(req, res, {
         moduleKey: module.key,
         quoteModule,
@@ -308,10 +322,9 @@ function register(app, ctx) {
         advanceTo = generated.nextSeq;
       }
       const now = new Date().toISOString();
-      quoteModule.drafts = [
-        ...(quoteModule.drafts || []),
-        {
-          id: buildRuleId("quote"),
+      const existingDraft = (quoteModule.drafts || []).find((entry) => entry.id === formData.draftId);
+      const savedDraft = {
+          id: existingDraft?.id || buildRuleId("quote"),
           number: formData.number,
           date: formData.date,
           header: formData.header,
@@ -320,10 +333,13 @@ function register(app, ctx) {
           // S2/Q7: persist the ordered remark selection + output language.
           noteIds: formData.noteIds,
           language: formData.language,
-          createdAt: now,
+          createdAt: existingDraft?.createdAt || now,
           updatedAt: now,
-        },
-      ];
+      };
+      quoteModule.drafts = existingDraft
+        ? quoteModule.drafts.map((entry) => entry.id === existingDraft.id ? savedDraft : entry)
+        : [...(quoteModule.drafts || []), savedDraft];
+      formData.draftId = savedDraft.id;
       if (advanceTo !== null) {
         quoteModule.settings.lastQuoteSeq = advanceTo;
       }
@@ -361,6 +377,22 @@ function register(app, ctx) {
 
     const quoteView = assembleQuoteView(quoteModule, formData, shippingData);
 
+    // Drafts may retain incomplete inputs; a priced PDF must have a complete,
+    // server-validated calculation for the currently selected loading mode.
+    if (quoteView.cargoCalculation.attempted && !quoteView.cargoCalculation.valid) {
+      req.flash = {
+        type: "error",
+        message: req.language === "es"
+          ? "Complete los datos de carga y use cantidades, pesos, medidas y tarifas válidos antes de generar el PDF."
+          : "请补全当前装载方式的计价信息，并检查箱量、包装数量、尺寸、重量及单价后再生成 PDF。",
+      };
+      res.status(400);
+      return renderQuoteWorkbench(req, res, {
+        moduleKey: "quote", quoteModule, formData, quoteView,
+        selectorData: buildQuoteSelectorData(shippingData), feeCodes: loadFeeCodes(),
+      });
+    }
+
     try {
       const pdf = await renderQuotePdf(quoteView);
 
@@ -377,12 +409,18 @@ function register(app, ctx) {
             input: {
               number: formData.number,
               header: formData.header,
+              quoteMode: formData.quoteMode,
+              language: formData.language,
+              noteIds: formData.noteIds,
               lineItems: formData.lineItems,
             },
             result: {
               rows: quoteView.rows,
               subtotals: quoteView.subtotals,
               indicative: quoteView.indicative,
+              showTotals: quoteView.showTotals,
+              outputAudience: quoteView.outputAudience,
+              taxTreatment: quoteView.taxTreatment,
             },
           });
         } catch (snapshotError) {
@@ -392,7 +430,7 @@ function register(app, ctx) {
 
       const safeName = String(formData.number || "quote").replace(/[^A-Za-z0-9._-]+/g, "_");
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `attachment; filename="${safeName}.pdf"`);
+      res.setHeader("Content-Disposition", `attachment; filename="${safeName}${quoteView.outputAudience === "internal" ? "-internal" : ""}.pdf"`);
       return res.send(pdf);
     } catch (error) {
       console.error("quote pdf generation failed", error);

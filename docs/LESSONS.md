@@ -433,3 +433,24 @@ Only record lessons that may change future behavior.
 - scope: project + global-candidate ((a) fork-symmetry-guard, (b) fail-loud-decommission, (c) NUL-makes-file-binary are cross-project → LESSON_CANDIDATES)
 - landed_in: src/lib/store/index.js (symmetric guard + NUL→space), scripts/audit-blob-seed-guard-test.js (new), scripts/audit-{rmw-cache,usage-guard}-test.js (fixture stubs), scripts/relational/prod-verify-seed-guard.js (new); PR #29 merged → deploy ef4f715f. Migration completion record docs/specs/MIGRATION_COMPLETE_20260625.md written this round.
 - next_action: STOP for Claude review. Migration COMPLETE (Steps 1–8). Deferred: hard DROP of the retired row (only irreversible step) + Step 7 route-layer per-entity writes (before multi-instance; single-instance + cache discipline blocks the clobber today). MIGRATION_COMPLETE_20260625.md + this LESSONS entry are written but NOT yet committed (PR #29 already merged) — recommend committing next cycle with the approved backlog. Sandbox fnczokogchlhutyskbdw safe to delete (Chandler's call).
+
+
+## 2026-09-13 - Cargo option editor must preserve identity and defaults during validation
+
+- source: Chandler approved configurable cargo choices; independent code review and local browser/HTTP verification on 2026-09-13.
+- type: user feedback + [SELF_CORRECTION]
+- lesson: Track existing rows separately from new duplicate rows so rejected input remains editable. Preserve an enabled default while its display name is temporarily empty, including error re-renders; validate the complete configuration before saving.
+- compatibility: Explicit empty/all-disabled lists must not reseed legacy options. Store historical draft codes and label snapshots independently of current choices.
+- evidence: `scripts/audit-quote-cargo-types-test.js`; `docs/specs/20260913_quote_cargo_types_IMPLEMENTATION_SPEC.md`; local browser save/reload, duplicate correction, default retention and mobile checks.
+- status: local; no global promotion.
+
+
+## 2026-09-13 - Quote pricing and compact editor verification
+
+- source: Chandler changes 2-6 and attached screenshots; explicit raw kg/cm3 comparison confirmation.
+- type: user feedback + self-correction; scope: local project only.
+- lesson: Keep missing prices distinct from zero through form parsing, normalization, totals and PDF. Conditional ranges and unselected alternatives must stay out of currency, tax and FX totals. Recompute cargo charges on the server with the same pure engine as the browser.
+- UI lesson: Hidden number inputs still participate in native validation. Use step=any while inactive and restore active constraints; removing step restores an integer constraint. Test save after entering a fractional rate and switching loading modes.
+- print lesson: Render real multi-page PDFs. Group section titles with table headers, and place repeated branding in the PDF page-margin footer so it cannot overlay fee rows.
+- evidence: scripts/audit-quote-workflow-v2-test.js (26 checks), complete 25-suite regression, desktop/mobile/ES browser checks and rendered FCL/LCL PDFs.
+- status: local; no global promotion.

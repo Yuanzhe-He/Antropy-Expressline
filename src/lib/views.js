@@ -42,6 +42,7 @@ const {
   QUOTE_INCOTERM_OPTIONS,
   QUOTE_TRANSPORT_MODE_OPTIONS,
   QUOTE_CARGO_TYPE_OPTIONS,
+  normalizeQuoteCargoTypes,
   QUOTE_UOM_OPTIONS,
   QUOTE_GROUP_ORDER,
   QUOTE_MODES,
@@ -55,6 +56,8 @@ const {
   resolveQuoteRoute,
 } = require("./quote");
 const { ensureArray, parseWholeNumber } = require("./rule-engine");
+const { parseCargoPricing, parseCargoPricingByType, cargoCalculation, buildCargoChargeRows, activeQuoteRows, historicalQuoteCargoType } = require("./quote-workflow");
+const { normalizeCargoPricingRules } = require("./quote-config");
 const {
   formatTerminalMixSummary,
   buildTaxOverrides,
@@ -768,15 +771,17 @@ function renderAdminRules(req, res, payload) {
   );
 }
 
-// Q4/Q5/Q6 (20260617): header fields are now dropdowns over fixed option sets.
-// A submitted value outside its set is dropped to "" (no legacy free-text kept)
-// — Jose supplied the standard sets, so stray values get normalized away.
+// Header values are controlled choices. Cargo types use the enabled admin
+// configuration; the other fields continue to use their fixed option sets.
+// Unknown/disabled submissions become empty rather than operator free text.
 function pickFromOptions(value, options, fallback = "") {
   const normalized = String(value ?? "").trim().toUpperCase();
   return options.includes(normalized) ? normalized : fallback;
 }
 
-function parseQuoteHeader(body = {}) {
+function parseQuoteHeader(body = {}, cargoTypes = normalizeQuoteCargoTypes()) {
+  const code = pickFromOptions(body.cargoType, cargoTypes.filter((entry) => entry.enabled).map((entry) => entry.code), "");
+  const cargoType = cargoTypes.find((entry) => entry.enabled && entry.code === code);
   return {
     operation: body.operation === "EXPORT" ? "EXPORT" : "IMPORT",
     department: pickFromOptions(
@@ -793,7 +798,16 @@ function parseQuoteHeader(body = {}) {
     pol: body.pol ?? DEFAULT_QUOTE_HEADER.pol,
     pod: body.pod ?? DEFAULT_QUOTE_HEADER.pod,
     commodity: body.commodity || "",
-    cargoType: pickFromOptions(body.cargoType, QUOTE_CARGO_TYPE_OPTIONS, ""),
+    cargoType: code,
+    showTotals: body.showTotals === "1" || body.showTotals === "on",
+    notesSelectionExplicit: body.quoteFormPresent === "1",
+    outputAudience: body.outputAudience === "internal" ? "internal" : "customer",
+    taxTreatment: ["included", "excluded"].includes(body.taxTreatment) ? body.taxTreatment : "unspecified",
+    ...(cargoType ? { cargoTypeLabel: cargoType.label } : {}),
+    importerQualification: ["own", "trading_company"].includes(body.importerQualification) ? body.importerQualification : "",
+    specialImportQualification: ["yes", "no", "unknown"].includes(body.specialImportQualification) ? body.specialImportQualification : "",
+    nomCertification: ["yes", "no", "unknown"].includes(body.nomCertification) ? body.nomCertification : "",
+    ministryRegistration: ["yes", "no", "unknown"].includes(body.ministryRegistration) ? body.ministryRegistration : "",
     delivery: body.delivery || "",
     // Q7.2: ordered, addable/removable custom general-data rows (label/value).
     extraFields: parseQuoteExtraFields(body),
@@ -816,12 +830,17 @@ function parseQuoteLineItems(body = {}) {
   const ids = ensureArray(body.li_id);
   const cell = (name, index) => ensureArray(body[name])[index] ?? "";
   return ids.map((id, index) => {
+    if (String(id).startsWith("cargo-calculated-") || cell("li_source", index) === "cargo_pricing") return null;
     const calcModule = cell("li_calcModule", index);
     const calcField = cell("li_calcField", index);
     return {
       id: id || `li-${index + 1}`,
       // Q7.3: section splits MEXICO LOCAL vs NO MEXICO (origin/China side) charges.
       section: cell("li_section", index) === "foreign" ? "foreign" : "mexico",
+      chargeKind: cell("li_chargeKind", index) === "contingent" ? "contingent" : "fixed",
+      included: cell("li_included", index) !== "0",
+      unitPriceMax: cell("li_unitPriceMax", index) === "" ? null : Number(cell("li_unitPriceMax", index)),
+      appliesTo: cell("li_appliesTo", index) ? String(cell("li_appliesTo", index)).split(",").filter((code) => ["FCL", "LCL", "BBK", "AIR"].includes(code)) : ["FCL", "LCL", "BBK", "AIR"],
       category: cell("li_category", index),
       code: cell("li_code", index),
       conceptEn: cell("li_conceptEn", index),
@@ -834,10 +853,10 @@ function parseQuoteLineItems(body = {}) {
       currency: cell("li_currency", index),
       remark: cell("li_remark", index),
       isAtCost: String(cell("li_atCost", index)) === "1",
-      source: cell("li_source", index) || "manual",
+      source: ["calc", "manual", "atcost"].includes(cell("li_source", index)) ? cell("li_source", index) : "manual",
       calcRef: calcModule && calcField ? { module: calcModule, field: calcField } : null,
     };
-  });
+  }).filter(Boolean);
 }
 
 function parseQuotePullInputs(body = {}) {
@@ -882,14 +901,17 @@ function buildQuoteSelectorData(shippingData) {
 
 function assembleQuoteView(quoteModule, formData, shippingData) {
   const quoteSettings = quoteModule.settings || {};
-  const totals = computeQuoteTotals(formData.lineItems, {
+  const cargo = cargoCalculation(formData.header.cargoType, formData.cargoPricing || formData.header.cargoPricing);
+  const cargoChargeRows = buildCargoChargeRows(formData.header.cargoType, cargo);
+  const activeRows = activeQuoteRows(formData.lineItems, formData.quoteMode, formData.header.cargoType,
+    historicalQuoteCargoType(quoteModule, formData.draftId));
+  const totals = computeQuoteTotals([...activeRows, ...cargoChargeRows], {
     exchangeRates: shippingData.exchangeRates,
-    showIndicativeConversion: quoteSettings.showIndicativeConversion,
+    showIndicativeConversion: quoteSettings.showIndicativeConversion === true,
     indicativeCurrency: quoteSettings.indicativeCurrency,
-    // R4 dual-currency display (default on; MXN sin IVA + USD con 16% IVA).
-    dualCurrency: quoteSettings.dualCurrency !== false,
-    ivaMxn: Number.isFinite(Number(quoteSettings.ivaMxn)) ? Number(quoteSettings.ivaMxn) : 0,
-    ivaUsd: Number.isFinite(Number(quoteSettings.ivaUsd)) ? Number(quoteSettings.ivaUsd) : 0.16,
+    // Quote amounts are the entered selling prices. Do not infer taxes or
+    // convert and add VAT again to an already tax-inclusive quotation.
+    dualCurrency: false,
   });
   const route = resolveQuoteRoute(
     getModuleData(shippingData, "inland"),
@@ -900,7 +922,17 @@ function assembleQuoteView(quoteModule, formData, shippingData) {
     date: formData.date,
     header: formData.header,
     quoteMode: formData.quoteMode,
+    showTotals: formData.header.showTotals === true,
+    outputAudience: formData.header.outputAudience === "internal" ? "internal" : "customer",
+    taxTreatment: formData.header.taxTreatment || "unspecified",
     rows: totals.rows,
+    editableRows: computeQuoteTotals(formData.lineItems).rows,
+    cargoCalculation: cargo,
+    cargoChargeRows,
+    chargeSections: ["fixed", "contingent"].map((chargeKind) => ({
+      chargeKind,
+      sections: groupRowsBySection(totals.rows.filter((row) => (row.chargeKind === "contingent" ? "contingent" : "fixed") === chargeKind && (chargeKind === "contingent" || row.included !== false))),
+    })),
     groups: groupRowsForRender(totals.rows),
     sections: groupRowsBySection(totals.rows),
     subtotals: totals.subtotals,
@@ -920,11 +952,11 @@ function selectQuoteNotes(library = [], selectedIds) {
   }
   const byId = new Map(library.map((n) => [n.id, n]));
   const picked = selectedIds.map((id) => byId.get(id)).filter(Boolean);
-  return picked.length ? picked : (selectedIds.length ? [] : library);
+  return picked;
 }
 
 function buildQuoteFormData(quoteModule, body = {}, options = {}) {
-  const hasPostedRows = ensureArray(body.li_id).length > 0;
+  const hasPostedRows = body.quoteFormPresent === "1" || ensureArray(body.li_id).length > 0;
   // Quote mode (round11): posted value wins; a fresh quote falls back to the
   // admin default preset, then mexico_only (legacy behavior / back-compat).
   const quoteMode = normalizeQuoteMode(
@@ -934,8 +966,9 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
   // rows but reconcile against the (possibly just-changed) mode: mexico_only
   // drops foreign rows; ocean_mexico injects the foreign block when missing.
   const lineItems = hasPostedRows
-    ? reconcileLineItemsForMode(parseQuoteLineItems(body), quoteMode)
-    : buildInitialLineItems(quoteMode);
+    ? body.quoteFormPresent === "1" ? parseQuoteLineItems(body)
+      : reconcileLineItemsForMode(parseQuoteLineItems(body), quoteMode, quoteModule.settings?.feeTemplates, true)
+    : buildInitialLineItems(quoteMode, quoteModule.settings?.feeTemplates);
   const number =
     (body.quotationNumber || "").trim() || generateQuoteNumber(quoteModule.settings).number;
   const today = new Date().toISOString().slice(0, 10);
@@ -944,19 +977,55 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
   const libraryIds = (quoteModule.notes || []).map((n) => n.id);
   const postedNoteIds = ensureArray(body.note_sel).map(String);
   const language = pickFromOptions(body.quoteLang, ["EN", "ZH", "ES"], "");
-  const header = parseQuoteHeader(body);
+  const cargoTypes = normalizeQuoteCargoTypes(quoteModule.settings?.cargoTypes);
+  const existingDraft = (quoteModule.drafts || []).find((entry) => entry.id === body.draftId);
+  const historicalCode = existingDraft?.header?.cargoType;
+  if (historicalCode) {
+    const existingChoice = cargoTypes.find((entry) => entry.code === historicalCode);
+    if (existingChoice) {
+      existingChoice.enabled = true;
+      existingChoice.label = existingDraft.header.cargoTypeLabel || existingChoice.label;
+    } else cargoTypes.push({ code: historicalCode, label: existingDraft.header.cargoTypeLabel || historicalCode, enabled: true });
+  }
+  const header = parseQuoteHeader(body, cargoTypes);
   // S5: pre-fill a fresh quote's header from the admin default preset.
   if (!hasPostedRows) {
     const hd = quoteModule.settings?.headerDefaults || {};
     if (hd.department) header.department = hd.department;
     if (hd.transportMode) header.transportMode = hd.transportMode;
     if (hd.incoterm) header.incoterm = hd.incoterm;
-    if (hd.cargoType) header.cargoType = hd.cargoType;
+    if (body.cargoType === undefined && hd.cargoType) {
+      const defaultCargo = cargoTypes.find((entry) => entry.enabled && entry.code === hd.cargoType);
+      if (defaultCargo) {
+        header.cargoType = defaultCargo.code;
+        header.cargoTypeLabel = defaultCargo.label;
+      }
+    }
   }
+  const pricingRules = normalizeCargoPricingRules(quoteModule.settings?.cargoPricingRules);
+  const cargoPricingByType = parseCargoPricingByType(body, header.cargoType);
+  const legacyType = historicalQuoteCargoType(quoteModule, body.draftId);
+  const legacyPricing = legacyType && legacyType === header.cargoType &&
+    !Object.keys(body).some((name) => name.startsWith("cargo_")) ? existingDraft?.header?.cargoPricing : null;
+  const cargoPricing = cargoPricingByType[header.cargoType] || legacyPricing || parseCargoPricing(body, header.cargoType);
+  if (!hasPostedRows) {
+    const rule = pricingRules[header.cargoType];
+    if (rule) Object.assign(cargoPricing, rule);
+    if (body.cargo_currency === undefined) cargoPricing.currency = quoteModule.settings?.defaultCurrencyByCategory?.TRANSPORTATION || "MXN";
+  }
+  if (QUOTE_CARGO_TYPE_OPTIONS.includes(header.cargoType)) cargoPricingByType[header.cargoType] = cargoPricing;
+  header.cargoPricing = cargoPricing;
+  header.cargoPricingByType = cargoPricingByType;
   return {
+    draftId: typeof body.draftId === "string" ? body.draftId.slice(0, 100) : "",
     number,
     date: (body.date || "").trim() || options.date || today,
     header,
+    cargoPricing,
+    cargoPricingByType,
+    showTotals: header.showTotals,
+    outputAudience: header.outputAudience,
+    taxTreatment: header.taxTreatment,
     quoteMode,
     lineItems,
     noteIds: hasPostedRows ? postedNoteIds : libraryIds,
@@ -967,6 +1036,12 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
 
 function renderQuoteWorkbench(req, res, payload) {
   const moduleMeta = getModulePresentation(payload.moduleKey, req.language);
+  const cargoChoices = normalizeQuoteCargoTypes(payload.quoteModule.settings?.cargoTypes).filter((entry) => entry.enabled);
+  const savedDraft = (payload.quoteModule.drafts || []).find((entry) => entry.id === payload.formData.draftId);
+  const savedCode = savedDraft?.header?.cargoType;
+  if (savedCode && !cargoChoices.some((entry) => entry.code === savedCode)) {
+    cargoChoices.push({ code: savedCode, label: savedDraft.header.cargoTypeLabel || savedCode, enabled: false, historical: true });
+  }
   res.render(
     "workbench-quote",
     baseView(req, {
@@ -975,6 +1050,11 @@ function renderQuoteWorkbench(req, res, payload) {
       currentModuleKey: payload.moduleKey,
       selectedModule: moduleMeta,
       quoteSettings: payload.quoteModule.settings,
+      pricingRules: normalizeCargoPricingRules(payload.quoteModule.settings?.cargoPricingRules),
+      historicalCargoType: historicalQuoteCargoType(payload.quoteModule, payload.formData.draftId),
+      drafts: (payload.quoteModule.drafts || []).map(({ id, number, date }) => ({ id, number, date })).reverse(),
+      feeCurrencyDefaults: payload.quoteModule.settings?.defaultCurrencyByCategory || {},
+      quoteTemplates: payload.quoteModule.settings?.feeTemplates || [],
       quoteView: payload.quoteView,
       formData: payload.formData,
       quoteNotes: payload.quoteModule.notes || [],
@@ -985,7 +1065,7 @@ function renderQuoteWorkbench(req, res, payload) {
         department: QUOTE_DEPARTMENT_OPTIONS,
         transportMode: QUOTE_TRANSPORT_MODE_OPTIONS,
         incoterm: QUOTE_INCOTERM_OPTIONS,
-        cargoType: QUOTE_CARGO_TYPE_OPTIONS,
+        cargoType: cargoChoices,
       },
       categoryOptions: QUOTE_GROUP_ORDER,
       quoteModes: QUOTE_MODES,
