@@ -67,3 +67,8 @@ together.
 - Keep Antropy AI secondary in the first viewport; it should not compete with the DEWELL mark.
 - Express Line can remain as product/workbench context where useful, but it should not overpower the DEWELL brand treatment.
 - For favicon polish, use a simplified DEWELL-derived mark rather than introducing a new symbol.
+
+
+## 2026-09-20 - Customer/internal quote output and explicit totals
+
+The Bill/Chandler meeting and Chandler’s implementation request supersede the provisional June dual-currency VAT block. Customer exports hide internal codes and default to no bottom amount summaries. A saved per-quote checkbox enables original-currency fixed subtotals; optional indicative conversion also obeys that checkbox. Input prices are not automatically grossed up. Tax treatment is explicit (unconfirmed/included/excluded), with editable business clauses retained. Internal exports add the official code immediately after category, without inventing codes for generated transport rows. The exact old provisional dual-currency default clause migrates to neutral wording; independently authored clauses are preserved.

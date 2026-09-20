@@ -146,3 +146,10 @@ Chandler requested early loading-mode selection, clearer fee sections, smaller c
 Fixed fees and charges-if-incurred have separate tables, editable backend libraries and local template restoration. The current editing language uses one visible concept input; other translations expand on demand. Custom fields say field name/content with examples. Quote-scoped blue-gray surfaces replace the flat black table, and native checkboxes are 16px square. Existing unrelated screens retain their styling.
 
 Verified desktop fee rows around 82px, checkbox16px, mobile390px viewport without page-wide overflow, ES controls, mixed containers, raw kg/cm3 calculations, mode changes with fractional inputs, draft save and category-currency readback. PDF qualifications use wider labels; repeated section headers and margin footers avoid orphan titles and overlaps.
+
+
+## 2026-09-20 - Four transport workflows and saved output choices
+
+Quote scope and cargo/service type are top-level controls. FCL supports multiple container rows; LCL/BBK/AIR have separate retained state and manual/raw/volumetric pricing methods. AIR begins with manual quantity and no assumed divisor. New fee rows belong to the selected type. Descriptive cargo fields do not force automatic transport pricing. Drafts reopen without losing inactive-mode entries or PDF choices. Customer/internal output, explicit tax treatment and the default-off PDF summary checkbox sit with export controls. Old disabled/removed types may only be reopened through their actual saved draft.
+
+Browser checks: FCL 2×100 + 1×250 = 450; LCL max(10 kg, 12000 cm3) × .01 = 120; BBK manual 387×41 = 15867; AIR manual 120×5 = 600. Switching and reopening retain these separate values. At 1440px the two top selectors share y=313.98 and height=42px. Default narrow viewport stacks controls. Four rendered A4 PDFs were visually inspected, including customer totals off, included-tax 1850 with no added VAT, internal 10-row BBK with codes, and AIR manual pricing.

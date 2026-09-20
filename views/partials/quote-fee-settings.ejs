@@ -27,6 +27,9 @@
   .quote-fee-editor .fee-fields label > span { font-size: .8rem; }
   .quote-fee-editor input, .quote-fee-editor select, .quote-fee-editor textarea { width: 100%; min-height: 36px; padding: .45rem .6rem; font-size: .9rem; }
   .quote-fee-editor input[readonly] { opacity: .65; }
+  .quote-fee-editor .fee-mode-options { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .75rem; min-height: 36px; }
+  .quote-fee-editor .fee-mode-options label { display: inline-flex; align-items: center; gap: .3rem; margin: 0; }
+  .quote-fee-editor .fee-mode-options input[type="checkbox"] { width: 14px; height: 14px; min-height: 14px; padding: 0; margin: 0; flex: 0 0 14px; }
   .quote-fee-editor textarea { resize: vertical; line-height: 1.5; }
   .quote-fee-editor .fee-full { grid-column: 1 / -1; }
   .quote-fee-editor .fee-rule-actions { display: flex; justify-content: flex-end; margin-top: .6rem; }
@@ -65,6 +68,7 @@
     <details class="fee-rule" data-fee-row <%= feeError || isNewTemplate ? 'open' : '' %>>
       <summary><span data-fee-summary-name><%= (lang === 'es' ? entry.conceptEs : entry.conceptZh) || entry.conceptEn || feeText('新费用', 'Nuevo cargo') %></span><span data-fee-summary-meta><%= kindLabel(entry.chargeKind) %> · <%= entry.unitPrice === '' || entry.unitPrice == null ? '—' : entry.unitPrice %><%= entry.unitPriceMax !== '' && entry.unitPriceMax != null ? '–' + entry.unitPriceMax : '' %> <%= entry.currency %> · <%= entry.enabled ? feeText('启用', 'Activo') : feeText('停用', 'Inactivo') %></span></summary>
       <div class="fee-rule-body">
+        <input type="hidden" name="fee_id[]" value="<%= entry.id || '' %>" />
         <div class="fee-fields fee-names">
           <label><span><%= feeText('费用名称（中文）', 'Nombre chino') %></span><input name="fee_zh[]" value="<%= entry.conceptZh || '' %>" maxlength="200" /></label>
           <label><span><%= feeText('费用名称（English）', 'Nombre en inglés') %></span><input name="fee_en[]" value="<%= entry.conceptEn || '' %>" maxlength="200" /></label>
@@ -81,10 +85,15 @@
           <label><span><%= feeText('价格／范围下限', 'Precio / mínimo') %></span><input name="fee_price[]" inputmode="decimal" value="<%= entry.unitPrice ?? '' %>" /></label>
           <label><span><%= feeText('范围上限（可留空）', 'Máximo (opcional)') %></span><input name="fee_max[]" inputmode="decimal" value="<%= entry.unitPriceMax ?? '' %>" /></label>
           <label><span><%= feeText('币种', 'Moneda') %></span><select name="fee_currency[]"><% valuesWithCurrent(['USD', 'MXN'], entry.currency).forEach((currency) => { %><option value="<%= currency %>" <%= entry.currency === currency ? 'selected' : '' %>><%= currency %></option><% }) %></select></label>
-          <label><span><%= feeText('装载方式（逗号分隔）', 'Carga (separada por comas)') %></span><input name="fee_modes[]" value="<%= (entry.appliesTo || []).join(',') %>" placeholder="FCL,LCL,BBK" required /></label>
+          <div><span><%= feeText('适用装载方式', 'Tipos de carga') %></span>
+            <input type="hidden" name="fee_modes[]" value="<%= (entry.appliesTo || []).join(',') %>" />
+            <div class="fee-mode-options" role="group" aria-label="<%= feeText('适用装载方式', 'Tipos de carga') %>">
+              <% ['FCL', 'LCL', 'BBK', 'AIR'].forEach((mode) => { %><label><input type="checkbox" data-fee-mode="<%= mode %>" <%= (entry.appliesTo || []).includes(mode) ? 'checked' : '' %> /><span><%= mode %></span></label><% }) %>
+            </div>
+          </div>
           <% const selectionValue = entry.editorSelectionValue ?? (entry.selectionRequired ? '1' : '0'); %>
           <label><span><%= feeText('加入报价的方式', 'Agregar a la cotización') %></span><select name="fee_selectionRequired[]"><% valuesWithCurrent(['0', '1'], selectionValue).forEach((value) => { %><option value="<%= value %>" <%= selectionValue === value ? 'selected' : '' %>><%= value === '0' ? feeText('自动预填', 'Precargar') : value === '1' ? feeText('报价时选择', 'Elegir al cotizar') : value %></option><% }) %></select></label>
-          <label><span><%= feeText('费用编号', 'Identificador') %></span><input name="fee_id[]" value="<%= entry.id || '' %>" maxlength="80" required readonly /></label>
+          <label><span><%= feeText('官方费用代码（可留空）', 'Código oficial (opcional)') %></span><input name="fee_code[]" value="<%= entry.code || '' %>" maxlength="100" placeholder="<%= feeText('填写公司确认的代码', 'Código confirmado por la empresa') %>" /></label>
           <label class="fee-full"><span><%= feeText('客户可见的费用说明／发生条件', 'Descripción / condición visible para el cliente') %></span><textarea name="fee_remark[]" rows="2" maxlength="3000"><%= entry.remark || '' %></textarea></label>
           <label class="fee-full"><span><%= feeText('内部来源备注', 'Referencia interna') %></span><textarea name="fee_sourceNote[]" rows="2" maxlength="2000"><%= entry.sourceNote || '' %></textarea></label>
         </div>
@@ -105,5 +114,5 @@
     </details>
   <% }) %>
   <datalist id="quote-fee-uom-list"><% feeUomOptions.forEach((unit) => { %><option value="<%= unit %>"></option><% }) %></datalist>
-  <template id="quote-fee-row-template"><% renderFee({id:'',category:'SHIPPING LINE',chargeKind:'fixed',section:'mexico',currency:'USD',unit:1,defaultQuantity:1,unitPrice:'',unitPriceMax:'',unitOfMeasure:'container',appliesTo:['FCL','LCL','BBK'],enabled:true,selectionRequired:true}, true); %></template>
+  <template id="quote-fee-row-template"><% renderFee({id:'',code:'',category:'SHIPPING LINE',chargeKind:'fixed',section:'mexico',currency:'USD',unit:1,defaultQuantity:1,unitPrice:'',unitPriceMax:'',unitOfMeasure:'container',appliesTo:['FCL','LCL','BBK','AIR'],enabled:true,selectionRequired:true}, true); %></template>
 </section>

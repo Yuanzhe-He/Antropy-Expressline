@@ -41,6 +41,7 @@ const {
   QUOTE_DEPARTMENT_OPTIONS,
   QUOTE_INCOTERM_OPTIONS,
   QUOTE_TRANSPORT_MODE_OPTIONS,
+  QUOTE_CARGO_TYPE_OPTIONS,
   normalizeQuoteCargoTypes,
   QUOTE_UOM_OPTIONS,
   QUOTE_GROUP_ORDER,
@@ -55,7 +56,8 @@ const {
   resolveQuoteRoute,
 } = require("./quote");
 const { ensureArray, parseWholeNumber } = require("./rule-engine");
-const { parseCargoPricing, cargoCalculation, buildCargoChargeRows, activeQuoteRows } = require("./quote-workflow");
+const { parseCargoPricing, parseCargoPricingByType, cargoCalculation, buildCargoChargeRows, activeQuoteRows, historicalQuoteCargoType } = require("./quote-workflow");
+const { normalizeCargoPricingRules } = require("./quote-config");
 const {
   formatTerminalMixSummary,
   buildTaxOverrides,
@@ -797,6 +799,10 @@ function parseQuoteHeader(body = {}, cargoTypes = normalizeQuoteCargoTypes()) {
     pod: body.pod ?? DEFAULT_QUOTE_HEADER.pod,
     commodity: body.commodity || "",
     cargoType: code,
+    showTotals: body.showTotals === "1" || body.showTotals === "on",
+    notesSelectionExplicit: body.quoteFormPresent === "1",
+    outputAudience: body.outputAudience === "internal" ? "internal" : "customer",
+    taxTreatment: ["included", "excluded"].includes(body.taxTreatment) ? body.taxTreatment : "unspecified",
     ...(cargoType ? { cargoTypeLabel: cargoType.label } : {}),
     importerQualification: ["own", "trading_company"].includes(body.importerQualification) ? body.importerQualification : "",
     specialImportQualification: ["yes", "no", "unknown"].includes(body.specialImportQualification) ? body.specialImportQualification : "",
@@ -834,7 +840,7 @@ function parseQuoteLineItems(body = {}) {
       chargeKind: cell("li_chargeKind", index) === "contingent" ? "contingent" : "fixed",
       included: cell("li_included", index) !== "0",
       unitPriceMax: cell("li_unitPriceMax", index) === "" ? null : Number(cell("li_unitPriceMax", index)),
-      appliesTo: cell("li_appliesTo", index) ? String(cell("li_appliesTo", index)).split(",").filter((code) => ["FCL", "LCL", "BBK"].includes(code)) : ["FCL", "LCL", "BBK"],
+      appliesTo: cell("li_appliesTo", index) ? String(cell("li_appliesTo", index)).split(",").filter((code) => ["FCL", "LCL", "BBK", "AIR"].includes(code)) : ["FCL", "LCL", "BBK", "AIR"],
       category: cell("li_category", index),
       code: cell("li_code", index),
       conceptEn: cell("li_conceptEn", index),
@@ -897,15 +903,15 @@ function assembleQuoteView(quoteModule, formData, shippingData) {
   const quoteSettings = quoteModule.settings || {};
   const cargo = cargoCalculation(formData.header.cargoType, formData.cargoPricing || formData.header.cargoPricing);
   const cargoChargeRows = buildCargoChargeRows(formData.header.cargoType, cargo);
-  const activeRows = activeQuoteRows(formData.lineItems, formData.quoteMode, formData.header.cargoType);
+  const activeRows = activeQuoteRows(formData.lineItems, formData.quoteMode, formData.header.cargoType,
+    historicalQuoteCargoType(quoteModule, formData.draftId));
   const totals = computeQuoteTotals([...activeRows, ...cargoChargeRows], {
     exchangeRates: shippingData.exchangeRates,
-    showIndicativeConversion: quoteSettings.showIndicativeConversion,
+    showIndicativeConversion: quoteSettings.showIndicativeConversion === true,
     indicativeCurrency: quoteSettings.indicativeCurrency,
-    // R4 dual-currency display (default on; MXN sin IVA + USD con 16% IVA).
-    dualCurrency: quoteSettings.dualCurrency !== false,
-    ivaMxn: Number.isFinite(Number(quoteSettings.ivaMxn)) ? Number(quoteSettings.ivaMxn) : 0,
-    ivaUsd: Number.isFinite(Number(quoteSettings.ivaUsd)) ? Number(quoteSettings.ivaUsd) : 0.16,
+    // Quote amounts are the entered selling prices. Do not infer taxes or
+    // convert and add VAT again to an already tax-inclusive quotation.
+    dualCurrency: false,
   });
   const route = resolveQuoteRoute(
     getModuleData(shippingData, "inland"),
@@ -916,6 +922,9 @@ function assembleQuoteView(quoteModule, formData, shippingData) {
     date: formData.date,
     header: formData.header,
     quoteMode: formData.quoteMode,
+    showTotals: formData.header.showTotals === true,
+    outputAudience: formData.header.outputAudience === "internal" ? "internal" : "customer",
+    taxTreatment: formData.header.taxTreatment || "unspecified",
     rows: totals.rows,
     editableRows: computeQuoteTotals(formData.lineItems).rows,
     cargoCalculation: cargo,
@@ -943,7 +952,7 @@ function selectQuoteNotes(library = [], selectedIds) {
   }
   const byId = new Map(library.map((n) => [n.id, n]));
   const picked = selectedIds.map((id) => byId.get(id)).filter(Boolean);
-  return picked.length ? picked : (selectedIds.length ? [] : library);
+  return picked;
 }
 
 function buildQuoteFormData(quoteModule, body = {}, options = {}) {
@@ -969,12 +978,16 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
   const postedNoteIds = ensureArray(body.note_sel).map(String);
   const language = pickFromOptions(body.quoteLang, ["EN", "ZH", "ES"], "");
   const cargoTypes = normalizeQuoteCargoTypes(quoteModule.settings?.cargoTypes);
-  const header = parseQuoteHeader(body, cargoTypes);
-  const cargoPricing = parseCargoPricing(body);
-  if (!hasPostedRows && body.cargo_currency === undefined && !cargoCalculation(header.cargoType, cargoPricing).attempted) {
-    cargoPricing.currency = quoteModule.settings?.defaultCurrencyByCategory?.TRANSPORTATION || "MXN";
+  const existingDraft = (quoteModule.drafts || []).find((entry) => entry.id === body.draftId);
+  const historicalCode = existingDraft?.header?.cargoType;
+  if (historicalCode) {
+    const existingChoice = cargoTypes.find((entry) => entry.code === historicalCode);
+    if (existingChoice) {
+      existingChoice.enabled = true;
+      existingChoice.label = existingDraft.header.cargoTypeLabel || existingChoice.label;
+    } else cargoTypes.push({ code: historicalCode, label: existingDraft.header.cargoTypeLabel || historicalCode, enabled: true });
   }
-  header.cargoPricing = cargoPricing;
+  const header = parseQuoteHeader(body, cargoTypes);
   // S5: pre-fill a fresh quote's header from the admin default preset.
   if (!hasPostedRows) {
     const hd = quoteModule.settings?.headerDefaults || {};
@@ -989,11 +1002,30 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
       }
     }
   }
+  const pricingRules = normalizeCargoPricingRules(quoteModule.settings?.cargoPricingRules);
+  const cargoPricingByType = parseCargoPricingByType(body, header.cargoType);
+  const legacyType = historicalQuoteCargoType(quoteModule, body.draftId);
+  const legacyPricing = legacyType && legacyType === header.cargoType &&
+    !Object.keys(body).some((name) => name.startsWith("cargo_")) ? existingDraft?.header?.cargoPricing : null;
+  const cargoPricing = cargoPricingByType[header.cargoType] || legacyPricing || parseCargoPricing(body, header.cargoType);
+  if (!hasPostedRows) {
+    const rule = pricingRules[header.cargoType];
+    if (rule) Object.assign(cargoPricing, rule);
+    if (body.cargo_currency === undefined) cargoPricing.currency = quoteModule.settings?.defaultCurrencyByCategory?.TRANSPORTATION || "MXN";
+  }
+  if (QUOTE_CARGO_TYPE_OPTIONS.includes(header.cargoType)) cargoPricingByType[header.cargoType] = cargoPricing;
+  header.cargoPricing = cargoPricing;
+  header.cargoPricingByType = cargoPricingByType;
   return {
+    draftId: typeof body.draftId === "string" ? body.draftId.slice(0, 100) : "",
     number,
     date: (body.date || "").trim() || options.date || today,
     header,
     cargoPricing,
+    cargoPricingByType,
+    showTotals: header.showTotals,
+    outputAudience: header.outputAudience,
+    taxTreatment: header.taxTreatment,
     quoteMode,
     lineItems,
     noteIds: hasPostedRows ? postedNoteIds : libraryIds,
@@ -1004,6 +1036,12 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
 
 function renderQuoteWorkbench(req, res, payload) {
   const moduleMeta = getModulePresentation(payload.moduleKey, req.language);
+  const cargoChoices = normalizeQuoteCargoTypes(payload.quoteModule.settings?.cargoTypes).filter((entry) => entry.enabled);
+  const savedDraft = (payload.quoteModule.drafts || []).find((entry) => entry.id === payload.formData.draftId);
+  const savedCode = savedDraft?.header?.cargoType;
+  if (savedCode && !cargoChoices.some((entry) => entry.code === savedCode)) {
+    cargoChoices.push({ code: savedCode, label: savedDraft.header.cargoTypeLabel || savedCode, enabled: false, historical: true });
+  }
   res.render(
     "workbench-quote",
     baseView(req, {
@@ -1012,6 +1050,9 @@ function renderQuoteWorkbench(req, res, payload) {
       currentModuleKey: payload.moduleKey,
       selectedModule: moduleMeta,
       quoteSettings: payload.quoteModule.settings,
+      pricingRules: normalizeCargoPricingRules(payload.quoteModule.settings?.cargoPricingRules),
+      historicalCargoType: historicalQuoteCargoType(payload.quoteModule, payload.formData.draftId),
+      drafts: (payload.quoteModule.drafts || []).map(({ id, number, date }) => ({ id, number, date })).reverse(),
       feeCurrencyDefaults: payload.quoteModule.settings?.defaultCurrencyByCategory || {},
       quoteTemplates: payload.quoteModule.settings?.feeTemplates || [],
       quoteView: payload.quoteView,
@@ -1024,7 +1065,7 @@ function renderQuoteWorkbench(req, res, payload) {
         department: QUOTE_DEPARTMENT_OPTIONS,
         transportMode: QUOTE_TRANSPORT_MODE_OPTIONS,
         incoterm: QUOTE_INCOTERM_OPTIONS,
-        cargoType: normalizeQuoteCargoTypes(payload.quoteModule.settings?.cargoTypes).filter((entry) => entry.enabled),
+        cargoType: cargoChoices,
       },
       categoryOptions: QUOTE_GROUP_ORDER,
       quoteModes: QUOTE_MODES,

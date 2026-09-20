@@ -21,8 +21,8 @@ const {
   parseNumber,
   slugifyId,
 } = require("./shared");
-const { normalizeCargoPricing } = require("../../../public/quote-pricing");
-const { QUOTE_CONFIG_VERSION, DEFAULT_QUOTE_FEE_TEMPLATES, DEFAULT_CURRENCY_BY_CATEGORY, normalizeQuoteFeeTemplates } = require("../quote-config");
+const { normalizeCargoPricing, normalizeCargoPricingByType } = require("../../../public/quote-pricing");
+const { QUOTE_CONFIG_VERSION, DEFAULT_QUOTE_FEE_TEMPLATES, DEFAULT_CURRENCY_BY_CATEGORY, normalizeQuoteFeeTemplates, normalizeCargoPricingRules } = require("../quote-config");
 
 function normalizeQuoteLineItem(item = {}, fallbackId) {
   const atCost =
@@ -58,7 +58,7 @@ function normalizeQuoteLineItem(item = {}, fallbackId) {
     chargeKind: item.chargeKind === "contingent" ? "contingent" : "fixed",
     included: item.included !== false,
     unitPriceMax: item.unitPriceMax === "" || item.unitPriceMax === null || item.unitPriceMax === undefined ? null : Math.max(0, parseNumber(item.unitPriceMax, 0)),
-    appliesTo: Array.isArray(item.appliesTo) ? item.appliesTo.map(String).filter((code) => ["FCL", "LCL", "BBK"].includes(code)) : ["FCL", "LCL", "BBK"],
+    appliesTo: Array.isArray(item.appliesTo) ? item.appliesTo.map(String).filter((code) => ["FCL", "LCL", "BBK", "AIR"].includes(code)) : ["FCL", "LCL", "BBK", "AIR"],
     unitOfMeasure: String(item.unitOfMeasure || "").trim(),
     unit:
       item.unit === null || item.unit === "" || item.unit === undefined
@@ -107,7 +107,12 @@ function normalizeQuoteHeader(header = {}) {
     specialImportQualification: ["yes", "no", "unknown"].includes(header.specialImportQualification) ? header.specialImportQualification : "",
     nomCertification: ["yes", "no", "unknown"].includes(header.nomCertification) ? header.nomCertification : "",
     ministryRegistration: ["yes", "no", "unknown"].includes(header.ministryRegistration) ? header.ministryRegistration : "",
-    ...(header.cargoPricing ? { cargoPricing: normalizeCargoPricing(header.cargoPricing) } : {}),
+    ...(header.cargoPricing ? { cargoPricing: normalizeCargoPricing(header.cargoPricing, cargoType) } : {}),
+    ...(header.cargoPricingByType ? { cargoPricingByType: normalizeCargoPricingByType(header.cargoPricingByType) } : {}),
+    showTotals: header.showTotals === true,
+    notesSelectionExplicit: header.notesSelectionExplicit === true,
+    outputAudience: header.outputAudience === "internal" ? "internal" : "customer",
+    taxTreatment: ["included", "excluded"].includes(header.taxTreatment) ? header.taxTreatment : "unspecified",
     ...(cargoType && typeof header.cargoTypeLabel === "string" && header.cargoTypeLabel.trim()
       ? { cargoTypeLabel: header.cargoTypeLabel.trim().slice(0, 120) }
       : {}),
@@ -183,10 +188,19 @@ function normalizeQuoteHeaderDefaults(hd = {}, cargoTypes) {
 function normalizeQuoteModuleData(moduleData = {}) {
   const settingsIn = moduleData.settings || {};
   let cargoTypes = normalizeQuoteCargoTypes(settingsIn.cargoTypes);
-  if (Number(settingsIn.cargoTypePolicyVersion || 0) < 1) cargoTypes = cargoTypes.filter((entry) => ["FCL", "LCL", "BBK"].includes(entry.code));
+  if (Number(settingsIn.cargoTypePolicyVersion || 0) < 1) cargoTypes = cargoTypes.filter((entry) => ["FCL", "LCL", "BBK", "AIR"].includes(entry.code));
+  // Add the newly requested AIR workflow once. An explicit empty list or an
+  // existing disabled AIR remains an administrator's deliberate choice.
+  if (Number(settingsIn.cargoTypePolicyVersion || 0) < 2 && cargoTypes.length && !cargoTypes.some((entry) => entry.code === "AIR")) {
+    cargoTypes.push({ code: "AIR", label: "AIR", enabled: true });
+  }
   const feeTemplates = normalizeQuoteFeeTemplates(Array.isArray(settingsIn.feeTemplates)
     ? settingsIn.feeTemplates
     : [...QUOTE_TEMPLATE_ROWS.filter((row) => row.section === "foreign").map((row, index) => ({...row, id: `foreign-${index + 1}`, chargeKind: "fixed", enabled: true, appliesTo: ["FCL", "LCL", "BBK"]})), ...DEFAULT_QUOTE_FEE_TEMPLATES]);
+  if (Number(settingsIn.feeTemplateConfigVersion || 0) < 2) {
+    const local = feeTemplates.find((row) => row.id === "delivery-order" && row.category === "SHIPPING LINE" && row.conceptEn === "Delivery Order Fee" && row.conceptZh === "船公司 LOCAL");
+    if (local) local.conceptEn = "Shipping line local charge";
+  }
   const defaultCurrencyByCategory = Object.fromEntries(Object.entries(DEFAULT_CURRENCY_BY_CATEGORY).map(([category, fallback]) => [category, ["MXN", "USD"].includes(settingsIn.defaultCurrencyByCategory?.[category]) ? settingsIn.defaultCurrencyByCategory[category] : fallback]));
   const templateVersion = parseNumber(settingsIn.templateVersion, 0);
   const seedTemplate =
@@ -194,6 +208,17 @@ function normalizeQuoteModuleData(moduleData = {}) {
     !Array.isArray(moduleData.templateRows) ||
     !moduleData.templateRows.length;
   const seedNotes = !Array.isArray(moduleData.notes) || !moduleData.notes.length;
+  const notes = (seedNotes ? QUOTE_NOTES : moduleData.notes).map((note, index) => normalizeQuoteNote(note, `note-${index + 1}`));
+  if (Number(settingsIn.taxDisclaimerPolicyVersion || 0) < 1) {
+    // Only replace the exact provisional system wording tied to the removed
+    // dual-currency tax block. Business-authored terms remain untouched.
+    for (const note of notes) {
+      if (note.en === "Prices are shown in two currencies: the MXN price is exclusive of VAT; the USD price already includes 16% VAT. Any exchange-rate difference is settled at the invoicing-date FX." && note.zh === "本报价以两种币种显示：比索（MXN）价为不含税价；美金（USD）价已含 16% 增值税（VAT）。汇率差异按开票当日汇率结算。") {
+        note.en = QUOTE_NOTES[0].en;
+        note.zh = QUOTE_NOTES[0].zh;
+      }
+    }
+  }
   const pad = Math.min(
     8,
     Math.max(1, Math.trunc(parseNumber(settingsIn.quoteNumberPad, 3)) || 3)
@@ -218,7 +243,9 @@ function normalizeQuoteModuleData(moduleData = {}) {
       showIndicativeConversion: Boolean(settingsIn.showIndicativeConversion),
       indicativeCurrency: normalizeCurrencyCode(settingsIn.indicativeCurrency, "MXN"),
       cargoTypes,
-      cargoTypePolicyVersion: 1,
+      cargoTypePolicyVersion: 2,
+      taxDisclaimerPolicyVersion: 1,
+      cargoPricingRules: normalizeCargoPricingRules(settingsIn.cargoPricingRules),
       feeTemplates,
       feeTemplateConfigVersion: QUOTE_CONFIG_VERSION,
       defaultCurrencyByCategory,
@@ -229,9 +256,7 @@ function normalizeQuoteModuleData(moduleData = {}) {
     templateRows: (seedTemplate ? QUOTE_TEMPLATE_ROWS : moduleData.templateRows).map(
       (row, index) => normalizeQuoteLineItem(row, `tpl-${index + 1}`)
     ),
-    notes: (seedNotes ? QUOTE_NOTES : moduleData.notes).map((note, index) =>
-      normalizeQuoteNote(note, `note-${index + 1}`)
-    ),
+    notes,
     drafts: (Array.isArray(moduleData.drafts) ? moduleData.drafts : []).map(
       (draft, index) => normalizeQuoteDraft(draft, `q-${index + 1}`)
     ),

@@ -388,8 +388,8 @@ const QUOTE_NOTES = Object.freeze([
     // K5 (20260614): provisional wording for the dual-currency display — PENDING
     // Jose's final confirmation at the review meeting. Coordinated with the VAT
     // clause in docs/BRAND_NOTES.md. Revert/adjust if Jose changes the wording.
-    en: "Prices are shown in two currencies: the MXN price is exclusive of VAT; the USD price already includes 16% VAT. Any exchange-rate difference is settled at the invoicing-date FX.",
-    zh: "本报价以两种币种显示：比索（MXN）价为不含税价；美金（USD）价已含 16% 增值税（VAT）。汇率差异按开票当日汇率结算。",
+    en: "Tax treatment follows the conditions stated in this quotation.",
+    zh: "税费处理以本报价所列条件为准。",
   },
   {
     en: "Any costs not caused by our company will be charged based on actual expenses.",
@@ -422,7 +422,7 @@ const QUOTE_TRANSPORT_MODE_OPTIONS = Object.freeze([
   "AIR", "SEA", "FSA", "FAS", "ROA", "RAI", "COU",
 ]);
 const QUOTE_CARGO_TYPE_OPTIONS = Object.freeze([
-  "FCL", "LCL", "BBK",
+  "FCL", "LCL", "BBK", "AIR",
 ]);
 
 function normalizeQuoteCargoCode(value) {
@@ -473,7 +473,7 @@ function normalizeQuoteCargoTypes(value) {
 // Q7.3: unit of measure (separate from the numeric qty). Stored as a code;
 // labels are resolved per language in the view via i18n (quote.uom_*).
 const QUOTE_UOM_OPTIONS = Object.freeze([
-  "container", "bl", "occurrence", "piece", "vehicle", "day",
+  "container", "bl", "shipment", "truck", "kg", "ton", "cbm", "chargeable", "flat", "occurrence", "piece", "vehicle", "day",
 ]);
 
 const DEFAULT_QUOTE_HEADER = Object.freeze({

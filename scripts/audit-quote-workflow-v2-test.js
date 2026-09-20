@@ -139,8 +139,8 @@ function selectValues(html, name) {
 function runPure(shippingData) {
   const quote = shippingData.modules.quote;
   pure("one-time cargo migration retires other codes but preserves historical draft snapshots", () => {
-    assert.deepEqual(quote.settings.cargoTypes.map((row) => row.code), ["FCL", "LCL", "BBK"]);
-    assert.equal(quote.settings.cargoTypePolicyVersion, 1);
+    assert.deepEqual(quote.settings.cargoTypes.map((row) => row.code), ["FCL", "LCL", "BBK", "AIR"]);
+    assert.equal(quote.settings.cargoTypePolicyVersion, 2);
     assert.equal(quote.drafts[0].header.cargoType, "ROR");
     assert.equal(quote.drafts[0].header.cargoTypeLabel, "Historical roll-on cargo");
     const empty = normalizeQuoteModuleData({ settings: { cargoTypes: [], cargoTypePolicyVersion: 1 } });
@@ -234,14 +234,14 @@ function runPure(shippingData) {
     assert.equal(cargoCalculation("", combined).attempted, false);
   });
   pure("partial array submissions retain quantity/weight inputs even when type/dimension anchors are missing", () => {
-    for (const [type, body] of [
-      ["FCL", { cargo_containerQuantity: [2] }],
-      ["FCL", { cargo_containerQuantity: [-1] }],
-      ["LCL", { cargo_weightKg: [10], cargo_weightCount: [2] }],
-      ["BBK", { cargo_packageCount: [2] }],
+    for (const [type, body, attempted] of [
+      ["FCL", { cargo_containerQuantity: [2] }, false],
+      ["FCL", { cargo_containerQuantity: [-1] }, false],
+      ["LCL", { cargo_weightKg: [10], cargo_weightCount: [2] }, false],
+      ["BBK", { cargo_packageCount: [2] }, false],
     ]) {
       const calculation = cargoCalculation(type, parseCargoPricing(body));
-      assert.equal(calculation.attempted, true);
+      assert.equal(calculation.attempted, attempted);
       assert.equal(calculation.valid, false);
       assert.deepEqual(calculation.rows, []);
     }
@@ -371,13 +371,13 @@ async function runHttp(shippingData, sessionStore) {
   try {
     const front = await request("/workbench/quote");
     assert.equal(front.status, 200);
-    assert.deepEqual(selectValues(front.html, "cargoType"), ["FCL", "LCL", "BBK"]);
+    assert.deepEqual(selectValues(front.html, "cargoType"), ["FCL", "LCL", "BBK", "AIR"]);
     for (const key of Object.keys(CUSTOMS)) assert.match(front.html, new RegExp(`name="${key}"`));
     const admin = await request("/admin/quote/settings");
     assert.equal(admin.status, 200);
     assert.match(admin.html, /name="feeTemplatesPresent"/);
     assert.match(admin.html, /name="currencyDefaultsPresent"/);
-    ok("real frontend and admin render three cargo choices, four customs questions and fee/currency editors");
+    ok("real frontend and admin render four cargo choices, four customs questions and fee/currency editors");
 
     const before = await readQuote();
     const modified = before.settings.feeTemplates.map((row) => row.id === "container-cleaning"

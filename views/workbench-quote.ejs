@@ -12,6 +12,11 @@
   const initialContainerCurrency = (r) => r.currency || (['containerType','quantity','unitPrice'].some((k) => hasPricingValue(r[k])) ? '' : transportCurrency);
   const hasPackagePricing = hasPricingValue(pricing.unitPrice) || packageRows.some((r) => Object.values(r).some(hasPricingValue));
   const initialPackageCurrency = pricing.currency || (hasPackagePricing ? '' : transportCurrency);
+  const cargoRules = typeof pricingRules !== 'undefined' ? pricingRules : {};
+  const currentCargoType = formData.header.cargoType || '';
+  const currentMethod = pricing.method || cargoRules[currentCargoType]?.method || (currentCargoType === 'AIR' ? 'manual' : 'raw_max');
+  const outputAudience = formData.outputAudience || 'customer';
+  const taxTreatment = formData.taxTreatment || 'unspecified';
 %>
 
 <section class="page-heading page-heading-card">
@@ -21,7 +26,15 @@
 
 <form id="quote-form" method="post" action="/workbench/quote" class="quote-shell" data-quote-form>
   <input type="hidden" name="quoteFormPresent" value="1" />
+  <input type="hidden" name="draftId" value="<%= formData.draftId || '' %>" />
+  <input type="hidden" name="cargoPricingByType" value="" />
   <section class="quote-card quote-setup">
+    <% if (typeof drafts !== 'undefined' && drafts.length) { %>
+      <div class="quote-actions quote-draft-actions">
+        <label class="quote-field"><span><%= ql('已保存的草稿', 'Borradores guardados') %></span><select data-quote-draft-picker><option value=""><%= ql('选择草稿', 'Seleccionar borrador') %></option><% drafts.forEach((draft) => { %><option value="<%= draft.id %>" <%= formData.draftId === draft.id ? 'selected' : '' %>><%= draft.number || draft.id %><%= draft.date ? ' · ' + draft.date : '' %></option><% }) %></select></label>
+        <button type="button" class="ghost-button compact-button" data-quote-open-draft <%= !formData.draftId ? 'disabled' : '' %>><%= ql('打开草稿', 'Abrir borrador') %></button>
+      </div>
+    <% } %>
     <div class="quote-grid quote-mode-grid">
       <label class="quote-field"><span><%= t("quote.quoteMode") %></span>
         <select name="quoteMode" data-quote-mode>
@@ -33,7 +46,7 @@
         <select name="cargoType" data-cargo-type>
           <option value="" <%= !formData.header.cargoType ? 'selected' : '' %>><%= ql('请选择装载方式', 'Seleccionar modalidad de carga') %></option>
           <% headerOptions.cargoType.forEach((entry) => { %>
-            <option value="<%= entry.code %>" <%= formData.header.cargoType === entry.code ? 'selected' : '' %>><%= entry.label %></option>
+            <option value="<%= entry.code %>" <%= formData.header.cargoType === entry.code ? 'selected' : '' %>><%= entry.label %><%= entry.historical ? ql('（已停用 · 历史报价）', ' (deshabilitada · cotización histórica)') : '' %></option>
           <% }) %>
         </select>
         <% if (!headerOptions.cargoType.length) { %><small><%= t('quote.cargoTypesEmpty') %></small><% } %>
@@ -61,9 +74,18 @@
       <button type="button" class="ghost-button compact-button" data-cargo-add="container"><%= ql('＋ 新增箱型', '＋ Agregar tipo de contenedor') %></button>
     </div>
 
-    <div class="quote-pricing-panel" data-cargo-panel="packages" <%= !['LCL','BBK'].includes(formData.header.cargoType) ? 'hidden' : '' %>>
-      <h3><%= ql('LCL / BBK · 计费重', 'LCL / BBK · Valor facturable') %></h3>
-      <p class="quote-hint"><%= ql('总体积 = 长 × 宽 × 高（cm）× 包装数量；总重量 = 单件重量（kg）× 重量件数。直接比较总体积 cm³ 与总重量 kg 的数值，取较大值 × 单价。', 'Volumen total = largo × ancho × alto (cm) × bultos; peso total = peso unitario (kg) × cantidad. Se compara directamente el valor numérico de cm³ con kg y se multiplica el mayor por el precio unitario.') %></p>
+    <div class="quote-pricing-panel" data-cargo-panel="packages" <%= !['LCL','BBK','AIR'].includes(formData.header.cargoType) ? 'hidden' : '' %>>
+      <h3 data-cargo-package-title><%= currentCargoType %> · <%= ql('计费信息', 'Datos de la tarifa') %></h3>
+      <p class="quote-hint" data-cargo-type-hint></p>
+      <div class="quote-grid quote-method-grid">
+        <label class="quote-field"><span><%= ql('计费方式', 'Método de cálculo') %></span><select name="cargo_method">
+          <% [['raw_max','直接比较 kg 与 cm³ 数值','Comparar valores de kg y cm³'],['volumetric','体积折算重量后比较','Comparar peso real y volumétrico'],['manual','手动填写计费数量','Capturar cantidad facturable']].forEach(([value,zh,es]) => { %><option value="<%= value %>" <%= currentMethod === value ? 'selected' : '' %>><%= ql(zh,es) %></option><% }) %>
+        </select></label>
+        <label class="quote-field" data-cargo-method-field="volumetric" <%= currentMethod !== 'volumetric' ? 'hidden' : '' %>><span><%= ql('体积重除数（cm³/kg）', 'Divisor volumétrico (cm³/kg)') %></span><input type="number" min="0" step="any" name="cargo_volumeDivisor" value="<%= pricingValue(pricing.volumeDivisor ?? cargoRules[currentCargoType]?.volumeDivisor) %>" placeholder="<%= ql('填写已确认的除数', 'Divisor confirmado') %>" /></label>
+        <label class="quote-field" data-cargo-method-field="manual" <%= currentMethod !== 'manual' ? 'hidden' : '' %>><span><%= ql('计费数量', 'Cantidad facturable') %></span><input type="number" min="0" step="any" name="cargo_manualChargeable" value="<%= pricingValue(pricing.manualChargeable) %>" /></label>
+      </div>
+      <p class="quote-hint" data-cargo-method-hint></p>
+      <h4 class="quote-extra-title"><%= ql('货物信息（可选）', 'Datos de la carga (opcionales)') %></h4>
       <div class="quote-table-wrap"><table class="quote-table quote-cargo-table">
         <thead><tr><th><%= ql('长 cm', 'Largo cm') %></th><th><%= ql('宽 cm', 'Ancho cm') %></th><th><%= ql('高 cm', 'Alto cm') %></th><th><%= ql('包装数量', 'Cantidad de bultos') %></th><th><%= ql('单件重量 kg', 'Peso unitario kg') %></th><th><%= ql('重量件数', 'Cantidad para peso') %></th><th></th></tr></thead>
         <tbody data-cargo-package-rows>
@@ -82,6 +104,7 @@
       </div>
     </div>
     <div class="quote-pricing-result" data-cargo-result role="status" aria-live="polite" hidden></div>
+    <div class="quote-cargo-recovery" data-cargo-recovery hidden><p class="quote-hint" data-cargo-recovery-message></p><button type="button" class="ghost-button compact-button" data-cargo-reset><%= ql('清空本类型计价', 'Vaciar tarifa de esta modalidad') %></button><button type="button" class="ghost-button compact-button" data-cargo-reset-all hidden><%= ql('清空所有类型的计价数据', 'Vaciar las tarifas de todas las modalidades') %></button></div>
   </section>
 
   <!-- General Data -->
@@ -160,7 +183,7 @@
       <div class="quote-card-heading"><h3><%= kind === 'fixed' ? ql('固定费用', 'Cargos fijos') : ql('发生才收取的费用', 'Cargos si se generan') %></h3><span class="quote-kind-pill"><%= kind === 'fixed' ? ql('计入报价', 'Incluidos en la cotización') : ql('仅供告知', 'Solo informativos') %></span></div>
       <p class="quote-hint"><%= kind === 'fixed' ? ql('勾选的固定费用计入报价，未选项目不计入；实报实销项目另按实际账单结算。', 'Solo los cargos seleccionados se incluyen en la cotización; los conceptos AT COST se liquidan contra factura real.') : ql('仅在相应情况实际发生时收取。以下金额用于提前告知，不计入本次报价小计。', 'Se cobran únicamente si ocurre la situación indicada. Los importes siguientes son informativos y no se suman al subtotal.') %></p>
       <div class="quote-table-wrap"><table class="quote-table" data-quote-table="<%= kind %>">
-        <thead><tr><th><%= t('quote.colSection') %></th><th><%= t('quote.colCategory') %></th><th class="quote-concept-heading"><%= ql('费用名称', 'Concepto') %></th><th><%= t('quote.colCode') %></th><th><%= t('quote.colQty') %></th><th><%= t('quote.colUom') %></th><th><%= t('quote.colUnitPrice') %></th><th><%= t('quote.colCurrency') %></th><th><%= kind === 'contingent' ? ql('发生时金额','Importe si ocurre') : t('quote.colTotal') %></th><th class="quote-remark-heading"><%= t('quote.colRemark') %></th><th><%= ql('计价方式', 'Tratamiento') %></th><th></th></tr></thead>
+        <thead><tr><th><%= t('quote.colSection') %></th><th><%= t('quote.colCode') %></th><th><%= t('quote.colCategory') %></th><th class="quote-concept-heading"><%= ql('费用名称', 'Concepto') %></th><th><%= t('quote.colQty') %></th><th><%= t('quote.colUom') %></th><th><%= t('quote.colUnitPrice') %></th><th><%= t('quote.colCurrency') %></th><th><%= kind === 'contingent' ? ql('发生时金额','Importe si ocurre') : t('quote.colTotal') %></th><th class="quote-remark-heading"><%= t('quote.colRemark') %></th><th><%= ql('计价方式', 'Tratamiento') %></th><th></th></tr></thead>
         <tbody data-quote-rows="<%= kind %>">
           <% (quoteView.editableRows || quoteView.rows.filter((r) => !r.isCargoCharge)).filter((r) => (r.chargeKind === 'contingent' ? 'contingent' : 'fixed') === kind).forEach((row) => { %>
             <%- include('partials/quote-fee-row', { row, lang, t, categoryOptions, uomOptions }) %>
@@ -213,6 +236,15 @@
     </div>
   </section>
 
+  <section class="quote-card quote-output-options">
+    <h3><%= ql('报价输出', 'Salida de la cotización') %></h3>
+    <div class="quote-grid">
+      <label class="quote-field"><span><%= ql('输出版本', 'Versión') %></span><select name="outputAudience"><option value="customer" <%= outputAudience === 'customer' ? 'selected' : '' %>><%= ql('客户版（隐藏内部费用代码）', 'Cliente (sin códigos internos)') %></option><option value="internal" <%= outputAudience === 'internal' ? 'selected' : '' %>><%= ql('内部版（显示费用代码）', 'Interna (con códigos)') %></option></select></label>
+      <label class="quote-field"><span><%= ql('报价金额税务口径', 'Tratamiento de impuestos') %></span><select name="taxTreatment"><% [['unspecified','待确认','Por confirmar'],['included','金额已含税','Precios con impuestos incluidos'],['excluded','金额未含税','Precios sin impuestos']].forEach(([value,zh,es]) => { %><option value="<%= value %>" <%= taxTreatment === value ? 'selected' : '' %>><%= ql(zh,es) %></option><% }) %></select></label>
+      <label class="quote-output-toggle"><input type="checkbox" name="showTotals" value="1" <%= formData.showTotals === true ? 'checked' : '' %> /><span><%= ql('PDF 显示底部金额汇总', 'Mostrar resumen de importes en el PDF') %><small><%= ql('默认关闭；各费用行的单价与金额仍会显示。', 'Desactivado por defecto; los precios e importes por concepto siguen visibles.') %></small></span></label>
+    </div>
+    <p class="quote-hint"><%= ql('汇总按原币种显示；税务口径不会自动增加税额。', 'El resumen conserva las monedas originales; elegir el tratamiento no agrega impuestos automáticamente.') %></p>
+  </section>
   <div class="quote-actions">
     <%# Q7: output language — bilingual (legacy EN+中) or single EN/ZH/ES. %>
     <label class="quote-field" style="max-width: 200px;">
@@ -232,6 +264,7 @@
 <datalist id="fee-codes">
   <% feeCodes.forEach((fc) => { %><option value="<%= fc.code %>" data-desc="<%= fc.description.replace(/\"/g, '&quot;') %>"><%= fc.code %> — <%= fc.description %></option><% }) %>
 </datalist>
+<datalist id="quote-fee-units"><% [...new Set([...uomOptions, 'shipment', 'truck', 'flat', 'kg', 'ton', 'm³', 'W/M', 'container', 'bill', 'day'])].forEach((unit) => { %><option value="<%= unit %>"></option><% }) %></datalist>
 
 <script id="quote-selector-data" type="application/json"><%- safeJson(selectorData) %></script>
 <script id="quote-fee-codes" type="application/json"><%- safeJson(feeCodes) %></script>
@@ -240,9 +273,18 @@
 <script id="quote-section-labels" type="application/json"><%- safeJson({ foreign: t("quote.sectionForeign"), mexico: t("quote.sectionMexico") }) %></script>
 <script id="quote-category-options" type="application/json"><%- safeJson(categoryOptions) %></script>
 <script id="quote-fee-settings" type="application/json"><%- safeJson({ currencyDefaults: typeof feeCurrencyDefaults !== 'undefined' ? feeCurrencyDefaults : {}, templates: typeof quoteTemplates !== 'undefined' ? quoteTemplates : [] }) %></script>
+<script id="quote-cargo-state-data" type="application/json"><%- safeJson({ states: formData.cargoPricingByType || {}, rules: cargoRules, historicalCargoType: typeof historicalCargoType !== 'undefined' ? historicalCargoType : '' }) %></script>
 <script id="quote-ui-labels" type="application/json"><%- safeJson({
-  uiLang: lang, templateSelect: ql('选择已启用的费用', 'Seleccionar cargo habilitado'), templateEmpty: ql('当前适用费用均已添加', 'No hay cargos disponibles para agregar'),
-  pending: ql('待填写完整计价信息', 'Complete los datos de la tarifa'), emptyCargo: ql('可填写对应计价信息，自动计算费用。', 'Capture los datos para calcular la tarifa.'),
+  uiLang: lang, templateSelect: ql('选择已启用的费用', 'Seleccionar cargo habilitado'), templateEmpty: ql('暂无可添加的适用费用，可在后台配置或手动新增', 'No hay cargos aplicables para agregar; configúrelos en administración o agregue una fila manual'),
+  pending: ql('已填写金额，请补全当前计费方式需要的数据。', 'Se capturó un precio; complete los datos requeridos por el método.'), emptyCargo: ql('未填写运输单价；可直接填写下方费用，货物信息不参与金额计算。', 'Sin tarifa de transporte; puede cotizar los cargos de abajo sin calcular un importe por carga.'),
+  cargoTitles: { LCL: ql('LCL · 拼箱计费', 'LCL · Tarifa de carga consolidada'), BBK: ql('BBK · 散杂货与车辆计费', 'BBK · Carga fraccionada y vehículos'), AIR: ql('AIR · 空运计费', 'AIR · Tarifa aérea') },
+  cargoTypeHints: { LCL: ql('可使用货物数据计算，也可手动填写计费数量。每票费用可在下方使用 shipment 单位单独报价。', 'Calcule con los datos de carga o capture la cantidad facturable. Cotice cargos por embarque abajo con la unidad shipment.'), BBK: ql('按车计费时，在下方费用表中每辆车单独一行，填写 truck / flat 单位、数量及该车价格。此处可另填货物计费信息。', 'Para tarifas por vehículo, agregue una fila independiente por camión o plataforma abajo, con unidad truck / flat, cantidad y precio. Aquí puede calcular además la tarifa de la carga.'), AIR: ql('初始采用手动计费数量。使用体积重时，请填写已确认的除数；不会预设空运折算系数。', 'El método inicial es cantidad manual. Para peso volumétrico, indique el divisor confirmado; no se presupone ningún factor aéreo.') },
+  cargoMethodHints: { raw_max: ql('总体积 = 长 × 宽 × 高（cm）× 包装数量；总重量 = 单件重量（kg）× 重量件数。直接比较 cm³ 与 kg 的数值，取较大值 × 单价。', 'Volumen = largo × ancho × alto (cm) × bultos; peso = peso unitario (kg) × cantidad. Se toma el mayor valor numérico entre cm³ y kg y se multiplica por el precio.'), volumetric: ql('体积重 = 总体积 cm³ ÷ 已确认的除数；与总重量 kg 比较，取较大值 × 单价。填写单价后，需要完整的尺寸、数量、重量和除数。', 'Peso volumétrico = volumen total cm³ ÷ divisor confirmado. Se toma el mayor entre peso real y volumétrico y se multiplica por el precio. Con tarifa, complete dimensiones, cantidades, peso y divisor.'), manual: ql('金额 = 手动填写的计费数量 × 单价；尺寸和重量可留作货物说明，不改变此数量。', 'Importe = cantidad facturable capturada × precio. Las dimensiones y el peso son descriptivos y no cambian esa cantidad.') },
+  cargoInvalidSaved: ql('已保存的计价数据含无效值。请重新填写对应字段；也可清空本类型计价后重新录入。', 'La tarifa guardada contiene valores no válidos. Corrija los campos correspondientes o vacíe esta modalidad para volver a capturarla.'),
+  cargoCheckFields: ql('请检查', 'Revise'), cargoContainerRow: ql('箱型行', 'Fila de contenedor'), cargoPackageRow: ql('包装行', 'Fila de bultos'),
+  cargoFieldNames: { method: ql('计费方式', 'Método'), manualChargeable: ql('计费数量', 'Cantidad facturable'), volumeDivisor: ql('体积重除数', 'Divisor'), unitPrice: ql('单价', 'Precio'), currency: ql('币种', 'Moneda'), containerType: ql('箱型', 'Tipo de contenedor'), quantity: ql('箱量', 'Cantidad'), lengthCm: ql('长', 'Largo'), widthCm: ql('宽', 'Ancho'), heightCm: ql('高', 'Alto'), packageCount: ql('包装数量', 'Bultos'), weightKg: ql('单件重量', 'Peso unitario'), weightCount: ql('重量件数', 'Cantidad para peso') },
+  cargoInvalidRows: ql('已保存的计价行数超限或结构不完整，不能直接计算。请清空本类型计价后，核对原始信息并重新录入。', 'Las filas guardadas exceden el límite o están incompletas. Vacíe la tarifa de esta modalidad y vuelva a capturarla cotejando la fuente.'),
+  cargoInvalidCache: ql('保存的多类型计价数据不完整，无法确认各类型的数据。请先核对原始信息，再清空所有类型的计价数据并重新录入。', 'Los datos guardados de las modalidades están incompletos. Coteje la información original, vacíe las tarifas de todas las modalidades y vuelva a capturarlas.'),
   pricingTotal: ql('装载计价金额', 'Importe por modalidad'), weight: ql('总重量', 'Peso total'), volume: ql('总体积', 'Volumen total'), chargeable: ql('计费数值', 'Valor facturable'),
   cargoIncluded: ql('此金额计入固定费用小计。', 'Este importe se incluye en el subtotal fijo.'), cargoPreview: ql('计价预览', 'Vista previa de tarifa'),
   fieldName: ql('字段名称', 'Nombre del campo'), fieldValue: ql('填写内容', 'Contenido'), fieldExample: ql('例如：客户参考号', 'Ej.: Referencia del cliente'), valueExample: ql('例如：PO-001', 'Ej.: PO-001'), remove: t('quote.removeRow')

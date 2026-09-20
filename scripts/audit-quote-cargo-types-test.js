@@ -103,9 +103,9 @@ async function main() {
   let server;
   try {
     assert.deepEqual(normalizeQuoteCargoTypes(undefined), QUOTE_CARGO_TYPE_OPTIONS.map((code) => ({ code, label: code, enabled: true })));
-    assert.deepEqual(normalizeQuoteCargoTypes(undefined).map((row) => row.code), ["FCL", "LCL", "BBK"], "new quotes start with the three approved choices");
+    assert.deepEqual(normalizeQuoteCargoTypes(undefined).map((row) => row.code), ["FCL", "LCL", "BBK", "AIR"], "new quotes start with the four requested choices");
     assert.deepEqual(normalizeQuoteCargoTypes([]), [], "explicit empty list does not fall back");
-    ok("legacy missing configuration falls back to eight; explicit empty remains empty");
+    ok("legacy missing configuration falls back to four; explicit empty remains empty");
 
     const seed = JSON.parse(fs.readFileSync(path.join(__dirname, "../data/shipping-lines.json"), "utf8"));
     seed.modules.quote = {

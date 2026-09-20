@@ -38,6 +38,7 @@
       const row = template.content.firstElementChild.cloneNode(true);
       const kind = add.dataset.feeAdd;
       input(row, 'id').value = `fee-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      input(row, 'code').value = '';
       input(row, 'chargeKind').value = kind;
       input(row, 'currency').value = defaultCurrency(input(row, 'category').value);
       editor.querySelector(`[data-fee-list="${kind}"]`).appendChild(row);
@@ -63,6 +64,9 @@
   editor.addEventListener('change', (event) => {
     const row = event.target.closest('[data-fee-row]');
     if (!row) return; // Editing a default does not overwrite existing fees.
+    if (event.target.matches('[data-fee-mode]')) {
+      input(row, 'modes').value = [...row.querySelectorAll('[data-fee-mode]:checked')].map((node) => node.dataset.feeMode).join(',');
+    }
     if (event.target.name === 'fee_category[]') {
       input(row, 'currency').value = defaultCurrency(event.target.value);
     }

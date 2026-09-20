@@ -27,6 +27,8 @@ const {
   getQuoteDefaultCurrency,
   normalizeQuoteFeeTemplates,
   validateQuoteFeeTemplates,
+  normalizeCargoPricingRules,
+  validateCargoPricingRules,
 } = require("../lib/quote-config");
 
 const FEE_FORM_FIELDS = ["id", "chargeKind", "category", "section", "en", "zh", "es", "unit", "uom", "price", "max", "currency", "remark", "active", "modes", "selectionRequired", "sourceNote"];
@@ -38,6 +40,7 @@ function quoteConfigErrorMessage(code, language) {
     invalid_fee_template: ["费用内容无效，请检查后重试。", "El cargo contiene datos no válidos."],
     invalid_fee_template_id: ["费用编号只能包含字母、数字、下划线和连字符，最长 80 字符。", "El identificador admite letras, números, guiones y guiones bajos; máximo 80 caracteres."],
     duplicate_fee_template_id: ["费用编号重复，请为新增费用使用不同编号。", "Hay identificadores de cargo duplicados."],
+    invalid_fee_template_code: ["官方费用代码最多 100 字符，不能包含换行或控制字符；尚未确认可留空。", "El código oficial admite hasta 100 caracteres, sin saltos de línea ni caracteres de control; puede quedar vacío."],
     invalid_fee_template_label: ["每项费用至少填写中文或英文名称，每个名称最多 200 字符。", "Cada cargo requiere un nombre chino o inglés de hasta 200 caracteres."],
     invalid_fee_template_category: ["请选择有效的费用分组。", "Selecciona un grupo de cargos válido."],
     invalid_fee_template_currency: ["费用币种只能为 USD 或 MXN。", "La moneda del cargo debe ser USD o MXN."],
@@ -45,7 +48,10 @@ function quoteConfigErrorMessage(code, language) {
     invalid_fee_template_section: ["请选择墨西哥段或非墨西哥段。", "Selecciona la sección México o fuera de México."],
     invalid_fee_template_enabled: ["请选择费用的启用状态。", "Selecciona el estado del cargo."],
     invalid_fee_template_selection: ["请选择报价时的添加方式。", "Selecciona cómo se agrega el cargo a la cotización."],
-    invalid_fee_template_cargo_types: ["适用装载方式只能填写 FCL、LCL、BBK，逗号分隔，至少选择一种。", "Indica al menos FCL, LCL o BBK, separados por comas."],
+    invalid_fee_template_cargo_types: ["适用装载方式至少选择一种：FCL、LCL、BBK 或 AIR。", "Selecciona al menos un tipo: FCL, LCL, BBK o AIR."],
+    invalid_cargo_pricing_rules: ["计费规则不完整，请检查 LCL、BBK、AIR 三项后重试。", "Completa las reglas de LCL, BBK y AIR."],
+    invalid_cargo_pricing_method: ["请选择有效的计费方式：原始数值较大者、体积重或手动。", "Selecciona máximo numérico, peso volumétrico o manual."],
+    invalid_cargo_pricing_divisor: ["体积系数必须为大于 0 的数字；选择体积重计费时必须填写。", "El divisor debe ser un número mayor que 0 y es obligatorio al usar peso volumétrico."],
     invalid_fee_template_price: ["价格必须是非负数字，也可以留空。", "El precio debe ser un número no negativo o quedar vacío."],
     invalid_fee_template_price_range: ["价格上限必须是非负数字，并且不低于下限；单一价格请留空上限。", "El precio máximo debe ser numérico y no menor que el mínimo; déjalo vacío para un precio único."],
     invalid_fee_template_quantity: ["默认数量必须是非负数字，也可以留空。", "La cantidad predeterminada debe ser un número no negativo o quedar vacía."],
@@ -86,6 +92,8 @@ function register(app, ctx) {
       feeError: "",
       feeErrorCode: "",
       currencyError: "",
+      cargoPricingRules: normalizeCargoPricingRules(quote.settings.cargoPricingRules),
+      cargoPricingError: "",
       headerOptions: {
         department: QUOTE_DEPARTMENT_OPTIONS,
         transportMode: QUOTE_TRANSPORT_MODE_OPTIONS,
@@ -155,7 +163,27 @@ function register(app, ctx) {
       let cargoError = "";
       let feeError = "";
       let currencyError = "";
+      let cargoPricingError = "";
+      let postedCargoPricingRules;
       let postedCurrencyRows;
+      if (b.cargoPricingRulesPresent === "1") {
+        const types = ensureArray(b.pricing_type);
+        const methods = ensureArray(b.pricing_method);
+        const divisors = ensureArray(b.pricing_divisor);
+        const knownTypes = ["LCL", "BBK", "AIR"];
+        const complete = types.length === knownTypes.length && new Set(types).size === types.length &&
+          types.every((type) => knownTypes.includes(type)) && methods.length === types.length && divisors.length === types.length &&
+          [...methods, ...divisors].every((value) => typeof value === "string");
+        postedCargoPricingRules = Object.fromEntries(knownTypes.map((type) => {
+          const index = types.indexOf(type);
+          return [type, {
+            method: typeof methods[index] === "string" ? methods[index].trim() : "",
+            volumeDivisor: typeof divisors[index] === "string" ? divisors[index].trim() : "",
+          }];
+        }));
+        cargoPricingError = complete ? validateCargoPricingRules(postedCargoPricingRules) : "invalid_cargo_pricing_rules";
+        if (!cargoPricingError) quote.settings.cargoPricingRules = normalizeCargoPricingRules(postedCargoPricingRules);
+      }
       if (b.currencyDefaultsPresent === "1") {
         const categories = ensureArray(b.currency_category);
         const values = ensureArray(b.currency_value);
@@ -173,6 +201,9 @@ function register(app, ctx) {
       }
       if (b.feeTemplatesPresent === "1") {
         const fields = Object.fromEntries(FEE_FORM_FIELDS.map((field) => [field, ensureArray(b[`fee_${field}`])]));
+        // An older form may omit official codes entirely. Keep its saved codes;
+        // current forms submit blank explicitly when a code is not yet known.
+        const codes = b.fee_code === undefined ? null : ensureArray(b.fee_code);
         const previous = new Map((quote.settings.feeTemplates || []).map((entry) => [entry.id, entry]));
         const text = (field, index) => typeof fields[field][index] === "string" ? fields[field][index].trim() : "";
         const rows = fields.id.map((_id, index) => {
@@ -185,7 +216,7 @@ function register(app, ctx) {
           return {
             ...stored,
             id, category, currency,
-            code: stored.code || id.toUpperCase().replace(/-/g, "_"),
+            code: codes ? codes[index] : (stored.code || ""),
             chargeKind: text("chargeKind", index), section: text("section", index),
             conceptEn: text("en", index), conceptZh: text("zh", index), conceptEs: text("es", index),
             unit: text("unit", index), defaultQuantity: text("unit", index), unitOfMeasure: text("uom", index),
@@ -197,7 +228,7 @@ function register(app, ctx) {
           };
         });
         feeError = validateQuoteFeeTemplates(rows);
-        if (FEE_FORM_FIELDS.some((field) => fields[field].length !== fields.id.length || fields[field].some((value) => typeof value !== "string"))) {
+        if ((codes && (codes.length !== fields.id.length || codes.some((value) => typeof value !== "string"))) || FEE_FORM_FIELDS.some((field) => fields[field].length !== fields.id.length || fields[field].some((value) => typeof value !== "string"))) {
           feeError = "invalid_fee_templates";
         } else if (fields.active.some((value) => !["0", "1"].includes(value))) {
           feeError = "invalid_fee_template_enabled";
@@ -251,13 +282,15 @@ function register(app, ctx) {
           zh: String(zhs[i] || "").trim(),
         }))
         .filter((n) => n.en || n.zh || n.es);
-      if (cargoError || feeError || currencyError) {
+      if (cargoError || feeError || currencyError || cargoPricingError) {
         res.status(400);
         return renderQuoteSettings(req, res, quote, {
           cargoError: cargoError ? req.t(`quote.${cargoError}`) : "",
           feeError: feeError ? quoteConfigErrorMessage(feeError, req.language) : "",
           feeErrorCode: feeError,
           currencyError: currencyError ? quoteConfigErrorMessage(currencyError, req.language) : "",
+          cargoPricingError: cargoPricingError ? quoteConfigErrorMessage(cargoPricingError, req.language) : "",
+          ...(cargoPricingError ? { cargoPricingRules: postedCargoPricingRules } : {}),
           postedCurrencyRows,
           storedCargoCodes,
         });

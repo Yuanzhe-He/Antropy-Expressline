@@ -49,9 +49,9 @@
 .quote-shell table.quote-table input:not([type="checkbox"]):not([type="hidden"]), .quote-shell table.quote-table select { min-height: 31px; padding: .34rem .35rem; font-size: .74rem; }
 .quote-shell table[data-quote-table] { min-width: 1260px; }
 .quote-shell table[data-quote-table] td:nth-child(1) { width: 115px; }
-.quote-shell table[data-quote-table] td:nth-child(2) { width: 135px; }
-.quote-shell table[data-quote-table] td:nth-child(3) { min-width: 180px; }
-.quote-shell table[data-quote-table] td:nth-child(4) { width: 100px; }
+.quote-shell table[data-quote-table] td:nth-child(2) { width: 100px; }
+.quote-shell table[data-quote-table] td:nth-child(3) { width: 135px; }
+.quote-shell table[data-quote-table] td:nth-child(4) { min-width: 180px; }
 .quote-shell table[data-quote-table] td:nth-child(5) { width: 67px; }
 .quote-shell table[data-quote-table] td:nth-child(6) { width: 85px; }
 .quote-shell table[data-quote-table] td:nth-child(7) { width: 92px; }
@@ -84,6 +84,12 @@
 .quote-shell .quote-cargo-table td { vertical-align: middle; }
 .quote-shell .quote-package-actions .quote-field { width: 180px; }
 .quote-shell .quote-package-actions button { margin-right: auto; }
+.quote-shell .quote-method-grid { max-width: 850px; margin-bottom: .6rem; }
+.quote-shell .quote-draft-actions { margin: 0 0 1rem; padding-bottom: .8rem; border-bottom: 1px solid var(--quote-line); }
+.quote-shell .quote-draft-actions .quote-field { flex: 0 1 360px; }
+.quote-shell .quote-output-toggle { display: flex; align-items: start; gap: .55rem; font-size: .8rem; padding-top: .2rem; }
+.quote-shell .quote-output-toggle span { display: grid; gap: .35rem; }
+.quote-shell .quote-output-toggle small { color: var(--quote-muted); font-size: .73rem; line-height: 1.45; }
 .quote-shell .quote-pricing-result { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem 1.2rem; margin-top: .8rem; padding: .7rem .8rem; background: var(--quote-input); border-radius: 6px; font-size: .8rem; }
 .quote-shell .quote-pricing-result strong { font-variant-numeric: tabular-nums; }
 .quote-shell .quote-pricing-result .quote-hint { flex-basis: 100%; margin: 0; }

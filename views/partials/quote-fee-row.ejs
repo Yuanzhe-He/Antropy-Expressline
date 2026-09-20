@@ -4,6 +4,7 @@
     <option value="foreign" <%= row.section === 'foreign' ? 'selected' : '' %>><%= t('quote.sectionForeign') %></option>
     <option value="mexico" <%= row.section !== 'foreign' ? 'selected' : '' %>><%= t('quote.sectionMexico') %></option>
   </select></td>
+  <td><input type="text" name="li_code[]" value="<%= row.code || '' %>" list="fee-codes" data-quote-code aria-label="<%= t('quote.colCode') %>" /></td>
   <td><select name="li_category[]" aria-label="<%= t('quote.colCategory') %>">
     <% categoryOptions.forEach((cat) => { %><option value="<%= cat %>" <%= row.category === cat ? 'selected' : '' %>><%= cat %></option><% }) %>
   </select></td>
@@ -15,12 +16,8 @@
       <% }) %>
     </details>
   </td>
-  <td><input type="text" name="li_code[]" value="<%= row.code || '' %>" list="fee-codes" data-quote-code aria-label="<%= t('quote.colCode') %>" /></td>
   <td><input type="number" min="0" step="any" name="li_unit[]" value="<%= row.unit == null ? '' : row.unit %>" data-quote-unit aria-label="<%= t('quote.colQty') %>" /></td>
-  <td><select name="li_uom[]" aria-label="<%= t('quote.colUom') %>">
-    <option value=""></option>
-    <% uomOptions.forEach((u) => { %><option value="<%= u %>" <%= row.unitOfMeasure === u ? 'selected' : '' %>><%= t('quote.uom_' + u) %></option><% }) %>
-  </select></td>
+  <td><input type="text" name="li_uom[]" value="<%= row.unitOfMeasure || '' %>" list="quote-fee-units" aria-label="<%= t('quote.colUom') %>" placeholder="shipment" /></td>
   <td class="quote-price-cell">
     <input type="number" min="0" step="0.01" name="li_unitPrice[]" value="<%= row.unitPrice == null ? '' : row.unitPrice %>" data-quote-price <%= row.isAtCost ? 'readonly' : '' %> aria-label="<%= t('quote.colUnitPrice') %>" />
     <input type="hidden" name="li_unitPriceMax[]" value="<%= row.unitPriceMax == null ? '' : row.unitPriceMax %>" data-quote-price-max />

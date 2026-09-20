@@ -7,6 +7,9 @@
   };
   const labels = readJson('quote-ui-labels', {});
   const settings = readJson('quote-fee-settings', { currencyDefaults: {}, templates: [] });
+  const cargoStateData = readJson('quote-cargo-state-data', { states: {}, rules: {} });
+  const cargoStates = { ...(cargoStateData.states || {}) };
+  const cargoTypes = ['FCL', 'LCL', 'BBK', 'AIR'];
   const feeByCode = new Map(readJson('quote-fee-codes', []).map((fee) => [fee.code, fee]));
   const modeSelect = form.querySelector('[data-quote-mode]');
   const cargoSelect = form.querySelector('[data-cargo-type]');
@@ -25,18 +28,78 @@
   let cargoCalculation = null;
   let initialSubtotalBasis = null;
   const removedTemplateIds = new Set();
+  let activeCargoType = cargoSelect?.value || '';
 
-  function collectCargoPricing() {
+  function collectCargoPricing(type = activeCargoType) {
     return {
-      containers: [...form.querySelectorAll('[data-cargo-container-row]')].map((row) => ({
+      containers: type === 'FCL' ? [...form.querySelectorAll('[data-cargo-container-row]')].map((row) => ({
         containerType: val(row, 'cargo_containerType[]'), quantity: val(row, 'cargo_containerQuantity[]'),
         unitPrice: val(row, 'cargo_containerPrice[]'), currency: val(row, 'cargo_containerCurrency[]'),
-      })),
-      packages: [...form.querySelectorAll('[data-cargo-package-row]')].map((row) => ({
+      })) : [],
+      packages: type !== 'FCL' ? [...form.querySelectorAll('[data-cargo-package-row]')].map((row) => ({
         lengthCm: val(row, 'cargo_lengthCm[]'), widthCm: val(row, 'cargo_widthCm[]'), heightCm: val(row, 'cargo_heightCm[]'),
         packageCount: val(row, 'cargo_packageCount[]'), weightKg: val(row, 'cargo_weightKg[]'), weightCount: val(row, 'cargo_weightCount[]'),
-      })), unitPrice: val(form, 'cargo_unitPrice'), currency: val(form, 'cargo_currency'),
+      })) : [],
+      unitPrice: type === 'FCL' ? '' : val(form, 'cargo_unitPrice'),
+      currency: type === 'FCL' ? '' : val(form, 'cargo_currency'),
+      method: type === 'FCL' ? 'raw_max' : val(form, 'cargo_method'),
+      manualChargeable: type === 'FCL' ? '' : val(form, 'cargo_manualChargeable'),
+      volumeDivisor: type === 'FCL' ? '' : val(form, 'cargo_volumeDivisor'),
+      ...(Array.isArray(cargoStates[type]?.validationErrors) ? { validationErrors: [...cargoStates[type].validationErrors] } : {}),
     };
+  }
+
+  function saveCargoState() {
+    if (cargoTypes.includes(activeCargoType)) cargoStates[activeCargoType] = collectCargoPricing(activeCargoType);
+    // These type markers describe current local errors. Rebuild them instead
+    // of propagating an old context error into otherwise valid modalities.
+    const cacheErrors = (Array.isArray(cargoStates._validationErrors) ? cargoStates._validationErrors : []).filter((error) => !/^cargoPricingByType:(FCL|LCL|BBK|AIR):invalid_state$/.test(error));
+    for (const type of cargoTypes) {
+      const state = cargoStates[type];
+      if (!Array.isArray(state?.validationErrors)) continue;
+      state.validationErrors = state.validationErrors.filter((error) => !error.startsWith('cargoPricingByType:'));
+      if (state.validationErrors.some((error) => error.startsWith('pricing:') || /:(?:invalid_rows|too_many_rows|invalid_row)$/.test(error))) cacheErrors.push(`cargoPricingByType:${type}:invalid_state`);
+    }
+    if (cacheErrors.length || cargoStates._validationErrors) cargoStates._validationErrors = [...new Set(cacheErrors)];
+    const field = byName(form, 'cargoPricingByType');
+    if (field) field.value = JSON.stringify(cargoStates);
+  }
+
+  function newCargoState(type) {
+    const rule = cargoStateData.rules?.[type] || {};
+    return { containers: [{ currency: currencyDefault('TRANSPORTATION') }], packages: [{}],
+      unitPrice: '', currency: currencyDefault('TRANSPORTATION'), method: rule.method || (type === 'AIR' ? 'manual' : 'raw_max'),
+      volumeDivisor: rule.volumeDivisor ?? '', manualChargeable: '' };
+  }
+
+  function clearCargoFieldErrors(input) {
+    const state = cargoStates[activeCargoType];
+    if (!Array.isArray(state?.validationErrors) || !input?.name) return;
+    let field = input.name.replace(/^cargo_/, '').replace(/\[\]$/, '');
+    const container = input.closest('[data-cargo-container-row]');
+    const pkg = input.closest('[data-cargo-package-row]');
+    if (container) {
+      field = { containerType: 'containerType', containerQuantity: 'quantity', containerPrice: 'unitPrice', containerCurrency: 'currency' }[field];
+      const index = [...container.parentNode.querySelectorAll('[data-cargo-container-row]')].indexOf(container);
+      field = `containers.${index}.${field}`;
+    } else if (pkg) {
+      const index = [...pkg.parentNode.querySelectorAll('[data-cargo-package-row]')].indexOf(pkg);
+      field = `packages.${index}.${field}`;
+    }
+    state.validationErrors = state.validationErrors.filter((error) => !error.startsWith(field + ':'));
+  }
+
+  function clearCargoRowErrors(kind, index, removed) {
+    const state = cargoStates[activeCargoType];
+    if (!Array.isArray(state?.validationErrors)) return;
+    const prefix = kind === 'container' ? 'containers' : 'packages';
+    state.validationErrors = state.validationErrors.flatMap((error) => {
+      const match = error.match(/^(containers|packages)\.(\d+)([.:].*)$/);
+      if (!match || match[1] !== prefix) return [error];
+      const rowIndex = Number(match[2]);
+      if (rowIndex === index) return [];
+      return [removed && rowIndex > index ? `${prefix}.${rowIndex - 1}${match[3]}` : error];
+    });
   }
 
   function appendResult(label, amount, suffix = '') {
@@ -50,15 +113,33 @@
 
   function recomputeCargo() {
     const cargoType = cargoSelect?.value || '';
+    const method = val(form, 'cargo_method');
+    saveCargoState();
+    const pricing = collectCargoPricing();
+    const cacheErrors = Array.isArray(cargoStates._validationErrors) ? cargoStates._validationErrors : [];
+    // Map-level failures block the preview, but are not copied into individual
+    // states: correcting one broken modality must not corrupt another one.
+    const calculationPricing = cacheErrors.length ? { ...pricing, validationErrors: [...new Set([...(pricing.validationErrors || []), ...cacheErrors])] } : pricing;
+    const attempted = window.QuotePricing?.cargoPricingAttempted
+      ? window.QuotePricing.cargoPricingAttempted(cargoType, calculationPricing)
+      : (cargoType === 'FCL' ? pricing.containers.some((row) => String(row.unitPrice).trim() !== '') : String(pricing.unitPrice).trim() !== '');
+    const title = form.querySelector('[data-cargo-package-title]');
+    if (title) title.textContent = labels.cargoTitles?.[cargoType] || cargoType;
+    const typeHint = form.querySelector('[data-cargo-type-hint]');
+    if (typeHint) typeHint.textContent = labels.cargoTypeHints?.[cargoType] || '';
+    const methodHint = form.querySelector('[data-cargo-method-hint]');
+    if (methodHint) methodHint.textContent = labels.cargoMethodHints?.[method] || '';
+    form.querySelectorAll('[data-cargo-method-field]').forEach((field) => { field.hidden = field.dataset.cargoMethodField !== method; });
     form.querySelectorAll('[data-cargo-panel]').forEach((panel) => {
-      panel.hidden = panel.dataset.cargoPanel === 'FCL' ? cargoType !== 'FCL' : !['LCL', 'BBK'].includes(cargoType);
-      // Inactive inputs still submit so switching modes never discards work.
-      // Remove only native constraints there; the server validates the active mode.
+      panel.hidden = panel.dataset.cargoPanel === 'FCL' ? cargoType !== 'FCL' : !['LCL', 'BBK', 'AIR'].includes(cargoType);
+      // The JSON field preserves inactive modes. Only the active legacy inputs
+      // submit, so hidden invalid numbers cannot block a different workflow.
+      panel.querySelectorAll('input,select').forEach((input) => { input.disabled = panel.hidden; });
       panel.querySelectorAll('input[type="number"]').forEach((input) => {
         for (const attribute of ['min', 'step']) {
           const savedKey = attribute === 'min' ? 'cargoMin' : 'cargoStep';
           if (input.dataset[savedKey] == null) input.dataset[savedKey] = input.getAttribute(attribute) || '';
-          if (panel.hidden) {
+          if (panel.hidden || !attempted || input.closest('[data-cargo-method-field][hidden]') || (method === 'manual' && input.closest('[data-cargo-package-row]'))) {
             if (attribute === 'step') input.setAttribute('step', 'any');
             else input.removeAttribute(attribute);
           }
@@ -66,15 +147,34 @@
         }
       });
     });
+    const savedErrors = cargoStates[cargoType]?.validationErrors || [];
+    const typeCacheError = cacheErrors.includes(`cargoPricingByType:${cargoType}:invalid_state`);
+    const globalCacheError = cacheErrors.some((error) => error !== `cargoPricingByType:${cargoType}:invalid_state`);
+    const recovery = form.querySelector('[data-cargo-recovery]');
+    if (recovery) {
+      recovery.hidden = !savedErrors.length && !typeCacheError && !globalCacheError;
+      const structural = savedErrors.some((error) => /:(?:invalid_rows|too_many_rows|invalid_row|invalid_object)$/.test(error));
+      recovery.querySelector('[data-cargo-recovery-message]').textContent = globalCacheError ? labels.cargoInvalidCache : (structural || typeCacheError ? labels.cargoInvalidRows : labels.cargoInvalidSaved);
+      if (!globalCacheError && !structural && !typeCacheError) {
+        const fields = [...new Set(savedErrors.map((error) => {
+          const path = error.split(':')[0];
+          const rowField = path.match(/^(containers|packages)\.(\d+)\.(\w+)$/);
+          if (rowField && labels.cargoFieldNames?.[rowField[3]]) return `${rowField[1] === 'containers' ? labels.cargoContainerRow : labels.cargoPackageRow} ${Number(rowField[2]) + 1} · ${labels.cargoFieldNames[rowField[3]]}`;
+          return labels.cargoFieldNames?.[path] || '';
+        }).filter(Boolean))];
+        if (fields.length) recovery.querySelector('[data-cargo-recovery-message]').append(document.createTextNode(` ${labels.cargoCheckFields}: ${fields.slice(0, 6).join('、')}${fields.length > 6 ? '…' : ''}`));
+      }
+      recovery.querySelector('[data-cargo-reset]').hidden = globalCacheError;
+      recovery.querySelector('[data-cargo-reset-all]').hidden = !globalCacheError;
+    }
     if (!pricingResult) return;
     pricingResult.replaceChildren();
     pricingResult.hidden = !cargoType;
     cargoCalculation = null;
     if (!cargoType || !window.QuotePricing) return;
-    const pricing = collectCargoPricing();
-    cargoCalculation = window.QuotePricing.calculateCargoPricing(cargoType, pricing);
+    cargoCalculation = window.QuotePricing.calculateCargoPricing(cargoType, calculationPricing);
     pricingResult.dataset.valid = String(cargoCalculation.valid);
-    if (['LCL', 'BBK'].includes(cargoType)) {
+    if (['LCL', 'BBK', 'AIR'].includes(cargoType)) {
       if (cargoCalculation.totalWeightKg != null) appendResult(labels.weight, fmtQty(cargoCalculation.totalWeightKg), 'kg');
       if (cargoCalculation.totalVolumeCm3 != null) appendResult(labels.volume, fmtQty(cargoCalculation.totalVolumeCm3), 'cm³');
       if (cargoCalculation.chargeableValue != null) appendResult(labels.chargeable, fmtQty(cargoCalculation.chargeableValue));
@@ -92,7 +192,7 @@
     const hint = document.createElement('p');
     hint.className = 'quote-hint';
     const hasAmounts = cargoCalculation.valid && (cargoCalculation.subtotals || []).length > 0;
-    hint.textContent = hasAmounts ? labels.cargoIncluded : (cargoCalculation.attempted === false ? labels.emptyCargo : labels.pending);
+    hint.textContent = hasAmounts ? labels.cargoIncluded : (!attempted ? labels.emptyCargo : labels.pending);
     pricingResult.append(hint);
   }
 
@@ -100,7 +200,8 @@
     const modes = val(row, 'li_appliesTo[]').split(',').map((c) => c.trim()).filter(Boolean);
     const activeCargo = cargoSelect?.value || '';
     const geo = val(row, 'li_section[]') !== 'foreign' || modeSelect?.value === 'ocean_mexico';
-    return geo && (!activeCargo || !modes.length || modes.includes(activeCargo));
+    const historical = activeCargo && activeCargo === cargoStateData.historicalCargoType && !cargoTypes.includes(activeCargo);
+    return geo && (historical || !activeCargo || !modes.length || modes.includes(activeCargo));
   }
 
   function recomputeRow(row) {
@@ -267,19 +368,56 @@
   form.querySelectorAll('[data-quote-row]').forEach(wireRow);
   form.querySelectorAll('[data-quote-add]').forEach((button) => button.addEventListener('click', () => {
     const kind = button.dataset.quoteAdd === 'contingent' ? 'contingent' : 'fixed';
-    const row = buildRow(kind, { unit: 1 });
+    const row = buildRow(kind, { unit: 1, appliesTo: cargoTypes.includes(activeCargoType) ? [activeCargoType] : cargoTypes });
     if (!row) return;
     form.querySelector(`[data-quote-rows="${kind}"]`).append(row);
     wireRow(row); recomputeAll();
     row.querySelector('.concept-cell input[type="text"]')?.focus();
   }));
   modeSelect?.addEventListener('change', () => { seedForeignTemplates(); recomputeAll(); });
-  cargoSelect?.addEventListener('change', recomputeAll);
+  cargoSelect?.addEventListener('change', () => {
+    saveCargoState();
+    activeCargoType = cargoSelect.value;
+    if (cargoTypes.includes(activeCargoType)) restoreCargoState(activeCargoType, cargoStates[activeCargoType] || newCargoState(activeCargoType));
+    if (cargoTypes.includes(activeCargoType)) {
+      const department = byName(form, 'department');
+      const transportMode = byName(form, 'transportMode');
+      if (department) department.value = activeCargoType === 'AIR' ? 'AIR' : 'OCEAN';
+      if (transportMode) transportMode.value = activeCargoType === 'AIR' ? 'AIR' : 'SEA';
+    }
+    recomputeAll();
+  });
 
   const cargoRows = {
     container: { list: form.querySelector('[data-cargo-container-rows]'), selector: '[data-cargo-container-row]' },
     package: { list: form.querySelector('[data-cargo-package-rows]'), selector: '[data-cargo-package-row]' },
   };
+  const cargoRowTemplates = Object.fromEntries(Object.entries(cargoRows).map(([kind, collection]) => [kind, collection.list?.querySelector(collection.selector)?.cloneNode(true)]));
+  function restoreCargoState(type, state) {
+    const kind = type === 'FCL' ? 'container' : 'package';
+    const collection = cargoRows[kind];
+    const fields = kind === 'container'
+      ? { containerType: 'cargo_containerType[]', quantity: 'cargo_containerQuantity[]', unitPrice: 'cargo_containerPrice[]', currency: 'cargo_containerCurrency[]' }
+      : Object.fromEntries(['lengthCm', 'widthCm', 'heightCm', 'packageCount', 'weightKg', 'weightCount'].map((key) => [key, `cargo_${key}[]`]));
+    const entries = state[kind === 'container' ? 'containers' : 'packages'];
+    const rows = Array.isArray(entries) && entries.length ? entries : [kind === 'container' ? { currency: state.currency || currencyDefault('TRANSPORTATION') } : {}];
+    if (collection.list && cargoRowTemplates[kind]) {
+      collection.list.replaceChildren(...rows.map((entry) => {
+        const row = cargoRowTemplates[kind].cloneNode(true);
+        for (const [key, name] of Object.entries(fields)) byName(row, name).value = entry[key] ?? '';
+        const total = row.querySelector('[data-cargo-container-total]');
+        if (total) total.textContent = '—';
+        return row;
+      }));
+    }
+    if (type !== 'FCL') {
+      for (const key of ['unitPrice', 'currency', 'manualChargeable', 'volumeDivisor']) {
+        const field = byName(form, `cargo_${key}`);
+        if (field) field.value = state[key] ?? '';
+      }
+      byName(form, 'cargo_method').value = state.method || (type === 'AIR' ? 'manual' : 'raw_max');
+    }
+  }
   function clearCargoRow(row) {
     row.querySelectorAll('input,select').forEach((input) => { input.value = ''; });
     const currency = byName(row, 'cargo_containerCurrency[]');
@@ -293,21 +431,50 @@
     if (!row) return;
     clearCargoRow(row); collection.list.append(row); recomputeAll(); row.querySelector('input')?.focus();
   }));
-  Object.values(cargoRows).forEach(({ list, selector }) => {
-    list?.addEventListener('input', recomputeAll);
-    list?.addEventListener('change', recomputeAll);
+  Object.entries(cargoRows).forEach(([kind, { list, selector }]) => {
+    const update = (event) => { clearCargoFieldErrors(event.target); recomputeAll(); };
+    list?.addEventListener('input', update);
+    list?.addEventListener('change', update);
     list?.addEventListener('click', (event) => {
       const button = event.target.closest('[data-cargo-remove]');
       if (!button) return;
       const row = button.closest(selector);
-      if (list.querySelectorAll(selector).length > 1) row.remove(); else clearCargoRow(row);
+      const rows = [...list.querySelectorAll(selector)];
+      clearCargoRowErrors(kind, rows.indexOf(row), rows.length > 1);
+      if (rows.length > 1) row.remove(); else clearCargoRow(row);
       recomputeAll();
     });
   });
-  ['cargo_unitPrice', 'cargo_currency'].forEach((name) => {
-    byName(form, name)?.addEventListener('input', recomputeAll);
-    byName(form, name)?.addEventListener('change', recomputeAll);
+  ['cargo_unitPrice', 'cargo_currency', 'cargo_method', 'cargo_manualChargeable', 'cargo_volumeDivisor'].forEach((name) => {
+    const update = (event) => { clearCargoFieldErrors(event.target); recomputeAll(); };
+    byName(form, name)?.addEventListener('input', update);
+    byName(form, name)?.addEventListener('change', update);
   });
+  form.querySelector('[data-cargo-reset]')?.addEventListener('click', () => {
+    if (!cargoTypes.includes(activeCargoType)) return;
+    cargoStates[activeCargoType] = newCargoState(activeCargoType);
+    if (Array.isArray(cargoStates._validationErrors)) cargoStates._validationErrors = cargoStates._validationErrors.filter((error) => error !== `cargoPricingByType:${activeCargoType}:invalid_state`);
+    for (const type of cargoTypes) {
+      if (Array.isArray(cargoStates[type]?.validationErrors)) cargoStates[type].validationErrors = cargoStates[type].validationErrors.filter((error) => error !== `cargoPricingByType:${activeCargoType}:invalid_state`);
+    }
+    restoreCargoState(activeCargoType, cargoStates[activeCargoType]);
+    recomputeAll();
+  });
+  form.querySelector('[data-cargo-reset-all]')?.addEventListener('click', () => {
+    Object.keys(cargoStates).forEach((key) => { delete cargoStates[key]; });
+    if (cargoTypes.includes(activeCargoType)) {
+      cargoStates[activeCargoType] = newCargoState(activeCargoType);
+      restoreCargoState(activeCargoType, cargoStates[activeCargoType]);
+    }
+    recomputeAll();
+  });
+  const draftPicker = form.querySelector('[data-quote-draft-picker]');
+  const openDraft = form.querySelector('[data-quote-open-draft]');
+  draftPicker?.addEventListener('change', () => { if (openDraft) openDraft.disabled = !draftPicker.value; });
+  openDraft?.addEventListener('click', () => {
+    if (draftPicker?.value) window.location.assign('/workbench/quote?draft=' + encodeURIComponent(draftPicker.value));
+  });
+  form.addEventListener('submit', saveCargoState);
 
   const gdRows = form.querySelector('[data-gd-rows]');
   form.querySelector('[data-gd-add]')?.addEventListener('click', () => {
@@ -338,5 +505,6 @@
       remarkList.insertBefore(dragging, event.clientY > rect.top + rect.height / 2 ? over.nextSibling : over);
     });
   }
+  if (cargoTypes.includes(activeCargoType) && cargoStates[activeCargoType]) restoreCargoState(activeCargoType, cargoStates[activeCargoType]);
   recomputeAll();
 })();

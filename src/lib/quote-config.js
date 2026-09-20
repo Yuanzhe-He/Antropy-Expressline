@@ -1,6 +1,6 @@
 "use strict";
 
-const QUOTE_CONFIG_VERSION = 1;
+const QUOTE_CONFIG_VERSION = 2;
 const QUOTE_FEE_CATEGORIES = Object.freeze([
   "OCEAN FREIGHT", "PORT OF ORIGIN", "SHIPPING LINE", "PORT FEES",
   "CUSTOMS CLEARANCE", "TRANSPORTATION", "DUTY",
@@ -9,7 +9,12 @@ const DEFAULT_CURRENCY_BY_CATEGORY = Object.freeze(Object.fromEntries(
   QUOTE_FEE_CATEGORIES.map((category) => [category, category === "SHIPPING LINE" ? "USD" : "MXN"]),
 ));
 const CURRENCIES = ["USD", "MXN"];
-const CARGO_TYPES = ["FCL", "LCL", "BBK"];
+const CARGO_TYPES = ["FCL", "LCL", "BBK", "AIR"];
+const CARGO_PRICING_TYPES = Object.freeze(["LCL", "BBK", "AIR"]);
+const CARGO_PRICING_METHODS = Object.freeze(["raw_max", "volumetric", "manual"]);
+const DEFAULT_CARGO_PRICING_RULES = Object.freeze(Object.fromEntries(
+  CARGO_PRICING_TYPES.map((type) => [type, Object.freeze({ method: type === "AIR" ? "manual" : "raw_max", volumeDivisor: null })]),
+));
 const MAX_ROWS = 100;
 const SOURCE_NOTE = "User screenshot received 2026-09-13: CY-Door 港到门 / 正清墨西哥清关送货, 40HQ column. Reference prices and conditions pending Bill review; not a carrier tariff.";
 
@@ -22,11 +27,11 @@ function getQuoteDefaultCurrency(category, settings = {}) {
 
 function template(id, category, conceptEn, conceptZh, price, currency, unitOfMeasure, remark, extra = {}) {
   const row = {
-    id, code: id.toUpperCase().replace(/-/g, "_"), category, conceptEn, conceptZh,
+    id, code: "", category, conceptEn, conceptZh,
     conceptEs: "", section: "mexico", unit: 1, defaultQuantity: 1,
     unitOfMeasure, unitPrice: price, unitPriceMax: null, currency,
     remark, isAtCost: false, source: "manual", calcRef: null,
-    chargeKind: "fixed", appliesTo: unitOfMeasure === "container" ? ["FCL"] : [...CARGO_TYPES],
+    chargeKind: "fixed", appliesTo: ["FCL"],
     enabled: true, selectionRequired: false, sourceNote: SOURCE_NOTE,
     ...extra,
   };
@@ -40,7 +45,7 @@ function template(id, category, conceptEn, conceptZh, price, currency, unitOfMea
 const DEFAULT_QUOTE_FEE_TEMPLATES = Object.freeze([
   template("pre-inspection", "CUSTOMS CLEARANCE", "Pre-inspection Fee", "预检费", 350, "USD", "container",
     "Recommended, speeds up customs clearance. 建议做，加速通关。", { selectionRequired: true }),
-  template("delivery-order", "SHIPPING LINE", "Delivery Order Fee", "船公司 LOCAL", 190, "USD", "container",
+  template("delivery-order", "SHIPPING LINE", "Shipping line local charge", "船公司 LOCAL", 190, "USD", "container",
     "Actual cost, shipping line invoice to be provided. 实报实销，提供船司发票。"),
   template("destination-handling", "SHIPPING LINE", "Destination Handling Fee", "换单费", 2000, "MXN", "bl",
     "Including AMS fee (AMS filing to the Mexican tax authority, not the AMS filed by origin booking). 含 AMS 费用，这个 AMS 不是国内订舱发的 AMS，是向墨西哥税局申报的 AMS。"),
@@ -82,6 +87,34 @@ function numeric(value) {
   if (typeof value === "string" && !/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(value.trim())) return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed >= 0 && parsed <= Number.MAX_SAFE_INTEGER / 100 ? parsed : null;
+}
+
+function normalizeCargoPricingRules(value) {
+  const input = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  return Object.fromEntries(CARGO_PRICING_TYPES.map((type) => {
+    const entry = input[type] && typeof input[type] === "object" && !Array.isArray(input[type]) ? input[type] : {};
+    const divisor = numeric(entry.volumeDivisor);
+    return [type, {
+      method: CARGO_PRICING_METHODS.includes(entry.method) ? entry.method : DEFAULT_CARGO_PRICING_RULES[type].method,
+      volumeDivisor: divisor !== null && divisor > 0 ? divisor : null,
+    }];
+  }));
+}
+
+function validateCargoPricingRules(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value) ||
+    Object.keys(value).length !== CARGO_PRICING_TYPES.length ||
+    Object.keys(value).some((type) => !CARGO_PRICING_TYPES.includes(type))) return "invalid_cargo_pricing_rules";
+  for (const type of CARGO_PRICING_TYPES) {
+    const entry = value[type];
+    if (!entry || typeof entry !== "object" || Array.isArray(entry) ||
+      Object.keys(entry).some((key) => !["method", "volumeDivisor"].includes(key))) return "invalid_cargo_pricing_rules";
+    if (!CARGO_PRICING_METHODS.includes(entry.method)) return "invalid_cargo_pricing_method";
+    const empty = entry.volumeDivisor === "" || entry.volumeDivisor == null;
+    const divisor = numeric(entry.volumeDivisor);
+    if ((!empty && (divisor === null || divisor <= 0)) || (entry.method === "volumetric" && empty)) return "invalid_cargo_pricing_divisor";
+  }
+  return "";
 }
 
 function normalizeRow(entry) {
@@ -137,6 +170,7 @@ function validateQuoteFeeTemplates(value) {
     if (typeof entry.id !== "string" || !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$/.test(entry.id)) return "invalid_fee_template_id";
     if (ids.has(entry.id)) return "duplicate_fee_template_id";
     ids.add(entry.id);
+    if (entry.code != null && (typeof entry.code !== "string" || entry.code.length > 100 || /[\u0000-\u001f\u007f]/.test(entry.code))) return "invalid_fee_template_code";
     const validLabel = (value) => typeof value === "string" && value.trim().length > 0 && value.trim().length <= 200;
     if (!validLabel(entry.conceptEn) && !validLabel(entry.conceptZh)) return "invalid_fee_template_label";
     if (![entry.conceptEn, entry.conceptZh, entry.conceptEs].every((value) => value == null || (typeof value === "string" && value.length <= 200))) return "invalid_fee_template_label";
@@ -166,6 +200,9 @@ module.exports = {
   DEFAULT_CURRENCY_BY_CATEGORY,
   getQuoteDefaultCurrency,
   DEFAULT_QUOTE_FEE_TEMPLATES,
+  DEFAULT_CARGO_PRICING_RULES,
+  normalizeCargoPricingRules,
+  validateCargoPricingRules,
   normalizeQuoteFeeTemplates,
   validateQuoteFeeTemplates,
 };

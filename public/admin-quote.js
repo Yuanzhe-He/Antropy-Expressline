@@ -47,6 +47,15 @@
   }
   const cargoError = document.querySelector("[data-cargo-error]");
   if (cargoError) cargoError.focus();
+  document.querySelectorAll("[data-cargo-pricing-rule]").forEach((row) => {
+    const method = row.querySelector("[data-pricing-method]");
+    const divisor = row.querySelector("[data-pricing-divisor]");
+    const sync = () => { divisor.required = method.value === "volumetric"; };
+    method.addEventListener("change", sync);
+    sync();
+  });
+  const pricingError = document.querySelector("[data-cargo-pricing-error]");
+  if (pricingError) pricingError.focus();
 
   const rows = document.querySelector("[data-remark-rows]");
   const addBtn = document.querySelector("[data-remark-add]");
