@@ -19,6 +19,7 @@ const {
   QUOTE_CARGO_TYPE_OPTIONS,
 } = require("../lib/quote");
 const { renderQuotePdf } = require("../lib/quote-pdf");
+const { normalizeQuoteType, normalizeRateCardsByType, validateRateCard } = require("../../public/quote-rate-card");
 const { shouldUseDatabase, insertQuoteSnapshot } = require("../lib/db");
 const { requireAuth } = require("../middleware/auth");
 
@@ -117,6 +118,8 @@ function register(app, ctx) {
         draftId: draft.id,
         cargoPricing: draft.header.cargoPricing || {},
         cargoPricingByType: draft.header.cargoPricingByType || (QUOTE_CARGO_TYPE_OPTIONS.includes(draft.header.cargoType) && draft.header.cargoPricing ? { [draft.header.cargoType]: draft.header.cargoPricing } : {}),
+        quoteType: normalizeQuoteType(draft.header.quoteType),
+        rateCardsByType: normalizeRateCardsByType(draft.header.rateCardsByType),
         showTotals: draft.header.showTotals === true,
         outputAudience: draft.header.outputAudience || "customer",
         taxTreatment: draft.header.taxTreatment || "unspecified",
@@ -289,6 +292,18 @@ function register(app, ctx) {
     const quoteModule = getModuleData(shippingData, "quote");
     const formData = buildQuoteFormData(quoteModule, req.body);
     const action = req.body.action || "recompute";
+    if (formData.quoteType === "long_term") {
+      const cardMap = formData.rateCardsByType || {};
+      const card = cardMap[formData.header.cargoType];
+      const errors = [...(cardMap._validationErrors || []), ...(card ? validateRateCard(card) : [])];
+      if (errors.length) {
+        req.flash = { type: "error", message: req.language === "es" ? "Revisa las especificaciones y los precios del tarifario antes de guardar." : "请检查长期报价的规格、币种、单价和区间，再保存。" };
+        res.status(400);
+        return renderQuoteWorkbench(req, res, { moduleKey: "quote", quoteModule, formData,
+          quoteView: assembleQuoteView(quoteModule, formData, shippingData),
+          selectorData: buildQuoteSelectorData(shippingData), feeCodes: loadFeeCodes() });
+      }
+    }
 
     if (action === "pull") {
       formData.lineItems = pullCalculatorValues({
@@ -377,6 +392,15 @@ function register(app, ctx) {
 
     const quoteView = assembleQuoteView(quoteModule, formData, shippingData);
 
+    if (quoteView.quoteType === "long_term" && quoteView.rateCard.errors.length) {
+      req.flash = { type: "error", message: req.language === "es"
+        ? "Selecciona un tipo de carga y captura al menos una tarifa válida. Revisa las especificaciones, monedas y rangos."
+        : "请选择装载方式，并填写至少一项有效的长期单价；检查规格名称、币种和价格区间。" };
+      res.status(400);
+      return renderQuoteWorkbench(req, res, { moduleKey: "quote", quoteModule, formData, quoteView,
+        selectorData: buildQuoteSelectorData(shippingData), feeCodes: loadFeeCodes() });
+    }
+
     // Drafts may retain incomplete inputs; a priced PDF must have a complete,
     // server-validated calculation for the currently selected loading mode.
     if (quoteView.cargoCalculation.attempted && !quoteView.cargoCalculation.valid) {
@@ -421,6 +445,8 @@ function register(app, ctx) {
               showTotals: quoteView.showTotals,
               outputAudience: quoteView.outputAudience,
               taxTreatment: quoteView.taxTreatment,
+              quoteType: quoteView.quoteType,
+              rateCard: quoteView.rateCard,
             },
           });
         } catch (snapshotError) {
@@ -430,7 +456,7 @@ function register(app, ctx) {
 
       const safeName = String(formData.number || "quote").replace(/[^A-Za-z0-9._-]+/g, "_");
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `attachment; filename="${safeName}${quoteView.outputAudience === "internal" ? "-internal" : ""}.pdf"`);
+      res.setHeader("Content-Disposition", `attachment; filename="${safeName}${quoteView.quoteType === "long_term" ? "-rate-card" : ""}${quoteView.outputAudience === "internal" ? "-internal" : ""}.pdf"`);
       return res.send(pdf);
     } catch (error) {
       console.error("quote pdf generation failed", error);

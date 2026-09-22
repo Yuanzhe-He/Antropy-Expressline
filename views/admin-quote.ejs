@@ -1,5 +1,7 @@
 <%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
 
+<link rel="stylesheet" href="/quote-workbench.css?v=20260922-quote-types" />
+
 <section class="page-heading page-heading-card">
   <div class="page-heading-title"><h2><%= t("quote.adminTitle") %></h2></div>
   <div class="module-intro-card"><p><%= t("quote.adminDescription") %></p></div>
@@ -23,6 +25,12 @@
 
 <form method="post" action="/admin/quote/settings" class="stack-form">
   <%- include("partials/quote-fee-settings", { quoteSettings, feeCategories, feeUomOptions, feeError, feeErrorCode, currencyError, postedCurrencyRows: typeof postedCurrencyRows !== 'undefined' ? postedCurrencyRows : undefined, lang }) %>
+  <section class="panel" id="quote-rate-card-defaults">
+    <div class="section-title"><div><p class="eyebrow"><%= lang === 'zh' ? '长期报价模板' : 'Plantillas de tarifas a largo plazo' %></p>
+      <small><%= lang === 'zh' ? '按装载方式维护规格与每单位价格。各项数量固定为 1，规格列互为选择，不相加；保存后仅用于新建长期报价，已有草稿保留原价。' : 'Configure especificaciones y precios por unidad. Cantidad fija de 1; las columnas son alternativas y no se suman. Solo se aplica a nuevos tarifarios.' %></small></div></div>
+    <% if (typeof rateCardError !== 'undefined' && rateCardError) { %><p class="cargo-type-error" role="alert"><%= rateCardError %></p><% } %>
+    <%- include('partials/quote-rate-card-editor', {editorId:'admin-rate-card',language:lang,value:quoteSettings.rateCardDefaults || {},defaults:quoteSettings.rateCardDefaults || {},templates:quoteSettings.feeTemplates || [],adminMode:true,cargoType:'FCL'}) %>
+  </section>
   <section class="panel" id="quote-cargo-types" data-cargo-editor>
     <input type="hidden" name="cargoTypesPresent" value="1" />
     <div class="section-title">
@@ -88,6 +96,8 @@
     <div class="section-title"><div><p class="eyebrow"><%= t("quote.headerDefaultsTitle") %></p><small><%= t("quote.headerDefaultsHint") %></small></div></div>
     <% const hd = quoteSettings.headerDefaults || {}; %>
     <div class="grid-form">
+      <label><span><%= lang === 'zh' ? '默认报价类型' : 'Tipo de cotización predeterminado' %></span>
+        <select name="hd_quoteType"><option value="single" <%= hd.quoteType !== 'long_term' ? 'selected' : '' %>><%= lang === 'zh' ? '单票报价' : 'Cotización por embarque' %></option><option value="long_term" <%= hd.quoteType === 'long_term' ? 'selected' : '' %>><%= lang === 'zh' ? '长期报价' : 'Tarifario a largo plazo' %></option></select></label>
       <label><span><%= t("quote.department") %></span>
         <select name="hd_department"><option value="">—</option>
           <% headerOptions.department.forEach((c) => { %><option value="<%= c %>" <%= hd.department === c ? "selected" : "" %>><%= c %></option><% }) %>
@@ -155,6 +165,8 @@
   </div>
 </template>
 
+<script src="/quote-rate-card.js?v=20260922-quote-types" defer></script>
+<script src="/quote-rate-card-editor.js?v=20260922-quote-types" defer></script>
 <script src="/admin-quote.js" defer></script>
 <script src="/admin-quote-fees.js" defer></script>
 

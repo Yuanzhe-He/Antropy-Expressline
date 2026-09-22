@@ -58,6 +58,7 @@ const {
 const { ensureArray, parseWholeNumber } = require("./rule-engine");
 const { parseCargoPricing, parseCargoPricingByType, cargoCalculation, buildCargoChargeRows, activeQuoteRows, historicalQuoteCargoType } = require("./quote-workflow");
 const { normalizeCargoPricingRules } = require("./quote-config");
+const { normalizeQuoteType, normalizeRateCardsByType, parseRateCardsByType, createDefaultRateCard, buildRateCardView } = require("../../public/quote-rate-card");
 const {
   formatTerminalMixSummary,
   buildTaxOverrides,
@@ -799,6 +800,7 @@ function parseQuoteHeader(body = {}, cargoTypes = normalizeQuoteCargoTypes()) {
     pod: body.pod ?? DEFAULT_QUOTE_HEADER.pod,
     commodity: body.commodity || "",
     cargoType: code,
+    quoteType: normalizeQuoteType(body.quoteType),
     showTotals: body.showTotals === "1" || body.showTotals === "on",
     notesSelectionExplicit: body.quoteFormPresent === "1",
     outputAudience: body.outputAudience === "internal" ? "internal" : "customer",
@@ -899,11 +901,31 @@ function buildQuoteSelectorData(shippingData) {
   };
 }
 
+function quoteRateCardDefaults(quoteModule) {
+  const configured = normalizeRateCardsByType(quoteModule.settings?.rateCardDefaults);
+  const result = { ...configured };
+  for (const type of QUOTE_CARGO_TYPE_OPTIONS) {
+    if (!Object.prototype.hasOwnProperty.call(result, type)) {
+      result[type] = createDefaultRateCard(type, quoteModule.settings?.feeTemplates || []);
+    }
+  }
+  return result;
+}
+
 function assembleQuoteView(quoteModule, formData, shippingData) {
   const quoteSettings = quoteModule.settings || {};
-  const cargo = cargoCalculation(formData.header.cargoType, formData.cargoPricing || formData.header.cargoPricing);
+  const quoteType = normalizeQuoteType(formData.header.quoteType);
+  const isRateCard = quoteType === "long_term";
+  const cardMap = normalizeRateCardsByType(formData.rateCardsByType || formData.header.rateCardsByType);
+  const rateCard = isRateCard ? buildRateCardView(cardMap[formData.header.cargoType] || createDefaultRateCard(formData.header.cargoType, []), formData.quoteMode) : null;
+  if (rateCard) {
+    rateCard.errors = [...new Set([...(rateCard.errors || []), ...(cardMap._validationErrors || [])])];
+    if (!QUOTE_CARGO_TYPE_OPTIONS.includes(formData.header.cargoType)) rateCard.errors.push("cargo_type_required");
+  }
+  const cargo = isRateCard ? { attempted: false, valid: true, rows: [], errors: [] }
+    : cargoCalculation(formData.header.cargoType, formData.cargoPricing || formData.header.cargoPricing);
   const cargoChargeRows = buildCargoChargeRows(formData.header.cargoType, cargo);
-  const activeRows = activeQuoteRows(formData.lineItems, formData.quoteMode, formData.header.cargoType,
+  const activeRows = isRateCard ? [] : activeQuoteRows(formData.lineItems, formData.quoteMode, formData.header.cargoType,
     historicalQuoteCargoType(quoteModule, formData.draftId));
   const totals = computeQuoteTotals([...activeRows, ...cargoChargeRows], {
     exchangeRates: shippingData.exchangeRates,
@@ -922,7 +944,9 @@ function assembleQuoteView(quoteModule, formData, shippingData) {
     date: formData.date,
     header: formData.header,
     quoteMode: formData.quoteMode,
-    showTotals: formData.header.showTotals === true,
+    quoteType,
+    rateCard,
+    showTotals: !isRateCard && formData.header.showTotals === true,
     outputAudience: formData.header.outputAudience === "internal" ? "internal" : "customer",
     taxTreatment: formData.header.taxTreatment || "unspecified",
     rows: totals.rows,
@@ -991,6 +1015,7 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
   // S5: pre-fill a fresh quote's header from the admin default preset.
   if (!hasPostedRows) {
     const hd = quoteModule.settings?.headerDefaults || {};
+    if (body.quoteType === undefined) header.quoteType = normalizeQuoteType(hd.quoteType);
     if (hd.department) header.department = hd.department;
     if (hd.transportMode) header.transportMode = hd.transportMode;
     if (hd.incoterm) header.incoterm = hd.incoterm;
@@ -1016,6 +1041,13 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
   if (QUOTE_CARGO_TYPE_OPTIONS.includes(header.cargoType)) cargoPricingByType[header.cargoType] = cargoPricing;
   header.cargoPricing = cargoPricing;
   header.cargoPricingByType = cargoPricingByType;
+  const rateCardsByType = body.rateCardsByType === undefined
+    ? normalizeRateCardsByType(existingDraft?.header?.rateCardsByType)
+    : parseRateCardsByType(body.rateCardsByType);
+  if (header.quoteType === "long_term" && QUOTE_CARGO_TYPE_OPTIONS.includes(header.cargoType) && !Object.prototype.hasOwnProperty.call(rateCardsByType, header.cargoType)) {
+    rateCardsByType[header.cargoType] = structuredClone(quoteRateCardDefaults(quoteModule)[header.cargoType]);
+  }
+  header.rateCardsByType = rateCardsByType;
   return {
     draftId: typeof body.draftId === "string" ? body.draftId.slice(0, 100) : "",
     number,
@@ -1023,6 +1055,8 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
     header,
     cargoPricing,
     cargoPricingByType,
+    quoteType: header.quoteType,
+    rateCardsByType,
     showTotals: header.showTotals,
     outputAudience: header.outputAudience,
     taxTreatment: header.taxTreatment,
@@ -1051,6 +1085,7 @@ function renderQuoteWorkbench(req, res, payload) {
       selectedModule: moduleMeta,
       quoteSettings: payload.quoteModule.settings,
       pricingRules: normalizeCargoPricingRules(payload.quoteModule.settings?.cargoPricingRules),
+      rateCardDefaults: quoteRateCardDefaults(payload.quoteModule),
       historicalCargoType: historicalQuoteCargoType(payload.quoteModule, payload.formData.draftId),
       drafts: (payload.quoteModule.drafts || []).map(({ id, number, date }) => ({ id, number, date })).reverse(),
       feeCurrencyDefaults: payload.quoteModule.settings?.defaultCurrencyByCategory || {},

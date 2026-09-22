@@ -1,0 +1,20 @@
+<%
+  const rcOptions = typeof options !== 'undefined' ? options : {};
+  const rcId = typeof editorId !== 'undefined' ? editorId : rcOptions.editorId;
+  const rcLang = typeof language !== 'undefined' ? language : (rcOptions.language || 'zh');
+  const rcAdmin = typeof adminMode !== 'undefined' ? adminMode : Boolean(rcOptions.adminMode);
+  const rcValue = typeof value !== 'undefined' ? value : (rcOptions.value || {});
+  const rcDefaults = typeof defaults !== 'undefined' ? defaults : (rcOptions.defaults || {});
+  const rcTemplates = typeof templates !== 'undefined' ? templates : (rcOptions.templates || []);
+  const rcCargo = typeof cargoType !== 'undefined' ? cargoType : (rcOptions.cargoType || '');
+  const rcJson = (input) => JSON.stringify(input == null ? {} : input).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+%>
+<div id="<%= rcId %>" class="quote-shell quote-rate-card-editor" data-rate-card-editor>
+  <input type="hidden" name="<%= rcAdmin ? 'rateCardDefaults' : 'rateCardsByType' %>" value="<%= JSON.stringify(rcValue) %>" data-rate-card-value />
+  <% if (rcAdmin) { %><input type="hidden" name="rateCardDefaultsPresent" value="1" /><% } %>
+  <script type="application/json" data-rate-card-config><%- rcJson({ editorId: rcId, language: rcLang, adminMode: rcAdmin, value: rcValue, defaults: rcDefaults, templates: rcTemplates, cargoType: rcCargo }) %></script>
+  <div data-rate-card-toolbar></div>
+  <p class="quote-hint" data-rate-card-empty></p>
+  <div class="quote-rate-errors" data-rate-card-errors role="status" aria-live="polite" hidden></div>
+  <div data-rate-card-content></div>
+</div>

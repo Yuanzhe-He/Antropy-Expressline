@@ -72,3 +72,8 @@ together.
 ## 2026-09-20 - Customer/internal quote output and explicit totals
 
 The Bill/Chandler meeting and Chandler’s implementation request supersede the provisional June dual-currency VAT block. Customer exports hide internal codes and default to no bottom amount summaries. A saved per-quote checkbox enables original-currency fixed subtotals; optional indicative conversion also obeys that checkbox. Input prices are not automatically grossed up. Tax treatment is explicit (unconfirmed/included/excluded), with editable business clauses retained. Internal exports add the official code immediately after category, without inventing codes for generated transport rows. The exact old provisional dual-currency default clause migrates to neutral wording; independently authored clauses are preserved.
+
+
+## 2026-09-22 - Long-term specification rate cards
+
+The independently selected quote type distinguishes a single-shipment quote from a long-term rate card. Long-term exports use landscape A4 and the existing navy/blue-gray document palette, with up to three specification columns per panel. Quantity is visibly 1 for each fee row. Blank, zero, price range, and AT COST remain distinct; alternative specifications never produce an aggregate shipment price. Customer output omits internal codes; internal output places codes second. Existing single-shipment exports remain portrait and retain the optional bottom summary.

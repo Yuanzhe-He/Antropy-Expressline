@@ -1,6 +1,6 @@
 <%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
 
-<link rel="stylesheet" href="/quote-workbench.css" />
+<link rel="stylesheet" href="/quote-workbench.css?v=20260922-quote-types" />
 <%
   const ql = (zh, es) => lang === 'zh' ? zh : es;
   const pricing = formData.cargoPricing || {};
@@ -17,6 +17,7 @@
   const currentMethod = pricing.method || cargoRules[currentCargoType]?.method || (currentCargoType === 'AIR' ? 'manual' : 'raw_max');
   const outputAudience = formData.outputAudience || 'customer';
   const taxTreatment = formData.taxTreatment || 'unspecified';
+  const quoteType = formData.quoteType || formData.header.quoteType || 'single';
 %>
 
 <section class="page-heading page-heading-card">
@@ -36,6 +37,7 @@
       </div>
     <% } %>
     <div class="quote-grid quote-mode-grid">
+      <label class="quote-field"><span><%= ql('报价类型', 'Tipo de cotización') %></span><select name="quoteType" data-quote-type><option value="single" <%= quoteType !== 'long_term' ? 'selected' : '' %>><%= ql('单票报价', 'Cotización por embarque') %></option><option value="long_term" <%= quoteType === 'long_term' ? 'selected' : '' %>><%= ql('长期报价 / 价格表', 'Cotización de largo plazo / tarifario') %></option></select></label>
       <label class="quote-field"><span><%= t("quote.quoteMode") %></span>
         <select name="quoteMode" data-quote-mode>
           <option value="mexico_only" <%= formData.quoteMode !== "ocean_mexico" ? "selected" : "" %>><%= t("quote.quoteModeMexicoOnly") %></option>
@@ -52,9 +54,9 @@
         <% if (!headerOptions.cargoType.length) { %><small><%= t('quote.cargoTypesEmpty') %></small><% } %>
       </label>
     </div>
-    <p class="quote-hint"><%= ql('先选择报价范围与装载方式，再填写对应的计价信息。切换装载方式会保留已填写的内容。', 'Elija el alcance y la modalidad de carga para completar la tarifa. Cambiar la modalidad conserva los datos capturados.') %></p>
+    <p class="quote-hint"><%= ql('先选择报价类型、范围与装载方式。单票报价按实际数量计价；长期报价列出各规格单价。切换会保留各自内容。', 'Elija tipo, alcance y modalidad. Una cotización por embarque usa cantidades reales; el tarifario muestra precios por especificación. Cambiar conserva los datos de cada tipo.') %></p>
 
-    <div class="quote-pricing-panel" data-cargo-panel="FCL" <%= formData.header.cargoType !== 'FCL' ? 'hidden' : '' %>>
+    <div class="quote-pricing-panel" data-cargo-panel="FCL" <%= quoteType === 'long_term' || formData.header.cargoType !== 'FCL' ? 'hidden' : '' %>>
       <h3><%= ql('FCL · 按箱型与箱量计价', 'FCL · Tarifa por tipo y cantidad de contenedores') %></h3>
       <div class="quote-table-wrap"><table class="quote-table quote-cargo-table">
         <thead><tr><th><%= ql('箱型', 'Tipo de contenedor') %></th><th><%= ql('箱量', 'Cantidad') %></th><th><%= ql('每箱金额', 'Precio por contenedor') %></th><th><%= t('quote.colCurrency') %></th><th><%= t('quote.colTotal') %></th><th></th></tr></thead>
@@ -74,7 +76,7 @@
       <button type="button" class="ghost-button compact-button" data-cargo-add="container"><%= ql('＋ 新增箱型', '＋ Agregar tipo de contenedor') %></button>
     </div>
 
-    <div class="quote-pricing-panel" data-cargo-panel="packages" <%= !['LCL','BBK','AIR'].includes(formData.header.cargoType) ? 'hidden' : '' %>>
+    <div class="quote-pricing-panel" data-cargo-panel="packages" <%= quoteType === 'long_term' || !['LCL','BBK','AIR'].includes(formData.header.cargoType) ? 'hidden' : '' %>>
       <h3 data-cargo-package-title><%= currentCargoType %> · <%= ql('计费信息', 'Datos de la tarifa') %></h3>
       <p class="quote-hint" data-cargo-type-hint></p>
       <div class="quote-grid quote-method-grid">
@@ -105,6 +107,11 @@
     </div>
     <div class="quote-pricing-result" data-cargo-result role="status" aria-live="polite" hidden></div>
     <div class="quote-cargo-recovery" data-cargo-recovery hidden><p class="quote-hint" data-cargo-recovery-message></p><button type="button" class="ghost-button compact-button" data-cargo-reset><%= ql('清空本类型计价', 'Vaciar tarifa de esta modalidad') %></button><button type="button" class="ghost-button compact-button" data-cargo-reset-all hidden><%= ql('清空所有类型的计价数据', 'Vaciar las tarifas de todas las modalidades') %></button></div>
+  </section>
+
+  <section class="quote-card" data-quote-long-term <%= quoteType !== 'long_term' ? 'hidden' : '' %>>
+    <h3><%= ql('长期报价 · 规格价格表', 'Tarifario por especificación') %></h3>
+    <%- include('partials/quote-rate-card-editor', { editorId: 'quote-rate-card', language: lang, value: formData.rateCardsByType || formData.header.rateCardsByType || {}, defaults: typeof rateCardDefaults !== 'undefined' ? rateCardDefaults : {}, templates: typeof quoteTemplates !== 'undefined' ? quoteTemplates : [], adminMode: false, cargoType: currentCargoType }) %>
   </section>
 
   <!-- General Data -->
@@ -179,7 +186,7 @@
       cost; it does not auto-pull from the handover/customs/inland calculators. %>
 
   <% ['fixed','contingent'].forEach((kind) => { %>
-    <section class="quote-card quote-fee-section" data-fee-section="<%= kind %>">
+    <section class="quote-card quote-fee-section" data-fee-section="<%= kind %>" data-quote-single-only <%= quoteType === 'long_term' ? 'hidden' : '' %>>
       <div class="quote-card-heading"><h3><%= kind === 'fixed' ? ql('固定费用', 'Cargos fijos') : ql('发生才收取的费用', 'Cargos si se generan') %></h3><span class="quote-kind-pill"><%= kind === 'fixed' ? ql('计入报价', 'Incluidos en la cotización') : ql('仅供告知', 'Solo informativos') %></span></div>
       <p class="quote-hint"><%= kind === 'fixed' ? ql('勾选的固定费用计入报价，未选项目不计入；实报实销项目另按实际账单结算。', 'Solo los cargos seleccionados se incluyen en la cotización; los conceptos AT COST se liquidan contra factura real.') : ql('仅在相应情况实际发生时收取。以下金额用于提前告知，不计入本次报价小计。', 'Se cobran únicamente si ocurre la situación indicada. Los importes siguientes son informativos y no se suman al subtotal.') %></p>
       <div class="quote-table-wrap"><table class="quote-table" data-quote-table="<%= kind %>">
@@ -199,7 +206,7 @@
   <% }) %>
 
   <!-- Subtotals -->
-  <section class="quote-card">
+  <section class="quote-card" data-quote-single-only <%= quoteType === 'long_term' ? 'hidden' : '' %>>
     <h3><%= t("quote.subtotals") %></h3>
     <div class="quote-subtotals" data-quote-subtotals>
       <div><span><%= t("quote.subtotalMxn") %>:</span> <strong data-quote-subtotal-mxn><%= (quoteView.subtotals.find((s) => s.currency === "MXN") || {}).amountLabel || "0.00" %></strong> MXN</div>
@@ -241,7 +248,7 @@
     <div class="quote-grid">
       <label class="quote-field"><span><%= ql('输出版本', 'Versión') %></span><select name="outputAudience"><option value="customer" <%= outputAudience === 'customer' ? 'selected' : '' %>><%= ql('客户版（隐藏内部费用代码）', 'Cliente (sin códigos internos)') %></option><option value="internal" <%= outputAudience === 'internal' ? 'selected' : '' %>><%= ql('内部版（显示费用代码）', 'Interna (con códigos)') %></option></select></label>
       <label class="quote-field"><span><%= ql('报价金额税务口径', 'Tratamiento de impuestos') %></span><select name="taxTreatment"><% [['unspecified','待确认','Por confirmar'],['included','金额已含税','Precios con impuestos incluidos'],['excluded','金额未含税','Precios sin impuestos']].forEach(([value,zh,es]) => { %><option value="<%= value %>" <%= taxTreatment === value ? 'selected' : '' %>><%= ql(zh,es) %></option><% }) %></select></label>
-      <label class="quote-output-toggle"><input type="checkbox" name="showTotals" value="1" <%= formData.showTotals === true ? 'checked' : '' %> /><span><%= ql('PDF 显示底部金额汇总', 'Mostrar resumen de importes en el PDF') %><small><%= ql('默认关闭；各费用行的单价与金额仍会显示。', 'Desactivado por defecto; los precios e importes por concepto siguen visibles.') %></small></span></label>
+      <label class="quote-output-toggle" data-quote-single-only <%= quoteType === 'long_term' ? 'hidden' : '' %>><input type="checkbox" name="showTotals" value="1" <%= formData.showTotals === true ? 'checked' : '' %> /><span><%= ql('PDF 显示底部金额汇总', 'Mostrar resumen de importes en el PDF') %><small><%= ql('默认关闭；各费用行的单价与金额仍会显示。', 'Desactivado por defecto; los precios e importes por concepto siguen visibles.') %></small></span></label>
     </div>
     <p class="quote-hint"><%= ql('汇总按原币种显示；税务口径不会自动增加税额。', 'El resumen conserva las monedas originales; elegir el tratamiento no agrega impuestos automáticamente.') %></p>
   </section>
@@ -291,7 +298,9 @@
 }) %></script>
 <datalist id="cargo-container-types"><% ((selectorData && selectorData.containerTypes) || []).forEach((c) => { %><option value="<%= c.key || c.code || c.label %>"><%= c.label || c.key || c.code %></option><% }) %></datalist>
 <template id="quote-row-template"><table><tbody><%- include('partials/quote-fee-row', { row: { category: 'SHIPPING LINE', unit: 1, source: 'manual' }, lang, t, categoryOptions, uomOptions }) %></tbody></table></template>
-<script src="/quote-pricing.js"></script>
-<script src="/quote.js"></script>
+<script src="/quote-pricing.js?v=20260922-quote-types"></script>
+<script src="/quote-rate-card.js?v=20260922-quote-types"></script>
+<script src="/quote-rate-card-editor.js?v=20260922-quote-types"></script>
+<script src="/quote.js?v=20260922-quote-types"></script>
 
 <%- include("partials/footer") %>

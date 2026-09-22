@@ -1,3 +1,7 @@
+<%
+  var documentQuoteType = (typeof quoteType !== "undefined" ? quoteType : header.quoteType) === "long_term" ? "long_term" : "single";
+  var longTerm = documentQuoteType === "long_term";
+%>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,7 +21,7 @@
   @font-face { font-family: "Noto Sans SC"; font-style: normal; font-weight: 700; src: url("<%= assets.fontCjk %>") format("woff2"); }
   <% } %>
 
-  @page { size: A4; margin: 12mm 10mm 16mm; }
+  @page { size: A4<%= longTerm ? ' landscape' : '' %>; margin: 12mm 10mm 16mm; }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: #ffffff; }
   body {
@@ -62,6 +66,12 @@
   .concept-en { font-weight: 700; }
   .concept-zh { font-size: 8.5px; color: #41505f; }
   .atcost { color: #6b7785; }
+  .rate-card-panel + .rate-card-panel { break-before: page; page-break-before: always; }
+  table.rate-card { table-layout: fixed; }
+  table.rate-card th, table.rate-card td { overflow-wrap: anywhere; }
+  table.rate-card td.num { white-space: normal; }
+  table.rate-card th.specification { text-align: right; }
+  table.rate-card td.quantity { text-align: center; }
 
   .route-meta { margin-top: 6px; font-size: 8.5px; color: #41505f; border-left: 3px solid #3b4ab0; padding: 3px 8px; background: #f5f6fb; }
   .route-meta b { color: #2f3b8c; }
@@ -105,11 +115,17 @@
   var single = qlang === "EN" || qlang === "ZH" || qlang === "ES";
   var labelLang = single ? qlang : "EN";
   var internal = typeof outputAudience !== "undefined" && outputAudience === "internal";
-  var includeTotals = typeof showTotals !== "undefined" && showTotals === true;
+  // A rate card contains alternatives, so aggregate amounts are never meaningful.
+  var includeTotals = !longTerm && typeof showTotals !== "undefined" && showTotals === true;
   var tax = typeof taxTreatment !== "undefined" ? taxTreatment : "unspecified";
   var LBL = {
     date: { EN: "DATE", ZH: "日期", ES: "FECHA" },
     number: { EN: "QUOTATION NUMBER", ZH: "报价编号", ES: "NÚMERO" },
+    quoteType: { EN: "QUOTATION TYPE", ZH: "报价类型", ES: "TIPO DE COTIZACIÓN" },
+    singleQuote: { EN: "Single shipment", ZH: "单票报价", ES: "Embarque único" },
+    longTermQuote: { EN: "Long-term rate card", ZH: "长期报价", ES: "Tarifario de largo plazo" },
+    rateCardHint: { EN: "Unit rates for a quantity of 1. Specifications are alternatives and are not added together. — means no rate offered.", ZH: "数量固定为 1，展示各规格单价；不同规格不累加。— 表示未提供报价。", ES: "Tarifas unitarias para una cantidad de 1. Las especificaciones son alternativas y no se suman. — indica una tarifa no ofrecida." },
+    rateCardContingentHint: { EN: "These unit rates apply only if the stated event occurs.", ZH: "以下单价仅在相应情况实际发生时适用。", ES: "Estas tarifas unitarias aplican únicamente si ocurre la situación indicada." },
     general: { EN: "GENERAL DATA", ZH: "基本信息", ES: "DATOS GENERALES" },
     operation: { EN: "OPERATION", ZH: "业务", ES: "OPERACIÓN" },
     incoterm: { EN: "INCOTERM", ZH: "贸易术语", ES: "INCOTERM" },
@@ -190,6 +206,28 @@
   var chargeList = (typeof chargeSections !== "undefined" && Array.isArray(chargeSections))
     ? chargeSections
     : [{ chargeKind: "fixed", sections: sectionList }];
+  var card = typeof rateCard !== "undefined" && rateCard ? rateCard : {};
+  var cardVariants = Array.isArray(card.variants) ? card.variants : [];
+  var cardRows = (Array.isArray(card.rows) ? card.rows : []).filter((row) => row.included !== false);
+  var variantPanels = [];
+  for (var variantIndex = 0; variantIndex < cardVariants.length; variantIndex += 3) {
+    variantPanels.push(cardVariants.slice(variantIndex, variantIndex + 3));
+  }
+  function rateLabel(cell) {
+    if (!cell) return "—";
+    if (cell.isAtCost) return "AT COST";
+    if (typeof cell.priceLabel === "string") return cell.priceLabel;
+    if (cell.unitPrice === null || cell.unitPrice === undefined || cell.unitPrice === "") return "—";
+    var price = Number(cell.unitPrice);
+    if (!Number.isFinite(price)) return "—";
+    var numberFormat = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+    var result = price.toLocaleString("en-US", numberFormat);
+    if (cell.unitPriceMax !== null && cell.unitPriceMax !== undefined && cell.unitPriceMax !== "") {
+      var max = Number(cell.unitPriceMax);
+      if (Number.isFinite(max) && max !== price) result += "–" + max.toLocaleString("en-US", numberFormat);
+    }
+    return result;
+  }
 %>
   <header class="doc-header">
     <div class="logo-box">
@@ -201,6 +239,7 @@
   <div class="quote-meta">
     <div><div class="lbl"><%= L("date") %></div><div><%= date %></div></div>
     <div><div class="lbl"><%= L("number") %></div><div><%= number %></div></div>
+    <div><div class="lbl"><%= L("quoteType") %></div><div><%= bilingualLabel(longTerm ? "longTermQuote" : "singleQuote") %></div></div>
   </div>
 
   <div class="band"><%= L("general") %></div>
@@ -218,6 +257,71 @@
     <% }); %>
   </table>
 
+  <% if (longTerm) { %>
+    <% variantPanels.forEach((panel, panelIndex) => { %>
+    <div class="rate-card-panel" data-panel="<%= panelIndex + 1 %>">
+      <% ['fixed', 'contingent'].forEach((kind) => {
+        ['foreign', 'mexico'].forEach((geography) => {
+          var rows = cardRows.filter((row) => (row.chargeKind === 'contingent' ? 'contingent' : 'fixed') === kind && (row.section === 'foreign' ? 'foreign' : 'mexico') === geography);
+          if (!rows.length) return;
+          var columnCount = (internal ? 7 : 6) + panel.length;
+      %>
+      <table class="charges rate-card">
+        <colgroup>
+          <col style="width:<%= internal ? 8 : 9 %>%" />
+          <% if (internal) { %><col style="width:6%" /><% } %>
+          <col style="width:<%= internal ? 18 : 20 %>%" />
+          <col style="width:3%" />
+          <col style="width:7%" />
+          <% panel.forEach(() => { %><col style="width:<%= (internal ? 33 : 35) / panel.length %>%" /><% }); %>
+          <col style="width:6%" />
+          <col style="width:<%= internal ? 19 : 20 %>%" />
+        </colgroup>
+        <thead>
+          <tr><td colspan="<%= columnCount %>" class="charge-heading-cell">
+            <div class="band <%= kind === 'contingent' ? 'contingent-band' : '' %>"><%= bilingualLabel('longTermQuote') %><% if (variantPanels.length > 1) { %> · <%= panelIndex + 1 %> / <%= variantPanels.length %><% } %> · <%= bilingualLabel(kind === 'contingent' ? 'contingentCharges' : 'fixedCharges') %></div>
+            <p class="charge-section-hint"><%= L('rateCardHint') %><% if (!single) { %><br/><span class="zh"><%= LBL.rateCardHint.ZH %></span><% } %><% if (kind === 'contingent') { %><br/><%= bilingualLabel('rateCardContingentHint') %><% } %></p>
+            <div class="charge-section-label"><%= bilingualLabel(geography === 'foreign' ? 'secForeign' : 'secMexico') %></div>
+          </td></tr>
+          <tr>
+            <th><%= L('colCat') %></th>
+            <% if (internal) { %><th><%= L('colCode') %></th><% } %>
+            <th><%= L('colConcept') %></th>
+            <th><%= L('colQty') %></th>
+            <th><%= L('colUom') %></th>
+            <% panel.forEach((variant) => { %><th class="specification"><%= variant.label %><br/><%= L('colUnitPrice') %></th><% }); %>
+            <th><%= L('colCur') %></th>
+            <th><%= L('colRemark') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% rows.forEach((row) => { %>
+          <tr>
+            <td class="cat"><%= row.category %></td>
+            <% if (internal) { %><td><%= row.code || '' %></td><% } %>
+            <td>
+              <% if (single) { %>
+                <div class="concept-en"><%= qlang === 'ZH' ? (row.conceptZh || row.conceptEn) : (qlang === 'ES' ? (row.conceptEs || row.conceptEn) : row.conceptEn) %></div>
+              <% } else { %>
+                <div class="concept-en"><%= row.conceptEn %></div>
+                <% if (row.conceptZh) { %><div class="concept-zh zh"><%= row.conceptZh %></div><% } %>
+              <% } %>
+            </td>
+            <td class="quantity">1</td>
+            <td><%= uomLabel(row.unitOfMeasure) %></td>
+            <% panel.forEach((variant) => { var cell = (row.cells || {})[variant.id]; %>
+              <td class="num <%= cell && cell.isAtCost ? 'atcost' : '' %>"><%= rateLabel(cell) %></td>
+            <% }); %>
+            <td class="cur"><%= row.currency %></td>
+            <td><%= row.remark || '' %></td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+      <% }); }); %>
+    </div>
+    <% }); %>
+  <% } else { %>
   <% chargeList.forEach((charge) => {
       var contingent = charge.chargeKind === 'contingent';
       var chargeGeographies = (charge.sections || []).map((sec) => ({
@@ -276,6 +380,7 @@
     </table>
     <% }); %>
   <% }); %>
+  <% } %>
 
   <% if (typeof route !== "undefined" && route) { %>
     <div class="route-meta">
