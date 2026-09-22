@@ -22,6 +22,7 @@ const {
   slugifyId,
 } = require("./shared");
 const { normalizeCargoPricing, normalizeCargoPricingByType } = require("../../../public/quote-pricing");
+const { normalizeQuoteType, normalizeRateCardsByType, createDefaultRateCard } = require("../../../public/quote-rate-card");
 const { QUOTE_CONFIG_VERSION, DEFAULT_QUOTE_FEE_TEMPLATES, DEFAULT_CURRENCY_BY_CATEGORY, normalizeQuoteFeeTemplates, normalizeCargoPricingRules } = require("../quote-config");
 
 function normalizeQuoteLineItem(item = {}, fallbackId) {
@@ -103,12 +104,14 @@ function normalizeQuoteHeader(header = {}) {
     pod: String(header.pod ?? DEFAULT_QUOTE_HEADER.pod).trim(),
     commodity: String(header.commodity || "").trim(),
     cargoType,
+    quoteType: normalizeQuoteType(header.quoteType),
     importerQualification: ["own", "trading_company"].includes(header.importerQualification) ? header.importerQualification : "",
     specialImportQualification: ["yes", "no", "unknown"].includes(header.specialImportQualification) ? header.specialImportQualification : "",
     nomCertification: ["yes", "no", "unknown"].includes(header.nomCertification) ? header.nomCertification : "",
     ministryRegistration: ["yes", "no", "unknown"].includes(header.ministryRegistration) ? header.ministryRegistration : "",
     ...(header.cargoPricing ? { cargoPricing: normalizeCargoPricing(header.cargoPricing, cargoType) } : {}),
     ...(header.cargoPricingByType ? { cargoPricingByType: normalizeCargoPricingByType(header.cargoPricingByType) } : {}),
+    ...(header.rateCardsByType !== undefined ? { rateCardsByType: normalizeRateCardsByType(header.rateCardsByType) } : {}),
     showTotals: header.showTotals === true,
     notesSelectionExplicit: header.notesSelectionExplicit === true,
     outputAudience: header.outputAudience === "internal" ? "internal" : "customer",
@@ -173,6 +176,7 @@ function normalizeQuoteHeaderDefaults(hd = {}, cargoTypes) {
   };
   const src = hd && typeof hd === "object" ? hd : {};
   return {
+    quoteType: normalizeQuoteType(src.quoteType),
     department: pick(src.department, QUOTE_DEPARTMENT_OPTIONS),
     transportMode: pick(src.transportMode, QUOTE_TRANSPORT_MODE_OPTIONS),
     incoterm: pick(src.incoterm, QUOTE_INCOTERM_OPTIONS),
@@ -200,6 +204,14 @@ function normalizeQuoteModuleData(moduleData = {}) {
   if (Number(settingsIn.feeTemplateConfigVersion || 0) < 2) {
     const local = feeTemplates.find((row) => row.id === "delivery-order" && row.category === "SHIPPING LINE" && row.conceptEn === "Delivery Order Fee" && row.conceptZh === "船公司 LOCAL");
     if (local) local.conceptEn = "Shipping line local charge";
+  }
+  const rateCardDefaults = normalizeRateCardsByType(settingsIn.rateCardDefaults);
+  for (const type of ["FCL", "LCL", "BBK", "AIR"]) {
+    // Presets initialize only missing cards. In particular, an intentionally
+    // emptied matrix and every historical draft remain independent snapshots.
+    if (!Object.prototype.hasOwnProperty.call(rateCardDefaults, type)) {
+      rateCardDefaults[type] = createDefaultRateCard(type, feeTemplates);
+    }
   }
   const defaultCurrencyByCategory = Object.fromEntries(Object.entries(DEFAULT_CURRENCY_BY_CATEGORY).map(([category, fallback]) => [category, ["MXN", "USD"].includes(settingsIn.defaultCurrencyByCategory?.[category]) ? settingsIn.defaultCurrencyByCategory[category] : fallback]));
   const templateVersion = parseNumber(settingsIn.templateVersion, 0);
@@ -246,6 +258,7 @@ function normalizeQuoteModuleData(moduleData = {}) {
       cargoTypePolicyVersion: 2,
       taxDisclaimerPolicyVersion: 1,
       cargoPricingRules: normalizeCargoPricingRules(settingsIn.cargoPricingRules),
+      rateCardDefaults,
       feeTemplates,
       feeTemplateConfigVersion: QUOTE_CONFIG_VERSION,
       defaultCurrencyByCategory,

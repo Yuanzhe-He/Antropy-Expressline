@@ -12,7 +12,11 @@
   const cargoTypes = ['FCL', 'LCL', 'BBK', 'AIR'];
   const feeByCode = new Map(readJson('quote-fee-codes', []).map((fee) => [fee.code, fee]));
   const modeSelect = form.querySelector('[data-quote-mode]');
+  const quoteTypeSelect = form.querySelector('[data-quote-type]');
   const cargoSelect = form.querySelector('[data-cargo-type]');
+  const rateEditor = window.QuoteRateCardEditors?.get('quote-rate-card');
+  const isLongTerm = () => quoteTypeSelect?.value === 'long_term';
+  const singleDisabledBefore = new WeakMap();
   const pricingResult = form.querySelector('[data-cargo-result]');
   const byName = (parent, name) => parent.querySelector(`[name="${name}"]`);
   const val = (parent, name) => byName(parent, name)?.value ?? '';
@@ -115,6 +119,17 @@
     const cargoType = cargoSelect?.value || '';
     const method = val(form, 'cargo_method');
     saveCargoState();
+    if (isLongTerm()) {
+      form.querySelectorAll('[data-cargo-panel]').forEach((panel) => {
+        panel.hidden = true;
+        panel.querySelectorAll('input,select,button').forEach((input) => { input.disabled = true; });
+      });
+      if (pricingResult) { pricingResult.hidden = true; pricingResult.replaceChildren(); }
+      const recovery = form.querySelector('[data-cargo-recovery]');
+      if (recovery) recovery.hidden = true;
+      cargoCalculation = null;
+      return;
+    }
     const pricing = collectCargoPricing();
     const cacheErrors = Array.isArray(cargoStates._validationErrors) ? cargoStates._validationErrors : [];
     // Map-level failures block the preview, but are not copied into individual
@@ -134,7 +149,7 @@
       panel.hidden = panel.dataset.cargoPanel === 'FCL' ? cargoType !== 'FCL' : !['LCL', 'BBK', 'AIR'].includes(cargoType);
       // The JSON field preserves inactive modes. Only the active legacy inputs
       // submit, so hidden invalid numbers cannot block a different workflow.
-      panel.querySelectorAll('input,select').forEach((input) => { input.disabled = panel.hidden; });
+      panel.querySelectorAll('input,select,button').forEach((input) => { input.disabled = panel.hidden; });
       panel.querySelectorAll('input[type="number"]').forEach((input) => {
         for (const attribute of ['min', 'step']) {
           const savedKey = attribute === 'min' ? 'cargoMin' : 'cargoStep';
@@ -258,6 +273,47 @@
       const el = form.querySelector(`[data-quote-subtotal-${currency.toLowerCase()}]`);
       if (el) el.textContent = fmtMoney(subtotals[currency] || 0);
     });
+    syncQuoteTypeUi();
+  }
+
+  function syncQuoteTypeUi() {
+    const longTerm = isLongTerm();
+    form.querySelectorAll('[data-quote-single-only]').forEach((section) => {
+      section.hidden = longTerm;
+      section.querySelectorAll('input:not([type="hidden"]),select,button').forEach((control) => {
+        if (longTerm) {
+          if (!singleDisabledBefore.has(control)) singleDisabledBefore.set(control, control.disabled);
+          control.disabled = true;
+        } else if (singleDisabledBefore.has(control)) {
+          control.disabled = singleDisabledBefore.get(control); singleDisabledBefore.delete(control);
+        }
+      });
+    });
+    const matrixSection = form.querySelector('[data-quote-long-term]');
+    if (matrixSection) matrixSection.hidden = !longTerm;
+    rateEditor?.setCargoType(cargoSelect?.value || '');
+    rateEditor?.setQuoteMode(modeSelect?.value || 'mexico_only');
+    rateEditor?.setEnabled(longTerm);
+    rateEditor?.sync();
+    syncSingleMirrors();
+  }
+
+  function syncSingleMirrors() {
+    form.querySelector('[data-quote-single-mirrors]')?.remove();
+    if (!isLongTerm()) return;
+    const holder = document.createElement('div'); holder.hidden = true; holder.dataset.quoteSingleMirrors = '';
+    // Keep the existing li_* contract when its editor is disabled. Each field
+    // is mirrored in row order; existing hidden metadata continues to submit.
+    form.querySelectorAll('[data-fee-section] [data-quote-row]').forEach((row) => {
+      row.querySelectorAll('input:not([type="hidden"])[name],select[name]').forEach((control) => {
+        const mirror = document.createElement('input'); mirror.type = 'hidden'; mirror.name = control.name; mirror.value = control.value; holder.append(mirror);
+      });
+    });
+    const totals = byName(form, 'showTotals');
+    if (totals?.checked) {
+      const mirror = document.createElement('input'); mirror.type = 'hidden'; mirror.name = 'showTotals'; mirror.value = '1'; holder.append(mirror);
+    }
+    form.append(holder);
   }
 
   function autofillCode(row) {
@@ -374,7 +430,8 @@
     wireRow(row); recomputeAll();
     row.querySelector('.concept-cell input[type="text"]')?.focus();
   }));
-  modeSelect?.addEventListener('change', () => { seedForeignTemplates(); recomputeAll(); });
+  modeSelect?.addEventListener('change', () => { if (!isLongTerm()) seedForeignTemplates(); recomputeAll(); });
+  quoteTypeSelect?.addEventListener('change', recomputeAll);
   cargoSelect?.addEventListener('change', () => {
     saveCargoState();
     activeCargoType = cargoSelect.value;
@@ -474,7 +531,14 @@
   openDraft?.addEventListener('click', () => {
     if (draftPicker?.value) window.location.assign('/workbench/quote?draft=' + encodeURIComponent(draftPicker.value));
   });
-  form.addEventListener('submit', saveCargoState);
+  form.addEventListener('submit', (event) => {
+    saveCargoState(); rateEditor?.sync(); syncSingleMirrors();
+    if (isLongTerm() && event.submitter?.getAttribute('formaction')?.endsWith('/pdf') && rateEditor?.validate({ forExport: true }).length) {
+      event.preventDefault();
+      const errors = form.querySelector('[data-rate-card-errors]');
+      if (errors) { errors.tabIndex = -1; errors.focus(); }
+    }
+  });
 
   const gdRows = form.querySelector('[data-gd-rows]');
   form.querySelector('[data-gd-add]')?.addEventListener('click', () => {

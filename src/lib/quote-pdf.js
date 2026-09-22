@@ -86,6 +86,7 @@ async function renderQuotePdf(quoteView) {
         .map((src) => `<img src="${src}" style="height:20px;max-width:76px;object-fit:contain;margin-left:8px" />`).join("");
       return await page.pdf({
         format: "A4",
+        landscape: (quoteView.quoteType === undefined ? quoteView.header?.quoteType : quoteView.quoteType) === "long_term",
         printBackground: true,
         preferCSSPageSize: true,
         margin: { top: "12mm", right: "10mm", bottom: "16mm", left: "10mm" },

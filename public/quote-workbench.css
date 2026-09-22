@@ -107,3 +107,39 @@
 
 .quote-shell .quote-template-picker { flex: 0 1 290px; margin-left: .5rem; }
 .quote-shell button:disabled { opacity: .45; cursor: default; }
+
+/* A rate card compares alternatives; each price column keeps its own input. */
+.quote-shell .quote-mode-grid { grid-template-columns: repeat(3, minmax(180px, 1fr)); max-width: 1200px; }
+.quote-rate-card-editor { gap: .7rem; min-width: 0; }
+.quote-shell { min-width: 0; max-width: 100%; }
+.quote-rate-card-editor > div, .quote-rate-card-editor [data-rate-card-content] { min-width: 0; max-width: 100%; }
+.quote-rate-card-editor .quote-table-wrap { width: 100%; min-width: 0; max-width: 100%; overflow-x: auto; }
+.quote-rate-card-editor [data-rate-card-toolbar] { display: grid; gap: .8rem; }
+.quote-rate-card-editor [data-rate-card-toolbar] > .quote-field { max-width: 260px; }
+.quote-rate-card-editor .quote-rate-variants { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
+.quote-rate-card-editor .quote-rate-variants > strong { font-size: .8rem; margin-right: .5rem; }
+.quote-rate-card-editor .quote-rate-variant { display: flex; gap: .2rem; width: 165px; }
+.quote-rate-card-editor .quote-rate-variant input { width: 125px; }
+.quote-rate-card-editor .quote-rate-section { min-width: 0; margin-top: .8rem; }
+.quote-rate-card-editor .quote-rate-section h4 { font-size: .9rem; margin: .8rem 0 .4rem; }
+.quote-rate-card-editor .quote-rate-table { min-width: 1120px; }
+.quote-rate-card-editor .quote-rate-table td:nth-child(1) { min-width: 92px; }
+.quote-rate-card-editor .quote-rate-table td:nth-child(2) { min-width: 95px; }
+.quote-rate-card-editor .quote-rate-concept { min-width: 205px; max-width: 300px; }
+.quote-rate-card-editor .quote-rate-price { min-width: 125px; max-width: 160px; }
+.quote-rate-card-editor .quote-rate-price > input { font-variant-numeric: tabular-nums; }
+.quote-rate-card-editor .quote-rate-price .quote-field { display: grid; grid-template-columns: 1fr; gap: .2rem; }
+.quote-rate-card-editor .quote-rate-price .quote-inclusion { display: flex; gap: .3rem; }
+.quote-rate-card-editor .quote-rate-quantity { display: block; padding: .5rem; font-weight: 600; text-align: center; }
+.quote-rate-card-editor .quote-rate-table td:nth-last-child(5) { min-width: 95px; }
+.quote-rate-card-editor .quote-rate-table td:nth-last-child(4) { min-width: 78px; }
+.quote-rate-card-editor .quote-rate-table td:nth-last-child(3) { min-width: 170px; }
+.quote-rate-card-editor .quote-rate-table td:nth-last-child(2) { min-width: 65px; }
+.quote-rate-card-editor .quote-rate-table td:last-child { width: 36px; }
+.quote-rate-card-editor .quote-rate-section .quote-actions select { width: min(340px, 100%); }
+.quote-rate-card-editor .quote-rate-errors { border: 1px solid #b47e42; background: color-mix(in srgb, #b47e42 10%, var(--quote-surface)); border-radius: 6px; padding: .7rem .9rem; font-size: .8rem; line-height: 1.5; }
+.quote-rate-card-editor .quote-rate-errors ul { margin: .35rem 0 0; padding-left: 1.2rem; }
+@media (max-width: 700px) {
+  .quote-shell .quote-mode-grid { grid-template-columns: 1fr; }
+  .quote-rate-card-editor .quote-rate-variants > strong { flex-basis: 100%; }
+}

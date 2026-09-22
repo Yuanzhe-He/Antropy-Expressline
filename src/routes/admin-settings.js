@@ -31,6 +31,8 @@ const {
   validateCargoPricingRules,
 } = require("../lib/quote-config");
 
+const { normalizeQuoteType, parseRateCardsByType, validateRateCardsByType } = require("../../public/quote-rate-card");
+
 const FEE_FORM_FIELDS = ["id", "chargeKind", "category", "section", "en", "zh", "es", "unit", "uom", "price", "max", "currency", "remark", "active", "modes", "selectionRequired", "sourceNote"];
 
 function quoteConfigErrorMessage(code, language) {
@@ -94,6 +96,7 @@ function register(app, ctx) {
       currencyError: "",
       cargoPricingRules: normalizeCargoPricingRules(quote.settings.cargoPricingRules),
       cargoPricingError: "",
+      rateCardError: "",
       headerOptions: {
         department: QUOTE_DEPARTMENT_OPTIONS,
         transportMode: QUOTE_TRANSPORT_MODE_OPTIONS,
@@ -164,6 +167,14 @@ function register(app, ctx) {
       let feeError = "";
       let currencyError = "";
       let cargoPricingError = "";
+      let rateCardError = "";
+      if (b.rateCardDefaultsPresent === "1") {
+        const hasOneJsonField = typeof b.rateCardDefaults === "string";
+        const parsedCards = hasOneJsonField ? parseRateCardsByType(b.rateCardDefaults) : quote.settings.rateCardDefaults;
+        const errors = hasOneJsonField ? validateRateCardsByType(parsedCards) : ["rate_card_json_required"];
+        rateCardError = errors.length ? (req.language === "es" ? "Revisa el tarifario: especificaciones únicas, monedas, precios y rangos válidos." : "请检查长期报价模板：规格名称不能重复，币种、单价和区间需有效。") : "";
+        quote.settings.rateCardDefaults = parsedCards;
+      }
       let postedCargoPricingRules;
       let postedCurrencyRows;
       if (b.cargoPricingRulesPresent === "1") {
@@ -269,6 +280,7 @@ function register(app, ctx) {
         incoterm: pickFromOptions(b.hd_incoterm ?? hd.incoterm, QUOTE_INCOTERM_OPTIONS, ""),
         cargoType: pickFromOptions(b.hd_cargoType ?? hd.cargoType, enabledCargoCodes, ""),
         quoteMode: normalizeQuoteMode(b.hd_quoteMode ?? hd.quoteMode),
+        quoteType: normalizeQuoteType(b.hd_quoteType ?? hd.quoteType),
       };
       const ids = ensureArray(b.note_id);
       const ens = ensureArray(b.note_en);
@@ -282,9 +294,10 @@ function register(app, ctx) {
           zh: String(zhs[i] || "").trim(),
         }))
         .filter((n) => n.en || n.zh || n.es);
-      if (cargoError || feeError || currencyError || cargoPricingError) {
+      if (cargoError || feeError || currencyError || cargoPricingError || rateCardError) {
         res.status(400);
         return renderQuoteSettings(req, res, quote, {
+          rateCardError,
           cargoError: cargoError ? req.t(`quote.${cargoError}`) : "",
           feeError: feeError ? quoteConfigErrorMessage(feeError, req.language) : "",
           feeErrorCode: feeError,
