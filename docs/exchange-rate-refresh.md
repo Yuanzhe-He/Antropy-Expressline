@@ -155,3 +155,11 @@ FX_REFRESH_MINUTE=0
 - 如果客户要求墨西哥官方 FIX 口径，可以接 Banxico SIE API，但通常需要 Banxico token。
 - 如果要更强的可审计性，可以把每次刷新记录写入 `audit_logs`，包括 provider、as-of date、rate、success/failure。
 - 如果要更严格的生产监控，可以增加汇率过期告警，例如超过 2 天未更新就在后台显示红色提示。
+
+## 2026-10-12：定时刷新每秒触发（已修复）
+
+- 现象：Railway 日志每秒打印一次 `Exchange rates refreshed ...`，本该每天墨西哥城时间 00:00 一次。之前的「write storm」（约每 2 秒一次写入）也是它：当时加的 15 分钟节流和读缓存挡住了大部分外部请求和写入，但定时器本身一直每秒空转。
+- 根因：`getZonedParts()` 用了 `hour12: false`。Node 20 及以下会把午夜格式化成 `24`，`getNextRefreshAt()` 因此算出一个已经过去的时间，调度器按 1 秒下限立刻重跑。Node 22 及以上不受影响。
+- 修复：改用 `hourCycle: "h23"`，并把 `24` 兜底归零；调度延迟下限从 1 秒改为 60 秒，即使以后再算错也不会高频空转。
+- 回归测试：`node scripts/audit-fx-scheduler-midnight-test.js`（用 Node 20 跑才能复现旧问题）。
+

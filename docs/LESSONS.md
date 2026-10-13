@@ -454,3 +454,13 @@ Only record lessons that may change future behavior.
 - print lesson: Render real multi-page PDFs. Group section titles with table headers, and place repeated branding in the PDF page-margin footer so it cannot overlay fee rows.
 - evidence: scripts/audit-quote-workflow-v2-test.js (26 checks), complete 25-suite regression, desktop/mobile/ES browser checks and rendered FCL/LCL PDFs.
 - status: local; no global promotion.
+
+
+## 2026-10-12 - FX scheduler fired every second: `hour12: false` midnight bug was the root cause of the write storm
+
+- source: Railway logs showed `Exchange rates refreshed` once per second; reproduced on Node 18/20 (fails) vs Node 22 (passes).
+- type: production bug, root cause of the earlier "write storm" that the 15-minute FX throttle and read cache only mitigated.
+- lesson: For time-zone math with `Intl.DateTimeFormat`, use `hourCycle: "h23"`, never `hour12: false` (Node <= 20 yields hour `24` at midnight). Give any self-rescheduling timer a sane minimum delay (here 60 s) so a wrong next-run calculation cannot become a tight loop. When a storm is mitigated by throttling, still look for the caller that generates it.
+- evidence: `scripts/audit-fx-scheduler-midnight-test.js` (fails on Node 20 before the fix, passes after); production logs after deploy.
+- status: local; no global promotion.
+
