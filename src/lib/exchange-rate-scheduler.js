@@ -45,7 +45,9 @@ function getZonedParts(date, timeZone) {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-    hour12: false,
+    // Not `hour12: false`: on Node <= 20 that formats midnight as "24", which made
+    // getNextRefreshAt return a time in the past and the daily refresh fire every second.
+    hourCycle: "h23",
   });
   const parts = {};
 
@@ -53,6 +55,9 @@ function getZonedParts(date, timeZone) {
     if (part.type !== "literal") {
       parts[part.type] = Number(part.value);
     }
+  }
+  if (parts.hour === 24) {
+    parts.hour = 0;
   }
 
   return parts;
@@ -154,7 +159,8 @@ function startExchangeRateScheduler(options = {}) {
       activeTimer = null;
       return;
     }
-    const delayMs = Math.max(1000, nextRefreshAt.getTime() - Date.now());
+    // Safety floor: even if the next-run math ever goes wrong again, never loop faster than once a minute.
+    const delayMs = Math.max(60 * 1000, nextRefreshAt.getTime() - Date.now());
 
     activeTimer = setTimeout(async () => {
       try {
