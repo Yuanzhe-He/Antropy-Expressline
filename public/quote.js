@@ -32,6 +32,39 @@
   let cargoCalculation = null;
   let initialSubtotalBasis = null;
   const removedTemplateIds = new Set();
+  const deletedRows = { fixed: [], contingent: [] };
+  function refreshUndo(kind) {
+    const button = form.querySelector(`[data-quote-undo="${kind}"]`);
+    if (button) button.disabled = !deletedRows[kind].length;
+  }
+  function deleteFeeRow(row) {
+    const kind = val(row, 'li_chargeKind[]') === 'contingent' ? 'contingent' : 'fixed';
+    const anchor = document.createComment('deleted quote fee');
+    row.before(anchor);
+    deletedRows[kind].push({ row, anchor });
+    const id = val(row, 'li_id[]');
+    if (id) removedTemplateIds.add(id);
+    row.remove(); refreshUndo(kind); recomputeAll();
+    form.querySelector(`[data-quote-undo="${kind}"]`)?.focus();
+  }
+  form.querySelectorAll('[data-quote-undo]').forEach((button) => button.addEventListener('click', () => {
+    const kind = button.dataset.quoteUndo;
+    const entry = deletedRows[kind]?.at(-1);
+    if (!entry) return;
+    const id = val(entry.row, 'li_id[]');
+    const duplicate = id && [...form.querySelectorAll('[data-quote-row]')].find((row) => val(row, 'li_id[]') === id);
+    const status = form.querySelector(`[data-quote-undo-status="${kind}"]`);
+    if (duplicate) {
+      if (!window.confirm(labels.undoDuplicate)) return;
+      duplicate.remove();
+    }
+    deletedRows[kind].pop();
+    if (entry.anchor.isConnected) entry.anchor.replaceWith(entry.row);
+    else form.querySelector(`[data-quote-rows="${kind}"]`).append(entry.row);
+    removedTemplateIds.delete(id); refreshUndo(kind); recomputeAll();
+    if (status) status.textContent = labels.undoRestored;
+    entry.row.querySelector('.concept-cell input')?.focus();
+  }));
   let activeCargoType = cargoSelect?.value || '';
 
   function collectCargoPricing(type = activeCargoType) {
@@ -219,35 +252,71 @@
     return geo && (historical || !activeCargo || !modes.length || modes.includes(activeCargo));
   }
 
+  function savedPricingErrors(row) {
+    try {
+      const errors = JSON.parse(val(row, 'li_pricingErrors[]') || '[]');
+      return Array.isArray(errors) && errors.every((error) => typeof error === 'string') ? errors : ['pricingErrors:invalid_errors'];
+    } catch (_) { return ['pricingErrors:invalid_errors']; }
+  }
+
+  function clearSavedPricingErrors(row, target) {
+    const prefixesByField = {
+      'li_priceType[]': ['priceType:', 'percentage:'],
+      'li_percentageRate[]': ['percentageRate:', 'total:'],
+      'li_cargoValue[]': ['cargoValue:', 'total:'],
+      'li_unitPrice[]': ['unitPrice:', 'total:', 'percentage:at_cost_conflict'],
+      'li_unitPriceMax[]': ['unitPriceMax:', 'total:', 'percentage:range_conflict'],
+      'li_unit[]': ['unit:', 'total:'],
+    };
+    const prefixes = target.matches('[data-quote-atcost-toggle]') ? ['percentage:at_cost_conflict', 'unitPrice:', 'total:'] : prefixesByField[target.name];
+    if (!prefixes) return;
+    const field = byName(row, 'li_pricingErrors[]');
+    if (field) field.value = JSON.stringify(savedPricingErrors(row).filter((error) => !prefixes.some((prefix) => error.startsWith(prefix))));
+  }
+
   function recomputeRow(row) {
     const cell = row.querySelector('[data-quote-rowtotal]');
     row.hidden = !applicability(row);
     const atCost = val(row, 'li_atCost[]') === '1';
     const included = val(row, 'li_included[]') !== '0';
     const contingent = val(row, 'li_chargeKind[]') === 'contingent';
+    const percentage = val(row, 'li_priceType[]') === 'percentage';
+    const retainedErrors = savedPricingErrors(row);
     row.classList.toggle('quote-row-excluded', !contingent && !included);
     cell.classList.toggle('quote-atcost', atCost);
     const priceInput = row.querySelector('[data-quote-price]');
-    if (priceInput) priceInput.readOnly = atCost;
-    if (atCost) {
-      const rangeLabel = row.querySelector('[data-quote-range-label]');
-      if (rangeLabel) rangeLabel.hidden = true;
-      cell.textContent = 'AT COST'; return null;
+    if (priceInput) priceInput.readOnly = atCost || percentage;
+    row.querySelector('[data-quote-amount-fields]').hidden = percentage;
+    row.querySelector('[data-quote-percent-fields]').hidden = !percentage && !retainedErrors.some((error) => /^(percentageRate|cargoValue):/.test(error));
+    row.querySelector('[data-quote-unit]').readOnly = percentage;
+    row.querySelector('[data-quote-base-currency]').textContent = val(row, 'li_currency[]');
+    const unitLabel = row.querySelector('[data-quote-unit-label]');
+    if (unitLabel) unitLabel.textContent = val(row, 'li_uom[]').trim().toLowerCase() === 'shipment' ? (labels.uiLang === 'zh' ? '按票' : 'Por embarque') : '';
+    const maxField = row.querySelector('[data-quote-price-max]');
+    const rangeEditor = row.querySelector('[data-quote-range-edit]');
+    // A conflicting stored range remains editable so it can be corrected explicitly.
+    if (rangeEditor) rangeEditor.hidden = !maxField.value.trim() && document.activeElement !== maxField;
+    const charge = window.QuoteChargePricing?.calculateCharge({
+      priceType: val(row, 'li_priceType[]') || 'amount',
+      percentageRate: val(row, 'li_percentageRate[]'), cargoValue: val(row, 'li_cargoValue[]'),
+      unit: val(row, 'li_unit[]'), unitPrice: val(row, 'li_unitPrice[]'),
+      unitPriceMax: val(row, 'li_unitPriceMax[]'), isAtCost: atCost, pricingErrors: retainedErrors,
+    });
+    const status = row.querySelector('[data-quote-fee-status]');
+    row.dataset.pricingStatus = charge?.status || 'invalid';
+    if (status) {
+      status.hidden = charge?.status !== 'invalid' && !(percentage && charge?.status === 'pending');
+      status.textContent = charge?.status === 'invalid' ? labels.feeInvalid : labels.feePending;
     }
-    const quantity = number(val(row, 'li_unit[]'));
-    const price = number(val(row, 'li_unitPrice[]'));
-    const upper = number(val(row, 'li_unitPriceMax[]'));
-    const rangeLabel = row.querySelector('[data-quote-range-label]');
-    if (rangeLabel) { rangeLabel.hidden = upper == null || upper <= price; rangeLabel.textContent = upper != null ? '– ' + fmtMoney(upper) : ''; }
-    if (quantity == null || price == null || quantity < 0 || price < 0) {
-      cell.textContent = '—';
+    if (!charge || charge.status === 'invalid' || charge.status === 'pending') {
+      cell.textContent = percentage && charge?.status === 'pending' ? labels.feePending : '—';
       return null;
     }
-    const total = roundMoney(quantity * price);
-    const isRange = upper != null && upper > price;
-    cell.textContent = fmtMoney(total) + (isRange ? ' – ' + fmtMoney(roundMoney(quantity * upper)) : '');
+    if (charge.status === 'atcost') { cell.textContent = 'AT COST'; return null; }
+    const isRange = charge.totalMax != null && charge.totalMax > charge.total;
+    cell.textContent = fmtMoney(charge.total) + (isRange ? ' – ' + fmtMoney(charge.totalMax) : '');
     if (contingent || !included || row.hidden || isRange) return null;
-    return { total, currency: val(row, 'li_currency[]') };
+    return { total: charge.total, currency: val(row, 'li_currency[]') };
   }
 
   function recomputeAll() {
@@ -326,19 +395,16 @@
   }
 
   function wireRow(row) {
-    row.addEventListener('input', recomputeAll);
+    row.addEventListener('input', (event) => { clearSavedPricingErrors(row, event.target); recomputeAll(); });
     row.addEventListener('change', (event) => {
+      clearSavedPricingErrors(row, event.target);
       if (event.target.matches('[data-quote-atcost-toggle]')) byName(row, 'li_atCost[]').value = event.target.checked ? '1' : '0';
       if (event.target.matches('[data-quote-included-toggle]')) byName(row, 'li_included[]').value = event.target.checked ? '1' : '0';
       if (event.target.name === 'li_category[]') byName(row, 'li_currency[]').value = currencyDefault(event.target.value);
       if (event.target.matches('[data-quote-code]')) autofillCode(row);
       recomputeAll();
     });
-    row.querySelector('[data-quote-remove]')?.addEventListener('click', () => {
-      const id = val(row, 'li_id[]');
-      if (id) removedTemplateIds.add(id);
-      row.remove(); recomputeAll();
-    });
+    row.querySelector('[data-quote-remove]')?.addEventListener('click', () => deleteFeeRow(row));
   }
 
   function buildRow(kind, data = {}) {
@@ -348,6 +414,8 @@
     const fields = {
       section: data.section || 'mexico', category: data.category || 'SHIPPING LINE',
       conceptEn: data.conceptEn || '', conceptZh: data.conceptZh || '', conceptEs: data.conceptEs || '', code: data.code || '',
+      pricingErrors: JSON.stringify(Array.isArray(data.pricingErrors) ? data.pricingErrors : []),
+      priceType: data.priceType || 'amount', percentageRate: data.percentageRate ?? '', cargoValue: data.cargoValue ?? '',
       unit: data.defaultQuantity ?? data.unit ?? '', uom: data.unitOfMeasure || data.uom || '', unitPrice: data.unitPrice ?? '', unitPriceMax: data.unitPriceMax ?? '',
       currency: data.currency || currencyDefault(data.category || 'SHIPPING LINE'), remark: data.remark || '', atCost: data.isAtCost ? '1' : '0',
       id: data.id || ('li-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)), source: data.source || 'manual',
@@ -531,6 +599,13 @@
   openDraft?.addEventListener('click', () => {
     if (draftPicker?.value) window.location.assign('/workbench/quote?draft=' + encodeURIComponent(draftPicker.value));
   });
+  const codeFields = ['customerCode', 'salesCode'].map((name) => byName(form, name));
+  function validateCodes() {
+    const mismatch = Boolean(codeFields[0]?.value.trim()) !== Boolean(codeFields[1]?.value.trim());
+    codeFields.forEach((field) => field?.setCustomValidity(mismatch ? labels.codesPair : ''));
+  }
+  codeFields.forEach((field) => field?.addEventListener('input', validateCodes));
+  validateCodes();
   form.addEventListener('submit', (event) => {
     saveCargoState(); rateEditor?.sync(); syncSingleMirrors();
     if (isLongTerm() && event.submitter?.getAttribute('formaction')?.endsWith('/pdf') && rateEditor?.validate({ forExport: true }).length) {

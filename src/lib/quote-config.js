@@ -1,6 +1,7 @@
 "use strict";
 
-const QUOTE_CONFIG_VERSION = 2;
+const QUOTE_CONFIG_VERSION = 3;
+const { normalizeChargePricing } = require("../../public/quote-charge-pricing");
 const QUOTE_FEE_CATEGORIES = Object.freeze([
   "OCEAN FREIGHT", "PORT OF ORIGIN", "SHIPPING LINE", "PORT FEES",
   "CUSTOMS CLEARANCE", "TRANSPORTATION", "DUTY",
@@ -42,6 +43,21 @@ function template(id, category, conceptEn, conceptZh, price, currency, unitOfMea
 // Directly read from the user-provided screenshot, including its explicit
 // currency exceptions, ranges, quantities, and conditional remarks. Optional
 // alternatives remain selectable templates, not automatically stacked charges.
+const NOVEMBER_QUOTE_FEE_TEMPLATES = Object.freeze([
+  template("uva-labeling", "CUSTOMS CLEARANCE", "UVA (Labeling Fee)", "UVA（标签费）", "", "MXN", "", "", {
+    selectionRequired: true, appliesTo: [...CARGO_TYPES], conceptEs: "UVA (Etiquetado)",
+    sourceNote: "Bill quotation feedback 2026-11-04: optional customs fee; price and billing unit to be entered per quotation.",
+  }),
+  template("trade-agency-service", "CUSTOMS CLEARANCE", "Trade Agency Service Fee", "贸易代理费", "", "MXN", "", "", {
+    priceType: "percentage", percentageRate: null, selectionRequired: true, appliesTo: [...CARGO_TYPES], conceptEs: "Servicio de agencia comercial",
+    sourceNote: "Bill quotation feedback 2026-11-04: supports percentage of commercial-invoice goods value, excluding freight, insurance and taxes; rate to be entered per quotation.",
+  }),
+  template("customs-overweight-surcharge", "CUSTOMS CLEARANCE", "Overweight surcharge", "超重费", "", "MXN", "", "", {
+    selectionRequired: true, appliesTo: [...CARGO_TYPES], conceptEs: "Recargo por sobrepeso",
+    sourceNote: "Bill quotation feedback 2026-11-04: optional customs fee, independent of transportation overweight fees; price and billing unit to be entered per quotation.",
+  }),
+]);
+
 const DEFAULT_QUOTE_FEE_TEMPLATES = Object.freeze([
   template("pre-inspection", "CUSTOMS CLEARANCE", "Pre-inspection Fee", "预检费", 350, "USD", "container",
     "Recommended, speeds up customs clearance. 建议做，加速通关。", { selectionRequired: true }),
@@ -76,6 +92,7 @@ const DEFAULT_QUOTE_FEE_TEMPLATES = Object.freeze([
     { chargeKind: "contingent", unit: 2, defaultQuantity: 2 }),
   template("truck-waiting", "TRANSPORTATION", "Truck Waiting Time Fee", "卡车待时费", 6000, "MXN", "day",
     "Free for the first 8 hours. 8 小时内免费。", { chargeKind: "contingent", appliesTo: ["FCL"] }),
+  ...NOVEMBER_QUOTE_FEE_TEMPLATES,
 ]);
 
 function safeText(value, limit) {
@@ -129,12 +146,15 @@ function normalizeRow(entry) {
   const defaultQuantity = numeric(entry.defaultQuantity == null ? entry.unit : entry.defaultQuantity);
   const upper = numeric(entry.unitPriceMax);
   const lower = numeric(entry.unitPrice);
+  const pricing = normalizeChargePricing(entry);
   return {
     id, code: safeText(entry.code, 100), category, conceptEn, conceptZh,
     conceptEs: safeText(entry.conceptEs, 200), section: entry.section === "foreign" ? "foreign" : "mexico",
     unit: defaultQuantity === null ? "" : defaultQuantity,
     defaultQuantity: defaultQuantity === null ? "" : defaultQuantity,
-    unitOfMeasure: safeText(entry.unitOfMeasure, 40) || "container",
+    unitOfMeasure: entry.unitOfMeasure == null ? "container" : safeText(entry.unitOfMeasure, 40),
+    priceType: pricing.priceType, percentageRate: pricing.percentageRate,
+    ...(pricing.pricingErrors.length ? { pricingErrors: pricing.pricingErrors } : {}),
     unitPrice: lower === null ? "" : lower, unitPriceMax: upper,
     currency: CURRENCIES.includes(entry.currency) ? entry.currency : getQuoteDefaultCurrency(category),
     remark: safeText(entry.remark, 3000), isAtCost: entry.isAtCost === true,
@@ -158,6 +178,25 @@ function normalizeQuoteFeeTemplates(value) {
     if (!row || ids.has(row.id)) continue;
     ids.add(row.id);
     rows.push(row);
+  }
+  return rows;
+}
+
+// Upgrade only a nonempty configured library. Custom/disabled matching rows win,
+// and historical quotes and rate cards remain independent snapshots.
+function upgradeQuoteFeeTemplates(value, configVersion) {
+  const rows = normalizeQuoteFeeTemplates(value);
+  if (Number(configVersion || 0) >= 3 || !rows.length) return rows;
+  const fold = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]/g, "");
+  const aliases = {
+    "uva-labeling": ["uva", "uvalabelingfee", "uvalabellingfee", "uva标签费", "标签费"],
+    "trade-agency-service": ["tradeagencyservicefee", "tradeagencyfee", "贸易代理费"],
+    "customs-overweight-surcharge": ["overweightsurcharge", "overweightfee", "超重费"],
+  };
+  for (const templateRow of NOVEMBER_QUOTE_FEE_TEMPLATES) {
+    const exists = rows.some((row) => row.id === templateRow.id || (row.category === "CUSTOMS CLEARANCE" &&
+      [row.conceptEn, row.conceptZh, row.conceptEs].some((label) => aliases[templateRow.id].includes(fold(label)))));
+    if (!exists && rows.length < MAX_ROWS) rows.push(normalizeRow(templateRow));
   }
   return rows;
 }
@@ -190,6 +229,7 @@ function validateQuoteFeeTemplates(value) {
     if (entry.unitOfMeasure != null && (typeof entry.unitOfMeasure !== "string" || entry.unitOfMeasure.length > 40)) return "invalid_fee_template_unit";
     if (entry.remark != null && (typeof entry.remark !== "string" || entry.remark.length > 3000)) return "invalid_fee_template_remark";
     if (entry.sourceNote != null && (typeof entry.sourceNote !== "string" || entry.sourceNote.length > 2000)) return "invalid_fee_template_source";
+    if (normalizeChargePricing(entry).pricingErrors.length) return "invalid_fee_template_percentage";
   }
   return "";
 }
@@ -200,9 +240,11 @@ module.exports = {
   DEFAULT_CURRENCY_BY_CATEGORY,
   getQuoteDefaultCurrency,
   DEFAULT_QUOTE_FEE_TEMPLATES,
+  NOVEMBER_QUOTE_FEE_TEMPLATES,
   DEFAULT_CARGO_PRICING_RULES,
   normalizeCargoPricingRules,
   validateCargoPricingRules,
   normalizeQuoteFeeTemplates,
+  upgradeQuoteFeeTemplates,
   validateQuoteFeeTemplates,
 };

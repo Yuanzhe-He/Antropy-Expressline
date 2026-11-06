@@ -54,6 +54,8 @@ function quoteConfigErrorMessage(code, language) {
     invalid_cargo_pricing_rules: ["计费规则不完整，请检查 LCL、BBK、AIR 三项后重试。", "Completa las reglas de LCL, BBK y AIR."],
     invalid_cargo_pricing_method: ["请选择有效的计费方式：原始数值较大者、体积重或手动。", "Selecciona máximo numérico, peso volumétrico o manual."],
     invalid_cargo_pricing_divisor: ["体积系数必须为大于 0 的数字；选择体积重计费时必须填写。", "El divisor debe ser un número mayor que 0 y es obligatorio al usar peso volumétrico."],
+    invalid_fee_template_pricing: ["请检查金额或百分比计价方式、费率及价格区间；百分比不能同时使用金额区间或 AT COST。", "Revisa el tipo de precio y el porcentaje; no combines porcentajes con rangos o AT COST."],
+    invalid_fee_template_percentage: ["请填写有效的非负百分数，也可留空待填；百分比不能同时使用金额区间或 AT COST。", "Captura un porcentaje no negativo válido o déjalo pendiente; no lo combines con rangos o AT COST."],
     invalid_fee_template_price: ["价格必须是非负数字，也可以留空。", "El precio debe ser un número no negativo o quedar vacío."],
     invalid_fee_template_price_range: ["价格上限必须是非负数字，并且不低于下限；单一价格请留空上限。", "El precio máximo debe ser numérico y no menor que el mínimo; déjalo vacío para un precio único."],
     invalid_fee_template_quantity: ["默认数量必须是非负数字，也可以留空。", "La cantidad predeterminada debe ser un número no negativo o quedar vacía."],
@@ -215,6 +217,7 @@ function register(app, ctx) {
         // An older form may omit official codes entirely. Keep its saved codes;
         // current forms submit blank explicitly when a code is not yet known.
         const codes = b.fee_code === undefined ? null : ensureArray(b.fee_code);
+        const pricingFields = Object.fromEntries(["priceType", "percentageRate"].map((name) => [name, b[`fee_${name}`] === undefined ? null : ensureArray(b[`fee_${name}`])]));
         const previous = new Map((quote.settings.feeTemplates || []).map((entry) => [entry.id, entry]));
         const text = (field, index) => typeof fields[field][index] === "string" ? fields[field][index].trim() : "";
         const rows = fields.id.map((_id, index) => {
@@ -232,6 +235,8 @@ function register(app, ctx) {
             conceptEn: text("en", index), conceptZh: text("zh", index), conceptEs: text("es", index),
             unit: text("unit", index), defaultQuantity: text("unit", index), unitOfMeasure: text("uom", index),
             unitPrice: text("price", index), unitPriceMax: text("max", index),
+            priceType: pricingFields.priceType ? pricingFields.priceType[index] : (stored.priceType || "amount"),
+            percentageRate: pricingFields.percentageRate ? pricingFields.percentageRate[index] : (stored.percentageRate ?? ""),
             remark: text("remark", index), sourceNote: text("sourceNote", index),
             enabled: text("active", index) === "1", selectionRequired: text("selectionRequired", index) === "1",
             editorActiveValue: text("active", index), editorSelectionValue: text("selectionRequired", index),
@@ -239,7 +244,7 @@ function register(app, ctx) {
           };
         });
         feeError = validateQuoteFeeTemplates(rows);
-        if ((codes && (codes.length !== fields.id.length || codes.some((value) => typeof value !== "string"))) || FEE_FORM_FIELDS.some((field) => fields[field].length !== fields.id.length || fields[field].some((value) => typeof value !== "string"))) {
+        if (Object.values(pricingFields).some((values) => values && (values.length !== fields.id.length || values.some((value) => typeof value !== "string"))) || (codes && (codes.length !== fields.id.length || codes.some((value) => typeof value !== "string"))) || FEE_FORM_FIELDS.some((field) => fields[field].length !== fields.id.length || fields[field].some((value) => typeof value !== "string"))) {
           feeError = "invalid_fee_templates";
         } else if (fields.active.some((value) => !["0", "1"].includes(value))) {
           feeError = "invalid_fee_template_enabled";

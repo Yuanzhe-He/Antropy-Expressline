@@ -90,6 +90,10 @@
   .dual-note { margin-top: 4px; font-size: 7.5px; color: #6b7785; line-height: 1.3; }
   .dual-note .zh { color: #6b7785; }
 
+  .percentage-detail { font-size: 7px; color: #41505f; white-space: normal; overflow-wrap: anywhere; }
+  .percentage-price { white-space: normal !important; }
+  .company-stamp { margin-top: 8mm; text-align: right; break-inside: avoid; page-break-inside: avoid; }
+  .company-stamp img { display: inline-block; width: 45mm; height: auto; max-height: 35mm; object-fit: contain; }
   .notes { margin-top: 12px; break-inside: avoid; page-break-inside: avoid; }
   .notes ol { margin: 4px 0 0; padding-left: 16px; orphans: 3; widows: 3; }
   .notes li { margin-bottom: 3px; break-inside: avoid; page-break-inside: avoid; }
@@ -154,6 +158,12 @@
     colCode: { EN: "INTERNAL CODE", ZH: "内部计费代码", ES: "CÓDIGO INTERNO" },
     internalCopy: { EN: "INTERNAL COPY", ZH: "内部版", ES: "COPIA INTERNA" },
     taxIncluded: { EN: "Entered prices include tax. No additional tax has been added.", ZH: "输入价格已含税，未重复加税。", ES: "Los precios incluyen impuestos. No se agregaron impuestos adicionales." },
+    mexicoTaxIncluded: { EN: "The fixed prices quoted for the Mexico segment include applicable Mexican VAT. No additional VAT has been added. This statement does not cover foreign charges; charges if incurred follow their stated conditions.", ZH: "上述墨西哥段固定报价已包含适用的墨西哥增值税，未重复加税。本说明不适用于境外费用；发生才收取的费用按各项列明条件执行。", ES: "Los precios fijos del tramo de México incluyen el IVA mexicano aplicable. No se agregó IVA adicional. Esto no cubre los cargos fuera de México; los cargos si se generan siguen sus condiciones indicadas." },
+    percentBasis: { EN: "Percentage of the entered commercial-invoice goods value, excluding freight, insurance and taxes; value in the fee currency. Charged once, not multiplied by quantity.", ZH: "按录入的商业发票货物金额计算，不含运费、保险和税费；货值与费用使用同一币种。按该基数收取一次，不再乘数量。", ES: "Porcentaje del valor de mercancías de la factura comercial capturado, sin flete, seguro ni impuestos, en la moneda del cargo. Se cobra una vez, sin multiplicar por cantidad." },
+    cargoValue: { EN: "Goods value", ZH: "货值基数", ES: "Valor de mercancía" },
+    pendingAmount: { EN: "Pending", ZH: "待计算", ES: "Pendiente" },
+    confirmedSubtotal: { EN: "CONFIRMED FIXED SUBTOTAL", ZH: "已确认固定费用小计", ES: "SUBTOTAL FIJO CONFIRMADO" },
+    pendingSubtotal: { EN: "Percentage charges with no goods value remain pending and are excluded from this subtotal. This is not the complete final amount.", ZH: "尚未录入货值的百分比费用待计算，未计入此小计；该小计并非完整最终金额。", ES: "Los cargos porcentuales sin valor de mercancía están pendientes y se excluyen de este subtotal; no representa el importe final completo." },
     taxExcluded: { EN: "Entered prices exclude tax. Applicable tax is not included in these amounts.", ZH: "输入价格未含税，所示金额未加税。", ES: "Los precios no incluyen impuestos. Los impuestos aplicables no están incluidos." },
     colConcept: { EN: "CONCEPT", ZH: "费用", ES: "CONCEPTO" },
     colQty: { EN: "QTY", ZH: "数量", ES: "CANT." },
@@ -213,8 +223,13 @@
   for (var variantIndex = 0; variantIndex < cardVariants.length; variantIndex += 3) {
     variantPanels.push(cardVariants.slice(variantIndex, variantIndex + 3));
   }
+  var hasPercentages = longTerm
+    ? cardRows.some((row) => Object.values(row.cells || {}).some((cell) => cell && cell.priceType === 'percentage'))
+    : chargeList.some((charge) => (charge.sections || []).some((sec) => (sec.groups || []).some((group) => group.items.some((row) => row.priceType === 'percentage'))));
+  var pendingPercentages = typeof pendingPercentage !== 'undefined' && pendingPercentage === true;
   function rateLabel(cell) {
     if (!cell) return "—";
+    if (cell.priceType === "percentage") return cell.percentageRate == null ? "—" : `${cell.percentageRate}%`;
     if (cell.isAtCost) return "AT COST";
     if (typeof cell.priceLabel === "string") return cell.priceLabel;
     if (cell.unitPrice === null || cell.unitPrice === undefined || cell.unitPrice === "") return "—";
@@ -310,7 +325,7 @@
             <td class="quantity">1</td>
             <td><%= uomLabel(row.unitOfMeasure) %></td>
             <% panel.forEach((variant) => { var cell = (row.cells || {})[variant.id]; %>
-              <td class="num <%= cell && cell.isAtCost ? 'atcost' : '' %>"><%= rateLabel(cell) %></td>
+              <td class="num <%= cell && cell.isAtCost ? 'atcost' : '' %>"><%= rateLabel(cell) %><% if (cell && cell.priceType === 'percentage') { %><div class="percentage-detail"><%= bilingualLabel('cargoValue') %></div><% } %></td>
             <% }); %>
             <td class="cur"><%= row.currency %></td>
             <td><%= row.remark || '' %></td>
@@ -367,10 +382,10 @@
                 <% if (row.conceptZh) { %><div class="concept-zh zh"><%= row.conceptZh %></div><% } %>
               <% } %>
             </td>
-            <td class="num"><%= row.unit === null ? "" : row.unit %></td>
+            <td class="num"><%= row.priceType === 'percentage' ? 1 : (row.unit === null ? "" : row.unit) %></td>
             <td><%= uomLabel(row.unitOfMeasure) %></td>
-            <td class="num <%= row.isAtCost ? 'atcost' : '' %>"><%= row.unitPriceLabel %></td>
-            <td class="num <%= row.total === null ? 'atcost' : '' %>"><%= row.totalLabel %></td>
+            <td class="num <%= row.isAtCost ? 'atcost' : '' %> <%= row.priceType === 'percentage' ? 'percentage-price' : '' %>"><%= row.unitPriceLabel %><% if (row.priceType === 'percentage') { %><div class="percentage-detail"><%= bilingualLabel('cargoValue') %>: <%= row.cargoValue === null || row.cargoValue === undefined || row.cargoValue === '' ? '—' : Number(row.cargoValue).toLocaleString('en-US', {maximumFractionDigits: 2}) %> <%= row.currency %></div><% } %></td>
+            <td class="num <%= row.total === null ? 'atcost' : '' %>"><%= row.priceType === 'percentage' && row.pricingStatus === 'pending' ? L('pendingAmount') : row.totalLabel %></td>
             <td class="cur"><%= row.currency %></td>
             <td><%= row.remark %></td>
           </tr>
@@ -393,19 +408,21 @@
     </div>
   <% } %>
 
+  <% if (hasPercentages) { %><p class="subtotal-note"><%= bilingualLabel('percentBasis') %></p><% } %>
   <% if (includeTotals) { %>
   <div class="subtotals">
     <% subtotals.forEach((s) => { %>
-      <div><%= s.currency %> <%= L("subtotalLabel") %>: <b><%= s.amountLabel %> <%= s.currency %></b></div>
+      <div><%= s.currency %> <%= L(pendingPercentages ? "confirmedSubtotal" : "subtotalLabel") %>: <b><%= s.amountLabel %> <%= s.currency %></b></div>
     <% }); %>
     <% if (!subtotals.length) { %><div class="atcost"><%= bilingualLabel("noFixedAmount") %></div><% } %>
   </div>
+  <% if (pendingPercentages) { %><p class="subtotal-note"><%= bilingualLabel('pendingSubtotal') %></p><% } %>
   <% if (typeof indicative !== 'undefined' && indicative) { %>
     <p class="indicative"><%= bilingualLabel('indicativeLabel') %>: <%= indicative.amountLabel %> <%= indicative.currency %><% if (indicative.asOfDate) { %> · <%= indicative.asOfDate %><% } %></p>
   <% } %>
   <% } %>
-  <% if (tax === 'included' || tax === 'excluded') { %>
-    <p class="subtotal-note"><%= bilingualLabel(tax === 'included' ? 'taxIncluded' : 'taxExcluded') %></p>
+  <% if (tax === 'included' || tax === 'excluded' || tax === 'mexico_included') { %>
+    <p class="subtotal-note"><%= bilingualLabel(tax === 'mexico_included' ? 'mexicoTaxIncluded' : tax === 'included' ? 'taxIncluded' : 'taxExcluded') %></p>
   <% } %>
 
   <div class="notes">
@@ -420,6 +437,10 @@
       <% }); %>
     </ol>
   </div>
+
+  <% if (typeof includeStamp !== 'undefined' && includeStamp === true && assets.companyStamp) { %>
+    <div class="company-stamp"><img src="<%= assets.companyStamp %>" alt="Express Line Corporation company stamp" /></div>
+  <% } %>
 
   <footer class="doc-footer">
     <div class="brand">Express Line Corporation</div>

@@ -22,10 +22,12 @@ const {
   slugifyId,
 } = require("./shared");
 const { normalizeCargoPricing, normalizeCargoPricingByType } = require("../../../public/quote-pricing");
+const { normalizeChargePricing } = require("../../../public/quote-charge-pricing");
 const { normalizeQuoteType, normalizeRateCardsByType, createDefaultRateCard } = require("../../../public/quote-rate-card");
-const { QUOTE_CONFIG_VERSION, DEFAULT_QUOTE_FEE_TEMPLATES, DEFAULT_CURRENCY_BY_CATEGORY, normalizeQuoteFeeTemplates, normalizeCargoPricingRules } = require("../quote-config");
+const { QUOTE_CONFIG_VERSION, DEFAULT_QUOTE_FEE_TEMPLATES, DEFAULT_CURRENCY_BY_CATEGORY, upgradeQuoteFeeTemplates, normalizeCargoPricingRules } = require("../quote-config");
 
 function normalizeQuoteLineItem(item = {}, fallbackId) {
+  const chargePricing = normalizeChargePricing(item);
   const atCost =
     Boolean(item.isAtCost) ||
     String(item.unitPrice ?? "").trim().toUpperCase() === "AT COST";
@@ -58,6 +60,7 @@ function normalizeQuoteLineItem(item = {}, fallbackId) {
     section: item.section === "foreign" ? "foreign" : "mexico",
     chargeKind: item.chargeKind === "contingent" ? "contingent" : "fixed",
     included: item.included !== false,
+    ...chargePricing,
     unitPriceMax: item.unitPriceMax === "" || item.unitPriceMax === null || item.unitPriceMax === undefined ? null : Math.max(0, parseNumber(item.unitPriceMax, 0)),
     appliesTo: Array.isArray(item.appliesTo) ? item.appliesTo.map(String).filter((code) => ["FCL", "LCL", "BBK", "AIR"].includes(code)) : ["FCL", "LCL", "BBK", "AIR"],
     unitOfMeasure: String(item.unitOfMeasure || "").trim(),
@@ -89,6 +92,11 @@ function normalizeQuoteHeader(header = {}) {
   const cargoType = normalizeQuoteCargoCode(header.cargoType);
   return {
     operation: operation === "EXPORT" ? "EXPORT" : "IMPORT",
+    customerCode: typeof header.customerCode === "string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$/.test(header.customerCode.trim()) ? header.customerCode.trim() : "",
+    salesCode: typeof header.salesCode === "string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$/.test(header.salesCode.trim()) ? header.salesCode.trim() : "",
+    revision: Number.isSafeInteger(Number(header.revision)) && Number(header.revision) >= 1 && Number(header.revision) <= 9999 ? Number(header.revision) : 1,
+    quoteEditorId: typeof header.quoteEditorId === "string" && /^[-A-Za-z0-9]{1,80}$/.test(header.quoteEditorId) ? header.quoteEditorId : "",
+    includeStamp: header.includeStamp === true,
     department: pickQuoteHeaderOption(
       header.department,
       QUOTE_DEPARTMENT_OPTIONS,
@@ -115,7 +123,7 @@ function normalizeQuoteHeader(header = {}) {
     showTotals: header.showTotals === true,
     notesSelectionExplicit: header.notesSelectionExplicit === true,
     outputAudience: header.outputAudience === "internal" ? "internal" : "customer",
-    taxTreatment: ["included", "excluded"].includes(header.taxTreatment) ? header.taxTreatment : "unspecified",
+    taxTreatment: ["included", "excluded", "mexico_included"].includes(header.taxTreatment) ? header.taxTreatment : "unspecified",
     ...(cargoType && typeof header.cargoTypeLabel === "string" && header.cargoTypeLabel.trim()
       ? { cargoTypeLabel: header.cargoTypeLabel.trim().slice(0, 120) }
       : {}),
@@ -198,9 +206,9 @@ function normalizeQuoteModuleData(moduleData = {}) {
   if (Number(settingsIn.cargoTypePolicyVersion || 0) < 2 && cargoTypes.length && !cargoTypes.some((entry) => entry.code === "AIR")) {
     cargoTypes.push({ code: "AIR", label: "AIR", enabled: true });
   }
-  const feeTemplates = normalizeQuoteFeeTemplates(Array.isArray(settingsIn.feeTemplates)
+  const feeTemplates = upgradeQuoteFeeTemplates(Array.isArray(settingsIn.feeTemplates)
     ? settingsIn.feeTemplates
-    : [...QUOTE_TEMPLATE_ROWS.filter((row) => row.section === "foreign").map((row, index) => ({...row, id: `foreign-${index + 1}`, chargeKind: "fixed", enabled: true, appliesTo: ["FCL", "LCL", "BBK"]})), ...DEFAULT_QUOTE_FEE_TEMPLATES]);
+    : [...QUOTE_TEMPLATE_ROWS.filter((row) => row.section === "foreign").map((row, index) => ({...row, id: `foreign-${index + 1}`, chargeKind: "fixed", enabled: true, appliesTo: ["FCL", "LCL", "BBK"]})), ...DEFAULT_QUOTE_FEE_TEMPLATES], settingsIn.feeTemplateConfigVersion);
   if (Number(settingsIn.feeTemplateConfigVersion || 0) < 2) {
     const local = feeTemplates.find((row) => row.id === "delivery-order" && row.category === "SHIPPING LINE" && row.conceptEn === "Delivery Order Fee" && row.conceptZh === "船公司 LOCAL");
     if (local) local.conceptEn = "Shipping line local charge";

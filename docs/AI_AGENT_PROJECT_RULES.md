@@ -128,6 +128,7 @@ It does not mean AI Workflow only applies when the phrase is used.
 - Source: `docs/business-process.md`; yard options depend on `港口 + 船公司`.
 - Source: `README.md`; exchange rate refresh uses public USD/MXN sources and can be refreshed manually.
 - Inferred; needs review: changes that affect fee formulas, tax handling, exchange rates, or quote totals require regression checks and should be described explicitly in Task Summary.
+- Quote normalization must be byte-idempotent after JSON roundtrip, including property order for blank/default cells: store change detection compares serialized JSON. Verify with the percentage/idempotence and RMW-cache regressions when adding fields. Source: EXP-QUOTE-20261106-normalization-byte-stability.
 
 ## Testing Rules
 
@@ -137,6 +138,7 @@ It does not mean AI Workflow only applies when the phrase is used.
 - Source: `package.json`; Excel template generation command is `npm run templates:excel`.
 - Source: `docs/product-uiux-audit.md`; UI coverage is currently weaker than backend smoke coverage and should include real browser checks when UI behavior changes.
 - Test failure tasks automatically classify infrastructure failure vs product regression.
+- When checking quote tax-note consistency, assert every conflicting sentence is absent from the exported PDF, including standalone follow-up clauses such as "VAT will be added"; preserve insurance and foreign-scope conditions. Source: EXP-QUOTE-20261106-tax-followup-sentence.
 - For DB-backed changes, separate infrastructure failures from product regressions.
 - If the agent fixes a regression caused by its own change, mark `[SELF_CORRECTION]` and route the lesson.
 

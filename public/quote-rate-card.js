@@ -64,15 +64,24 @@
   }
 
   function normalizeCell(value, field, errors) {
-    if (value == null) return { unitPrice: null, unitPriceMax: null, isAtCost: false };
+    // Match the populated-cell key order too: cache section diffs compare JSON,
+    // so a second normalization must not turn a no-op into an extra module write.
+    if (value == null) return { priceType: "amount", percentageRate: null, unitPrice: null, unitPriceMax: null, isAtCost: false };
     const input = isObject(value) ? value : {};
     if (input !== value) errors.push(`${field}:invalid_cell`);
     rejectPrototypeKeys(input, field, errors);
     const cell = {
+      priceType: input.priceType === "percentage" ? "percentage" : "amount",
+      percentageRate: price(input.percentageRate, `${field}.percentageRate`, errors),
       unitPrice: price(input.unitPrice, `${field}.unitPrice`, errors),
       unitPriceMax: price(input.unitPriceMax, `${field}.unitPriceMax`, errors),
       isAtCost: flag(input.isAtCost, false, `${field}.isAtCost`, errors),
     };
+    if (input.priceType !== undefined && !["amount", "percentage"].includes(input.priceType)) errors.push(`${field}.priceType:invalid_type`);
+    if (cell.priceType === "percentage") {
+      if (cell.isAtCost) errors.push(`${field}.priceType:at_cost_conflict`);
+      if (!empty(input.unitPriceMax)) errors.push(`${field}.priceType:range_conflict`);
+    }
     if (cell.unitPriceMax !== null && (cell.unitPrice === null || cell.unitPriceMax < cell.unitPrice)) {
       errors.push(`${field}.unitPriceMax:invalid_range`);
     }
@@ -207,7 +216,7 @@
   }
 
   function offered(cell) {
-    return Boolean(cell) && (cell.isAtCost === true || cell.unitPrice !== null);
+    return Boolean(cell) && (cell.priceType === "percentage" ? cell.percentageRate !== null && cell.percentageRate !== undefined : cell.isAtCost === true || cell.unitPrice !== null);
   }
 
   function validateRateCard(card, options = {}) {
@@ -238,6 +247,15 @@
     return Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 20 });
   }
 
+  function cellDisplay(cell) {
+    if (!cell) return "—";
+    if (cell.priceType === "percentage") return cell.percentageRate == null ? "—" :
+      `${Number(cell.percentageRate).toLocaleString("en-US", { maximumFractionDigits: 20, useGrouping: false })}%`;
+    return cell.isAtCost ? "AT COST" : cell.unitPrice == null ? "—" :
+      cell.unitPriceMax !== null && cell.unitPriceMax !== undefined && cell.unitPriceMax > cell.unitPrice
+        ? `${formatPrice(cell.unitPrice)}–${formatPrice(cell.unitPriceMax)}` : formatPrice(cell.unitPrice);
+  }
+
   function buildRateCardView(card, quoteMode) {
     const normalized = normalizeRateCard(card);
     // No partial matrix should be printed when an over-limit structure cannot
@@ -262,9 +280,7 @@
     const errors = validateRateCard(effective, { forExport: true });
     const rows = activeRows.map((row) => ({ ...row, unit: 1, cells: Object.fromEntries(normalized.variants.filter((variant) => safeId(variant.id)).map((variant) => {
       const cell = row.cells[variant.id];
-      return [variant.id, { ...cell, offered: offered(cell), priceLabel: cell.isAtCost ? "AT COST"
-        : cell.unitPrice === null ? "—" : cell.unitPriceMax !== null && cell.unitPriceMax > cell.unitPrice
-          ? `${formatPrice(cell.unitPrice)}–${formatPrice(cell.unitPriceMax)}` : formatPrice(cell.unitPrice) }];
+      return [variant.id, { ...cell, offered: offered(cell), priceLabel: cellDisplay(cell) }];
     })) }));
     const chargeSections = ["fixed", "contingent"].map((chargeKind) => ({
       chargeKind,
@@ -278,5 +294,5 @@
   }
 
   return { normalizeQuoteType, normalizeRateCard, normalizeRateCardsByType, parseRateCardsByType,
-    createDefaultRateCard, validateRateCard, validateRateCardsByType, buildRateCardView };
+    createDefaultRateCard, validateRateCard, validateRateCardsByType, buildRateCardView, cellDisplay };
 });

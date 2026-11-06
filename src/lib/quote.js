@@ -1,6 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { effectiveRoute } = require("./inland-routes");
+const { calculateCharge } = require("../../public/quote-charge-pricing");
 
 // Bump to (re)seed modules.quote.templateRows / notes from the constants below.
 // v2 (20260617): added the NO MEXICO (foreign) preset rows + the two foreign
@@ -660,26 +661,33 @@ function computeQuoteTotals(lineItems = [], options = {}) {
   const pairs = options.exchangeRates?.pairs || [];
   const subtotals = {};
   const rows = lineItems.map((item) => {
+    const pricing = calculateCharge(item);
     const atCost = Boolean(item.isAtCost) || isAtCostValue(item.unitPrice);
     const absent = (value) => value == null || String(value).trim() === "";
     const unit = absent(item.unit) ? null : toNumber(item.unit, null);
     const unitPrice = atCost || absent(item.unitPrice) ? null : toNumber(item.unitPrice, null);
-    const total = atCost || unit === null || unitPrice === null ? null : roundMoney(unit * unitPrice);
-    const hasRange = item.unitPriceMax !== null && item.unitPriceMax !== undefined && item.unitPriceMax !== "" && Number(item.unitPriceMax) > unitPrice;
-    const totalMax = hasRange && total !== null ? roundMoney(unit * Number(item.unitPriceMax)) : null;
+    const total = pricing.total;
+    const totalMax = pricing.totalMax;
+    const hasRange = totalMax !== null;
     const contingent = item.chargeKind === "contingent";
     if (total !== null && !contingent && item.included !== false && !hasRange && item.currency) {
       subtotals[item.currency] = roundMoney((subtotals[item.currency] || 0) + total);
     }
     return {
       ...item,
+      priceType: pricing.priceType,
+      percentageRate: pricing.percentageRate,
+      cargoValue: pricing.cargoValue,
+      pricingStatus: pricing.status,
+      pricingErrors: pricing.errors,
+      rateLabel: pricing.rateLabel,
       isAtCost: atCost,
       unit,
       unitPrice: atCost ? "AT COST" : unitPrice,
       total,
       totalMax,
-      totalLabel: atCost ? "AT COST" : total === null ? "—" : hasRange ? `${formatMoney(total)}–${formatMoney(totalMax)}` : formatMoney(total),
-      unitPriceLabel: atCost ? "AT COST" : unitPrice === null ? "—" : hasRange ? `${formatMoney(unitPrice)}–${formatMoney(item.unitPriceMax)}` : formatMoney(unitPrice),
+      totalLabel: pricing.status === "atcost" ? "AT COST" : total === null ? "—" : hasRange ? `${formatMoney(total)}–${formatMoney(totalMax)}` : formatMoney(total),
+      unitPriceLabel: pricing.priceType === "percentage" ? pricing.rateLabel : atCost ? "AT COST" : unitPrice === null ? "—" : hasRange ? `${formatMoney(unitPrice)}–${formatMoney(item.unitPriceMax)}` : formatMoney(unitPrice),
     };
   });
 
