@@ -16,7 +16,7 @@ const base = { pageTitle:'Quote',currentPath:'',currentArea:'',currentModuleKey:
 function render(data) {
  const html = ejs.render(fs.readFileSync('views/workbench-quote.ejs','utf8'), data, {filename:path.join(repo,'views/workbench-quote.ejs'),includer:(name,file)=>/partials\/(header|footer)$/.test(name)?{template:''}:{filename:file}});
  const dom = new JSDOM(html,{runScripts:'outside-only',url:'http://localhost/workbench/quote'});
- for(const file of ['quote-pricing.js','quote-rate-card.js','quote-rate-card-editor.js','quote.js']) dom.window.eval(fs.readFileSync('public/'+file,'utf8'));
+ for(const file of ['quote-pricing.js','quote-charge-pricing.js','quote-rate-card.js','quote-rate-card-editor.js','quote.js']) dom.window.eval(fs.readFileSync('public/'+file,'utf8'));
  return dom;
 }
 base.quoteTemplates=[{id:'ship-fee',enabled:true,appliesTo:['FCL','LCL','BBK','AIR'],category:'SHIPPING LINE',conceptZh:'船司费用',conceptEn:'Shipping fee',unitOfMeasure:'container',currency:'USD',unitPrice:999,defaultQuantity:9,section:'mexico',chargeKind:'fixed'}, {id:'if-fee',enabled:true,appliesTo:['FCL'],category:'PORT FEES',conceptZh:'或有费用',unitOfMeasure:'container',currency:'MXN',section:'mexico',chargeKind:'contingent'}];

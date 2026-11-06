@@ -143,3 +143,15 @@
   .quote-shell .quote-mode-grid { grid-template-columns: 1fr; }
   .quote-rate-card-editor .quote-rate-variants > strong { flex-basis: 100%; }
 }
+
+/* Quote feedback: stacked pricing controls keep the fee table scannable. */
+.quote-shell table[data-quote-table] td:nth-child(6) { min-width: 105px; }
+.quote-shell table[data-quote-table] td:nth-child(7) { width: 150px; min-width: 135px; }
+.quote-shell .quote-price-cell > *, .quote-shell .quote-percent-fields { margin-bottom: .3rem; }
+.quote-shell .quote-percent-fields { display: grid; gap: .35rem; }
+.quote-shell .quote-percent-fields label, .quote-shell .quote-range-edit { display: grid; gap: .2rem; font-size: .68rem; }
+.quote-shell .quote-percent-fields small, .quote-shell .quote-unit-label, .quote-shell .quote-fee-status { display: block; color: var(--quote-muted); font-size: .68rem; line-height: 1.4; white-space: normal; }
+.quote-shell .quote-unit-label { margin-top: .25rem; }
+.quote-shell [data-pricing-status="invalid"] .quote-fee-status { color: #d59a65; }
+.quote-shell .quote-rate-price > select { margin-bottom: .3rem; }
+.quote-shell .quote-rate-percent-label { display: block; font-size: .68rem; color: var(--quote-muted); line-height: 1.4; }

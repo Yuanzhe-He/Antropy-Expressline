@@ -464,3 +464,5 @@ Only record lessons that may change future behavior.
 - evidence: `scripts/audit-fx-scheduler-midnight-test.js` (fails on Node 20 before the fix, passes after); production logs after deploy.
 - status: local; no global promotion.
 
+
+- 2026-11-06 | EXP-QUOTE-20261106-normalization-byte-stability | docs/AI_AGENT_PROJECT_RULES.md#Business Invariants | [SELF_CORRECTION] Blank and populated rate-card cells must normalize to the same JSON property order; unequal ordering triggered unnecessary whole-blob persistence. Regression: audit-rmw-cache-test.js and audit-quote-percentage-test.js.

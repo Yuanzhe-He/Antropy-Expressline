@@ -6,6 +6,7 @@
   const isSpanish = document.documentElement.lang === 'es';
   const text = (zh, es) => isSpanish ? es : zh;
   const input = (row, field) => row.querySelector(`[name="fee_${field}[]"]`);
+  const deletedRows = { fixed: [], contingent: [] };
   const rows = () => [...editor.querySelectorAll('.fee-list [data-fee-row]')];
 
   function defaultCurrency(category) {
@@ -16,23 +17,36 @@
   function updateSummary(row) {
     const name = input(row, isSpanish ? 'es' : 'zh').value.trim() || input(row, 'en').value.trim() || text('新费用', 'Nuevo cargo');
     const kind = input(row, 'chargeKind').value === 'contingent' ? text('发生才收', 'Si ocurre') : text('固定费用', 'Cargo fijo');
-    const price = input(row, 'price').value.trim() || '—';
+    const percentage = input(row, 'priceType').value === 'percentage';
+    const price = percentage ? (input(row, 'percentageRate').value.trim() || '—') + '%' : input(row, 'price').value.trim() || '—';
+    row.querySelector('[data-fee-percentage-field]').hidden = !percentage;
+    row.querySelector('[data-fee-amount-field]').hidden = percentage;
+    const conflict = percentage && (input(row, 'max').value.trim() !== '' || /^at\s*cost$/i.test(input(row, 'price').value.trim()));
+    row.querySelector('[data-fee-max-field]').hidden = percentage && !conflict;
+    row.querySelector('[data-fee-pricing-warning]').hidden = !conflict;
     const max = input(row, 'max').value.trim();
     const status = input(row, 'active').value === '1' ? text('启用', 'Activo') : text('停用', 'Inactivo');
     row.querySelector('[data-fee-summary-name]').textContent = name;
-    row.querySelector('[data-fee-summary-meta]').textContent = `${kind} · ${price}${max ? `–${max}` : ''} ${input(row, 'currency').value} · ${status}`;
+    row.querySelector('[data-fee-summary-meta]').textContent = `${kind} · ${price}${!percentage && max ? `–${max}` : ''} ${percentage ? '' : input(row, 'currency').value} · ${status}`;
   }
 
   function updateCounts() {
     for (const kind of ['fixed', 'contingent']) {
-      const count = editor.querySelector(`[data-fee-list="${kind}"]`).children.length;
+      const count = editor.querySelector(`[data-fee-list="${kind}"]`).querySelectorAll('[data-fee-row]').length;
       editor.querySelector(`[data-fee-count="${kind}"]`).textContent = count;
       editor.querySelector(`[data-fee-empty="${kind}"]`).hidden = count > 0;
+      editor.querySelector(`[data-fee-undo="${kind}"]`).disabled = !deletedRows[kind].length || rows().length >= 100;
     }
     editor.querySelectorAll('[data-fee-add]').forEach((button) => { button.disabled = rows().length >= 100; });
   }
 
   editor.addEventListener('click', (event) => {
+    const undo = event.target.closest('[data-fee-undo]');
+    if (undo) {
+      const entry = deletedRows[undo.dataset.feeUndo]?.pop();
+      if (entry) { entry.anchor.replaceWith(entry.row); updateCounts(); entry.row.open = true; entry.row.querySelector('input:not([type="hidden"])')?.focus(); }
+      return;
+    }
     const add = event.target.closest('[data-fee-add]');
     if (add && rows().length < 100) {
       const row = template.content.firstElementChild.cloneNode(true);
@@ -51,6 +65,9 @@
     if (remove) {
       const row = remove.closest('[data-fee-row]');
       const group = row.closest('[data-fee-group]');
+      const kind = input(row, 'chargeKind').value === 'contingent' ? 'contingent' : 'fixed';
+      const anchor = document.createComment('deleted fee template'); row.before(anchor);
+      deletedRows[kind].push({ row, anchor });
       row.remove();
       updateCounts();
       group.querySelector('[data-fee-add]').focus();

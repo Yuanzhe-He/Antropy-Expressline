@@ -14,13 +14,43 @@ const { getBusinessModule } = require("../lib/modules");
 const { saveModule } = require("../lib/store");
 const {
   pullCalculatorValues,
-  generateQuoteNumber,
   loadFeeCodes,
   QUOTE_CARGO_TYPE_OPTIONS,
 } = require("../lib/quote");
 const { renderQuotePdf } = require("../lib/quote-pdf");
 const { normalizeQuoteType, normalizeRateCardsByType, validateRateCard } = require("../../public/quote-rate-card");
 const { shouldUseDatabase, insertQuoteSnapshot } = require("../lib/db");
+const { buildQuoteFilename, resolveQuoteNumber, validateQuoteNaming } = require("../lib/quote-export");
+
+// Serialize quote read/allocate/save within this app process. Sequence numbers
+// remain persisted in the existing quote settings. This is not a distributed
+// lock; multiple application writers need a DB-backed allocator.
+let quoteWriteQueue = Promise.resolve();
+function serializeQuoteMutation(handler) {
+  return (req, res, next) => {
+    const task = quoteWriteQueue.then(() => handler(req, res));
+    quoteWriteQueue = task.catch(() => {});
+    return task.catch(next);
+  };
+}
+
+function updateQuoteDraft(quoteModule, formData, numberDecision) {
+  const now = new Date().toISOString();
+  const existing = numberDecision.existing;
+  const saved = {
+    id: existing?.id || require("node:crypto").randomUUID(),
+    number: formData.number, date: formData.date, header: formData.header,
+    quoteMode: formData.quoteMode, lineItems: formData.lineItems,
+    noteIds: formData.noteIds, language: formData.language,
+    createdAt: existing?.createdAt || now, updatedAt: now,
+  };
+  quoteModule.drafts = existing
+    ? (quoteModule.drafts || []).map((entry) => entry.id === existing.id ? saved : entry)
+    : [...(quoteModule.drafts || []), saved];
+  formData.draftId = saved.id;
+  if (numberDecision.advanceTo !== null) quoteModule.settings.lastQuoteSeq = numberDecision.advanceTo;
+}
+
 const { requireAuth } = require("../middleware/auth");
 
 function register(app, ctx) {
@@ -29,7 +59,6 @@ function register(app, ctx) {
     loadShippingData,
     getModuleData,
     redirectWithFlash,
-    buildRuleId,
     renderWorkbench,
     renderQuoteWorkbench,
     rememberCalculatorState,
@@ -123,6 +152,10 @@ function register(app, ctx) {
         showTotals: draft.header.showTotals === true,
         outputAudience: draft.header.outputAudience || "customer",
         taxTreatment: draft.header.taxTreatment || "unspecified",
+        includeStamp: draft.header.includeStamp === true,
+        customerCode: draft.header.customerCode || "",
+        salesCode: draft.header.salesCode || "",
+        revision: draft.header.revision || 1,
         noteIds: draft.header.notesSelectionExplicit || draft.noteIds?.length
           ? draft.noteIds : (quoteModule.notes || []).map((note) => note.id),
         pullInputs: {},
@@ -287,11 +320,21 @@ function register(app, ctx) {
     });
   });
 
-  app.post("/workbench/quote", requireAuth, async (req, res) => {
+  function quoteError(req, res, quoteModule, formData, shippingData, message) {
+    req.flash = { type: "error", message };
+    res.status(400);
+    return renderQuoteWorkbench(req, res, { moduleKey: "quote", quoteModule, formData,
+      quoteView: assembleQuoteView(quoteModule, formData, shippingData),
+      selectorData: buildQuoteSelectorData(shippingData), feeCodes: loadFeeCodes() });
+  }
+
+  app.post("/workbench/quote", requireAuth, serializeQuoteMutation(async (req, res) => {
     const shippingData = await loadShippingData({ refreshRates: false });
     const quoteModule = getModuleData(shippingData, "quote");
     const formData = buildQuoteFormData(quoteModule, req.body);
     const action = req.body.action || "recompute";
+    if (validateQuoteNaming(formData.header).length) return quoteError(req, res, quoteModule, formData, shippingData,
+      req.language === "es" ? "Completa ambos códigos (letras, números, guiones; máximo 40) y una versión entera de 1 a 9999, o deja ambos códigos vacíos." : "客户和报价人 code 请同时填写（字母、数字、下划线或连字符，最多 40 位），也可同时留空；版本必须为 1–9999 的整数。");
     if (formData.quoteType === "long_term") {
       const cardMap = formData.rateCardsByType || {};
       const card = cardMap[formData.header.cargoType];
@@ -327,37 +370,11 @@ function register(app, ctx) {
         message: hasData ? req.t("quote.pulled") : req.t("quote.noShippingData"),
       };
     } else if (action === "saveDraft") {
-      const provided = (req.body.quotationNumber || "").trim();
-      let advanceTo = null;
-      if (provided) {
-        formData.number = provided;
-      } else {
-        const generated = generateQuoteNumber(quoteModule.settings);
-        formData.number = generated.number;
-        advanceTo = generated.nextSeq;
-      }
-      const now = new Date().toISOString();
-      const existingDraft = (quoteModule.drafts || []).find((entry) => entry.id === formData.draftId);
-      const savedDraft = {
-          id: existingDraft?.id || buildRuleId("quote"),
-          number: formData.number,
-          date: formData.date,
-          header: formData.header,
-          quoteMode: formData.quoteMode,
-          lineItems: formData.lineItems,
-          // S2/Q7: persist the ordered remark selection + output language.
-          noteIds: formData.noteIds,
-          language: formData.language,
-          createdAt: existingDraft?.createdAt || now,
-          updatedAt: now,
-      };
-      quoteModule.drafts = existingDraft
-        ? quoteModule.drafts.map((entry) => entry.id === existingDraft.id ? savedDraft : entry)
-        : [...(quoteModule.drafts || []), savedDraft];
-      formData.draftId = savedDraft.id;
-      if (advanceTo !== null) {
-        quoteModule.settings.lastQuoteSeq = advanceTo;
-      }
+      const numberDecision = resolveQuoteNumber(quoteModule, formData, req.body);
+      if (numberDecision.error) return quoteError(req, res, quoteModule, formData, shippingData,
+        req.language === "es" ? "El número ya pertenece a otra cotización. Usa otro número o abre el borrador existente." : "此报价编号已被另一份报价使用，请更换编号或打开已有草稿。");
+      formData.number = numberDecision.number;
+      updateQuoteDraft(quoteModule, formData, numberDecision);
       await saveModule("quote", shippingData);
       req.flash = {
         type: "success",
@@ -373,22 +390,19 @@ function register(app, ctx) {
       selectorData: buildQuoteSelectorData(shippingData),
       feeCodes: loadFeeCodes(),
     });
-  });
+  }));
 
-  app.post("/workbench/quote/pdf", requireAuth, async (req, res) => {
+  app.post("/workbench/quote/pdf", requireAuth, serializeQuoteMutation(async (req, res) => {
     const shippingData = await loadShippingData({ refreshRates: false });
     const quoteModule = getModuleData(shippingData, "quote");
     const formData = buildQuoteFormData(quoteModule, req.body);
 
-    const provided = (req.body.quotationNumber || "").trim();
-    let advanceTo = null;
-    if (provided) {
-      formData.number = provided;
-    } else {
-      const generated = generateQuoteNumber(quoteModule.settings);
-      formData.number = generated.number;
-      advanceTo = generated.nextSeq;
-    }
+    if (validateQuoteNaming(formData.header).length) return quoteError(req, res, quoteModule, formData, shippingData,
+      req.language === "es" ? "Completa ambos códigos válidos y una versión entera de 1 a 9999, o deja ambos códigos vacíos." : "客户和报价人 code 请同时填写且只使用字母、数字、下划线或连字符；版本必须为 1–9999 的整数。旧报价可同时留空 code。");
+    const numberDecision = resolveQuoteNumber(quoteModule, formData, req.body);
+    if (numberDecision.error) return quoteError(req, res, quoteModule, formData, shippingData,
+      req.language === "es" ? "El número ya pertenece a otra cotización. Abre su borrador o cambia el número." : "此报价编号已被另一份报价使用，请打开已有草稿或更换编号。");
+    formData.number = numberDecision.number;
 
     const quoteView = assembleQuoteView(quoteModule, formData, shippingData);
 
@@ -400,6 +414,9 @@ function register(app, ctx) {
       return renderQuoteWorkbench(req, res, { moduleKey: "quote", quoteModule, formData, quoteView,
         selectorData: buildQuoteSelectorData(shippingData), feeCodes: loadFeeCodes() });
     }
+
+    if (quoteView.pricingErrors.length) return quoteError(req, res, quoteModule, formData, shippingData,
+      req.language === "es" ? "Revisa los porcentajes, valores de mercancía y tipos de precio. Un porcentaje no puede combinarse con AT COST o un rango." : "请检查费率、货值及计价方式；百分比不能同时使用 AT COST 或金额区间，负数及无效输入不能导出。");
 
     // Drafts may retain incomplete inputs; a priced PDF must have a complete,
     // server-validated calculation for the currently selected loading mode.
@@ -420,10 +437,9 @@ function register(app, ctx) {
     try {
       const pdf = await renderQuotePdf(quoteView);
 
-      if (advanceTo !== null) {
-        quoteModule.settings.lastQuoteSeq = advanceTo;
-        await saveModule("quote", shippingData);
-      }
+      // Preserve editor identity and metadata for stable re-export/revision.
+      updateQuoteDraft(quoteModule, formData, numberDecision);
+      await saveModule("quote", shippingData);
 
       if (shouldUseDatabase()) {
         try {
@@ -454,15 +470,15 @@ function register(app, ctx) {
         }
       }
 
-      const safeName = String(formData.number || "quote").replace(/[^A-Za-z0-9._-]+/g, "_");
+      const filename = buildQuoteFilename(formData, quoteModule.settings);
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `attachment; filename="${safeName}${quoteView.quoteType === "long_term" ? "-rate-card" : ""}${quoteView.outputAudience === "internal" ? "-internal" : ""}.pdf"`);
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
       return res.send(pdf);
     } catch (error) {
       console.error("quote pdf generation failed", error);
       return redirectWithFlash(req, res, "error", req.t("quote.pdfError"), "/workbench/quote");
     }
-  });
+  }));
 }
 
 module.exports = { register };

@@ -146,10 +146,11 @@ function runPure(shippingData) {
     const empty = normalizeQuoteModuleData({ settings: { cargoTypes: [], cargoTypePolicyVersion: 1 } });
     assert.deepEqual(normalizeQuoteModuleData(empty).settings.cargoTypes, []);
   });
-  pure("26 editable templates preserve 14 screenshot rows, 12 foreign rows, ranges and explicit currencies", () => {
-    assert.equal(quote.settings.feeTemplates.length, 26);
+  pure("29 editable templates preserve 14 original rows, 3 optional November rows and 12 foreign rows", () => {
+    // The November feedback adds three optional customs concepts with blank prices.
+    assert.equal(quote.settings.feeTemplates.length, 29);
     assert.equal(quote.settings.feeTemplates.filter((row) => row.section === "foreign").length, 12);
-    assert.equal(DEFAULT_QUOTE_FEE_TEMPLATES.length, 14);
+    assert.equal(DEFAULT_QUOTE_FEE_TEMPLATES.length, 17);
     assert.equal(DEFAULT_QUOTE_FEE_TEMPLATES.filter((row) => row.chargeKind === "contingent").length, 6);
     const cleaning = quote.settings.feeTemplates.find((row) => row.id === "container-cleaning");
     assert.deepEqual([cleaning.unitPrice, cleaning.unitPriceMax, cleaning.currency], [800, 2000, "MXN"]);
@@ -266,7 +267,7 @@ function runPure(shippingData) {
     const source = buildInitialLineItems("mexico_only", quote.settings.feeTemplates);
     const contingent = source.filter((row) => row.chargeKind === "contingent");
     const excluded = source.filter((row) => row.selectionRequired);
-    assert.equal(excluded.length, 4); assert.ok(excluded.every((row) => row.included === false));
+    assert.equal(excluded.length, 7); assert.ok(excluded.every((row) => row.included === false));
     const references = computeQuoteTotals([...contingent, ...excluded], { exchangeRates: FX, dualCurrency: true, showIndicativeConversion: true });
     assert.deepEqual(references.subtotals, []);
     assert.equal(references.dualTotals.mxn.shown, 0); assert.equal(references.dualTotals.usd.shown, 0);
@@ -392,7 +393,7 @@ async function runHttp(shippingData, sessionStore) {
     });
     assert.equal(edited.status, 302);
     const persisted = await readQuote();
-    assert.equal(persisted.settings.feeTemplates.length, 27);
+    assert.equal(persisted.settings.feeTemplates.length, 30);
     assert.equal(persisted.settings.feeTemplates.find((row) => row.id === "container-cleaning").unitPriceMax, 2100);
     assert.equal(persisted.settings.feeTemplates.find((row) => row.id === "transport-full").enabled, false);
     assert.equal(getQuoteDefaultCurrency("SHIPPING LINE", persisted.settings.defaultCurrencyByCategory), "MXN");

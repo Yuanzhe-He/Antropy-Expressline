@@ -1,6 +1,6 @@
 <%- include("partials/header", { pageTitle, currentPath, currentArea, currentModuleKey, currentModule, user, userRoleLabel, flash, lang, t, languageOptions, languageReturnTo, modules }) %>
 
-<link rel="stylesheet" href="/quote-workbench.css?v=20260922-quote-types" />
+<link rel="stylesheet" href="/quote-workbench.css?v=20261106-quote-feedback" />
 
 <section class="page-heading page-heading-card">
   <div class="page-heading-title"><h2><%= t("quote.adminTitle") %></h2></div>
@@ -165,9 +165,10 @@
   </div>
 </template>
 
-<script src="/quote-rate-card.js?v=20260922-quote-types" defer></script>
-<script src="/quote-rate-card-editor.js?v=20260922-quote-types" defer></script>
+<script src="/quote-charge-pricing.js?v=20261106-quote-feedback" defer></script>
+<script src="/quote-rate-card.js?v=20261106-quote-feedback" defer></script>
+<script src="/quote-rate-card-editor.js?v=20261106-quote-feedback" defer></script>
 <script src="/admin-quote.js" defer></script>
-<script src="/admin-quote-fees.js" defer></script>
+<script src="/admin-quote-fees.js?v=20261106-quote-feedback" defer></script>
 
 <%- include("partials/footer") %>

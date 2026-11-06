@@ -47,6 +47,7 @@ function loadAssets() {
     logoExpressLine: fileToDataUri("express-line-logo.png"),
     logoIata: fileToDataUri("iata-logo.png"),
     logoCtpat: fileToDataUri("ctpat-logo.png"),
+    companyStamp: fileToDataUri("express-line-stamp.png"),
   };
   return assetCache;
 }
@@ -68,7 +69,9 @@ function launchBrowser() {
 }
 
 async function renderQuoteHtml(quoteView) {
-  return ejs.renderFile(templatePath, { ...quoteView, assets: loadAssets() });
+  const assets = loadAssets();
+  if (quoteView.includeStamp === true && !assets.companyStamp) throw new Error("Requested company stamp asset is unavailable");
+  return ejs.renderFile(templatePath, { ...quoteView, assets });
 }
 
 async function renderQuotePdf(quoteView) {

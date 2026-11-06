@@ -1,4 +1,4 @@
-<% const activeConcept = lang === 'zh' ? 'Zh' : 'Es'; const concepts = ['En', 'Zh', 'Es']; const conceptLabels = { En: 'English', Zh: '中文', Es: 'Español' }; %>
+<% const activeConcept = lang === 'zh' ? 'Zh' : 'Es'; const concepts = ['En', 'Zh', 'Es']; const feeText = (zh, es) => lang === 'zh' ? zh : es; const percentPricing = row.priceType === 'percentage'; const conceptLabels = { En: 'English', Zh: '中文', Es: 'Español' }; %>
 <tr data-quote-row data-charge-kind="<%= row.chargeKind === 'contingent' ? 'contingent' : 'fixed' %>">
   <td><select name="li_section[]" aria-label="<%= t('quote.colSection') %>">
     <option value="foreign" <%= row.section === 'foreign' ? 'selected' : '' %>><%= t('quote.sectionForeign') %></option>
@@ -17,11 +17,20 @@
     </details>
   </td>
   <td><input type="number" min="0" step="any" name="li_unit[]" value="<%= row.unit == null ? '' : row.unit %>" data-quote-unit aria-label="<%= t('quote.colQty') %>" /></td>
-  <td><input type="text" name="li_uom[]" value="<%= row.unitOfMeasure || '' %>" list="quote-fee-units" aria-label="<%= t('quote.colUom') %>" placeholder="shipment" /></td>
+  <td><input type="text" name="li_uom[]" value="<%= row.unitOfMeasure || '' %>" list="quote-fee-units" aria-label="<%= t('quote.colUom') %>" placeholder="shipment" data-quote-uom /><small class="quote-unit-label" data-quote-unit-label><%= row.unitOfMeasure === 'shipment' ? feeText('按票', 'Por embarque') : '' %></small></td>
   <td class="quote-price-cell">
-    <input type="number" min="0" step="0.01" name="li_unitPrice[]" value="<%= row.unitPrice == null ? '' : row.unitPrice %>" data-quote-price <%= row.isAtCost ? 'readonly' : '' %> aria-label="<%= t('quote.colUnitPrice') %>" />
-    <input type="hidden" name="li_unitPriceMax[]" value="<%= row.unitPriceMax == null ? '' : row.unitPriceMax %>" data-quote-price-max />
-    <span data-quote-range-label class="quote-range-label" <%= row.unitPriceMax == null ? 'hidden' : '' %>><%= row.unitPriceMax == null ? '' : '– ' + row.unitPriceMax %></span>
+    <select name="li_priceType[]" data-quote-price-type aria-label="<%= feeText('计价方式', 'Método de precio') %>"><option value="amount" <%= !percentPricing ? 'selected' : '' %>><%= feeText('固定金额', 'Importe fijo') %></option><option value="percentage" <%= percentPricing ? 'selected' : '' %>><%= feeText('货值百分比', '% del valor') %></option></select>
+    <div data-quote-amount-fields <%= percentPricing ? 'hidden' : '' %>>
+      <input type="number" min="0" step="0.01" name="li_unitPrice[]" value="<%= row.unitPrice == null ? '' : row.unitPrice %>" data-quote-price <%= row.isAtCost ? 'readonly' : '' %> aria-label="<%= t('quote.colUnitPrice') %>" />
+    </div>
+    <div class="quote-percent-fields" data-quote-percent-fields <%= !percentPricing ? 'hidden' : '' %>>
+      <label><span><%= feeText('费率 %', 'Tasa %') %></span><input type="text" inputmode="decimal" name="li_percentageRate[]" value="<%= row.percentageRate == null ? '' : row.percentageRate %>" data-quote-percentage-rate aria-label="<%= feeText('货值费率 %', 'Porcentaje del valor') %>" /></label>
+      <label><span><%= feeText('货值', 'Valor de mercancía') %> <span data-quote-base-currency><%= row.currency || '' %></span></span><input type="text" inputmode="decimal" name="li_cargoValue[]" value="<%= row.cargoValue == null ? '' : row.cargoValue %>" data-quote-cargo-value aria-label="<%= feeText('商业发票货值，不含运费保险税款', 'Valor de factura sin flete, seguro ni impuestos') %>" /></label>
+      <small><%= feeText('按货值计一次，不乘数量', 'Una vez sobre el valor, sin multiplicar cantidad') %></small>
+    </div>
+    <label class="quote-range-edit" data-quote-range-edit <%= row.unitPriceMax == null || row.unitPriceMax === '' ? 'hidden' : '' %>><span><%= feeText('范围上限（可清空）', 'Máximo (puede vaciarse)') %></span><input type="text" inputmode="decimal" name="li_unitPriceMax[]" value="<%= row.unitPriceMax == null ? '' : row.unitPriceMax %>" data-quote-price-max aria-label="<%= feeText('范围上限', 'Límite superior') %>" /></label>
+    <span data-quote-range-label class="quote-range-label" hidden></span>
+    <small class="quote-fee-status" data-quote-fee-status role="status" hidden></small>
   </td>
   <td><select name="li_currency[]" data-quote-currency aria-label="<%= t('quote.colCurrency') %>">
     <option value="" <%= !row.currency ? 'selected' : '' %>>—</option>
@@ -35,6 +44,7 @@
     <input type="hidden" name="li_included[]" value="<%= row.chargeKind !== 'contingent' && row.included !== false && !(row.included == null && row.selectionRequired) ? '1' : '0' %>" data-quote-included />
     <label class="quote-source-pill"><input type="checkbox" data-quote-atcost-toggle <%= row.isAtCost ? 'checked' : '' %> /><span>AT COST</span></label>
     <input type="hidden" name="li_atCost[]" value="<%= row.isAtCost ? '1' : '0' %>" data-quote-atcost />
+    <input type="hidden" name="li_pricingErrors[]" value="<%= JSON.stringify(Array.isArray(row.pricingErrors) ? row.pricingErrors : []) %>" data-quote-pricing-errors />
     <input type="hidden" name="li_id[]" value="<%= row.id || '' %>" />
     <input type="hidden" name="li_source[]" value="<%= row.source || 'manual' %>" />
     <input type="hidden" name="li_chargeKind[]" value="<%= row.chargeKind === 'contingent' ? 'contingent' : 'fixed' %>" />

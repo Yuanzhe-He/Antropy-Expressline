@@ -24,6 +24,7 @@
     let quoteMode = 'mexico_only';
     let enabled = Boolean(config.adminMode);
     let exportValidation = false;
+    const deletedRows = new Map();
     const hidden = root.querySelector('[data-rate-card-value]');
     const toolbar = root.querySelector('[data-rate-card-toolbar]');
     const content = root.querySelector('[data-rate-card-content]');
@@ -93,6 +94,8 @@
       if (/label/.test(location)) return prefix + text('请填写有效的规格名称。', 'Indique un nombre válido.');
       if (/concept/.test(location)) return prefix + text('请填写费用名称。', 'Indique el concepto del cargo.');
       if (/category/.test(location)) return prefix + text('请在费用分类中选择有效分类。', 'Seleccione un grupo válido.');
+      if (/percentageRate/.test(error)) return prefix + text('费率须为有效的非负百分数；未确定时请留空。', 'La tasa debe ser un porcentaje no negativo válido; déjela vacía si está pendiente.');
+      if (/percentage_conflict|percentage.*(?:atcost|range)|priceType/.test(error)) return prefix + text('百分比不能同时使用 AT COST 或范围，请修正计价方式。', 'El porcentaje no admite AT COST ni rango; corrija el método.');
       if (/unitPriceMax|invalid_range/.test(error)) return prefix + text('区间上限须为有效金额，且不小于单价。', 'El límite superior debe ser válido y no menor que el precio.');
       if (/unitPrice/.test(error)) return prefix + text('单价须为非负数字；不报价请留空。', 'El precio debe ser un número no negativo; déjelo vacío si no se ofrece.');
       if (/currency/.test(error)) return prefix + text('请选择 USD 或 MXN。', 'Seleccione USD o MXN.');
@@ -137,32 +140,61 @@
     function metadataInput(row, index, key, label, opts = {}) {
       const el = input(row[key], label, (value) => { row[key] = value; changed([`rows.${index}.${key}`, ...(key.startsWith('concept') ? [`rows.${index}.concept`] : [])]); }, opts); el.dataset.rateRowField = key; return el;
     }
+    function removeFeeRow(index) {
+      const card = currentCard();
+      if (!card || !Array.isArray(card.rows)) return;
+      const history = deletedRows.get(currentType) || [];
+      history.push({ row: card.rows[index], index, rowErrors: (card.validationErrors || []).filter((error) => error.startsWith(`rows.${index}.`) || error.startsWith(`rows.${index}:`)) });
+      deletedRows.set(currentType, history);
+      card.rows.splice(index, 1); reindexErrors('rows', index);
+      changed([], (error) => card.rows.length <= 100 && error === 'rows:too_many_rows'); render();
+      root.querySelector('[data-rate-undo-row]')?.focus();
+    }
+    function undoFeeRow() {
+      const card = currentCard(); const history = deletedRows.get(currentType) || [];
+      if (!card || !history.length || card.rows.length >= 100) return;
+      const entry = history.pop(); const index = Math.min(entry.index, card.rows.length);
+      card.rows.splice(index, 0, entry.row);
+      const currentErrors = (card.validationErrors || []).map((error) => {
+        const match = error.match(/^rows\.(\d+)([.:].*)$/);
+        return match && Number(match[1]) >= index ? `rows.${Number(match[1]) + 1}${match[2]}` : error;
+      });
+      card.validationErrors = [...currentErrors, ...entry.rowErrors.map((error) => error.replace(/^rows\.\d+/, `rows.${index}`))];
+      changed(); render();
+      [...root.querySelectorAll('[data-rate-row]')].find((row) => row.dataset.rateRow === String(entry.row?.id || index))?.querySelector('input')?.focus();
+    }
     function priceCell(row, rowIndex, variant) {
       if (!safeVariant(variant)) return node('td', '', text('无效规格，请删除', 'Especificación inválida; elimínela'));
       if (row.cells === undefined) row.cells = {};
       if (!row.cells || typeof row.cells !== 'object' || Array.isArray(row.cells)) return node('td', '', text('无效价格数据', 'Datos de precio no válidos'));
-      if (!hasOwn(row.cells, variant.id) || row.cells[variant.id] == null) row.cells[variant.id] = { unitPrice: '', unitPriceMax: '', isAtCost: false };
+      if (!hasOwn(row.cells, variant.id) || row.cells[variant.id] == null) row.cells[variant.id] = { priceType: 'amount', percentageRate: '', unitPrice: '', unitPriceMax: '', isAtCost: false };
       const cell = row.cells[variant.id];
       if (!cell || typeof cell !== 'object' || Array.isArray(cell)) return node('td', '', text('无效价格数据', 'Datos de precio no válidos'));
       const td = node('td', 'quote-rate-price'); td.dataset.rateVariant = variant.id;
       const path = `rows.${rowIndex}.cells.${variant.id}`;
+      const percentage = cell.priceType === 'percentage';
+      const method = select(cell.priceType || 'amount', [['amount', text('固定金额', 'Importe fijo')], ['percentage', text('货值百分比', '% del valor')]], variant.label + text(' 计价方式', ' Método'), (value) => { cell.priceType = value; changed([path + '.priceType']); render(); });
+      method.dataset.rateCellType = variant.id; td.append(method);
       const price = input(cell.unitPrice, variant.label + text(' 单价', ' Precio'), (value) => {
         cell.unitPrice = value; changed([path + '.unitPrice'], (error) => error === path + '.unitPriceMax:invalid_range');
-      }, { decimal: true }); price.dataset.rateCellPrice = variant.id; price.readOnly = Boolean(cell.isAtCost);
+      }, { decimal: true }); price.dataset.rateCellPrice = variant.id; price.readOnly = Boolean(cell.isAtCost); price.hidden = percentage;
+      const rate = input(cell.percentageRate, variant.label + text(' 费率 %', ' Tasa %'), (value) => { cell.percentageRate = value; changed([path + '.percentageRate']); }, { decimal: true }); rate.dataset.rateCellPercentage = variant.id; rate.hidden = !percentage;
+      const rateLabel = node('small', 'quote-rate-percent-label', text('% 商业发票货值，不含运费、保险及税', '% del valor de factura, sin flete, seguro ni impuestos')); rateLabel.hidden = !percentage;
       const detail = node('details', 'quote-translations'); const summary = node('summary'); detail.append(summary);
       const refreshPrice = () => { price.value = cell.isAtCost ? 'AT COST' : (cell.unitPrice ?? ''); summary.textContent = cell.isAtCost ? 'AT COST' : (cell.unitPriceMax != null && String(cell.unitPriceMax).trim() !== '' ? '– ' + cell.unitPriceMax : text('区间 / 实报实销', 'Rango / AT COST')); };
       refreshPrice();
-      const max = input(cell.unitPriceMax, variant.label + text(' 区间上限', ' Límite superior'), (value) => { cell.unitPriceMax = value; refreshPrice(); changed([path + '.unitPriceMax']); }, { decimal: true }); max.dataset.rateCellMax = variant.id; max.readOnly = Boolean(cell.isAtCost);
-      const costToggle = input(cell.isAtCost, variant.label + ' AT COST', (value) => { cell.isAtCost = value; price.readOnly = value; max.readOnly = value; refreshPrice(); changed([path + '.isAtCost']); }, { checkbox: true }); costToggle.dataset.rateCellAtcost = variant.id;
+      const max = input(cell.unitPriceMax, variant.label + text(' 区间上限', ' Límite superior'), (value) => { cell.unitPriceMax = value; refreshPrice(); changed([path + '.unitPriceMax', path + '.priceType']); }, { decimal: true }); max.dataset.rateCellMax = variant.id; max.readOnly = Boolean(cell.isAtCost);
+      const costToggle = input(cell.isAtCost, variant.label + ' AT COST', (value) => { cell.isAtCost = value; price.readOnly = value; max.readOnly = value; refreshPrice(); changed([path + '.isAtCost', path + '.priceType']); }, { checkbox: true }); costToggle.dataset.rateCellAtcost = variant.id;
       const costLabel = node('label', 'quote-inclusion'); costLabel.append(costToggle, node('span', '', 'AT COST'));
       detail.append(fieldLabel(text('上限（可选）', 'Máximo (opcional)'), max), costLabel);
-      td.append(price, detail); return td;
+      if (percentage) detail.append(node('small', 'quote-rate-percent-label', text('百分比不能同时使用范围或 AT COST。', 'El porcentaje no admite rango ni AT COST.')));
+      td.append(price, rate, rateLabel, detail); return td;
     }
     function renderRow(row, index, variants) {
       if (!object(row)) {
         const invalid = node('tr'); invalid.dataset.rateInvalidRow = String(index);
         const message = node('td', '', text('无效费用行；请核对原始内容后删除并重新添加。', 'Fila de cargo inválida; coteje la fuente, elimínela y vuelva a agregarla.')); message.colSpan = variants.length + 8;
-        const action = node('td'); const remove = button(text('删除此行', 'Eliminar fila'), () => { const card = currentCard(); card.rows.splice(index, 1); reindexErrors('rows', index); changed([], (error) => card.rows.length <= 100 && error === 'rows:too_many_rows'); render(); }); remove.dataset.rateRemoveRow = ''; action.append(remove); invalid.append(message, action); return invalid;
+        const action = node('td'); const remove = button(text('删除此行', 'Eliminar fila'), () => removeFeeRow(index)); remove.dataset.rateRemoveRow = ''; action.append(remove); invalid.append(message, action); return invalid;
       }
       const tr = node('tr'); tr.dataset.rateRow = row.id || String(index);
       if (!config.adminMode && quoteMode !== 'ocean_mexico' && row.section === 'foreign') tr.hidden = true;
@@ -179,17 +211,22 @@
       concepts.append(translations); cell(concepts, 'quote-rate-concept');
       variants.forEach((variant) => tr.append(priceCell(row, index, variant)));
       cell(node('span', 'quote-rate-quantity', '1'));
-      cell(metadataInput(row, index, 'unitOfMeasure', text('计费单位', 'Unidad'), { placeholder: currentType === 'FCL' ? 'container' : 'shipment' }));
+      const unitField = metadataInput(row, index, 'unitOfMeasure', text('计费单位', 'Unidad'), { placeholder: currentType === 'FCL' ? 'container' : 'shipment' });
+      unitField.setAttribute('list', root.id + '-units');
+      const unitWrap = node('div'); unitWrap.append(unitField);
+      const unitLabel = node('small', 'quote-unit-label');
+      const updateUnit = () => { unitLabel.textContent = unitField.value.trim().toLowerCase() === 'shipment' ? text('按票', 'Por embarque') : ''; };
+      unitField.addEventListener('input', updateUnit); updateUnit(); unitWrap.append(unitLabel); cell(unitWrap);
       cell(select(row.currency || '', [['', '—'], ['USD', 'USD'], ['MXN', 'MXN']], text('币种', 'Moneda'), (value) => { row.currency = value; changed([`rows.${index}.currency`]); }));
       cell(metadataInput(row, index, 'remark', text('备注', 'Observación')));
       const included = node('label', 'quote-inclusion'); const check = input(row.included !== false, text('显示此费用', 'Mostrar cargo'), (value) => { row.included = value; changed([`rows.${index}.included`]); }, { checkbox: true }); check.dataset.rateRowIncluded = ''; included.append(check, node('span', '', text('显示', 'Mostrar'))); cell(included);
-      const remove = button('×', () => { const card = currentCard(); card.rows.splice(index, 1); reindexErrors('rows', index); changed([], (error) => card.rows.length <= 100 && error === 'rows:too_many_rows'); render(); }); remove.setAttribute('aria-label', text('删除费用行', 'Eliminar cargo')); remove.dataset.rateRemoveRow = ''; cell(remove);
+      const remove = button('×', () => removeFeeRow(index)); remove.setAttribute('aria-label', text('删除费用行', 'Eliminar cargo')); remove.dataset.rateRemoveRow = ''; cell(remove);
       return tr;
     }
     function addRow(kind, source = {}) {
       const card = currentCard(); if (!card || !Array.isArray(card.rows) || card.rows.length >= 100) return;
       const category = source.category || 'SHIPPING LINE';
-      card.rows.push({ id: uid('rate-row'), category, code: source.code || '', conceptEn: source.conceptEn || '', conceptZh: source.conceptZh || '', conceptEs: source.conceptEs || '', section: source.section || 'mexico', chargeKind: kind, included: source.included !== false && !source.selectionRequired, unitOfMeasure: source.unitOfMeasure || (currentType === 'FCL' ? 'container' : 'shipment'), currency: source.currency || (category === 'SHIPPING LINE' ? 'USD' : 'MXN'), remark: source.remark || '', cells: Object.fromEntries(card.variants.filter(safeVariant).map((variant) => [variant.id, { unitPrice: '', unitPriceMax: '', isAtCost: false }])) });
+      card.rows.push({ id: uid('rate-row'), category, code: source.code || '', conceptEn: source.conceptEn || '', conceptZh: source.conceptZh || '', conceptEs: source.conceptEs || '', section: source.section || 'mexico', chargeKind: kind, included: source.included !== false && !source.selectionRequired, unitOfMeasure: source.unitOfMeasure || (currentType === 'FCL' ? 'container' : 'shipment'), currency: source.currency || (category === 'SHIPPING LINE' ? 'USD' : 'MXN'), remark: source.remark || '', cells: Object.fromEntries(card.variants.filter(safeVariant).map((variant) => [variant.id, { priceType: source.priceType || 'amount', percentageRate: '', unitPrice: '', unitPriceMax: '', isAtCost: false }])) });
       changed(); render();
     }
     function removeVariant(index) {
@@ -209,6 +246,12 @@
       const card = currentCard();
       empty.hidden = Boolean(card); empty.textContent = text('请先选择装载方式，再编辑对应的长期价格表。', 'Seleccione una modalidad para editar su tarifario.');
       if (!card || !Array.isArray(card.variants) || !Array.isArray(card.rows)) { sync(); showErrors(); setDisabled(); return; }
+      const undo = button(text('撤销删除费用行', 'Deshacer eliminación de cargo'), undoFeeRow);
+      undo.dataset.rateUndoRow = ''; undo.dataset.limitDisabled = String(!(deletedRows.get(currentType) || []).length || card.rows.length >= 100);
+      const undoBar = node('div', 'quote-actions'); undoBar.append(undo, node('small', 'quote-hint', text('恢复本页删除的内容和顺序；刷新或保存后记录清空。', 'Restaura valores y orden de esta sesión; guardar o recargar borra el historial.'))); toolbar.append(undoBar);
+      const units = node('datalist'); units.id = root.id + '-units';
+      for (const unit of ['shipment', 'container', 'bl', 'truck', 'day', 'kg', 'ton', 'm³', 'W/M']) { const option = node('option'); option.value = unit; option.label = unit === 'shipment' ? text('shipment（按票）', 'shipment (por embarque)') : unit; units.append(option); }
+      toolbar.append(units);
       const variantsBar = node('div', 'quote-rate-variants');
       variantsBar.append(node('strong', '', text('规格列 · 数量均为 1', 'Especificaciones · cantidad 1')));
       card.variants.forEach((variant, index) => {
@@ -229,7 +272,7 @@
         do { label = text(`规格 ${n}`, `Especificación ${n}`); n += 1; } while (card.variants.some((variant) => variant?.label === label));
         card.variants.push({ id: uid('variant'), label }); changed(); render();
       }); add.dataset.rateAddVariant = ''; add.dataset.limitDisabled = String(card.variants.length >= 12); variantsBar.append(add); toolbar.append(variantsBar);
-      content.append(node('p', 'quote-hint', text('每列是一个独立规格的单价，数量固定为 1；不同规格之间不合计。空白表示未报价，0 表示零价。', 'Cada columna es una tarifa independiente con cantidad fija de 1; no se suman alternativas. Vacío significa sin cotizar y 0 significa precio cero.')));
+      content.append(node('p', 'quote-hint', text('每列是一个独立规格的单价或货值费率，数量固定为 1；不同规格之间不合计。百分比仅显示费率，货值需与费用同币种；空白表示未报价，0 表示零价。', 'Cada columna es un precio o porcentaje independiente con cantidad 1; no se suman alternativas. El porcentaje muestra solo la tasa, sobre el valor en la moneda del cargo. Vacío significa sin cotizar y 0 significa precio cero.')));
       for (const kind of ['fixed', 'contingent']) {
         const section = node('section', 'quote-rate-section'); section.dataset.rateSection = kind;
         section.append(node('h4', '', kind === 'fixed' ? text('固定费用', 'Cargos fijos') : text('发生才收取的费用', 'Cargos si se generan')));

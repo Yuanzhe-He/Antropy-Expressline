@@ -7,6 +7,8 @@
 //
 // Public API: see module.exports at the bottom.
 
+const { randomUUID } = require("node:crypto");
+const { filterTaxNotes, validateQuoteNaming } = require("./quote-export");
 const { effectiveRoute } = require("./inland-routes");
 const {
   VEHICLE_TYPE_KEYS,
@@ -804,7 +806,12 @@ function parseQuoteHeader(body = {}, cargoTypes = normalizeQuoteCargoTypes()) {
     showTotals: body.showTotals === "1" || body.showTotals === "on",
     notesSelectionExplicit: body.quoteFormPresent === "1",
     outputAudience: body.outputAudience === "internal" ? "internal" : "customer",
-    taxTreatment: ["included", "excluded"].includes(body.taxTreatment) ? body.taxTreatment : "unspecified",
+    taxTreatment: ["included", "excluded", "mexico_included"].includes(body.taxTreatment) ? body.taxTreatment : "unspecified",
+    includeStamp: body.includeStamp === "1" || body.includeStamp === "on",
+    customerCode: typeof body.customerCode === "string" ? body.customerCode.trim() : "",
+    salesCode: typeof body.salesCode === "string" ? body.salesCode.trim() : "",
+    revision: body.revision === undefined || body.revision === "" ? 1 : Number(body.revision),
+    quoteEditorId: typeof body.quoteEditorId === "string" && /^[-A-Za-z0-9]{1,80}$/.test(body.quoteEditorId) ? body.quoteEditorId : randomUUID(),
     ...(cargoType ? { cargoTypeLabel: cargoType.label } : {}),
     importerQualification: ["own", "trading_company"].includes(body.importerQualification) ? body.importerQualification : "",
     specialImportQualification: ["yes", "no", "unknown"].includes(body.specialImportQualification) ? body.specialImportQualification : "",
@@ -826,6 +833,16 @@ function parseQuoteExtraFields(body = {}) {
       value: String(values[index] ?? "").trim(),
     }))
     .filter((row) => row.label);
+}
+
+function parsePricingErrors(value) {
+  if (value === "" || value === undefined || value === null) return [];
+  if (typeof value !== "string" || value.length > 8192) return ["pricingErrors:invalid_errors"];
+  try {
+    const errors = JSON.parse(value);
+    if (!Array.isArray(errors) || errors.length > 30 || errors.some((error) => typeof error !== "string" || error.length > 120)) return ["pricingErrors:invalid_errors"];
+    return [...new Set(errors)];
+  } catch (_) { return ["pricingErrors:invalid_errors"]; }
 }
 
 function parseQuoteLineItems(body = {}) {
@@ -852,6 +869,10 @@ function parseQuoteLineItems(body = {}) {
       // Q7.3: unit of measure (柜/提单/次/个/车型/天); `unit` stays the numeric qty.
       unitOfMeasure: cell("li_uom", index),
       unitPrice: cell("li_unitPrice", index),
+      priceType: cell("li_priceType", index) || "amount",
+      percentageRate: cell("li_percentageRate", index),
+      cargoValue: cell("li_cargoValue", index),
+      pricingErrors: parsePricingErrors(cell("li_pricingErrors", index)),
       currency: cell("li_currency", index),
       remark: cell("li_remark", index),
       isAtCost: String(cell("li_atCost", index)) === "1",
@@ -949,8 +970,18 @@ function assembleQuoteView(quoteModule, formData, shippingData) {
     showTotals: !isRateCard && formData.header.showTotals === true,
     outputAudience: formData.header.outputAudience === "internal" ? "internal" : "customer",
     taxTreatment: formData.header.taxTreatment || "unspecified",
+    includeStamp: formData.header.includeStamp === true,
+    pendingPercentage: totals.rows.some((row) => row.included !== false && row.chargeKind !== "contingent" && row.priceType === "percentage" && row.pricingStatus === "pending"),
+    pricingErrors: totals.rows.filter((row) => row.included !== false).flatMap((row) => (row.pricingErrors || []).map((error) => `${row.id}:${error}`)),
+    namingErrors: validateQuoteNaming(formData.header),
     rows: totals.rows,
-    editableRows: computeQuoteTotals(formData.lineItems).rows,
+    editableRows: computeQuoteTotals(formData.lineItems).rows.map((row, index) => ({
+      ...row,
+      // Preserve rejected raw text for correction; calculated labels/errors
+      // remain authoritative. Stored normalized errors roundtrip separately.
+      percentageRate: formData.lineItems[index]?.percentageRate ?? row.percentageRate,
+      cargoValue: formData.lineItems[index]?.cargoValue ?? row.cargoValue,
+    })),
     cargoCalculation: cargo,
     cargoChargeRows,
     chargeSections: ["fixed", "contingent"].map((chargeKind) => ({
@@ -963,7 +994,7 @@ function assembleQuoteView(quoteModule, formData, shippingData) {
     indicative: totals.indicative,
     dualTotals: totals.dualTotals,
     route,
-    notes: selectQuoteNotes(quoteModule.notes, formData.noteIds),
+    notes: filterTaxNotes(selectQuoteNotes(quoteModule.notes, formData.noteIds), formData.header.taxTreatment),
     language: formData.language || "",
   };
 }
@@ -1012,6 +1043,11 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
     } else cargoTypes.push({ code: historicalCode, label: existingDraft.header.cargoTypeLabel || historicalCode, enabled: true });
   }
   const header = parseQuoteHeader(body, cargoTypes);
+  if (!hasPostedRows && !existingDraft) {
+    if (body.taxTreatment === undefined) header.taxTreatment = "mexico_included";
+    if (body.includeStamp === undefined) header.includeStamp = true;
+  }
+  if (existingDraft && body.quoteEditorId === undefined && existingDraft.header.quoteEditorId) header.quoteEditorId = existingDraft.header.quoteEditorId;
   // S5: pre-fill a fresh quote's header from the admin default preset.
   if (!hasPostedRows) {
     const hd = quoteModule.settings?.headerDefaults || {};
@@ -1060,6 +1096,10 @@ function buildQuoteFormData(quoteModule, body = {}, options = {}) {
     showTotals: header.showTotals,
     outputAudience: header.outputAudience,
     taxTreatment: header.taxTreatment,
+    includeStamp: header.includeStamp,
+    customerCode: header.customerCode,
+    salesCode: header.salesCode,
+    revision: header.revision,
     quoteMode,
     lineItems,
     noteIds: hasPostedRows ? postedNoteIds : libraryIds,
