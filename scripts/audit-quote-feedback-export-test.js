@@ -82,6 +82,12 @@ async function main() {
     assert.equal(filterTaxNotes([{ en: foreign }], "mexico_included")[0].en, foreign);
     assert.equal(filterTaxNotes([{ en: insurance }], "mexico_included")[0].en, insurance);
     assert.equal(filterTaxNotes([{ en: "All prices exclude VAT. Insurance is available at 0.25% plus VAT. Payment is due in 30 days." }], "mexico_included")[0].en, "Insurance is available at 0.25% plus VAT. Payment is due in 30 days.");
+    const invoicingNote = "The above prices are exclusive of VAT. A 16% VAT will be added at invoicing. Payment is due in 30 days.";
+    assert.equal(filterTaxNotes([{ en: invoicingNote }], "mexico_included")[0].en, "Payment is due in 30 days.");
+    assert.equal(filterTaxNotes([{ en: "The VAT will be added at invoicing. Insurance is available at 0.25% plus VAT." }], "included")[0].en, "Insurance is available at 0.25% plus VAT.");
+    assert.equal(filterTaxNotes([{ en: "A 16% VAT will be added at invoicing." }], "excluded")[0].en, "A 16% VAT will be added at invoicing.");
+    assert.equal(filterTaxNotes([{ en: "A 16% VAT will be added to insurance at invoicing." }], "mexico_included")[0].en, "A 16% VAT will be added to insurance at invoicing.");
+    assert.equal(filterTaxNotes([{ en: "A 16% VAT will be added to origin prices at invoicing." }], "mexico_included")[0].en, "A 16% VAT will be added to origin prices at invoicing.");
     assert.equal(notes.length, 3);
     assert.equal(filterTaxNotes(notes, "unspecified"), notes);
     assert.deepEqual(filterTaxNotes(notes, "excluded").map((n) => n.id), ["old", "insurance"]);

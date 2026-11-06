@@ -466,3 +466,4 @@ Only record lessons that may change future behavior.
 
 
 - 2026-11-06 | EXP-QUOTE-20261106-normalization-byte-stability | docs/AI_AGENT_PROJECT_RULES.md#Business Invariants | [SELF_CORRECTION] Blank and populated rate-card cells must normalize to the same JSON property order; unequal ordering triggered unnecessary whole-blob persistence. Regression: audit-rmw-cache-test.js and audit-quote-percentage-test.js.
+- 2026-11-06 | EXP-QUOTE-20261106-tax-followup-sentence | docs/AI_AGENT_PROJECT_RULES.md#Testing Rules | [SELF_CORRECTION] Real PDF review caught a standalone VAT surcharge sentence after the leading exclusion clause was removed; verify all conflicting sentences and preserve scoped conditions.

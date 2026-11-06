@@ -83,7 +83,7 @@ function conflictingTaxSentence(sentence, treatment) {
   const businessCondition = /insurance|insured|seguro|保险|保额/.test(text);
   if (businessCondition) return false;
   const generalPrices = /(?:all|above|these|quoted|entered|our|the)\s+prices|prices\s+(?:are|include|exclude)|上述价格|本报价|所有价格|报价.*(?:含税|加税)|precios|tarifas/.test(text);
-  const taxSubject = /^\s*(?:\d+(?:\.\d+)?%\s*)?(?:vat|iva|tax(?:es)?|impuestos|增值税|税费|开票|结算|另加)/.test(text);
+  const taxSubject = /^\s*(?:(?:a|an|the)\s+)?(?:\d+(?:\.\d+)?%\s*)?(?:vat|iva|tax(?:es)?|impuestos|增值税|税费|开票|结算|另加)/.test(text);
   const currencyPrice = /(?:mxn|usd|比索|美金).*(?:price|价|vat|iva|税)/.test(text);
   if (!generalPrices && !taxSubject && !mexicoScope && !currencyPrice) return false;
   const negative = /(?:exclud\w*|exclusive\s+of|not\s+includ\w*|no\s+incluy\w*|sin)\s+(?:(?:applicable|local|mexican|any|all|el|los)\s+)*(?:\d+(?:\.\d+)?%\s*)?(?:vat|iva|tax\w*|impuesto\w*)|(?:vat|iva|tax\w*)\s+(?:is|are)?\s*not\s+included|不含(?:适用的?|墨西哥)?(?:增值)?税|未含(?:增值)?税|未税/.test(text);
